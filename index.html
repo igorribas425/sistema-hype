@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOATE HYPE // Ingressos</title>
+<style>
+  :root{--bg:#050505;--panel:#0d0d10;--line:#222228;--red:#ff163d;--green:#28d17c;--text:#f7f7f8;--muted:#96969e}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,sans-serif}
+  body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+  
+  .top-nav{position:fixed;top:0;left:0;width:100%;background:rgba(13,13,16,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 20px;display:flex;justify-content:center;gap:15px;z-index:1000}
+  .top-nav a{color:var(--muted);text-decoration:none;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);transition:.2s}
+  .top-nav a:hover{color:#fff;border-color:var(--red);background:rgba(255,22,61,.05)}
+
+  .box{width:min(480px,100%);background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:32px;box-shadow:0 20px 40px rgba(0,0,0,.6);margin-top:40px}
+  h1{text-align:center;font-size:28px;font-weight:950;letter-spacing:2px;margin-bottom:8px}
+  h1 span{color:var(--red);text-shadow:0 0 20px rgba(255,22,61,.5)}
+  p.sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:25px;text-transform:uppercase;letter-spacing:1px}
+  
+  .group{margin-bottom:18px}
+  label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:7px;letter-spacing:1px}
+  input, select{width:100%;height:48px;background:#060608;border:1px solid var(--line);border-radius:12px;padding:0 15px;color:#fff;font-size:15px;outline:none}
+  input:focus, select:focus{border-color:var(--red)}
+  
+  .btn{width:100%;height:50px;background:var(--red);color:#fff;border:0;border-radius:12px;font-weight:950;font-size:14px;cursor:pointer;margin-top:10px;letter-spacing:1px;transition:.2s}
+  .btn:hover{opacity:.9}
+
+  .pix-area{display:none;text-align:center;margin-top:20px;border-top:1px solid var(--line);padding-top:20px}
+  .qrcode{background:#fff;padding:15px;border-radius:12px;display:inline-block;margin:15px 0}
+  .qrcode img{width:160px;height:160px;display:block}
+  .pix-key{background:#060608;border:1px solid var(--line);padding:12px;border-radius:10px;font-size:12px;word-break:break-all;color:var(--green);margin-bottom:12px}
+  
+  .ticket-card{display:none;background:linear-gradient(135deg,#160005,#09090b);border:2px dashed var(--red);border-radius:20px;padding:24px;text-align:center;margin-top:20px;position:relative}
+  .ticket-card h2{color:var(--red);font-size:22px;letter-spacing:2px;margin-bottom:15px}
+  .ticket-info{text-align:left;background:#060608;padding:14px;border-radius:12px;margin-bottom:15px;font-size:13px;line-height:1.6}
+  .ticket-info span{color:var(--muted)}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#151518;border:1px solid #3b3b41;padding:12px 20px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:.25s}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-10px)}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="cliente.html" style="color:#fff;border-color:var(--red)">🛒 Comprar</a>
+  <a href="admin.html">⚙️ Admin</a>
+  <a href="portaria.html">🚪 Portaria</a>
+</nav>
+
+<div class="box">
+  <h1>BOATE <span>HYPE</span></h1>
+  <p class="sub">Garanta o seu ingresso antecipado</p>
+
+  <form id="ticketForm" onsubmit="generatePix(event)">
+    <div class="group">
+      <label>Nome Completo</label>
+      <input type="text" id="clientName" placeholder="O seu nome no documento" required autocomplete="off">
+    </div>
+
+    <div class="group">
+      <label>Género</label>
+      <select id="clientGender" required>
+        <option value="Feminino">Feminino</option>
+        <option value="Masculino">Masculino</option>
+      </select>
+    </div>
+    
+    <div class="group">
+      <label>Escolha o Lote / Setor</label>
+      <select id="ticketType" onchange="updatePrice()" required></select>
+    </div>
+
+    <div class="group">
+      <label>Valor a Pagar</label>
+      <input type="text" id="ticketPriceDisplay" readonly style="color:var(--green);font-weight:bold;background:#040405">
+    </div>
+
+    <button type="submit" class="btn">GERAR PIX DE PAGAMENTO</button>
+  </form>
+
+  <div class="pix-area" id="pixArea">
+    <p style="font-size:13px;color:#fff;margin-bottom:5px">Faça a leitura do QR Code ou copie a chave PIX:</p>
+    <div class="qrcode"><img id="qrImg" src="" alt="QR Code PIX"></div>
+    <div class="pix-key" id="pixKeyText"></div>
+    <button class="btn" style="background:#28d17c;color:#000" onclick="showTicketCard()">JÁ EFETUEI O PAGAMENTO // VER INGRESSO</button>
+  </div>
+
+  <div class="ticket-card" id="ticketCard">
+    <h2>🎟️ INGRESSO OFICIAL</h2>
+    <div class="ticket-info">
+      <p><span>Titular:</span> <strong id="tClientName" style="color:#fff"></strong></p>
+      <p><span>Género:</span> <strong id="tClientGender" style="color:#fff"></strong></p>
+      <p><span>Setor:</span> <strong id="tTicketName" style="color:#fff"></strong></p>
+      <p><span>Valor:</span> <strong id="tTicketPrice" style="color:var(--green)"></strong></p>
+      <p><span>Estado:</span> <strong id="tTicketStatus" style="color:#ffcc00">Pendente de Confirmação ADM</strong></p>
+      <p><span>Código ID:</span> <strong id="tTicketId" style="color:#aaa"></strong></p>
+    </div>
+    <p style="font-size:11px;color:var(--muted);line-height:1.4">Apresente este ecrã ou o seu nome na portaria da Boate HYPE com documento.</p>
+    <button class="btn" style="margin-top:15px;background:#15151a;border:1px solid var(--line)" onclick="location.reload()">Comprar Outro</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">Ação efetuada com sucesso!</div>
+
+<script>
+  const defaultTickets = [
+    { id: 1, name: "Pista - 1º Lote", price: 30.00 },
+    { id: 2, name: "Área VIP - 1º Lote", price: 60.00 },
+    { id: 3, name: "Camarote Open Bar", price: 120.00 }
+  ];
+
+  function getTickets() {
+    const data = localStorage.getItem("hype_config_tickets");
+    return data ? JSON.parse(data) : defaultTickets;
+  }
+
+  function init() {
+    const select = document.getElementById("ticketType");
+    const tickets = getTickets();
+    select.innerHTML = tickets.map(t => `<option value="${t.id}" data-price="${t.price}">${t.name} - R$ ${t.price.toFixed(2).replace('.', ',')}</option>`).join("");
+    updatePrice();
+  }
+
+  function updatePrice() {
+    const select = document.getElementById("ticketType");
+    const selectedOpt = select.options[select.selectedIndex];
+    const price = selectedOpt.getAttribute("data-price");
+    document.getElementById("ticketPriceDisplay").value = `R$ ${parseFloat(price).toFixed(2).replace('.', ',')}`;
+  }
+
+  let currentEntryId = null;
+
+  function generatePix(e) {
+    e.preventDefault();
+    const name = document.getElementById("clientName").value.trim();
+    const gender = document.getElementById("clientGender").value;
+    const select = document.getElementById("ticketType");
+    const ticketName = select.options[select.selectedIndex].text;
+    const price = select.options[select.selectedIndex].getAttribute("data-price");
+
+    const pixKey = localStorage.getItem("hype_pix_key") || "67667283000109";
+    
+    currentEntryId = Date.now();
+    const list = JSON.parse(localStorage.getItem("hype_ingressos") || "[]");
+    const newEntry = {
+      id: currentEntryId,
+      name: name,
+      gender: gender,
+      ticket: ticketName,
+      price: parseFloat(price),
+      status: "Pendente",
+      date: new Date().toLocaleDateString('pt-PT')
+    };
+    list.push(newEntry);
+    localStorage.setItem("hype_ingressos", JSON.stringify(list));
+
+    const pixPayload = `00020126580014br.gov.bcb.pix0136${pixKey}5204000053039865802BR5913BOATE HYPE6009SAO PAULO62070503***6304`;
+    const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(pixPayload)}`;
+    
+    document.getElementById("qrImg").src = qrApi;
+    document.getElementById("pixKeyText").innerText = pixKey;
+    document.getElementById("pixArea").style.display = "block";
+    document.getElementById("ticketForm").style.display = "none";
+    
+    showToast("Pedido gerado com sucesso!");
+  }
+
+  function showTicketCard() {
+    const list = JSON.parse(localStorage.getItem("hype_ingressos") || "[]");
+    const entry = list.find(item => item.id === currentEntryId);
+
+    if(entry) {
+      document.getElementById("tClientName").innerText = entry.name;
+      document.getElementById("tClientGender").innerText = entry.gender || "Não especificado";
+      document.getElementById("tTicketName").innerText = entry.ticket;
+      document.getElementById("tTicketPrice").innerText = `R$ ${entry.price.toFixed(2).replace('.', ',')}`;
+      document.getElementById("tTicketId").innerText = `#HYPE-${entry.id.toString().slice(-6)}`;
+      
+      if(entry.status === "Pago") {
+        document.getElementById("tTicketStatus").innerText = "CONFIRMADO (PAGO ✅)";
+        document.getElementById("tTicketStatus").style.color = "#28d17c";
+      }
+
+      document.getElementById("pixArea").style.display = "none";
+      document.getElementById("ticketCard").style.display = "block";
+    }
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.innerText = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 3000);
+  }
+
+  window.onload = init;
+</script>
+</body>
+</html>
