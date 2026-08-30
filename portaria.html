@@ -110,8 +110,12 @@
     <div class="empty-state">Comece a digitar o nome do cliente acima para validar a entrada.</div>
   </div>
 </div>
-<script src="https://axkbfrljohpkjnbotqnf.supabase.co"></script>
-<script src="'sb_publishable_QLfFi3Cl5FCL1SZnHOl8DQ_nigRxb-c'"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const supabaseUrl = 'https://axkbfrljohpkjnbotqnf.supabase.co';
+  const supabaseKey = 'sb_publishable_QLffI3C15FCL1SZnH0l8DQ_nigRxb-c';
+  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+</script>
 <script src="app.js"></script>
 </body>
 </html>
