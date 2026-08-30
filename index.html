@@ -5,123 +5,79 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HYPE LOUNGE CLUB // Ingressos</title>
 <style>
-  :root{--bg:#050505;--panel:#0d0d10;--line:#222228;--red:#ff163d;--green:#28d17c;--text:#f7f7f8;--muted:#96969e}
-  *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,sans-serif}
-  body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
-  
-  .top-nav{position:fixed;top:0;left:0;width:100%;background:rgba(13,13,16,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 20px;display:flex;justify-content:center;gap:15px;z-index:1000}
-  .top-nav a{color:var(--muted);text-decoration:none;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);transition:.2s}
-  .top-nav a:hover{color:#fff;border-color:var(--red);background:rgba(255,22,61,.05)}
 
-  .box{width:min(480px,100%);background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:32px;box-shadow:0 20px 40px rgba(0,0,0,.6);margin-top:40px}
-  h1{text-align:center;font-size:28px;font-weight:950;letter-spacing:2px;margin-bottom:8px}
-  h1 span{color:var(--red);text-shadow:0 0 20px rgba(255,22,61,.5)}
-  p.sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:25px;text-transform:uppercase;letter-spacing:1px}
-  
-  .group{margin-bottom:18px}
-  label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:7px;letter-spacing:1px}
-  input, select{width:100%;height:48px;background:#060608;border:1px solid var(--line);border-radius:12px;padding:0 15px;color:#fff;font-size:15px;outline:none}
-  input:focus, select:focus{border-color:var(--red)}
-  
-  .btn{width:100%;height:50px;background:var(--red);color:#fff;border:0;border-radius:12px;font-weight:950;font-size:14px;cursor:pointer;margin-top:10px;letter-spacing:1px;transition:.2s}
-  .btn:hover{opacity:.9}
-
-  .pix-area{display:none;text-align:center;margin-top:20px;border-top:1px solid var(--line);padding-top:20px}
-  .qrcode{background:#fff;padding:15px;border-radius:12px;display:inline-block;margin:15px 0}
-  .qrcode img{width:160px;height:160px;display:block}
-  .pix-key{background:#060608;border:1px solid var(--line);padding:12px;border-radius:10px;font-size:12px;word-break:break-all;color:var(--green);margin-bottom:12px}
-  
-  .ticket-card{display:none;background:linear-gradient(135deg,#160005,#09090b);border:2px dashed var(--red);border-radius:20px;padding:24px;text-align:center;margin-top:20px;position:relative}
-  .ticket-card h2{color:var(--red);font-size:22px;letter-spacing:2px;margin-bottom:15px}
-  .ticket-info{text-align:left;background:#060608;padding:14px;border-radius:12px;margin-bottom:15px;font-size:13px;line-height:1.6}
-  .ticket-info span{color:var(--muted)}
-
-  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#151518;border:1px solid #3b3b41;padding:12px 20px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:.25s}
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(-10px)}
-
-.ticket-schedule{margin-top:8px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);font-size:11px;line-height:1.5;background:#08080a}
-.ticket-schedule small{display:block;color:var(--muted);margin-top:3px}
+:root{--bg:#050505;--panel:#0d0d10;--line:#222228;--red:#f5f5f5;--green:#28d17c;--text:#f7f7f8;--muted:#96969e;--silver:#d8d8dc}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,sans-serif}
+html{scroll-behavior:smooth}
+body{background:radial-gradient(circle at 80% 0%,rgba(255,255,255,.055),transparent 28%),radial-gradient(circle at 10% 30%,rgba(255,255,255,.025),transparent 25%),#050505;color:var(--text);min-height:100vh;padding:20px;display:block}
+.top-nav{position:fixed;top:0;left:0;width:100%;background:rgba(5,5,5,.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.13);padding:12px 20px;display:flex;justify-content:center;gap:15px;z-index:1000}
+.top-nav a{color:var(--muted);text-decoration:none;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.17);transition:.2s}
+.top-nav a:hover{color:#fff;border-color:#fff;background:rgba(255,255,255,.07)}
+.page-shell{width:min(1240px,100%);margin:82px auto 28px;display:grid;gap:24px}
+.page-brand{margin:0 auto -6px}
+.brand-logo-wrap{display:flex;justify-content:center;align-items:center}
+.brand-logo{display:block;width:min(320px,80vw);height:auto;object-fit:contain;filter:drop-shadow(0 16px 34px rgba(255,255,255,.08))}
+.event-showcase{display:none;grid-template-columns:minmax(0,1.2fr) minmax(340px,.8fr);gap:0;background:linear-gradient(180deg,#0f0f12,#09090b);border:1px solid rgba(255,255,255,.16);border-radius:28px;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.45)}
+.event-showcase.show{display:grid}
+.event-visual{position:relative;min-height:520px;background:linear-gradient(135deg,#111,#060606)}
+.event-visual img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.event-visual-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.18),rgba(0,0,0,.48) 48%,rgba(0,0,0,.7));}
+.event-badge{position:absolute;left:26px;top:24px;z-index:2;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);backdrop-filter:blur(8px);padding:8px 12px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:1.4px;color:#f3f3f4}
+.event-panel{padding:34px 30px 30px;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(180deg,#131317,#09090b)}
+.eyebrow{display:inline-block;margin-bottom:8px;font-size:11px;font-weight:900;letter-spacing:2px;color:#d8d8dc;text-transform:uppercase}
+.event-panel h2{font-size:clamp(34px,4.6vw,62px);line-height:.95;text-transform:uppercase;letter-spacing:-1.5px;margin:0 0 10px;color:#fff}
+.event-panel h3{font-size:22px;line-height:1.15;color:#d9d9de;margin-bottom:14px}
+.event-panel p{color:#c9c9ce;line-height:1.78;font-size:15px;margin-top:18px}
+.event-meta{display:flex;flex-wrap:wrap;gap:10px;color:#fff;font-weight:800;font-size:12px}
+.event-highlights{display:grid;grid-template-columns:1fr;gap:10px;margin-top:22px}
+.highlight-card{padding:14px 15px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.035)}
+.highlight-card span{display:block;font-size:10px;letter-spacing:1.3px;font-weight:900;color:#9f9fa7;margin-bottom:4px}
+.highlight-card strong{font-size:14px;color:#fff}
+.cta-link{display:inline-flex;align-items:center;justify-content:center;margin-top:24px;min-height:50px;padding:0 18px;border-radius:14px;background:linear-gradient(135deg,#f7f7f7,#babac0);color:#060606;text-decoration:none;font-weight:950;font-size:13px;letter-spacing:1px;border:1px solid rgba(255,255,255,.35);box-shadow:0 10px 30px rgba(255,255,255,.06);width:fit-content}
+.purchase-layout{display:grid;grid-template-columns:minmax(0,.88fr) minmax(380px,.74fr);gap:24px;align-items:start}
+.purchase-copy{background:linear-gradient(180deg,#0f1013,#09090b);border:1px solid rgba(255,255,255,.12);border-radius:28px;padding:34px;box-shadow:0 20px 40px rgba(0,0,0,.34)}
+.section-head small{display:inline-block;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#bdbdc3;margin-bottom:12px}
+.section-head h1{text-align:left;font-size:clamp(34px,4.4vw,58px);font-weight:950;letter-spacing:-1.5px;margin-bottom:12px;line-height:.95}
+.brand-name{color:#fff;text-shadow:0 0 22px rgba(255,255,255,.16)}
+.brand-subline{display:block;color:#b8b8bd;font-size:.5em;letter-spacing:7px;font-weight:600;margin-top:6px}
+p.sub{text-align:left;color:var(--muted);font-size:15px;line-height:1.75;margin-bottom:25px;text-transform:none;letter-spacing:0}
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.info-box{padding:18px;border-radius:20px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1)}
+.info-box span{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.18);margin-bottom:12px;font-size:13px;font-weight:900;color:#fff}
+.info-box strong{display:block;font-size:15px;margin-bottom:7px;color:#fff}
+.info-box p{font-size:13px;line-height:1.65;color:#a5a5ae}
+.box{width:100%;background:linear-gradient(180deg,#111216,#09090b);border:1px solid rgba(255,255,255,.13);border-radius:28px;padding:32px;box-shadow:0 20px 46px rgba(0,0,0,.42)}
+.box-kicker{font-size:11px;letter-spacing:2px;color:#c9c9ce;font-weight:900;margin-bottom:8px}
+.box-title{font-size:26px;line-height:1.1;margin-bottom:22px;color:#fff}
+.group{margin-bottom:18px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:7px;letter-spacing:1px}
+input, select{width:100%;height:50px;background:#060608;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:0 15px;color:#fff;font-size:15px;outline:none}
+input:focus, select:focus{border-color:#d9d9de}
+.price-display{color:var(--green)!important;font-weight:900;background:#040405}
+.btn{width:100%;height:52px;background:linear-gradient(135deg,#f7f7f7,#bcbcc2);color:#080808;border:1px solid rgba(255,255,255,.35);border-radius:14px;font-weight:950;font-size:14px;cursor:pointer;margin-top:10px;letter-spacing:1px;transition:.2s;box-shadow:0 10px 30px rgba(255,255,255,.06)}
+.btn:hover{filter:brightness(1.07)}
+.success-btn{background:linear-gradient(135deg,#dfffe8,#7ef0a6)!important;color:#041108!important;border-color:rgba(126,240,166,.35)!important}
+.ghost-btn{margin-top:15px;background:#15151a!important;border:1px solid rgba(255,255,255,.12)!important;color:#fff!important;box-shadow:none}
+.pix-area{display:none;text-align:center;margin-top:22px;border-top:1px solid rgba(255,255,255,.1);padding-top:22px}
+.qrcode{background:#fff;padding:15px;border-radius:12px;display:inline-block;margin:15px 0}
+.qrcode img{width:160px;height:160px;display:block}
+.pix-key{background:#060608;border:1px solid rgba(255,255,255,.12);padding:12px;border-radius:12px;font-size:12px;word-break:break-all;color:var(--green);margin-bottom:12px}
+.ticket-card{display:none;background:linear-gradient(135deg,#111,#060606);border:2px dashed #dedee2;border-radius:20px;padding:24px;text-align:center;margin-top:22px;position:relative}
+.ticket-card h2{color:#fff;font-size:22px;letter-spacing:2px;margin-bottom:15px}
+.ticket-info{text-align:left;background:#060608;padding:14px;border-radius:12px;margin-bottom:15px;font-size:13px;line-height:1.65}
+.ticket-info span{color:var(--muted)}
+.ticket-qr{background:#fff;padding:10px;border-radius:12px;width:max-content;margin:15px auto}.ticket-qr img{width:210px;height:210px;display:block}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#151518;border:1px solid #3b3b41;padding:12px 20px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:1500}.toast.show{opacity:1;transform:translateX(-50%) translateY(-10px)}
+.ticket-schedule{margin-top:8px;padding:13px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);font-size:12px;line-height:1.55;background:#08080a}
+.ticket-schedule small{display:block;color:var(--muted);margin-top:6px;line-height:1.55}
 .ticket-schedule.active{border-color:rgba(40,209,124,.35);background:rgba(40,209,124,.06);color:var(--green)}
 .ticket-schedule.upcoming{border-color:rgba(56,189,248,.35);background:rgba(56,189,248,.06);color:#38bdf8}
-.ticket-schedule.expired{border-color:rgba(255,22,61,.35);background:rgba(255,22,61,.06);color:var(--red)}
+.ticket-schedule.expired{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.04);color:#d8d8dc}
 #ticketForm button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(1)}
+@media(max-width:1080px){.event-showcase{grid-template-columns:1fr}.event-visual{min-height:390px}.purchase-layout{grid-template-columns:1fr}.info-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){body{padding:14px}.page-shell{margin-top:74px}.event-panel{padding:24px 20px 22px}.event-visual{min-height:280px}.event-badge{left:16px;top:16px;font-size:10px}.purchase-copy,.box{padding:24px}.section-head h1{font-size:34px}.two-col,.info-grid{grid-template-columns:1fr}.brand-logo{width:min(240px,74vw)}.box-title{font-size:22px}}
 
-  .event-hero{display:none;width:min(900px,100%);min-height:390px;margin-top:55px;margin-bottom:20px;border-radius:24px;overflow:hidden;position:relative;border:1px solid var(--line);background:#0b0b0e}
-  .event-hero.show{display:flex;align-items:flex-end}
-  .event-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .event-hero:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 15%,rgba(0,0,0,.93))}
-  .event-hero-content{position:relative;z-index:2;padding:28px;width:100%}
-  .event-hero-content small{color:#ff7b8e;font-weight:900;letter-spacing:2px}
-  .event-hero-content h2{font-size:clamp(30px,7vw,58px);line-height:.95;margin:8px 0 8px;text-transform:uppercase}
-  .event-hero-content h3{font-size:19px;margin-bottom:8px}
-  .event-hero-content p{color:#c1c1c7;line-height:1.5;max-width:700px}
-  .event-meta{margin-top:10px;font-size:12px;color:#fff;font-weight:800}
-
-
-/* HYPE LOUNGE CLUB // identidade visual */
-:root{
-  --brand:#f5f5f5;
-  --brand2:#a9a9af;
-  --silver:#d8d8dc;
-}
-body{
-  background:
-    radial-gradient(circle at 80% 0%,rgba(255,255,255,.055),transparent 28%),
-    radial-gradient(circle at 10% 30%,rgba(255,255,255,.025),transparent 25%),
-    #050505 !important;
-}
-.top-nav{
-  background:rgba(5,5,5,.91)!important;
-  border-bottom:1px solid rgba(255,255,255,.13)!important;
-}
-.top-nav a{
-  border-color:rgba(255,255,255,.17)!important;
-}
-.top-nav a:hover{
-  border-color:#fff!important;
-  background:rgba(255,255,255,.07)!important;
-}
-.brand-logo-wrap{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  margin:4px auto 18px;
-}
-.brand-logo{
-  display:block;
-  width:min(310px,78vw);
-  height:auto;
-  object-fit:contain;
-  filter:drop-shadow(0 12px 30px rgba(255,255,255,.08));
-}
-.brand-mini{
-  display:block;
-  width:150px;
-  max-width:42vw;
-  height:auto;
-}
-.brand-name{color:#fff!important;text-shadow:0 0 20px rgba(255,255,255,.18)!important}
-.brand-sub{color:#b8b8bd!important;font-weight:500;letter-spacing:5px;font-size:.55em}
-h1 span{color:#fff!important;text-shadow:0 0 22px rgba(255,255,255,.15)!important}
-.btn{
-  background:linear-gradient(135deg,#f7f7f7,#bcbcc2)!important;
-  color:#080808!important;
-  border:1px solid rgba(255,255,255,.35)!important;
-  box-shadow:0 10px 30px rgba(255,255,255,.06);
-}
-.btn:hover{filter:brightness(1.08)}
-input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
-.ticket-card{border-color:#dedee2!important;background:linear-gradient(135deg,#111,#060606)!important}
-.ticket-card h2{color:#fff!important}
-.event-hero{border-color:rgba(255,255,255,.18)!important}
-.event-hero-content small{color:#d8d8dc!important}
-.quick-lot-box{border-color:rgba(255,255,255,.18)!important;background:#090909!important}
-.price-section-title{color:#ddd!important}
-.schedule-badge.active{color:#f4f4f4!important;border-color:rgba(255,255,255,.28)!important;background:rgba(255,255,255,.06)!important}
-
-</style>
-<style>
-.ticket-qr{background:#fff;padding:10px;border-radius:12px;width:max-content;margin:15px auto}.ticket-qr img{width:210px;height:210px;display:block}
 </style>
 </head>
 <body>
@@ -132,83 +88,124 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
   <a href="portaria.html">🚪 Portaria</a>
 </nav>
 
+<div class="page-shell">
+  <div class="brand-logo-wrap page-brand"><img src="logo-hype.png" class="brand-logo" alt="HYPE Lounge Club"></div>
 
-<div class="brand-logo-wrap" style="margin-top:70px;margin-bottom:8px"><img src="logo-hype.png" class="brand-logo" alt="HYPE Lounge Club"></div>
-<div class="event-hero" id="eventHero">
-  <img id="eventHeroImage" alt="Capa do evento">
-  <div class="event-hero-content">
-    <small>HYPE LOUNGE CLUB // EVENTO</small>
-    <h2 id="eventHeroArtist">HYPE</h2>
-    <h3 id="eventHeroName">Evento</h3>
-    <p id="eventHeroDescription"></p>
-    <div class="event-meta" id="eventHeroMeta"></div>
-  </div>
-</div>
+  <section class="event-showcase" id="eventHero">
+    <div class="event-visual">
+      <img id="eventHeroImage" alt="Capa do evento">
+      <div class="event-visual-overlay"></div>
+      <div class="event-badge">HYPE LOUNGE CLUB // EVENTO</div>
+    </div>
+    <div class="event-panel">
+      <small class="eyebrow">NOITE OFICIAL</small>
+      <h2 id="eventHeroArtist">HYPE</h2>
+      <h3 id="eventHeroName">Evento</h3>
+      <div class="event-meta" id="eventHeroMeta"></div>
+      <p id="eventHeroDescription"></p>
+      <div class="event-highlights">
+        <div class="highlight-card"><span>AMBIENTE</span><strong>Lounge premium</strong></div>
+        <div class="highlight-card"><span>EXPERIÊNCIA</span><strong>Ingresso antecipado online</strong></div>
+        <div class="highlight-card"><span>ENTRADA</span><strong>Validação com QR Code</strong></div>
+      </div>
+      <a href="#ticketBox" class="cta-link">GARANTIR INGRESSO</a>
+    </div>
+  </section>
 
-<div class="box">
-  <h1><span class="brand-name">HYPE</span><br><span class="brand-sub">LOUNGE CLUB</span></h1>
-  <p class="sub">Garanta o seu ingresso antecipado</p>
+  <section class="purchase-layout" id="ticketBox">
+    <div class="purchase-copy">
+      <div class="section-head">
+        <small>HYPE LOUNGE CLUB</small>
+        <h1><span class="brand-name">INGRESSOS</span> <span class="brand-subline">OFICIAIS</span></h1>
+        <p class="sub">Escolha seu lote, gere o pagamento por PIX e receba seu ingresso com QR Code para apresentar na portaria.</p>
+      </div>
 
-  <form id="ticketForm" onsubmit="generatePix(event)">
-    <div class="group">
-      <label>Nome Completo</label>
-      <input type="text" id="clientName" placeholder="O seu nome no documento" required autocomplete="off">
+      <div class="info-grid">
+        <div class="info-box">
+          <span>1</span>
+          <strong>Escolha o lote</strong>
+          <p>Selecione o setor e veja o valor atualizado no momento da compra.</p>
+        </div>
+        <div class="info-box">
+          <span>2</span>
+          <strong>Faça o PIX</strong>
+          <p>Gere o QR Code de pagamento e envie o comprovante quando necessário.</p>
+        </div>
+        <div class="info-box">
+          <span>3</span>
+          <strong>Receba seu ingresso</strong>
+          <p>Seu ingresso fica disponível com QR Code para validação no evento.</p>
+        </div>
+      </div>
     </div>
 
-    <div class="group">
-      <label>Telefone / WhatsApp</label>
-      <input type="tel" id="clientPhone" placeholder="(54) 99999-9999" autocomplete="tel">
-    </div>
+    <div class="box">
+      <h4 class="box-kicker">COMPRA ONLINE</h4>
+      <h2 class="box-title">Garanta o seu ingresso antecipado</h2>
 
-    <div class="group">
-      <label>CPF</label>
-      <input type="text" id="clientCpf" placeholder="Somente para identificação" inputmode="numeric" autocomplete="off">
-    </div>
+      <form id="ticketForm" onsubmit="generatePix(event)">
+        <div class="group">
+          <label>Nome Completo</label>
+          <input type="text" id="clientName" placeholder="O seu nome no documento" required autocomplete="off">
+        </div>
 
-    <div class="group">
-      <label>Género</label>
-      <select id="clientGender" required>
-        <option value="Feminino">Feminino</option>
-        <option value="Masculino">Masculino</option>
-      </select>
-    </div>
-    
-    <div class="group">
-      <label>Escolha o Lote / Setor</label>
-      <select id="ticketType" onchange="updatePrice()" required></select>
-      <div id="ticketScheduleInfo" class="ticket-schedule active"></div>
-    </div>
+        <div class="group">
+          <label>Telefone / WhatsApp</label>
+          <input type="tel" id="clientPhone" placeholder="(54) 99999-9999" autocomplete="tel">
+        </div>
 
-    <div class="group">
-      <label>Valor a Pagar</label>
-      <input type="text" id="ticketPriceDisplay" readonly style="color:var(--green);font-weight:bold;background:#040405">
+        <div class="group two-col">
+          <div>
+            <label>CPF</label>
+            <input type="text" id="clientCpf" placeholder="Somente para identificação" inputmode="numeric" autocomplete="off">
+          </div>
+          <div>
+            <label>Género</label>
+            <select id="clientGender" required>
+              <option value="Feminino">Feminino</option>
+              <option value="Masculino">Masculino</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="group">
+          <label>Escolha o Lote / Setor</label>
+          <select id="ticketType" onchange="updatePrice()" required></select>
+          <div id="ticketScheduleInfo" class="ticket-schedule active"></div>
+        </div>
+
+        <div class="group">
+          <label>Valor a Pagar</label>
+          <input type="text" id="ticketPriceDisplay" readonly class="price-display">
+        </div>
+
+        <button type="submit" class="btn">GERAR PIX DE PAGAMENTO</button>
+      </form>
+
+      <div class="pix-area" id="pixArea">
+        <p style="font-size:13px;color:#fff;margin-bottom:5px">Faça a leitura do QR Code ou copie a chave PIX:</p>
+        <div class="qrcode"><img id="qrImg" src="" alt="QR Code PIX"></div>
+        <div class="pix-key" id="pixKeyText"></div>
+        <button class="btn success-btn" onclick="showTicketCard()">JÁ EFETUEI O PAGAMENTO // VER INGRESSO</button>
+      </div>
+
+      <div class="ticket-card" id="ticketCard">
+        <h2>🎟️ INGRESSO OFICIAL</h2>
+        <div class="ticket-info">
+          <p><span>Titular:</span> <strong id="tClientName" style="color:#fff"></strong></p>
+          <p><span>WhatsApp:</span> <strong id="tClientPhone" style="color:#fff"></strong></p>
+          <p><span>Género:</span> <strong id="tClientGender" style="color:#fff"></strong></p>
+          <p><span>Setor:</span> <strong id="tTicketName" style="color:#fff"></strong></p>
+          <p><span>Valor:</span> <strong id="tTicketPrice" style="color:var(--green)"></strong></p>
+          <p><span>Estado:</span> <strong id="tTicketStatus" style="color:#ffcc00">Pendente de Confirmação ADM</strong></p>
+          <p><span>Código ID:</span> <strong id="tTicketId" style="color:#aaa"></strong></p>
+        </div>
+        <div class="ticket-qr"><img id="ticketQrImg" src="" alt="QR Code do ingresso"></div>
+        <p style="font-size:11px;color:var(--muted);line-height:1.4">Apresente o QR Code, seu ID ou seu nome na portaria com documento.</p>
+        <button class="btn ghost-btn" onclick="location.reload()">Comprar Outro</button>
+      </div>
     </div>
-
-    <button type="submit" class="btn">GERAR PIX DE PAGAMENTO</button>
-  </form>
-
-  <div class="pix-area" id="pixArea">
-    <p style="font-size:13px;color:#fff;margin-bottom:5px">Faça a leitura do QR Code ou copie a chave PIX:</p>
-    <div class="qrcode"><img id="qrImg" src="" alt="QR Code PIX"></div>
-    <div class="pix-key" id="pixKeyText"></div>
-    <button class="btn" style="background:#28d17c;color:#000" onclick="showTicketCard()">JÁ EFETUEI O PAGAMENTO // VER INGRESSO</button>
-  </div>
-
-  <div class="ticket-card" id="ticketCard">
-    <h2>🎟️ INGRESSO OFICIAL</h2>
-    <div class="ticket-info">
-      <p><span>Titular:</span> <strong id="tClientName" style="color:#fff"></strong></p>
-      <p><span>WhatsApp:</span> <strong id="tClientPhone" style="color:#fff"></strong></p>
-      <p><span>Género:</span> <strong id="tClientGender" style="color:#fff"></strong></p>
-      <p><span>Setor:</span> <strong id="tTicketName" style="color:#fff"></strong></p>
-      <p><span>Valor:</span> <strong id="tTicketPrice" style="color:var(--green)"></strong></p>
-      <p><span>Estado:</span> <strong id="tTicketStatus" style="color:#ffcc00">Pendente de Confirmação ADM</strong></p>
-      <p><span>Código ID:</span> <strong id="tTicketId" style="color:#aaa"></strong></p>
-    </div>
-    <div class="ticket-qr"><img id="ticketQrImg" src="" alt="QR Code do ingresso"></div>
-    <p style="font-size:11px;color:var(--muted);line-height:1.4">Apresente o QR Code, seu ID ou seu nome na portaria com documento.</p>
-    <button class="btn" style="margin-top:15px;background:#15151a;border:1px solid var(--line)" onclick="location.reload()">Comprar Outro</button>
-  </div>
+  </section>
 </div>
 
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>

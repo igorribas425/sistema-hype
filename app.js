@@ -167,9 +167,14 @@ function renderPublicEvent() {
   if (e.venue) bits.push(e.venue);
   if (meta) meta.textContent = bits.join(" • ");
 
-  if (img && e.cover_image) {
-    img.src = e.cover_image;
-    img.style.display = "block";
+  if (img) {
+    if (e.cover_image) {
+      img.src = e.cover_image;
+      img.style.display = "block";
+    } else {
+      img.removeAttribute("src");
+      img.style.display = "none";
+    }
   }
   hero.classList.add("show");
 }
@@ -275,8 +280,7 @@ function renderClientTickets(keepId = null) {
     const state = hypeStatus(t);
     const unavailable = !state.canBuy;
     const suffix = state.code === "upcoming" ? " — EM BREVE" : state.code === "expired" ? " — ENCERRADO" : state.code === "soldout" ? " — ESGOTADO" : state.code === "invalid" ? " — CONFIGURAÇÃO INVÁLIDA" : "";
-    const stock = t.quantity_total > 0 ? ` • ${Math.max(0, Number(t.quantity_available || 0))} restantes` : "";
-    return `<option value="${t.id}" data-price="${Number(t.price || 0)}" ${unavailable ? "disabled" : ""}>${hypeEscape(t.name)} - ${hypeFormatMoney(t.price)}${stock}${suffix}</option>`;
+    return `<option value="${t.id}" data-price="${Number(t.price || 0)}" ${unavailable ? "disabled" : ""}>${hypeEscape(t.name)} - ${hypeFormatMoney(t.price)}${suffix}</option>`;
   }).join("");
   const available = lots.filter(t => hypeStatus(t).canBuy);
   if (keepId && available.some(t => String(t.id) === String(keepId))) select.value = keepId;
@@ -308,7 +312,7 @@ function updateClientTicketState() {
   if (info) {
     const cls = state.code === "active" ? "active" : state.code === "upcoming" ? "upcoming" : "expired";
     info.className = `ticket-schedule ${cls}`;
-    info.innerHTML = `<div><b>🕒 ${hypeEscape(state.label)}</b></div><div>${hypeEscape(hypeCountdownText(ticket))}</div><small>Setor: ${hypeEscape(ticket.sector || "Pista")} • Vendidos: ${Number(ticket.quantity_sold || 0)}${ticket.quantity_total ? ` / ${Number(ticket.quantity_total)}` : ""}<br>Início: ${ticket.starts_at ? hypeFormatDateTime(ticket.starts_at) : "imediato"} • Fim: ${ticket.ends_at ? hypeFormatDateTime(ticket.ends_at) : "sem limite"}</small>`;
+    info.innerHTML = `<div><b>🕒 ${hypeEscape(state.label)}</b></div><div>${hypeEscape(hypeCountdownText(ticket))}</div><small>Setor: ${hypeEscape(ticket.sector || "Pista")}<br>Início: ${ticket.starts_at ? hypeFormatDateTime(ticket.starts_at) : "imediato"} • Fim: ${ticket.ends_at ? hypeFormatDateTime(ticket.ends_at) : "sem limite"}</small>`;
   }
 }
 
