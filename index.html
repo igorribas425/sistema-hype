@@ -38,6 +38,28 @@
 
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#151518;border:1px solid #3b3b41;padding:12px 20px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:.25s}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(-10px)}
+
+.ticket-schedule{margin-top:8px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);font-size:11px;line-height:1.5;background:#08080a}
+.ticket-schedule small{display:block;color:var(--muted);margin-top:3px}
+.ticket-schedule.active{border-color:rgba(40,209,124,.35);background:rgba(40,209,124,.06);color:var(--green)}
+.ticket-schedule.upcoming{border-color:rgba(56,189,248,.35);background:rgba(56,189,248,.06);color:#38bdf8}
+.ticket-schedule.expired{border-color:rgba(255,22,61,.35);background:rgba(255,22,61,.06);color:var(--red)}
+#ticketForm button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(1)}
+
+  .event-hero{display:none;width:min(900px,100%);min-height:390px;margin-top:55px;margin-bottom:20px;border-radius:24px;overflow:hidden;position:relative;border:1px solid var(--line);background:#0b0b0e}
+  .event-hero.show{display:flex;align-items:flex-end}
+  .event-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .event-hero:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 15%,rgba(0,0,0,.93))}
+  .event-hero-content{position:relative;z-index:2;padding:28px;width:100%}
+  .event-hero-content small{color:#ff7b8e;font-weight:900;letter-spacing:2px}
+  .event-hero-content h2{font-size:clamp(30px,7vw,58px);line-height:.95;margin:8px 0 8px;text-transform:uppercase}
+  .event-hero-content h3{font-size:19px;margin-bottom:8px}
+  .event-hero-content p{color:#c1c1c7;line-height:1.5;max-width:700px}
+  .event-meta{margin-top:10px;font-size:12px;color:#fff;font-weight:800}
+
+</style>
+<style>
+.ticket-qr{background:#fff;padding:10px;border-radius:12px;width:max-content;margin:15px auto}.ticket-qr img{width:210px;height:210px;display:block}
 </style>
 </head>
 <body>
@@ -48,6 +70,18 @@
   <a href="portaria.html">🚪 Portaria</a>
 </nav>
 
+
+<div class="event-hero" id="eventHero">
+  <img id="eventHeroImage" alt="Capa do evento">
+  <div class="event-hero-content">
+    <small>HYPE // EVENTO</small>
+    <h2 id="eventHeroArtist">HYPE</h2>
+    <h3 id="eventHeroName">Evento</h3>
+    <p id="eventHeroDescription"></p>
+    <div class="event-meta" id="eventHeroMeta"></div>
+  </div>
+</div>
+
 <div class="box">
   <h1>BOATE <span>HYPE</span></h1>
   <p class="sub">Garanta o seu ingresso antecipado</p>
@@ -56,6 +90,16 @@
     <div class="group">
       <label>Nome Completo</label>
       <input type="text" id="clientName" placeholder="O seu nome no documento" required autocomplete="off">
+    </div>
+
+    <div class="group">
+      <label>Telefone / WhatsApp</label>
+      <input type="tel" id="clientPhone" placeholder="(54) 99999-9999" autocomplete="tel">
+    </div>
+
+    <div class="group">
+      <label>CPF</label>
+      <input type="text" id="clientCpf" placeholder="Somente para identificação" inputmode="numeric" autocomplete="off">
     </div>
 
     <div class="group">
@@ -69,6 +113,7 @@
     <div class="group">
       <label>Escolha o Lote / Setor</label>
       <select id="ticketType" onchange="updatePrice()" required></select>
+      <div id="ticketScheduleInfo" class="ticket-schedule active"></div>
     </div>
 
     <div class="group">
@@ -90,111 +135,22 @@
     <h2>🎟️ INGRESSO OFICIAL</h2>
     <div class="ticket-info">
       <p><span>Titular:</span> <strong id="tClientName" style="color:#fff"></strong></p>
+      <p><span>WhatsApp:</span> <strong id="tClientPhone" style="color:#fff"></strong></p>
       <p><span>Género:</span> <strong id="tClientGender" style="color:#fff"></strong></p>
       <p><span>Setor:</span> <strong id="tTicketName" style="color:#fff"></strong></p>
       <p><span>Valor:</span> <strong id="tTicketPrice" style="color:var(--green)"></strong></p>
       <p><span>Estado:</span> <strong id="tTicketStatus" style="color:#ffcc00">Pendente de Confirmação ADM</strong></p>
       <p><span>Código ID:</span> <strong id="tTicketId" style="color:#aaa"></strong></p>
     </div>
-    <p style="font-size:11px;color:var(--muted);line-height:1.4">Apresente este ecrã ou o seu nome na portaria da Boate HYPE com documento.</p>
+    <div class="ticket-qr"><img id="ticketQrImg" src="" alt="QR Code do ingresso"></div>
+    <p style="font-size:11px;color:var(--muted);line-height:1.4">Apresente o QR Code, seu ID ou seu nome na portaria com documento.</p>
     <button class="btn" style="margin-top:15px;background:#15151a;border:1px solid var(--line)" onclick="location.reload()">Comprar Outro</button>
   </div>
 </div>
 
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
-
-<script>
-  const defaultTickets = [
-    { id: 1, name: "Pista - 1º Lote", price: 30.00 },
-    { id: 2, name: "Área VIP - 1º Lote", price: 60.00 },
-    { id: 3, name: "Camarote Open Bar", price: 120.00 }
-  ];
-
-  function getTickets() {
-    const data = localStorage.getItem("hype_config_tickets");
-    return data ? JSON.parse(data) : defaultTickets;
-  }
-
-  function init() {
-    const select = document.getElementById("ticketType");
-    const tickets = getTickets();
-    select.innerHTML = tickets.map(t => `<option value="${t.id}" data-price="${t.price}">${t.name} - R$ ${t.price.toFixed(2).replace('.', ',')}</option>`).join("");
-    updatePrice();
-  }
-
-  function updatePrice() {
-    const select = document.getElementById("ticketType");
-    const selectedOpt = select.options[select.selectedIndex];
-    const price = selectedOpt.getAttribute("data-price");
-    document.getElementById("ticketPriceDisplay").value = `R$ ${parseFloat(price).toFixed(2).replace('.', ',')}`;
-  }
-
-  let currentEntryId = null;
-
-  function generatePix(e) {
-    e.preventDefault();
-    const name = document.getElementById("clientName").value.trim();
-    const gender = document.getElementById("clientGender").value;
-    const select = document.getElementById("ticketType");
-    const ticketName = select.options[select.selectedIndex].text;
-    const price = select.options[select.selectedIndex].getAttribute("data-price");
-
-    const pixKey = localStorage.getItem("hype_pix_key") || "67667283000109";
-    
-    currentEntryId = Date.now();
-    const list = JSON.parse(localStorage.getItem("hype_ingressos") || "[]");
-    const newEntry = {
-      id: currentEntryId,
-      name: name,
-      gender: gender,
-      ticket: ticketName,
-      price: parseFloat(price),
-      status: "Pendente",
-      date: new Date().toLocaleDateString('pt-PT')
-    };
-    list.push(newEntry);
-    localStorage.setItem("hype_ingressos", JSON.stringify(list));
-
-    const pixPayload = `00020126580014br.gov.bcb.pix0136${pixKey}5204000053039865802BR5913BOATE HYPE6009SAO PAULO62070503***6304`;
-    const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(pixPayload)}`;
-    
-    document.getElementById("qrImg").src = qrApi;
-    document.getElementById("pixKeyText").innerText = pixKey;
-    document.getElementById("pixArea").style.display = "block";
-    document.getElementById("ticketForm").style.display = "none";
-    
-    showToast("Pedido gerado com sucesso!");
-  }
-
-  function showTicketCard() {
-    const list = JSON.parse(localStorage.getItem("hype_ingressos") || "[]");
-    const entry = list.find(item => item.id === currentEntryId);
-
-    if(entry) {
-      document.getElementById("tClientName").innerText = entry.name;
-      document.getElementById("tClientGender").innerText = entry.gender || "Não especificado";
-      document.getElementById("tTicketName").innerText = entry.ticket;
-      document.getElementById("tTicketPrice").innerText = `R$ ${entry.price.toFixed(2).replace('.', ',')}`;
-      document.getElementById("tTicketId").innerText = `#HYPE-${entry.id.toString().slice(-6)}`;
-      
-      if(entry.status === "Pago") {
-        document.getElementById("tTicketStatus").innerText = "CONFIRMADO (PAGO ✅)";
-        document.getElementById("tTicketStatus").style.color = "#28d17c";
-      }
-
-      document.getElementById("pixArea").style.display = "none";
-      document.getElementById("ticketCard").style.display = "block";
-    }
-  }
-
-  function showToast(msg) {
-    const t = document.getElementById("toast");
-    t.innerText = msg;
-    t.classList.add("show");
-    setTimeout(() => t.classList.remove("show"), 3000);
-  }
-
-  window.onload = init;
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

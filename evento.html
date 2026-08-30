@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HYPE // Evento & Artista</title>
+<style>
+:root{--bg:#050505;--panel:#0d0d10;--line:#26262d;--red:#ff163d;--green:#28d17c;--text:#f7f7f8;--muted:#96969e}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,sans-serif}
+body{background:radial-gradient(circle at 80% 0,#280009 0,transparent 30%),var(--bg);color:var(--text);min-height:100vh;padding:24px}
+.wrap{max-width:1050px;margin:auto}
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:22px}
+.top a{color:#fff;text-decoration:none;border:1px solid var(--line);padding:10px 14px;border-radius:10px}
+h1{font-size:28px} h1 span{color:var(--red)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px}
+.card h2{font-size:15px;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+label{display:block;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;margin:13px 0 6px}
+input,textarea{width:100%;background:#070709;color:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;outline:none}
+input:focus,textarea:focus{border-color:var(--red)}
+textarea{min-height:110px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{width:100%;margin-top:16px;background:var(--red);color:#fff;border:0;border-radius:11px;padding:13px;font-weight:900;cursor:pointer}
+.preview{min-height:440px;border-radius:18px;overflow:hidden;position:relative;background:#09090b;border:1px solid var(--line);display:flex;align-items:flex-end}
+.preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+.preview:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 20%,rgba(0,0,0,.92))}
+.preview-content{position:relative;z-index:2;padding:24px;width:100%}
+.preview-content small{color:#ff8192;font-weight:900;letter-spacing:2px}
+.preview-content h2{font-size:34px;margin:7px 0 6px}
+.preview-content h3{font-size:18px;color:#ddd;margin-bottom:8px}
+.preview-content p{color:#b0b0b8;line-height:1.5}
+.note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:8px}
+#loginScreen{position:fixed;inset:0;background:#050505ee;z-index:10;display:grid;place-items:center;padding:20px}
+.login{width:min(390px,100%);background:var(--panel);border:1px solid var(--line);padding:25px;border-radius:18px}
+.login input{margin-top:10px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#151518;border:1px solid var(--line);padding:12px 18px;border-radius:10px;opacity:0;transition:.2s;z-index:30}
+.toast.show{opacity:1}
+@media(max-width:780px){.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}.preview{min-height:360px}}
+</style>
+</head>
+<body>
+<div id="loginScreen">
+  <div class="login">
+    <h2>EVENTO // HYPE</h2>
+    <p style="color:var(--muted);font-size:12px;margin-top:5px">Entre com a conta Admin/Gerente.</p>
+    <input id="eventAdminUser" placeholder="Usuário" value="admin">
+    <input id="eventAdminPass" type="password" placeholder="Senha" onkeypress="if(event.key==='Enter') eventManagerLogin()">
+    <button class="btn" onclick="eventManagerLogin()">ENTRAR</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="top">
+    <h1>EVENTO <span>& ARTISTA</span></h1>
+    <a href="admin.html">← Voltar ao Admin</a>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Configuração do evento</h2>
+      <label>Nome do evento</label>
+      <input id="eventName" placeholder="Ex.: HYPE apresenta">
+
+      <label>Artista / DJ / Cantor</label>
+      <input id="eventArtist" placeholder="Ex.: MC Exemplo">
+
+      <div class="row">
+        <div>
+          <label>Data</label>
+          <input id="eventDate" type="date">
+        </div>
+        <div>
+          <label>Local</label>
+          <input id="eventVenue" placeholder="Carazinho/RS">
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Abertura</label>
+          <input id="eventOpening" type="time">
+        </div>
+        <div>
+          <label>Encerramento</label>
+          <input id="eventClosing" type="time">
+        </div>
+      </div>
+
+      <label>Descrição</label>
+      <textarea id="eventDescription" placeholder="Informações que aparecerão para o cliente."></textarea>
+
+      <label>Imagem do artista / capa</label>
+      <input id="eventImageFile" type="file" accept="image/*" onchange="previewEventImage(this)">
+      <p class="note">A imagem é comprimida antes de salvar. Use JPG/PNG. Recomendado: foto horizontal ou vertical de boa qualidade.</p>
+
+      <button class="btn" onclick="saveEventManager()">SALVAR E PUBLICAR NO SITE</button>
+    </div>
+
+    <div class="card">
+      <h2>Prévia para o cliente</h2>
+      <div class="preview">
+        <img id="eventPreviewImg" alt="Capa do evento">
+        <div class="preview-content">
+          <small>HYPE // EVENTO</small>
+          <h2 id="previewArtist">ARTISTA</h2>
+          <h3 id="previewEventName">Nome do evento</h3>
+          <p id="previewEventMeta">Data • Local</p>
+          <p id="previewDescription" style="margin-top:8px"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Salvo!</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

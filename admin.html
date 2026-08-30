@@ -63,34 +63,32 @@
   .btn-del{background:rgba(255,22,61,.1);color:var(--red);border-color:rgba(255,22,61,.3)}
   .btn-del:hover{background:var(--red);color:#fff}
 
-  .ticket-admin-card{background:#08080a;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
-  .ticket-admin-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
-  .ticket-admin-grid{display:grid;grid-template-columns:1.3fr .8fr 1fr 1fr;gap:9px}
-  .ticket-admin-card .form-group{margin-bottom:0}
-  .ticket-admin-card label{font-size:9px}
-  .ticket-admin-card input{height:40px}
-  .ticket-admin-preview{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;color:var(--muted);font-size:10px}
-  .ticket-admin-preview b{color:#fff}
-  .ticket-admin-actions{display:flex;gap:8px;margin-top:12px}
-  .ticket-admin-actions .btn-action{flex:1}
-  .schedule-badge{font-size:9px;font-weight:900;padding:4px 7px;border-radius:7px;border:1px solid var(--line)}
-  .schedule-badge.active{color:var(--green);border-color:rgba(40,209,124,.35);background:rgba(40,209,124,.08)}
-  .schedule-badge.upcoming{color:#38bdf8;border-color:rgba(56,189,248,.35);background:rgba(56,189,248,.08)}
-  .schedule-badge.expired,.schedule-badge.invalid{color:var(--red);border-color:rgba(255,22,61,.35);background:rgba(255,22,61,.08)}
-  @media(max-width:900px){.ticket-admin-grid{grid-template-columns:1fr 1fr}}
-  @media(max-width:560px){.ticket-admin-grid{grid-template-columns:1fr}.ticket-admin-actions{flex-direction:column}}
-
-  .stats-extended{grid-template-columns:repeat(7,1fr)}
-  .admin-toolbar{margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
-  .admin-toolbar strong{display:block;font-size:13px;letter-spacing:1px}
-  .admin-toolbar span{display:block;color:var(--muted);font-size:11px;margin-top:4px}
-  .export-btn{width:auto}
-  .info-note{margin-top:16px;padding:12px;border:1px dashed #493038;border-radius:10px;color:var(--muted);font-size:11px;background:#10090b}
-  .info-note b{color:#fff}
-  .ticket-admin-grid-wide{grid-template-columns:1.4fr .75fr .75fr 1fr 1fr}
-  .badge.cancelado{background:rgba(255,180,0,.1);color:#ffcc00;border:1px solid rgba(255,180,0,.25)}
-  @media(max-width:1100px){.stats-extended{grid-template-columns:repeat(4,1fr)}.ticket-admin-grid-wide{grid-template-columns:1fr 1fr}}
-  @media(max-width:650px){.stats-extended{grid-template-columns:1fr 1fr}.admin-toolbar{align-items:stretch;flex-direction:column}.export-btn{width:100%}}
+.ticket-admin-card{background:#08080a;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.ticket-admin-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
+.ticket-admin-grid{display:grid;grid-template-columns:1.3fr .8fr 1fr 1fr;gap:9px}
+.ticket-admin-card .form-group{margin-bottom:0}
+.ticket-admin-card label{font-size:9px}
+.ticket-admin-card input{height:40px}
+.ticket-admin-preview{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;color:var(--muted);font-size:10px}
+.ticket-admin-preview b{color:#fff}
+.ticket-admin-actions{display:flex;gap:8px;margin-top:12px}
+.ticket-admin-actions .btn-action{flex:1}
+.schedule-badge{font-size:9px;font-weight:900;padding:4px 7px;border-radius:7px;border:1px solid var(--line)}
+.schedule-badge.active{color:var(--green);border-color:rgba(40,209,124,.35);background:rgba(40,209,124,.08)}
+.schedule-badge.upcoming{color:#38bdf8;border-color:rgba(56,189,248,.35);background:rgba(56,189,248,.08)}
+.schedule-badge.expired,.schedule-badge.invalid{color:var(--red);border-color:rgba(255,22,61,.35);background:rgba(255,22,61,.08)}
+@media(max-width:900px){.ticket-admin-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.ticket-admin-grid{grid-template-columns:1fr}.ticket-admin-actions{flex-direction:column}}
+</style>
+<style>
+.stats-extended{grid-template-columns:repeat(7,1fr)}
+.admin-toolbar{margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.admin-toolbar strong{display:block;font-size:13px;letter-spacing:1px}.admin-toolbar span{display:block;color:var(--muted);font-size:11px;margin-top:4px}.export-btn{width:auto}
+.info-note{margin-top:16px;padding:12px;border:1px dashed #493038;border-radius:10px;color:var(--muted);font-size:11px;background:#10090b}.info-note b{color:#fff}
+.ticket-admin-grid-wide{grid-template-columns:1.4fr .75fr .75fr 1fr 1fr}
+.badge.cancelado{background:rgba(255,180,0,.1);color:#ffcc00;border:1px solid rgba(255,180,0,.25)}
+@media(max-width:1100px){.stats-extended{grid-template-columns:repeat(4,1fr)}.ticket-admin-grid-wide{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.stats-extended{grid-template-columns:1fr 1fr}.admin-toolbar{align-items:stretch;flex-direction:column}.export-btn{width:100%}}
 </style>
 </head>
 <body>
@@ -128,7 +126,10 @@
 
   <div class="admin-toolbar panel-box">
     <div><strong>CONTROLE DO EVENTO</strong><span>estoque, caixa e entradas em tempo real neste navegador</span></div>
-    <button class="btn-action export-btn" onclick="exportEntriesCSV()">⬇ Exportar CSV</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a class="btn-action export-btn" href="evento.html" style="text-decoration:none">🎤 Evento & Artista</a>
+      <button class="btn-action export-btn" onclick="exportEntriesCSV()">⬇ Exportar CSV</button>
+    </div>
   </div>
 
   <div class="grid-admin">
@@ -143,10 +144,10 @@
       <div class="admin-only team-panel">
         <h3 style="margin-top:25px">Equipe / Usuários</h3>
         <div class="team-form">
-          <input id="newUserName" placeholder="Nome da pessoa" style="margin-bottom:8px">
-          <input id="newUsername" placeholder="Utilizador" style="margin-bottom:8px">
-          <input id="newUserPassword" type="password" placeholder="Senha" style="margin-bottom:8px">
-          <select id="newUserRole" style="margin-bottom:8px"><option value="caixa">CAIXA</option><option value="portaria">PORTARIA</option><option value="admin">ADMIN</option></select>
+          <input id="newUserName" placeholder="Nome da pessoa">
+          <input id="newUsername" placeholder="Utilizador">
+          <input id="newUserPassword" type="password" placeholder="Senha">
+          <select id="newUserRole"><option value="caixa">CAIXA</option><option value="portaria">PORTARIA</option><option value="admin">ADMIN</option></select>
           <button class="btn" onclick="addUser()">+ ADICIONAR PESSOA</button>
         </div>
         <div style="overflow:auto;margin-top:12px"><table><thead><tr><th>Pessoa</th><th>Perfil</th><th>Ação</th></tr></thead><tbody id="usersTableBody"></tbody></table></div>
@@ -156,7 +157,7 @@
       <div class="form-group" style="margin-top:10px">
         <input type="text" id="pixKeyInput" placeholder="Chave PIX (E-mail, CNPJ ou Tel)">
       </div>
-      <button class="btn" onclick="savePixKey()" style="background:#15151a;border:1px solid var(--line);margin-top:10px">Salvar Chave PIX</button>
+      <button class="btn" onclick="savePixKey()" style="background:#15151a;border:1px solid var(--line)">Salvar Chave PIX</button>
     </div>
 
     <div class="panel-box">
@@ -186,11 +187,7 @@
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const supabaseUrl = 'https://axkbfrljohpkjnbotqnf.supabase.co';
-  const supabaseKey = 'sb_publishable_QLffI3C15FCL1SZnH0l8DQ_nigRxb-c';
-  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-</script>
+<script src="supabase-config.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

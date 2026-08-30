@@ -48,24 +48,12 @@
   .status-tag.pendente{background:var(--red);color:#fff}
 
   .empty-state{text-align:center;padding:40px;color:var(--muted);font-size:14px}
-
-  .portaria-actions{display:flex;gap:10px;margin-top:12px}
-  .portaria-btn{height:46px;border:0;border-radius:10px;background:var(--green);color:#000;font-weight:950;padding:0 14px;cursor:pointer;flex:1}
-  .portaria-btn.secondary{background:#161619;color:#fff;border:1px solid var(--line)}
-  .scanner-area{display:none;position:relative;margin-top:14px;background:#000;border-radius:14px;overflow:hidden;padding:12px}
-  .scanner-area.show{display:block}
-  .scanner-area video{display:block;width:100%;max-height:360px;object-fit:cover;border-radius:10px}
-  .scanner-line{position:absolute;left:10%;right:10%;top:50%;height:2px;background:var(--green);box-shadow:0 0 20px var(--green)}
-  .scanner-area .portaria-btn{margin-top:10px}
-  .status-area{display:flex;flex-direction:column;gap:10px;align-items:flex-end}
-  .btn-entry{border:0;border-radius:10px;background:var(--green);color:#000;font-weight:950;padding:12px 14px;cursor:pointer}
-  .result-card.used{border-color:rgba(255,180,0,.45);background:linear-gradient(135deg,rgba(255,180,0,.06),var(--panel))}
-  .status-tag.used{background:#ffcc00;color:#000}
-  .result-card.cancelado{border-color:rgba(255,22,61,.45);background:linear-gradient(135deg,rgba(255,22,61,.05),var(--panel))}
-  .status-tag.cancelado{background:var(--red);color:#fff}
-  .portaria-extra{margin-top:8px;color:var(--muted);font-size:11px}
-  .portaria-extra.ok{color:var(--green)}
-  @media(max-width:600px){.portaria-actions{flex-direction:column}.result-card{align-items:stretch;gap:15px;flex-direction:column}.status-area{align-items:stretch}.btn-entry{width:100%}}
+</style>
+<style>
+.portaria-actions{display:flex;gap:10px;margin-top:12px}.portaria-btn{height:46px;border:0;border-radius:10px;background:var(--green);color:#000;font-weight:950;padding:0 14px;cursor:pointer;flex:1}.portaria-btn.secondary{background:#161619;color:#fff;border:1px solid var(--line)}
+.scanner-area{display:none;position:relative;margin-top:14px;background:#000;border-radius:14px;overflow:hidden;padding:12px}.scanner-area.show{display:block}.scanner-area video{display:block;width:100%;max-height:360px;object-fit:cover;border-radius:10px}.scanner-line{position:absolute;left:10%;right:10%;top:50%;height:2px;background:var(--green);box-shadow:0 0 20px var(--green)}.scanner-area .portaria-btn{margin-top:10px}
+.status-area{display:flex;flex-direction:column;gap:10px;align-items:flex-end}.btn-entry{border:0;border-radius:10px;background:var(--green);color:#000;font-weight:950;padding:12px 14px;cursor:pointer}.result-card.used{border-color:rgba(255,180,0,.45);background:linear-gradient(135deg,rgba(255,180,0,.06),var(--panel))}.status-tag.used{background:#ffcc00;color:#000}.result-card.cancelado{border-color:rgba(255,22,61,.45);background:linear-gradient(135deg,rgba(255,22,61,.05),var(--panel))}.status-tag.cancelado{background:var(--red);color:#fff}.portaria-extra{margin-top:8px;color:var(--muted);font-size:11px}.portaria-extra.ok{color:var(--green)}
+@media(max-width:600px){.portaria-actions{flex-direction:column}.result-card{align-items:stretch;gap:15px;flex-direction:column}.status-area{align-items:stretch}.btn-entry{width:100%}}
 </style>
 </head>
 <body>
@@ -111,11 +99,7 @@
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const supabaseUrl = 'https://axkbfrljohpkjnbotqnf.supabase.co';
-  const supabaseKey = 'sb_publishable_QLffI3C15FCL1SZnH0l8DQ_nigRxb-c';
-  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-</script>
+<script src="supabase-config.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -11,6 +11,8 @@ const HYPE = {
   lots: [],
   tickets: [],
   pixKey: "",
+  event: null,
+  eventImageData: null,
   refreshTimer: null,
   scannerStream: null,
   scannerTimer: null,
@@ -130,13 +132,46 @@ async function sbRpc(name, params = {}) {
 }
 
 async function loadPublicState() {
-  const [lots, pix] = await Promise.all([
+  const [lots, pix, eventRows] = await Promise.all([
     sbRpc("public_lots"),
-    sbRpc("public_pix_key")
+    sbRpc("public_pix_key"),
+    sbRpc("public_event")
   ]);
   HYPE.lots = Array.isArray(lots) ? lots : [];
   HYPE.pixKey = typeof pix === "string" ? pix : "";
+  HYPE.event = Array.isArray(eventRows) ? (eventRows[0] || null) : (eventRows || null);
   return HYPE.lots;
+}
+
+function renderPublicEvent() {
+  const e = HYPE.event;
+  const hero = document.getElementById("eventHero");
+  if (!hero || !e) return;
+
+  const artist = document.getElementById("eventHeroArtist");
+  const name = document.getElementById("eventHeroName");
+  const desc = document.getElementById("eventHeroDescription");
+  const meta = document.getElementById("eventHeroMeta");
+  const img = document.getElementById("eventHeroImage");
+
+  if (artist) artist.textContent = e.artist_name || e.name || "HYPE";
+  if (name) name.textContent = e.name || "Evento HYPE";
+  if (desc) desc.textContent = e.description || "";
+
+  const bits = [];
+  if (e.event_date) {
+    const d = new Date(`${e.event_date}T12:00:00`);
+    bits.push(d.toLocaleDateString("pt-BR"));
+  }
+  if (e.opening_time) bits.push(`Abertura ${String(e.opening_time).slice(0,5)}`);
+  if (e.venue) bits.push(e.venue);
+  if (meta) meta.textContent = bits.join(" • ");
+
+  if (img && e.cover_image) {
+    img.src = e.cover_image;
+    img.style.display = "block";
+  }
+  hero.classList.add("show");
 }
 
 async function loadStaffTickets(search = "") {
@@ -219,11 +254,12 @@ let clientTicker = null;
 async function initClient() {
   try {
     await loadPublicState();
+    renderPublicEvent();
     renderClientTickets();
     updateClientTicketState();
     clearInterval(clientTicker);
     clientTicker = setInterval(async () => {
-      try { await loadPublicState(); renderClientTickets(document.getElementById("ticketType")?.value); updateClientTicketState(); }
+      try { await loadPublicState(); renderPublicEvent(); renderClientTickets(document.getElementById("ticketType")?.value); updateClientTicketState(); }
       catch (_) { /* mantém a última tela */ }
     }, 5000);
   } catch (err) {
@@ -597,6 +633,128 @@ function stopQrScanner() {
   document.getElementById('scannerArea')?.classList.remove('show');
 }
 
+
+/* ========================= EVENTO / ARTISTA ========================= */
+
+function eventManagerPreviewFields() {
+  const get = id => document.getElementById(id)?.value || "";
+  const artist = document.getElementById("previewArtist");
+  const eventName = document.getElementById("previewEventName");
+  const meta = document.getElementById("previewEventMeta");
+  const desc = document.getElementById("previewDescription");
+  if (artist) artist.textContent = get("eventArtist") || "ARTISTA";
+  if (eventName) eventName.textContent = get("eventName") || "Nome do evento";
+  const bits = [];
+  if (get("eventDate")) bits.push(new Date(get("eventDate")+"T12:00:00").toLocaleDateString("pt-BR"));
+  if (get("eventOpening")) bits.push("Abertura " + get("eventOpening"));
+  if (get("eventVenue")) bits.push(get("eventVenue"));
+  if (meta) meta.textContent = bits.join(" • ") || "Data • Local";
+  if (desc) desc.textContent = get("eventDescription");
+}
+
+async function initEventManager() {
+  if (!(await requireLogin("admin"))) {
+    const login = document.getElementById("loginScreen");
+    if (login) login.style.display = "grid";
+    return;
+  }
+  if (!["admin","gerente"].includes(HYPE.role)) {
+    sessionClear();
+    alert("Somente Admin/Gerente pode editar o evento.");
+    return;
+  }
+  const login = document.getElementById("loginScreen");
+  if (login) login.style.display = "none";
+  await loadPublicState();
+  fillEventManager();
+}
+
+async function eventManagerLogin() {
+  const username = document.getElementById("eventAdminUser")?.value.trim() || "";
+  const password = document.getElementById("eventAdminPass")?.value || "";
+  if (!username || !password) return alert("Informe usuário e senha.");
+  try {
+    const found = await verifyStaff(username, password);
+    if (!found || !["admin","gerente"].includes(found.role)) return alert("Conta sem permissão.");
+    sessionSave(found.username, password, found.role);
+    document.getElementById("loginScreen").style.display = "none";
+    await loadPublicState();
+    fillEventManager();
+  } catch (err) { alert(err.message); }
+}
+
+function fillEventManager() {
+  const e = HYPE.event || {};
+  const set = (id, value) => { const el = document.getElementById(id); if (el) el.value = value || ""; };
+  set("eventName", e.name);
+  set("eventArtist", e.artist_name);
+  set("eventDate", e.event_date);
+  set("eventOpening", e.opening_time ? String(e.opening_time).slice(0,5) : "");
+  set("eventClosing", e.closing_time ? String(e.closing_time).slice(0,5) : "");
+  set("eventVenue", e.venue);
+  set("eventDescription", e.description);
+  HYPE.eventImageData = e.cover_image || "";
+  const img = document.getElementById("eventPreviewImg");
+  if (img && HYPE.eventImageData) {
+    img.src = HYPE.eventImageData;
+    img.style.display = "block";
+  }
+  eventManagerPreviewFields();
+  ["eventName","eventArtist","eventDate","eventOpening","eventClosing","eventVenue","eventDescription"]
+    .forEach(id => document.getElementById(id)?.addEventListener("input", eventManagerPreviewFields));
+}
+
+function previewEventImage(input) {
+  const file = input?.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) return alert("Escolha uma imagem válida.");
+  if (file.size > 8 * 1024 * 1024) return alert("A imagem deve ter no máximo 8 MB.");
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const original = new Image();
+    original.onload = () => {
+      const maxW = 1600, maxH = 1200;
+      let w = original.width, h = original.height;
+      const scale = Math.min(1, maxW / w, maxH / h);
+      w = Math.round(w * scale); h = Math.round(h * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(original, 0, 0, w, h);
+      HYPE.eventImageData = canvas.toDataURL("image/jpeg", 0.82);
+      const preview = document.getElementById("eventPreviewImg");
+      if (preview) { preview.src = HYPE.eventImageData; preview.style.display = "block"; }
+    };
+    original.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveEventManager() {
+  if (!HYPE.user || !HYPE.pass) return alert("Faça login novamente.");
+  const val = id => document.getElementById(id)?.value || "";
+  try {
+    await sbRpc("staff_save_event", {
+      p_username: HYPE.user,
+      p_password: HYPE.pass,
+      p_name: val("eventName"),
+      p_artist_name: val("eventArtist"),
+      p_event_date: val("eventDate") || null,
+      p_opening_time: val("eventOpening") || null,
+      p_closing_time: val("eventClosing") || null,
+      p_venue: val("eventVenue"),
+      p_description: val("eventDescription"),
+      p_cover_image: HYPE.eventImageData || ""
+    });
+    await loadPublicState();
+    fillEventManager();
+    hypeNotify("Evento publicado no site!");
+  } catch (err) {
+    alert(err.message || "Erro ao salvar evento.");
+  }
+}
+
+
 /* ========================= BOOT ========================= */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -607,6 +765,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       await initAdmin();
     } else if (document.getElementById('portariaPass')) {
       await initPortaria();
+    } else if (document.getElementById('eventManagerForm') || document.getElementById('eventAdminUser')) {
+      await initEventManager();
     }
   } catch (err) {
     console.error(err);

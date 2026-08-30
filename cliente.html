@@ -39,14 +39,27 @@
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#151518;border:1px solid #3b3b41;padding:12px 20px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:.25s}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(-10px)}
 
-  .ticket-schedule{margin-top:8px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);font-size:11px;line-height:1.5;background:#08080a}
-  .ticket-schedule small{display:block;color:var(--muted);margin-top:3px}
-  .ticket-schedule.active{border-color:rgba(40,209,124,.35);background:rgba(40,209,124,.06);color:var(--green)}
-  .ticket-schedule.upcoming{border-color:rgba(56,189,248,.35);background:rgba(56,189,248,.06);color:#38bdf8}
-  .ticket-schedule.expired{border-color:rgba(255,22,61,.35);background:rgba(255,22,61,.06);color:var(--red)}
-  #ticketForm button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(1)}
-  .ticket-qr{background:#fff;padding:10px;border-radius:12px;width:max-content;margin:15px auto}
-  .ticket-qr img{width:210px;height:210px;display:block}
+.ticket-schedule{margin-top:8px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);font-size:11px;line-height:1.5;background:#08080a}
+.ticket-schedule small{display:block;color:var(--muted);margin-top:3px}
+.ticket-schedule.active{border-color:rgba(40,209,124,.35);background:rgba(40,209,124,.06);color:var(--green)}
+.ticket-schedule.upcoming{border-color:rgba(56,189,248,.35);background:rgba(56,189,248,.06);color:#38bdf8}
+.ticket-schedule.expired{border-color:rgba(255,22,61,.35);background:rgba(255,22,61,.06);color:var(--red)}
+#ticketForm button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(1)}
+
+  .event-hero{display:none;width:min(900px,100%);min-height:390px;margin-top:55px;margin-bottom:20px;border-radius:24px;overflow:hidden;position:relative;border:1px solid var(--line);background:#0b0b0e}
+  .event-hero.show{display:flex;align-items:flex-end}
+  .event-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .event-hero:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 15%,rgba(0,0,0,.93))}
+  .event-hero-content{position:relative;z-index:2;padding:28px;width:100%}
+  .event-hero-content small{color:#ff7b8e;font-weight:900;letter-spacing:2px}
+  .event-hero-content h2{font-size:clamp(30px,7vw,58px);line-height:.95;margin:8px 0 8px;text-transform:uppercase}
+  .event-hero-content h3{font-size:19px;margin-bottom:8px}
+  .event-hero-content p{color:#c1c1c7;line-height:1.5;max-width:700px}
+  .event-meta{margin-top:10px;font-size:12px;color:#fff;font-weight:800}
+
+</style>
+<style>
+.ticket-qr{background:#fff;padding:10px;border-radius:12px;width:max-content;margin:15px auto}.ticket-qr img{width:210px;height:210px;display:block}
 </style>
 </head>
 <body>
@@ -56,6 +69,18 @@
   <a href="admin.html">⚙️ Admin</a>
   <a href="portaria.html">🚪 Portaria</a>
 </nav>
+
+
+<div class="event-hero" id="eventHero">
+  <img id="eventHeroImage" alt="Capa do evento">
+  <div class="event-hero-content">
+    <small>HYPE // EVENTO</small>
+    <h2 id="eventHeroArtist">HYPE</h2>
+    <h3 id="eventHeroName">Evento</h3>
+    <p id="eventHeroDescription"></p>
+    <div class="event-meta" id="eventHeroMeta"></div>
+  </div>
+</div>
 
 <div class="box">
   <h1>BOATE <span>HYPE</span></h1>
@@ -124,13 +149,8 @@
 </div>
 
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
-<script src="https://axkbfrljohpkjnbotqnf.supabase.co"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const supabaseUrl = 'https://axkbfrljohpkjnbotqnf.supabase.co';
-  const supabaseKey = 'sb_publishable_QLffI3C15FCL1SZnH0l8DQ_nigRxb-c';
-  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-</script>
+<script src="supabase-config.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
