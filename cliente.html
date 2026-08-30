@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BOATE HYPE // Ingressos</title>
+<title>HYPE LOUNGE CLUB // Ingressos</title>
 <style>
   :root{--bg:#050505;--panel:#0d0d10;--line:#222228;--red:#ff163d;--green:#28d17c;--text:#f7f7f8;--muted:#96969e}
   *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,sans-serif}
@@ -57,6 +57,68 @@
   .event-hero-content p{color:#c1c1c7;line-height:1.5;max-width:700px}
   .event-meta{margin-top:10px;font-size:12px;color:#fff;font-weight:800}
 
+
+/* HYPE LOUNGE CLUB // identidade visual */
+:root{
+  --brand:#f5f5f5;
+  --brand2:#a9a9af;
+  --silver:#d8d8dc;
+}
+body{
+  background:
+    radial-gradient(circle at 80% 0%,rgba(255,255,255,.055),transparent 28%),
+    radial-gradient(circle at 10% 30%,rgba(255,255,255,.025),transparent 25%),
+    #050505 !important;
+}
+.top-nav{
+  background:rgba(5,5,5,.91)!important;
+  border-bottom:1px solid rgba(255,255,255,.13)!important;
+}
+.top-nav a{
+  border-color:rgba(255,255,255,.17)!important;
+}
+.top-nav a:hover{
+  border-color:#fff!important;
+  background:rgba(255,255,255,.07)!important;
+}
+.brand-logo-wrap{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin:4px auto 18px;
+}
+.brand-logo{
+  display:block;
+  width:min(310px,78vw);
+  height:auto;
+  object-fit:contain;
+  filter:drop-shadow(0 12px 30px rgba(255,255,255,.08));
+}
+.brand-mini{
+  display:block;
+  width:150px;
+  max-width:42vw;
+  height:auto;
+}
+.brand-name{color:#fff!important;text-shadow:0 0 20px rgba(255,255,255,.18)!important}
+.brand-sub{color:#b8b8bd!important;font-weight:500;letter-spacing:5px;font-size:.55em}
+h1 span{color:#fff!important;text-shadow:0 0 22px rgba(255,255,255,.15)!important}
+.btn{
+  background:linear-gradient(135deg,#f7f7f7,#bcbcc2)!important;
+  color:#080808!important;
+  border:1px solid rgba(255,255,255,.35)!important;
+  box-shadow:0 10px 30px rgba(255,255,255,.06);
+}
+.btn:hover{filter:brightness(1.08)}
+input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
+.ticket-card{border-color:#dedee2!important;background:linear-gradient(135deg,#111,#060606)!important}
+.ticket-card h2{color:#fff!important}
+.event-hero{border-color:rgba(255,255,255,.18)!important}
+.event-hero-content small{color:#d8d8dc!important}
+.quick-lot-box{border-color:rgba(255,255,255,.18)!important;background:#090909!important}
+.price-section-title{color:#ddd!important}
+.schedule-badge.active{color:#f4f4f4!important;border-color:rgba(255,255,255,.28)!important;background:rgba(255,255,255,.06)!important}
+
 </style>
 <style>
 .ticket-qr{background:#fff;padding:10px;border-radius:12px;width:max-content;margin:15px auto}.ticket-qr img{width:210px;height:210px;display:block}
@@ -71,10 +133,11 @@
 </nav>
 
 
+<div class="brand-logo-wrap" style="margin-top:70px;margin-bottom:8px"><img src="logo-hype.png" class="brand-logo" alt="HYPE Lounge Club"></div>
 <div class="event-hero" id="eventHero">
   <img id="eventHeroImage" alt="Capa do evento">
   <div class="event-hero-content">
-    <small>HYPE // EVENTO</small>
+    <small>HYPE LOUNGE CLUB // EVENTO</small>
     <h2 id="eventHeroArtist">HYPE</h2>
     <h3 id="eventHeroName">Evento</h3>
     <p id="eventHeroDescription"></p>
@@ -83,7 +146,7 @@
 </div>
 
 <div class="box">
-  <h1>BOATE <span>HYPE</span></h1>
+  <h1><span class="brand-name">HYPE</span><br><span class="brand-sub">LOUNGE CLUB</span></h1>
   <p class="sub">Garanta o seu ingresso antecipado</p>
 
   <form id="ticketForm" onsubmit="generatePix(event)">

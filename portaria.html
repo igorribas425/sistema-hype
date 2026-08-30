@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HYPE // Portaria & Validação</title>
+<title>HYPE LOUNGE CLUB // Portaria & Validação</title>
 <style>
   :root{--bg:#050505;--panel:#0d0d10;--line:#222228;--red:#ff163d;--green:#28d17c;--text:#f7f7f8;--muted:#96969e}
   *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,sans-serif}
@@ -48,6 +48,68 @@
   .status-tag.pendente{background:var(--red);color:#fff}
 
   .empty-state{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+
+/* HYPE LOUNGE CLUB // identidade visual */
+:root{
+  --brand:#f5f5f5;
+  --brand2:#a9a9af;
+  --silver:#d8d8dc;
+}
+body{
+  background:
+    radial-gradient(circle at 80% 0%,rgba(255,255,255,.055),transparent 28%),
+    radial-gradient(circle at 10% 30%,rgba(255,255,255,.025),transparent 25%),
+    #050505 !important;
+}
+.top-nav{
+  background:rgba(5,5,5,.91)!important;
+  border-bottom:1px solid rgba(255,255,255,.13)!important;
+}
+.top-nav a{
+  border-color:rgba(255,255,255,.17)!important;
+}
+.top-nav a:hover{
+  border-color:#fff!important;
+  background:rgba(255,255,255,.07)!important;
+}
+.brand-logo-wrap{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin:4px auto 18px;
+}
+.brand-logo{
+  display:block;
+  width:min(310px,78vw);
+  height:auto;
+  object-fit:contain;
+  filter:drop-shadow(0 12px 30px rgba(255,255,255,.08));
+}
+.brand-mini{
+  display:block;
+  width:150px;
+  max-width:42vw;
+  height:auto;
+}
+.brand-name{color:#fff!important;text-shadow:0 0 20px rgba(255,255,255,.18)!important}
+.brand-sub{color:#b8b8bd!important;font-weight:500;letter-spacing:5px;font-size:.55em}
+h1 span{color:#fff!important;text-shadow:0 0 22px rgba(255,255,255,.15)!important}
+.btn{
+  background:linear-gradient(135deg,#f7f7f7,#bcbcc2)!important;
+  color:#080808!important;
+  border:1px solid rgba(255,255,255,.35)!important;
+  box-shadow:0 10px 30px rgba(255,255,255,.06);
+}
+.btn:hover{filter:brightness(1.08)}
+input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
+.ticket-card{border-color:#dedee2!important;background:linear-gradient(135deg,#111,#060606)!important}
+.ticket-card h2{color:#fff!important}
+.event-hero{border-color:rgba(255,255,255,.18)!important}
+.event-hero-content small{color:#d8d8dc!important}
+.quick-lot-box{border-color:rgba(255,255,255,.18)!important;background:#090909!important}
+.price-section-title{color:#ddd!important}
+.schedule-badge.active{color:#f4f4f4!important;border-color:rgba(255,255,255,.28)!important;background:rgba(255,255,255,.06)!important}
+
 </style>
 <style>
 .portaria-actions{display:flex;gap:10px;margin-top:12px}.portaria-btn{height:46px;border:0;border-radius:10px;background:var(--green);color:#000;font-weight:950;padding:0 14px;cursor:pointer;flex:1}.portaria-btn.secondary{background:#161619;color:#fff;border:1px solid var(--line)}
@@ -66,7 +128,7 @@
 
 <div id="loginScreen">
   <div class="loginBox">
-    <h2 style="margin-bottom:5px;color:#fff">PORTARIA // HYPE</h2>
+    <div class="brand-logo-wrap"><img src="logo-hype.png" class="brand-logo" alt="HYPE Lounge Club"></div><h2 style="margin-bottom:5px;color:#fff">PORTARIA // HYPE LOUNGE CLUB</h2>
     <p style="color:var(--muted);font-size:12px;margin-bottom:20px">Acesso da equipe de portaria</p>
     <input type="text" id="portariaUser" placeholder="Utilizador" value="portaria" style="width:100%;height:42px;background:#060608;border:1px solid var(--line);border-radius:9px;padding:0 12px;color:#fff;margin-bottom:10px">
     <input type="password" id="portariaPass" placeholder="Palavra-passe..." autofocus onkeypress="if(event.key === 'Enter') checkPortariaLogin()">
@@ -76,7 +138,7 @@
 
 <div class="container">
   <header>
-    <h1>BOATE <span>HYPE</span> // PORTARIA</h1>
+    <h1><span class="brand-name">HYPE</span> <span class="brand-sub">LOUNGE CLUB</span> // PORTARIA</h1>
     <p class="sub">Controlo rápido de acessos e validação de ingressos</p>
   </header>
 

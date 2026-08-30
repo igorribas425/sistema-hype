@@ -155,7 +155,7 @@ function renderPublicEvent() {
   const img = document.getElementById("eventHeroImage");
 
   if (artist) artist.textContent = e.artist_name || e.name || "HYPE";
-  if (name) name.textContent = e.name || "Evento HYPE";
+  if (name) name.textContent = e.name || "Evento HYPE LOUNGE CLUB";
   if (desc) desc.textContent = e.description || "";
 
   const bits = [];

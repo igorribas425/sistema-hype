@@ -21,3 +21,12 @@ No Admin agora existe o bloco "CRIAR / ADICIONAR INGRESSO".
 Você pode criar Pista, VIP, Camarote ou qualquer outro ingresso e definir o preço.
 Os ingressos existentes aparecem abaixo com o campo PREÇO e o botão SALVAR LOTE.
 Não precisa executar SQL novo para esta atualização.
+
+
+BRANDING HYPE LOUNGE CLUB
+-------------------------
+- Nome visual atualizado para HYPE LOUNGE CLUB.
+- Logo adicionada como logo-hype.png.
+- Tema principal atualizado para preto, branco e prata/cinza.
+- Funções do Supabase, ingressos, Admin e Portaria foram mantidas.
+- Não é necessário executar SQL novo.

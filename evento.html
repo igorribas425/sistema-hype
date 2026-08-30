@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HYPE // Evento & Artista</title>
+<title>HYPE LOUNGE CLUB // Evento & Artista</title>
 <style>
 :root{--bg:#050505;--panel:#0d0d10;--line:#26262d;--red:#ff163d;--green:#28d17c;--text:#f7f7f8;--muted:#96969e}
 *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,sans-serif}
@@ -36,12 +36,74 @@ textarea{min-height:110px;resize:vertical}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#151518;border:1px solid var(--line);padding:12px 18px;border-radius:10px;opacity:0;transition:.2s;z-index:30}
 .toast.show{opacity:1}
 @media(max-width:780px){.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}.preview{min-height:360px}}
+
+/* HYPE LOUNGE CLUB // identidade visual */
+:root{
+  --brand:#f5f5f5;
+  --brand2:#a9a9af;
+  --silver:#d8d8dc;
+}
+body{
+  background:
+    radial-gradient(circle at 80% 0%,rgba(255,255,255,.055),transparent 28%),
+    radial-gradient(circle at 10% 30%,rgba(255,255,255,.025),transparent 25%),
+    #050505 !important;
+}
+.top-nav{
+  background:rgba(5,5,5,.91)!important;
+  border-bottom:1px solid rgba(255,255,255,.13)!important;
+}
+.top-nav a{
+  border-color:rgba(255,255,255,.17)!important;
+}
+.top-nav a:hover{
+  border-color:#fff!important;
+  background:rgba(255,255,255,.07)!important;
+}
+.brand-logo-wrap{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin:4px auto 18px;
+}
+.brand-logo{
+  display:block;
+  width:min(310px,78vw);
+  height:auto;
+  object-fit:contain;
+  filter:drop-shadow(0 12px 30px rgba(255,255,255,.08));
+}
+.brand-mini{
+  display:block;
+  width:150px;
+  max-width:42vw;
+  height:auto;
+}
+.brand-name{color:#fff!important;text-shadow:0 0 20px rgba(255,255,255,.18)!important}
+.brand-sub{color:#b8b8bd!important;font-weight:500;letter-spacing:5px;font-size:.55em}
+h1 span{color:#fff!important;text-shadow:0 0 22px rgba(255,255,255,.15)!important}
+.btn{
+  background:linear-gradient(135deg,#f7f7f7,#bcbcc2)!important;
+  color:#080808!important;
+  border:1px solid rgba(255,255,255,.35)!important;
+  box-shadow:0 10px 30px rgba(255,255,255,.06);
+}
+.btn:hover{filter:brightness(1.08)}
+input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
+.ticket-card{border-color:#dedee2!important;background:linear-gradient(135deg,#111,#060606)!important}
+.ticket-card h2{color:#fff!important}
+.event-hero{border-color:rgba(255,255,255,.18)!important}
+.event-hero-content small{color:#d8d8dc!important}
+.quick-lot-box{border-color:rgba(255,255,255,.18)!important;background:#090909!important}
+.price-section-title{color:#ddd!important}
+.schedule-badge.active{color:#f4f4f4!important;border-color:rgba(255,255,255,.28)!important;background:rgba(255,255,255,.06)!important}
+
 </style>
 </head>
 <body>
 <div id="loginScreen">
   <div class="login">
-    <h2>EVENTO // HYPE</h2>
+    <div class="brand-logo-wrap"><img src="logo-hype.png" class="brand-logo" alt="HYPE Lounge Club"></div><h2>EVENTO // HYPE LOUNGE CLUB</h2>
     <p style="color:var(--muted);font-size:12px;margin-top:5px">Entre com a conta Admin/Gerente.</p>
     <input id="eventAdminUser" placeholder="Usuário" value="admin">
     <input id="eventAdminPass" type="password" placeholder="Senha" onkeypress="if(event.key==='Enter') eventManagerLogin()">
@@ -51,7 +113,7 @@ textarea{min-height:110px;resize:vertical}
 
 <div class="wrap">
   <div class="top">
-    <h1>EVENTO <span>& ARTISTA</span></h1>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><img src="logo-hype.png" class="brand-mini" alt="HYPE Lounge Club"><h1>EVENTO <span>& ARTISTA</span></h1></div>
     <a href="admin.html">← Voltar ao Admin</a>
   </div>
 
@@ -101,7 +163,7 @@ textarea{min-height:110px;resize:vertical}
       <div class="preview">
         <img id="eventPreviewImg" alt="Capa do evento">
         <div class="preview-content">
-          <small>HYPE // EVENTO</small>
+          <small>HYPE LOUNGE CLUB // EVENTO</small>
           <h2 id="previewArtist">ARTISTA</h2>
           <h3 id="previewEventName">Nome do evento</h3>
           <p id="previewEventMeta">Data • Local</p>
