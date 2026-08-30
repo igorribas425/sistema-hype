@@ -62,6 +62,35 @@
   .btn-action:hover{border-color:#555}
   .btn-del{background:rgba(255,22,61,.1);color:var(--red);border-color:rgba(255,22,61,.3)}
   .btn-del:hover{background:var(--red);color:#fff}
+
+  .ticket-admin-card{background:#08080a;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .ticket-admin-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
+  .ticket-admin-grid{display:grid;grid-template-columns:1.3fr .8fr 1fr 1fr;gap:9px}
+  .ticket-admin-card .form-group{margin-bottom:0}
+  .ticket-admin-card label{font-size:9px}
+  .ticket-admin-card input{height:40px}
+  .ticket-admin-preview{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;color:var(--muted);font-size:10px}
+  .ticket-admin-preview b{color:#fff}
+  .ticket-admin-actions{display:flex;gap:8px;margin-top:12px}
+  .ticket-admin-actions .btn-action{flex:1}
+  .schedule-badge{font-size:9px;font-weight:900;padding:4px 7px;border-radius:7px;border:1px solid var(--line)}
+  .schedule-badge.active{color:var(--green);border-color:rgba(40,209,124,.35);background:rgba(40,209,124,.08)}
+  .schedule-badge.upcoming{color:#38bdf8;border-color:rgba(56,189,248,.35);background:rgba(56,189,248,.08)}
+  .schedule-badge.expired,.schedule-badge.invalid{color:var(--red);border-color:rgba(255,22,61,.35);background:rgba(255,22,61,.08)}
+  @media(max-width:900px){.ticket-admin-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.ticket-admin-grid{grid-template-columns:1fr}.ticket-admin-actions{flex-direction:column}}
+
+  .stats-extended{grid-template-columns:repeat(7,1fr)}
+  .admin-toolbar{margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .admin-toolbar strong{display:block;font-size:13px;letter-spacing:1px}
+  .admin-toolbar span{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+  .export-btn{width:auto}
+  .info-note{margin-top:16px;padding:12px;border:1px dashed #493038;border-radius:10px;color:var(--muted);font-size:11px;background:#10090b}
+  .info-note b{color:#fff}
+  .ticket-admin-grid-wide{grid-template-columns:1.4fr .75fr .75fr 1fr 1fr}
+  .badge.cancelado{background:rgba(255,180,0,.1);color:#ffcc00;border:1px solid rgba(255,180,0,.25)}
+  @media(max-width:1100px){.stats-extended{grid-template-columns:repeat(4,1fr)}.ticket-admin-grid-wide{grid-template-columns:1fr 1fr}}
+  @media(max-width:650px){.stats-extended{grid-template-columns:1fr 1fr}.admin-toolbar{align-items:stretch;flex-direction:column}.export-btn{width:100%}}
 </style>
 </head>
 <body>
@@ -75,7 +104,8 @@
 <div id="loginScreen">
   <div class="loginBox">
     <h2 style="margin-bottom:5px;color:#fff">ADMIN // HYPE</h2>
-    <p style="color:var(--muted);font-size:12px;margin-bottom:20px">Digite a palavra-passe</p>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:20px">Entre com a conta da equipe</p>
+    <input type="text" id="adminUser" placeholder="Utilizador" value="admin" style="margin-bottom:10px" onkeypress="if(event.key === 'Enter') checkLogin()">
     <input type="password" id="adminPass" placeholder="Palavra-passe..." style="margin-bottom:12px" onkeypress="if(event.key === 'Enter') checkLogin()">
     <button class="btn" onclick="checkLogin()">ENTRAR NO PAINEL</button>
   </div>
@@ -86,24 +116,47 @@
     <h1>PAINEL <span>HYPE</span> // ADMIN</h1>
   </header>
 
-  <div class="stats">
+  <div class="stats stats-extended">
     <div class="stat-card"><span>Total na Lista</span><h3 id="totalCount">0</h3></div>
-    <div class="stat-card green"><span>Confirmados (Pagos)</span><h3 id="paidCount">0</h3></div>
+    <div class="stat-card green"><span>Pagos</span><h3 id="paidCount">0</h3></div>
     <div class="stat-card red"><span>Pendentes</span><h3 id="pendingCount">0</h3></div>
-    <div class="stat-card blue"><span>Caixa Estimado</span><h3 id="totalCash">R$ 0,00</h3></div>
+    <div class="stat-card blue"><span>Caixa</span><h3 id="totalCash">R$ 0,00</h3></div>
+    <div class="stat-card green"><span>Entraram</span><h3 id="enteredCount">0</h3></div>
+    <div class="stat-card red"><span>Cancelados</span><h3 id="canceledCount">0</h3></div>
+    <div class="stat-card blue"><span>Pendente em R$</span><h3 id="pendingValue">R$ 0,00</h3></div>
+  </div>
+
+  <div class="admin-toolbar panel-box">
+    <div><strong>CONTROLE DO EVENTO</strong><span>estoque, caixa e entradas em tempo real neste navegador</span></div>
+    <button class="btn-action export-btn" onclick="exportEntriesCSV()">⬇ Exportar CSV</button>
   </div>
 
   <div class="grid-admin">
-    <div class="panel-box">
-      <h3>Gerenciar Lotes & Preços</h3>
-      <p style="color:var(--muted);font-size:12px;margin-bottom:15px">Altere os valores cobrados em tempo real.</p>
+    <div class="panel-box admin-only">
+      <h3>Gerenciar Lotes, Preços & Horários</h3>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:15px">
+        Defina quando cada lote começa a vender e quando a venda expira. Deixe os horários vazios para manter o lote sem limite.
+      </p>
       <div id="ticketConfigList"></div>
       
+      <div class="info-note">💡 <b>Limite 0 = ilimitado.</b> O estoque conta reservas pendentes e pagamentos pagos; cancelados liberam a vaga.</div>
+      <div class="admin-only team-panel">
+        <h3 style="margin-top:25px">Equipe / Usuários</h3>
+        <div class="team-form">
+          <input id="newUserName" placeholder="Nome da pessoa" style="margin-bottom:8px">
+          <input id="newUsername" placeholder="Utilizador" style="margin-bottom:8px">
+          <input id="newUserPassword" type="password" placeholder="Senha" style="margin-bottom:8px">
+          <select id="newUserRole" style="margin-bottom:8px"><option value="caixa">CAIXA</option><option value="portaria">PORTARIA</option><option value="admin">ADMIN</option></select>
+          <button class="btn" onclick="addUser()">+ ADICIONAR PESSOA</button>
+        </div>
+        <div style="overflow:auto;margin-top:12px"><table><thead><tr><th>Pessoa</th><th>Perfil</th><th>Ação</th></tr></thead><tbody id="usersTableBody"></tbody></table></div>
+      </div>
+
       <h3 style="margin-top:25px">Chave PIX (Recebimento)</h3>
       <div class="form-group" style="margin-top:10px">
         <input type="text" id="pixKeyInput" placeholder="Chave PIX (E-mail, CNPJ ou Tel)">
       </div>
-      <button class="btn" onclick="savePixKey()" style="background:#15151a;border:1px solid var(--line)">Salvar Chave PIX</button>
+      <button class="btn" onclick="savePixKey()" style="background:#15151a;border:1px solid var(--line);margin-top:10px">Salvar Chave PIX</button>
     </div>
 
     <div class="panel-box">
@@ -132,250 +185,8 @@
     </div>
   </div>
 </div>
-
-<script>
-  function checkLogin() {
-    const pass = document.getElementById("adminPass").value;
-    if(pass === "Hype@2026") {
-      document.getElementById("loginScreen").style.display = "none";
-      initAdmin();
-    } else {
-      alert("Palavra-passe incorreta! (Palavra-passe: Hype@2026)");
-    }
-  }
-
-  const defaultTickets = [
-    { id: 1, name: "Pista - 1º Lote", price: 30.00 },
-    { id: 2, name: "Área VIP - 1º Lote", price: 60.00 },
-    { id: 3, name: "Camarote Open Bar", price: 120.00 }
-  ];
-
-  function getTickets() {
-    const data = localStorage.getItem("hype_config_tickets");
-    return data ? JSON.parse(data) : defaultTickets;
-  }
-
-  // Lista pré-carregada completa com todos os convidados (todos com status Pago)
-  const initialPreloadedList = [
-    {id: 1711000001, name: "Luiz Guilherme Martins dos Passos", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000002, name: "Jader Batty", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000003, name: "Francine Rapose", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000004, name: "Carlos Daniel de Oliveira da Rosa", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000005, name: "Marlon Rodrigues", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000006, name: "Tiago Ramos", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000007, name: "Amanda Andrade", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000008, name: "Nicelly Pratos", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000009, name: "Júlia Távio Alves dos Santos", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000010, name: "Rosane Abade", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000011, name: "Danusa Schutz", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000012, name: "André Carlos Bechet", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000013, name: "Diego Gomes", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000014, name: "Marina Angelim", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000015, name: "Letícia Portela", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000016, name: "Edicélia de Lima", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000017, name: "Bethina Berlafga", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000018, name: "Michele Gonçalves de Carvalho", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000019, name: "Bruna Dias Teles dos Santos", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000020, name: "Karyara de Oliveira da Silva", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000021, name: "Tomaz Totti", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000022, name: "Larissa Ribeiro", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000023, name: "Sara Waskins", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000024, name: "Marcela Alves", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000025, name: "Larissa Muniz", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000026, name: "Renata", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000027, name: "Fabiano Gonçalves", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000028, name: "Vitória Alexandra Leite", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000029, name: "Rayana Barroso", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000030, name: "Julian", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000031, name: "Joana Lacourt", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000032, name: "João Vitor Lacourt", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000033, name: "Pedro Henrique favini", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000034, name: "Leonardo Dias", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000035, name: "Jean Sampaio", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000036, name: "Carlos rezende", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000037, name: "Douglas Moreira", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000038, name: "Arthur Gonçalves Monteiro", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000039, name: "Alan Araújo da Silva", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000040, name: "Eduardo Ferreira dos Santos", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000041, name: "Vitoria possinato", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000042, name: "Vivian borges", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000043, name: "Cassyel silva", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000044, name: "Eduardo Ferreira da Silva", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000045, name: "Neliana Pires", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000046, name: "Eduarda Rodrigues", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000047, name: "Andressa piccini", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000048, name: "Amanda Barcelos", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000049, name: "Thays almeida", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000050, name: "Iago albuquerque", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000051, name: "Leonardo seibert", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000052, name: "Lucas oliveira", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000053, name: "Lucas Tauffer", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000054, name: "Jeferson Mac", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000055, name: "Gisele", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000056, name: "Diulli", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000057, name: "Kamilly Santos", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000058, name: "Lays Moraes", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000059, name: "Renan", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000060, name: "jean", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000061, name: "Cristian", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000062, name: "Andressa Decezare", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000063, name: "Mikaela Souza", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000064, name: "Esmeralda", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000065, name: "Paola Oliveira", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000066, name: "Laura", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000067, name: "marcos Oliveira", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000068, name: "Chrystofer", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000069, name: "Guilherme", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000070, name: "igor veloso", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000071, name: "rafa aguirres", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000072, name: "brayan mertz", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000073, name: "adrian oliveira", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000074, name: "Vitor", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000075, name: "Weligton Soares", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000076, name: "erik pulli", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000077, name: "vitória Molina", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000078, name: "henrique gabriel", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000079, name: "Eduarda", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000080, name: "Leonardo", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000081, name: "Lucas", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000082, name: "Pedro lago", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000083, name: "Larissa mello", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000084, name: "Natali mello", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000085, name: "Ana paula machado", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000086, name: "Ana Laura Pereira Garcia", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000087, name: "Patrick vieira", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000088, name: "yago henrique", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000089, name: "leonardo hubner", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000090, name: "Amanda ritter", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000091, name: "Kati Amarante", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000092, name: "Laura Andrade", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000093, name: "Bruna Lima", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000094, name: "fabio mello", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000095, name: "Evelyn oliveira", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000096, name: "Iaskara", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000097, name: "Jean Mello", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000098, name: "Lucas Mello", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000099, name: "Helen", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000100, name: "agatha silva", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000101, name: "Nicolas Souza", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000102, name: "Victor Trindade", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000103, name: "Yuri Lemos", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000104, name: "Matheus gerlach", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000105, name: "Gustavo Moraes", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"}
-  ];
-
-  function initAdmin() {
-    if(!localStorage.getItem("hype_ingressos")) {
-      localStorage.setItem("hype_ingressos", JSON.stringify(initialPreloadedList));
-    }
-    renderConfigTickets();
-    renderClientsTable();
-    const savedPix = localStorage.getItem("hype_pix_key") || "67667283000109";
-    document.getElementById("pixKeyInput").value = savedPix;
-  }
-
-  function renderConfigTickets() {
-    const tickets = getTickets();
-    const container = document.getElementById("ticketConfigList");
-    container.innerHTML = tickets.map((t, index) => `
-      <div style="display:grid;grid-template-columns:1.5fr 1fr auto;gap:8px;margin-bottom:10px;align-items:center">
-        <input type="text" id="tName_${index}" value="${t.name}">
-        <input type="number" step="0.01" id="tPrice_${index}" value="${t.price}">
-        <button class="btn-action" onclick="updateTicket(${index})">Salvar</button>
-      </div>
-    `).join("");
-  }
-
-  function updateTicket(index) {
-    let tickets = getTickets();
-    tickets[index].name = document.getElementById(`tName_${index}`).value;
-    tickets[index].price = parseFloat(document.getElementById(`tPrice_${index}`).value);
-    localStorage.setItem("hype_config_tickets", JSON.stringify(tickets));
-    alert("Valor e lote atualizados com sucesso!");
-    renderConfigTickets();
-  }
-
-  function savePixKey() {
-    const key = document.getElementById("pixKeyInput").value.trim();
-    localStorage.setItem("hype_pix_key", key);
-    alert("Chave PIX atualizada com sucesso!");
-  }
-
-  function renderClientsTable() {
-    if(!localStorage.getItem("hype_ingressos")) {
-      localStorage.setItem("hype_ingressos", JSON.stringify(initialPreloadedList));
-    }
-    const list = JSON.parse(localStorage.getItem("hype_ingressos") || "[]");
-    const tbody = document.getElementById("adminTableBody");
-    const searchTerm = document.getElementById("searchInput") ? document.getElementById("searchInput").value.toLowerCase() : "";
-    
-    let paid = 0;
-    let pending = 0;
-    let totalCash = 0;
-
-    list.forEach(item => {
-      if(item.status === "Pago") {
-        paid++;
-        totalCash += (item.price || 0);
-      } else {
-        pending++;
-      }
-    });
-
-    const filteredList = list.filter(item => {
-      return item.name.toLowerCase().includes(searchTerm) || item.ticket.toLowerCase().includes(searchTerm);
-    });
-
-    if(filteredList.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">Nenhum cliente encontrado.</td></tr>`;
-    } else {
-      tbody.innerHTML = filteredList.map(item => {
-        const genderTag = item.gender ? `<span class="badge gender">${item.gender}</span>` : '';
-        return `
-          <tr>
-            <td><strong>${item.name}</strong><br>${genderTag}<small style="color:var(--muted)">${item.ticket}</small></td>
-            <td>R$ ${(item.price || 0).toFixed(2).replace('.', ',')}</td>
-            <td><span class="badge ${item.status === "Pago" ? "pago" : "pendente"}">${item.status.toUpperCase()}</span></td>
-            <td>
-              <div class="actions-cell">
-                <button class="btn-action" onclick="toggleStatus(${item.id})">Confirmar Pagamento</button>
-                <button class="btn-action btn-del" onclick="deleteClient(${item.id})">Excluir</button>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join("");
-    }
-
-    document.getElementById("totalCount").innerText = list.length;
-    document.getElementById("paidCount").innerText = paid;
-    document.getElementById("pendingCount").innerText = pending;
-    document.getElementById("totalCash").innerText = `R$ ${totalCash.toFixed(2).replace('.', ',')}`;
-  }
-
-  function toggleStatus(id) {
-    let list = JSON.parse(localStorage.getItem("hype_ingressos") || "[]");
-    list = list.map(item => {
-      if(item.id === id) item.status = item.status === "Pago" ? "Pendente" : "Pago";
-      return item;
-    });
-    localStorage.setItem("hype_ingressos", JSON.stringify(list));
-    renderClientsTable();
-  }
-
-  function deleteClient(id) {
-    let list = JSON.parse(localStorage.getItem("hype_ingressos") || "[]");
-    list = list.filter(item => item.id !== id);
-    localStorage.setItem("hype_ingressos", JSON.stringify(list));
-    renderClientsTable();
-  }
-
-  function clearAll() {
-    if(confirm("Deseja apagar todos os registos de clientes?")) {
-      localStorage.removeItem("hype_ingressos");
-      renderClientsTable();
-    }
-  }
-</script>
+<script src="https://axkbfrljohpkjnbotqnf.supabase.co"></script>
+<script src="'sb_publishable_QLfFi3Cl5FCL1SZnHOl8DQ_nigRxb-c'"></script>
+<script src="app.js"></script>
 </body>
 </html>

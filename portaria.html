@@ -48,6 +48,24 @@
   .status-tag.pendente{background:var(--red);color:#fff}
 
   .empty-state{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+
+  .portaria-actions{display:flex;gap:10px;margin-top:12px}
+  .portaria-btn{height:46px;border:0;border-radius:10px;background:var(--green);color:#000;font-weight:950;padding:0 14px;cursor:pointer;flex:1}
+  .portaria-btn.secondary{background:#161619;color:#fff;border:1px solid var(--line)}
+  .scanner-area{display:none;position:relative;margin-top:14px;background:#000;border-radius:14px;overflow:hidden;padding:12px}
+  .scanner-area.show{display:block}
+  .scanner-area video{display:block;width:100%;max-height:360px;object-fit:cover;border-radius:10px}
+  .scanner-line{position:absolute;left:10%;right:10%;top:50%;height:2px;background:var(--green);box-shadow:0 0 20px var(--green)}
+  .scanner-area .portaria-btn{margin-top:10px}
+  .status-area{display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+  .btn-entry{border:0;border-radius:10px;background:var(--green);color:#000;font-weight:950;padding:12px 14px;cursor:pointer}
+  .result-card.used{border-color:rgba(255,180,0,.45);background:linear-gradient(135deg,rgba(255,180,0,.06),var(--panel))}
+  .status-tag.used{background:#ffcc00;color:#000}
+  .result-card.cancelado{border-color:rgba(255,22,61,.45);background:linear-gradient(135deg,rgba(255,22,61,.05),var(--panel))}
+  .status-tag.cancelado{background:var(--red);color:#fff}
+  .portaria-extra{margin-top:8px;color:var(--muted);font-size:11px}
+  .portaria-extra.ok{color:var(--green)}
+  @media(max-width:600px){.portaria-actions{flex-direction:column}.result-card{align-items:stretch;gap:15px;flex-direction:column}.status-area{align-items:stretch}.btn-entry{width:100%}}
 </style>
 </head>
 <body>
@@ -61,7 +79,8 @@
 <div id="loginScreen">
   <div class="loginBox">
     <h2 style="margin-bottom:5px;color:#fff">PORTARIA // HYPE</h2>
-    <p style="color:var(--muted);font-size:12px;margin-bottom:20px">Insira a palavra-passe de acesso</p>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:20px">Acesso da equipe de portaria</p>
+    <input type="text" id="portariaUser" placeholder="Utilizador" value="portaria" style="width:100%;height:42px;background:#060608;border:1px solid var(--line);border-radius:9px;padding:0 12px;color:#fff;margin-bottom:10px">
     <input type="password" id="portariaPass" placeholder="Palavra-passe..." autofocus onkeypress="if(event.key === 'Enter') checkPortariaLogin()">
     <button class="btn" onclick="checkPortariaLogin()">ENTRAR NA PORTARIA</button>
   </div>
@@ -74,152 +93,25 @@
   </header>
 
   <div class="search-box">
-    <label>Pesquisar Nome do Cliente</label>
-    <input type="text" class="search-input" id="portariaSearch" placeholder="Digite o nome para verificar..." oninput="searchClient()" autocomplete="off">
+    <label>Pesquisar Nome, WhatsApp ou ID</label>
+    <input type="text" class="search-input" id="portariaSearch" placeholder="Nome, telefone ou #HYPE-123456..." oninput="searchClient()" autocomplete="off">
+    <div class="portaria-actions">
+      <button class="portaria-btn" onclick="startQrScanner()">📷 LER QR CODE</button>
+      <button class="portaria-btn secondary" onclick="document.getElementById('portariaSearch').value=''; searchClient(); stopQrScanner()">LIMPAR</button>
+    </div>
+    <div id="scannerArea" class="scanner-area">
+      <video id="qrVideo" autoplay muted playsinline></video>
+      <div class="scanner-line"></div>
+      <button class="portaria-btn secondary" onclick="stopQrScanner()">FECHAR CÂMERA</button>
+    </div>
   </div>
 
   <div class="results-grid" id="resultsContainer">
     <div class="empty-state">Comece a digitar o nome do cliente acima para validar a entrada.</div>
   </div>
 </div>
-
-<script>
-  const initialPreloadedList = [
-    {id: 1711000001, name: "Luiz Guilherme Martins dos Passos", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000002, name: "Jader Batty", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000003, name: "Francine Rapose", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000004, name: "Carlos Daniel de Oliveira da Rosa", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000005, name: "Marlon Rodrigues", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000006, name: "Tiago Ramos", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000007, name: "Amanda Andrade", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000008, name: "Nicelly Pratos", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000009, name: "Júlia Távio Alves dos Santos", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000010, name: "Rosane Abade", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000011, name: "Danusa Schutz", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000012, name: "André Carlos Bechet", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000013, name: "Diego Gomes", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000014, name: "Marina Angelim", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000015, name: "Letícia Portela", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000016, name: "Edicélia de Lima", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000017, name: "Bethina Berlafga", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000018, name: "Michele Gonçalves de Carvalho", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000019, name: "Bruna Dias Teles dos Santos", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000020, name: "Karyara de Oliveira da Silva", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000021, name: "Tomaz Totti", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000022, name: "Larissa Ribeiro", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000023, name: "Sara Waskins", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000024, name: "Marcela Alves", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000025, name: "Larissa Muniz", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000026, name: "Renata", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000027, name: "Fabiano Gonçalves", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000028, name: "Vitória Alexandra Leite", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000029, name: "Rayana Barroso", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000030, name: "Julian", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000031, name: "Joana Lacourt", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000032, name: "João Vitor Lacourt", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000033, name: "Pedro Henrique favini", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000034, name: "Leonardo Dias", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000035, name: "Jean Sampaio", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000036, name: "Carlos rezende", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000037, name: "Douglas Moreira", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000038, name: "Arthur Gonçalves Monteiro", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000039, name: "Alan Araújo da Silva", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000040, name: "Eduardo Ferreira dos Santos", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000041, name: "Vitoria possinato", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000042, name: "Vivian borges", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000043, name: "Cassyel silva", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000044, name: "Eduardo Ferreira da Silva", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000045, name: "Neliana Pires", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000046, name: "Eduarda Rodrigues", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000047, name: "Andressa piccini", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000048, name: "Amanda Barcelos", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000049, name: "Thays almeida", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000050, name: "Iago albuquerque", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000051, name: "Leonardo seibert", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000052, name: "Lucas oliveira", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000053, name: "Lucas Tauffer", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000054, name: "Jeferson Mac", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000055, name: "Gisele", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000056, name: "Diulli", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000057, name: "Kamilly Santos", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000058, name: "Lays Moraes", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000059, name: "Renan", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000060, name: "jean", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000061, name: "Cristian", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000062, name: "Andressa Decezare", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000063, name: "Mikaela Souza", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000064, name: "Esmeralda", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000065, name: "Paola Oliveira", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000066, name: "Laura", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000067, name: "marcos Oliveira", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000068, name: "Chrystofer", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000069, name: "Guilherme", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000070, name: "igor veloso", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000071, name: "rafa aguirres", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000072, name: "brayan mertz", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000073, name: "adrian oliveira", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000074, name: "Vitor", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000075, name: "Weligton Soares", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000076, name: "erik pulli", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000077, name: "vitória Molina", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000078, name: "henrique gabriel", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000079, name: "Eduarda", gender: "Feminino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000080, name: "Leonardo", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"},
-    {id: 1711000081, name: "Lucas", gender: "Masculino", ticket: "Pista - 1º Lote", price: 30.00, status: "Pago"}
-  ];
-
-  function checkPortariaLogin() {
-    const pass = document.getElementById("portariaPass").value;
-    if(pass === "portaria2026") {
-      document.getElementById("loginScreen").style.display = "none";
-      document.getElementById("portariaSearch").focus();
-    } else {
-      alert("Palavra-passe incorreta! (Palavra-passe: portaria2026)");
-    }
-  }
-
-  function searchClient() {
-    if(!localStorage.getItem("hype_ingressos")) {
-      localStorage.setItem("hype_ingressos", JSON.stringify(initialPreloadedList));
-    }
-    const query = document.getElementById("portariaSearch").value.toLowerCase().trim();
-    const container = document.getElementById("resultsContainer");
-    const list = JSON.parse(localStorage.getItem("hype_ingressos") || "[]");
-
-    if (query === "") {
-      container.innerHTML = `<div class="empty-state">Comece a digitar o nome do cliente acima para validar a entrada.</div>`;
-      return;
-    }
-
-    const filtered = list.filter(item => item.name.toLowerCase().includes(query));
-
-    if (filtered.length === 0) {
-      container.innerHTML = `<div class="empty-state" style="color:var(--red)">❌ Nenhum cliente encontrado com o nome "${query}".</div>`;
-      return;
-    }
-
-    container.innerHTML = filtered.map(item => {
-      const isPaid = item.status === "Pago";
-      const statusClass = isPaid ? "pago" : "pendente";
-      const statusText = isPaid ? "LIBERADO ✅ (PAGO)" : "BLOQUEADO ❌ (PENDENTE)";
-      
-      return `
-        <div class="result-card ${statusClass}">
-          <div class="client-info">
-            <h3>${item.name}</h3>
-            <div class="client-details">
-              <span class="badge gender">${item.gender || 'N/I'}</span>
-              <span>•</span>
-              <strong style="color:#fff">${item.ticket}</strong>
-            </div>
-          </div>
-          <div class="status-tag ${statusClass}">
-            ${statusText}
-          </div>
-        </div>
-      `;
-    }).join("");
-  }
-</script>
+<script src="https://axkbfrljohpkjnbotqnf.supabase.co"></script>
+<script src="'sb_publishable_QLfFi3Cl5FCL1SZnHOl8DQ_nigRxb-c'"></script>
+<script src="app.js"></script>
 </body>
 </html>

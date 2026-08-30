@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOATE HYPE // Ingressos</title>
+<style>
+  :root{--bg:#050505;--panel:#0d0d10;--line:#222228;--red:#ff163d;--green:#28d17c;--text:#f7f7f8;--muted:#96969e}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,sans-serif}
+  body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+  
+  .top-nav{position:fixed;top:0;left:0;width:100%;background:rgba(13,13,16,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 20px;display:flex;justify-content:center;gap:15px;z-index:1000}
+  .top-nav a{color:var(--muted);text-decoration:none;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);transition:.2s}
+  .top-nav a:hover{color:#fff;border-color:var(--red);background:rgba(255,22,61,.05)}
+
+  .box{width:min(480px,100%);background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:32px;box-shadow:0 20px 40px rgba(0,0,0,.6);margin-top:40px}
+  h1{text-align:center;font-size:28px;font-weight:950;letter-spacing:2px;margin-bottom:8px}
+  h1 span{color:var(--red);text-shadow:0 0 20px rgba(255,22,61,.5)}
+  p.sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:25px;text-transform:uppercase;letter-spacing:1px}
+  
+  .group{margin-bottom:18px}
+  label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:7px;letter-spacing:1px}
+  input, select{width:100%;height:48px;background:#060608;border:1px solid var(--line);border-radius:12px;padding:0 15px;color:#fff;font-size:15px;outline:none}
+  input:focus, select:focus{border-color:var(--red)}
+  
+  .btn{width:100%;height:50px;background:var(--red);color:#fff;border:0;border-radius:12px;font-weight:950;font-size:14px;cursor:pointer;margin-top:10px;letter-spacing:1px;transition:.2s}
+  .btn:hover{opacity:.9}
+
+  .pix-area{display:none;text-align:center;margin-top:20px;border-top:1px solid var(--line);padding-top:20px}
+  .qrcode{background:#fff;padding:15px;border-radius:12px;display:inline-block;margin:15px 0}
+  .qrcode img{width:160px;height:160px;display:block}
+  .pix-key{background:#060608;border:1px solid var(--line);padding:12px;border-radius:10px;font-size:12px;word-break:break-all;color:var(--green);margin-bottom:12px}
+  
+  .ticket-card{display:none;background:linear-gradient(135deg,#160005,#09090b);border:2px dashed var(--red);border-radius:20px;padding:24px;text-align:center;margin-top:20px;position:relative}
+  .ticket-card h2{color:var(--red);font-size:22px;letter-spacing:2px;margin-bottom:15px}
+  .ticket-info{text-align:left;background:#060608;padding:14px;border-radius:12px;margin-bottom:15px;font-size:13px;line-height:1.6}
+  .ticket-info span{color:var(--muted)}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#151518;border:1px solid #3b3b41;padding:12px 20px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:.25s}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-10px)}
+
+  .ticket-schedule{margin-top:8px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);font-size:11px;line-height:1.5;background:#08080a}
+  .ticket-schedule small{display:block;color:var(--muted);margin-top:3px}
+  .ticket-schedule.active{border-color:rgba(40,209,124,.35);background:rgba(40,209,124,.06);color:var(--green)}
+  .ticket-schedule.upcoming{border-color:rgba(56,189,248,.35);background:rgba(56,189,248,.06);color:#38bdf8}
+  .ticket-schedule.expired{border-color:rgba(255,22,61,.35);background:rgba(255,22,61,.06);color:var(--red)}
+  #ticketForm button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(1)}
+  .ticket-qr{background:#fff;padding:10px;border-radius:12px;width:max-content;margin:15px auto}
+  .ticket-qr img{width:210px;height:210px;display:block}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="cliente.html" style="color:#fff;border-color:var(--red)">🛒 Comprar</a>
+  <a href="admin.html">⚙️ Admin</a>
+  <a href="portaria.html">🚪 Portaria</a>
+</nav>
+
+<div class="box">
+  <h1>BOATE <span>HYPE</span></h1>
+  <p class="sub">Garanta o seu ingresso antecipado</p>
+
+  <form id="ticketForm" onsubmit="generatePix(event)">
+    <div class="group">
+      <label>Nome Completo</label>
+      <input type="text" id="clientName" placeholder="O seu nome no documento" required autocomplete="off">
+    </div>
+
+    <div class="group">
+      <label>Telefone / WhatsApp</label>
+      <input type="tel" id="clientPhone" placeholder="(54) 99999-9999" autocomplete="tel">
+    </div>
+
+    <div class="group">
+      <label>CPF</label>
+      <input type="text" id="clientCpf" placeholder="Somente para identificação" inputmode="numeric" autocomplete="off">
+    </div>
+
+    <div class="group">
+      <label>Género</label>
+      <select id="clientGender" required>
+        <option value="Feminino">Feminino</option>
+        <option value="Masculino">Masculino</option>
+      </select>
+    </div>
+    
+    <div class="group">
+      <label>Escolha o Lote / Setor</label>
+      <select id="ticketType" onchange="updatePrice()" required></select>
+      <div id="ticketScheduleInfo" class="ticket-schedule active"></div>
+    </div>
+
+    <div class="group">
+      <label>Valor a Pagar</label>
+      <input type="text" id="ticketPriceDisplay" readonly style="color:var(--green);font-weight:bold;background:#040405">
+    </div>
+
+    <button type="submit" class="btn">GERAR PIX DE PAGAMENTO</button>
+  </form>
+
+  <div class="pix-area" id="pixArea">
+    <p style="font-size:13px;color:#fff;margin-bottom:5px">Faça a leitura do QR Code ou copie a chave PIX:</p>
+    <div class="qrcode"><img id="qrImg" src="" alt="QR Code PIX"></div>
+    <div class="pix-key" id="pixKeyText"></div>
+    <button class="btn" style="background:#28d17c;color:#000" onclick="showTicketCard()">JÁ EFETUEI O PAGAMENTO // VER INGRESSO</button>
+  </div>
+
+  <div class="ticket-card" id="ticketCard">
+    <h2>🎟️ INGRESSO OFICIAL</h2>
+    <div class="ticket-info">
+      <p><span>Titular:</span> <strong id="tClientName" style="color:#fff"></strong></p>
+      <p><span>WhatsApp:</span> <strong id="tClientPhone" style="color:#fff"></strong></p>
+      <p><span>Género:</span> <strong id="tClientGender" style="color:#fff"></strong></p>
+      <p><span>Setor:</span> <strong id="tTicketName" style="color:#fff"></strong></p>
+      <p><span>Valor:</span> <strong id="tTicketPrice" style="color:var(--green)"></strong></p>
+      <p><span>Estado:</span> <strong id="tTicketStatus" style="color:#ffcc00">Pendente de Confirmação ADM</strong></p>
+      <p><span>Código ID:</span> <strong id="tTicketId" style="color:#aaa"></strong></p>
+    </div>
+    <div class="ticket-qr"><img id="ticketQrImg" src="" alt="QR Code do ingresso"></div>
+    <p style="font-size:11px;color:var(--muted);line-height:1.4">Apresente o QR Code, seu ID ou seu nome na portaria com documento.</p>
+    <button class="btn" style="margin-top:15px;background:#15151a;border:1px solid var(--line)" onclick="location.reload()">Comprar Outro</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">Ação efetuada com sucesso!</div>
+<script src="https://axkbfrljohpkjnbotqnf.supabase.co"></script>
+<script src="'sb_publishable_QLfFi3Cl5FCL1SZnHOl8DQ_nigRxb-c'"></script>
+<script src="app.js"></script>
+</body>
+</html>
