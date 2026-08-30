@@ -13,3 +13,11 @@ Não publique arquivos SQL, service_role, senha do banco ou chave secreta.
 
 No GitHub Pages:
 Settings > Pages > Deploy from a branch > main > /(root)
+
+
+ATUALIZAÇÃO DE PREÇOS
+---------------------
+No Admin agora existe o bloco "CRIAR / ADICIONAR INGRESSO".
+Você pode criar Pista, VIP, Camarote ou qualquer outro ingresso e definir o preço.
+Os ingressos existentes aparecem abaixo com o campo PREÇO e o botão SALVAR LOTE.
+Não precisa executar SQL novo para esta atualização.

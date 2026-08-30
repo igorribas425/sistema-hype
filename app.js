@@ -411,7 +411,12 @@ function renderConfigTickets() {
     target.innerHTML = `<div class="info-note">Seu perfil não pode alterar lotes.</div>`;
     return;
   }
-  target.innerHTML = (HYPE.lots || []).map((t, i) => `
+  const lots = HYPE.lots || [];
+  if (!lots.length) {
+    target.innerHTML = `<div class="empty-lots">Nenhum ingresso/lote cadastrado ainda. Use o formulário acima para criar o primeiro e definir o preço.</div>`;
+    return;
+  }
+  target.innerHTML = lots.map((t, i) => `
     <div class="ticket-admin-card">
       <div class="ticket-admin-head"><strong>${hypeEscape(t.name)}</strong><span class="schedule-badge ${hypeStatus(t).code === 'active' ? 'active' : hypeStatus(t).code === 'upcoming' ? 'upcoming' : 'expired'}">${hypeEscape(hypeStatus(t).label)}</span></div>
       <div class="ticket-admin-grid ticket-admin-grid-wide">
@@ -436,6 +441,65 @@ function toDateTimeLocal(value) {
 }
 
 function fromDateTimeLocal(value) { return value ? new Date(value).toISOString() : null; }
+
+
+async function createNewLot() {
+  if (!['admin','gerente'].includes(HYPE.role)) return alert("Somente Admin/Gerente pode criar ingressos.");
+  const name = document.getElementById("newLotName")?.value.trim() || "";
+  const sector = document.getElementById("newLotSector")?.value.trim() || "Pista";
+  const priceRaw = document.getElementById("newLotPrice")?.value;
+  const qtyRaw = document.getElementById("newLotQty")?.value;
+  const startRaw = document.getElementById("newLotStart")?.value || "";
+  const endRaw = document.getElementById("newLotEnd")?.value || "";
+
+  const price = Number(priceRaw);
+  const qty = Number(qtyRaw || 0);
+
+  if (!name) return alert("Digite o nome do ingresso.");
+  if (priceRaw === "" || !Number.isFinite(price) || price < 0) return alert("Digite um preço válido.");
+  if (!Number.isFinite(qty) || qty < 0) return alert("Digite uma quantidade válida.");
+
+  let startAt = null, endAt = null;
+  try {
+    startAt = fromDateTimeLocal(startRaw);
+    endAt = fromDateTimeLocal(endRaw);
+  } catch (_) {
+    return alert("Confira as datas e horários.");
+  }
+
+  if (startAt && endAt && new Date(endAt) <= new Date(startAt)) {
+    return alert("A expiração precisa ser depois do início da venda.");
+  }
+
+  try {
+    await sbRpc("staff_upsert_lot", {
+      p_username: HYPE.user,
+      p_password: HYPE.pass,
+      p_id: 0,
+      p_name: name,
+      p_sector: sector,
+      p_price: price,
+      p_quantity_total: qty,
+      p_starts_at: startAt,
+      p_ends_at: endAt,
+      p_active: true,
+      p_sort_order: (HYPE.lots?.length || 0) + 1
+    });
+
+    ["newLotName","newLotSector","newLotPrice","newLotStart","newLotEnd"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
+    const qtyEl = document.getElementById("newLotQty");
+    if (qtyEl) qtyEl.value = "0";
+
+    await loadPublicState();
+    renderConfigTickets();
+    hypeNotify("Ingresso criado com sucesso.");
+  } catch (err) {
+    alert(err.message || "Erro ao criar ingresso.");
+  }
+}
 
 async function updateTicket(index) {
   const t = HYPE.lots[index];
