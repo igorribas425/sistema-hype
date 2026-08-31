@@ -450,7 +450,7 @@ function updateClientTicketState() {
   }
 }
 
-async function createMercadoPagoPix(ticketId, email) {
+async function createMercadoPagoPix(ticketId) {
   const cfg = hypeCfg();
   // A primeira Edge Function foi publicada no Supabase com este slug.
   const endpoint = `${cfg.url}/functions/v1/bright-handler`;
@@ -462,8 +462,7 @@ async function createMercadoPagoPix(ticketId, email) {
       "Authorization": `Bearer ${cfg.anonKey}`
     },
     body: JSON.stringify({
-      ticket_id: Number(ticketId),
-      email: String(email || "").trim()
+      ticket_id: Number(ticketId)
     })
   });
 
@@ -556,11 +555,9 @@ async function generatePix(e) {
 
   const name = document.getElementById("clientName")?.value.trim() || "";
   const phone = document.getElementById("clientPhone")?.value.trim() || "";
-  const email = document.getElementById("clientEmail")?.value.trim() || "";
   const cpf = document.getElementById("clientCpf")?.value.trim() || "";
   const gender = document.getElementById("clientGender")?.value || "";
   if (!name) return alert("Informe seu nome.");
-  if (!email || !email.includes("@")) return alert("Informe um e-mail válido.");
 
   const submit = document.querySelector('#ticketForm button[type="submit"]');
   const originalText = submit?.textContent || "GERAR PIX DE PAGAMENTO";
@@ -586,7 +583,7 @@ async function generatePix(e) {
       HYPE.currentTicketCode = entry.ticket_code;
     }
 
-    const payment = await createMercadoPagoPix(entry.id, email);
+    const payment = await createMercadoPagoPix(entry.id);
     HYPE.currentPixCode = payment.qr_code || "";
 
     const qrImg = document.getElementById("qrImg");
