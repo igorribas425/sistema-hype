@@ -1,0 +1,31 @@
+HYPE V14 — VISUAL PREMIUM SEM VÍDEOS
+
+Esta atualização é SOMENTE do site no GitHub.
+Não precisa rodar SQL novo no Supabase.
+Não altera Asaas, webhook, e-mail, portaria ou banco.
+
+ARQUIVOS ALTERADOS NA V14:
+- index.html
+- cliente.html
+- app.js
+
+O QUE FOI ADICIONADO:
+- destaque grande do evento usando a própria arte
+- fundo desfocado e animado com a cor do evento
+- contagem regressiva grande
+- line-up automático a partir do campo Artista/DJ
+- botões WhatsApp, Compartilhar e Abrir Mapa
+- cards visuais 3D para Pista/VIP/Camarote/lotes
+- aviso de últimos ingressos
+- preço dos cards muda conforme Feminino/Masculino
+- botão fixo COMPRAR AGORA no celular
+- efeito 3D/parallax na arte no computador
+- animação de entrada suave
+
+INSTALAÇÃO:
+1. Abra o repositório correto sistema-hype no GitHub.
+2. Substitua somente index.html, cliente.html e app.js.
+3. Clique em Commit changes.
+4. Aguarde o GitHub Pages publicar.
+5. Abra o site e pressione Ctrl + F5.
+

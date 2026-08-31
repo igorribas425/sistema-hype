@@ -182,6 +182,130 @@ body::before{z-index:0 !important;opacity:.78}
 .event-ambient{z-index:0 !important;mix-blend-mode:screen}
 .page-shell{position:relative;z-index:1}
 
+
+/* =========================================================
+   HYPE V14 — EXPERIENCE / VISUAL PREMIUM SEM VÍDEOS
+   Apenas front-end: não altera PIX, Asaas, Supabase ou Portaria
+   ========================================================= */
+body{overflow-x:hidden}
+.v14-spotlight{
+  position:relative;overflow:hidden;border-radius:30px;min-height:560px;
+  border:1px solid rgba(var(--event-accent-rgb),.32);
+  background:linear-gradient(135deg,rgba(10,10,12,.96),rgba(5,5,6,.93));
+  box-shadow:0 34px 90px rgba(0,0,0,.48),0 0 72px rgba(var(--event-accent-rgb),.10);
+  isolation:isolate;
+}
+.v14-spotlight::before,.v14-spotlight::after{
+  content:"";position:absolute;border-radius:50%;pointer-events:none;filter:blur(28px);opacity:.65;z-index:-1;
+  animation:v14FloatGlow 9s ease-in-out infinite alternate;
+}
+.v14-spotlight::before{width:420px;height:420px;left:-130px;top:-150px;background:rgba(var(--event-accent-rgb),.24)}
+.v14-spotlight::after{width:360px;height:360px;right:-120px;bottom:-150px;background:rgba(var(--event-accent-rgb),.18);animation-delay:-3s}
+@keyframes v14FloatGlow{from{transform:translate3d(-18px,-8px,0) scale(.96)}to{transform:translate3d(24px,18px,0) scale(1.08)}}
+.v14-spotlight-bg{
+  position:absolute;inset:-8%;z-index:-3;background-position:center;background-size:cover;
+  filter:blur(42px) saturate(1.45);opacity:.30;transform:scale(1.12);
+  transition:background-image .5s ease,opacity .5s ease;
+}
+.v14-spotlight-shade{position:absolute;inset:0;z-index:-2;background:linear-gradient(100deg,rgba(4,4,5,.28),rgba(4,4,5,.82) 48%,rgba(4,4,5,.97))}
+.v14-hero-grid{display:grid;grid-template-columns:minmax(310px,.92fr) minmax(0,1.08fr);gap:0;min-height:560px}
+.v14-art-wrap{position:relative;min-height:560px;display:grid;place-items:center;padding:34px;perspective:1200px}
+.v14-art-glow{position:absolute;width:70%;aspect-ratio:1;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;background:rgba(var(--event-accent-rgb),.28);filter:blur(55px);opacity:.75}
+.v14-event-art{
+  position:relative;z-index:2;width:min(430px,92%);max-height:500px;object-fit:cover;border-radius:24px;
+  border:1px solid rgba(255,255,255,.20);box-shadow:0 35px 75px rgba(0,0,0,.55),0 0 42px rgba(var(--event-accent-rgb),.18);
+  transform:rotateY(-4deg) rotateX(1deg) translateZ(0);transition:transform .22s ease-out,box-shadow .35s ease;
+}
+.v14-art-wrap:hover .v14-event-art{box-shadow:0 40px 90px rgba(0,0,0,.60),0 0 55px rgba(var(--event-accent-rgb),.25)}
+.v14-art-placeholder{display:none;position:relative;z-index:2;width:min(430px,92%);aspect-ratio:4/5;border-radius:24px;border:1px solid rgba(255,255,255,.15);place-items:center;font-size:54px;font-weight:950;letter-spacing:6px;background:linear-gradient(145deg,rgba(var(--event-accent-rgb),.14),#070708);color:#fff}
+.v14-content{padding:42px 38px 38px;display:flex;flex-direction:column;justify-content:center}
+.v14-kicker{display:flex;align-items:center;gap:9px;color:var(--event-accent);font-size:11px;font-weight:950;letter-spacing:2.2px;text-transform:uppercase;margin-bottom:12px}
+.v14-kicker::before{content:"";width:28px;height:2px;background:var(--event-accent);box-shadow:0 0 12px rgba(var(--event-accent-rgb),.6)}
+.v14-content h1{font-size:clamp(38px,5vw,72px);line-height:.91;letter-spacing:-2px;text-transform:uppercase;max-width:760px}
+.v14-event-name{display:block;color:#c9c9ce;font-size:clamp(17px,2vw,25px);line-height:1.15;margin-top:14px;font-weight:800}
+.v14-event-desc{margin-top:16px;color:#b8b8c0;line-height:1.72;font-size:14px;max-width:720px}
+.v14-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:19px}
+.v14-meta-chip{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 12px;border-radius:999px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.13);font-size:11px;font-weight:850;color:#efeff1}
+.v14-countdown-wrap{margin-top:24px}
+.v14-countdown-label{font-size:10px;font-weight:950;letter-spacing:1.8px;color:#9b9ba4;text-transform:uppercase;margin-bottom:9px}
+.v14-countdown{display:grid;grid-template-columns:repeat(4,minmax(70px,1fr));gap:8px;max-width:520px}
+.v14-time{padding:13px 8px 11px;text-align:center;border-radius:15px;background:linear-gradient(180deg,rgba(var(--event-accent-rgb),.12),rgba(255,255,255,.025));border:1px solid rgba(var(--event-accent-rgb),.23)}
+.v14-time b{display:block;font-size:clamp(24px,3.2vw,39px);line-height:1;color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 0 20px rgba(var(--event-accent-rgb),.18)}
+.v14-time span{display:block;margin-top:5px;font-size:9px;letter-spacing:1.3px;color:#9d9da6;font-weight:900}
+.v14-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:22px}
+.v14-action{min-height:46px;padding:0 16px;border-radius:13px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.055);color:#fff;font-weight:900;font-size:11px;letter-spacing:.65px;cursor:pointer;transition:.25s}
+.v14-action.primary{background:linear-gradient(135deg,var(--event-accent),#efeff2);color:#050505;border-color:rgba(var(--event-accent-rgb),.72);box-shadow:0 12px 34px rgba(var(--event-accent-rgb),.16)}
+.v14-action:hover{transform:translateY(-2px);border-color:rgba(var(--event-accent-rgb),.55)}
+.v14-lineup{margin-top:25px}
+.v14-lineup-title{font-size:10px;font-weight:950;letter-spacing:1.8px;color:#a0a0a8;text-transform:uppercase;margin-bottom:11px}
+.v14-lineup-track{display:flex;gap:8px;flex-wrap:wrap}
+.v14-lineup-item{position:relative;padding:10px 13px 10px 27px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(5,5,7,.42);font-size:12px;font-weight:850;color:#f4f4f5}
+.v14-lineup-item::before{content:"";position:absolute;left:11px;top:50%;width:7px;height:7px;border-radius:50%;transform:translateY(-50%);background:var(--event-accent);box-shadow:0 0 12px rgba(var(--event-accent-rgb),.65)}
+.v14-lots-section{grid-column:1/-1;padding:0 34px 34px}
+.v14-lots-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}
+.v14-lots-head small{font-size:10px;color:var(--event-accent);letter-spacing:1.6px;font-weight:950}
+.v14-lots-head h3{font-size:24px;margin-top:4px}
+.v14-lots-head span{font-size:11px;color:#8f8f98}
+.v14-lot-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.v14-lot-card{
+  position:relative;overflow:hidden;text-align:left;padding:17px;border-radius:18px;min-height:146px;
+  background:linear-gradient(145deg,rgba(var(--event-accent-rgb),.09),rgba(255,255,255,.025));
+  border:1px solid rgba(255,255,255,.12);color:#fff;cursor:pointer;transform-style:preserve-3d;
+  transition:transform .24s ease,border-color .24s ease,box-shadow .24s ease,opacity .24s ease;
+}
+.v14-lot-card::after{content:"";position:absolute;width:120px;height:120px;border-radius:50%;right:-55px;bottom:-65px;background:rgba(var(--event-accent-rgb),.13);filter:blur(10px)}
+.v14-lot-card:hover{transform:translateY(-5px) rotateX(2deg);border-color:rgba(var(--event-accent-rgb),.50);box-shadow:0 18px 38px rgba(0,0,0,.34),0 0 28px rgba(var(--event-accent-rgb),.10)}
+.v14-lot-card.active{border-color:var(--event-accent);box-shadow:0 0 0 1px rgba(var(--event-accent-rgb),.30),0 18px 42px rgba(0,0,0,.38),0 0 34px rgba(var(--event-accent-rgb),.15)}
+.v14-lot-card.disabled{opacity:.46;cursor:not-allowed;filter:grayscale(.4)}
+.v14-lot-card small{display:block;color:#9c9ca5;font-size:9px;font-weight:950;letter-spacing:1.25px;text-transform:uppercase}
+.v14-lot-card strong{display:block;font-size:18px;margin:7px 0 2px}
+.v14-lot-price{font-size:24px;font-weight:950;color:var(--event-accent);margin-top:9px}
+.v14-lot-stock{margin-top:6px;font-size:10px;font-weight:850;color:#babac1}
+.v14-lot-stock.hot{color:#ffce58}
+.v14-lot-status{position:absolute;right:12px;top:12px;padding:5px 8px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);font-size:8px;font-weight:950;letter-spacing:.7px}
+.v14-sticky-buy{display:none}
+.v14-reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+.v14-reveal.visible{opacity:1;transform:none}
+@media(max-width:980px){
+  .v14-hero-grid{grid-template-columns:1fr}
+  .v14-art-wrap{min-height:430px;padding-bottom:10px}
+  .v14-event-art{width:min(390px,82%);max-height:400px}
+  .v14-content{padding:26px 26px 32px}
+  .v14-lots-section{padding:0 24px 28px}
+  .v14-lot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:720px){
+  body{padding:14px 14px 92px!important}
+  .v14-spotlight{border-radius:24px}
+  .v14-art-wrap{min-height:355px;padding:22px 16px 4px}
+  .v14-event-art{width:min(330px,88%);max-height:330px;border-radius:20px;transform:none!important}
+  .v14-content{padding:23px 20px 26px}
+  .v14-content h1{letter-spacing:-1px}
+  .v14-countdown{grid-template-columns:repeat(4,1fr);gap:6px}
+  .v14-time{padding:11px 4px 9px}
+  .v14-time b{font-size:25px}
+  .v14-actions{display:grid;grid-template-columns:1fr 1fr}
+  .v14-action.primary{grid-column:1/-1}
+  .v14-lots-section{padding:0 18px 22px}
+  .v14-lots-head{align-items:start;flex-direction:column}
+  .v14-lot-grid{grid-template-columns:1fr}
+  .v14-lot-card{min-height:128px}
+  .v14-sticky-buy{
+    position:fixed;display:flex;left:10px;right:10px;bottom:10px;z-index:1200;align-items:center;gap:10px;
+    padding:9px 9px 9px 13px;border-radius:18px;background:rgba(7,7,9,.93);backdrop-filter:blur(18px);
+    border:1px solid rgba(var(--event-accent-rgb),.38);box-shadow:0 18px 60px rgba(0,0,0,.55),0 0 28px rgba(var(--event-accent-rgb),.12)
+  }
+  .v14-sticky-copy{min-width:0;flex:1}
+  .v14-sticky-copy small{display:block;color:#8f8f98;font-size:8px;font-weight:950;letter-spacing:1px}
+  .v14-sticky-copy strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;margin-top:2px}
+  .v14-sticky-buy button{min-width:130px;height:46px;border:0;border-radius:13px;background:linear-gradient(135deg,var(--event-accent),#f0f0f2);color:#050505;font-weight:950;font-size:10px;letter-spacing:.5px}
+}
+@media(prefers-reduced-motion:reduce){
+  .v14-spotlight::before,.v14-spotlight::after{animation:none}
+  .v14-reveal{opacity:1;transform:none;transition:none}
+  .v14-event-art,.v14-lot-card{transition:none}
+}
+
 </style>
 </head>
 <body>
@@ -201,6 +325,57 @@ body::before{z-index:0 !important;opacity:.78}
     <div class="event-carousel" id="eventCarousel"></div>
     <div class="event-dots" id="eventDots"></div>
   </section>
+
+
+  <section class="v14-spotlight v14-reveal" id="v14Spotlight">
+    <div class="v14-spotlight-bg" id="v14SpotlightBg" aria-hidden="true"></div>
+    <div class="v14-spotlight-shade" aria-hidden="true"></div>
+    <div class="v14-hero-grid">
+      <div class="v14-art-wrap" id="v14ArtWrap">
+        <div class="v14-art-glow" aria-hidden="true"></div>
+        <img class="v14-event-art" id="v14HeroImage" alt="Arte do evento selecionado">
+        <div class="v14-art-placeholder" id="v14HeroPlaceholder">HYPE</div>
+      </div>
+      <div class="v14-content">
+        <div class="v14-kicker">EXPERIÊNCIA HYPE</div>
+        <h1 id="v14Artist">HYPE LOUNGE CLUB</h1>
+        <span class="v14-event-name" id="v14EventName">Evento selecionado</span>
+        <div class="v14-meta" id="v14EventMeta"></div>
+        <p class="v14-event-desc" id="v14EventDescription"></p>
+
+        <div class="v14-countdown-wrap">
+          <div class="v14-countdown-label" id="v14CountdownLabel">CONTAGEM REGRESSIVA</div>
+          <div class="v14-countdown" aria-live="polite">
+            <div class="v14-time"><b id="v14Days">00</b><span>DIAS</span></div>
+            <div class="v14-time"><b id="v14Hours">00</b><span>HORAS</span></div>
+            <div class="v14-time"><b id="v14Minutes">00</b><span>MIN</span></div>
+            <div class="v14-time"><b id="v14Seconds">00</b><span>SEG</span></div>
+          </div>
+        </div>
+
+        <div class="v14-actions">
+          <button type="button" class="v14-action primary" onclick="hypeV14ScrollToTickets()">🎟 GARANTIR INGRESSO</button>
+          <button type="button" class="v14-action" onclick="hypeV14ShareWhatsApp()">WHATSAPP</button>
+          <button type="button" class="v14-action" onclick="hypeV14ShareEvent()">COMPARTILHAR</button>
+          <button type="button" class="v14-action" id="v14MapButton" onclick="hypeV14OpenMap()">📍 ABRIR MAPA</button>
+        </div>
+
+        <div class="v14-lineup" id="v14Lineup">
+          <div class="v14-lineup-title">LINE-UP</div>
+          <div class="v14-lineup-track" id="v14LineupTrack"></div>
+        </div>
+      </div>
+
+      <div class="v14-lots-section">
+        <div class="v14-lots-head">
+          <div><small>ESCOLHA SUA EXPERIÊNCIA</small><h3>Ingressos disponíveis</h3></div>
+          <span>O valor muda conforme o gênero selecionado na compra.</span>
+        </div>
+        <div class="v14-lot-grid" id="v14LotGrid"></div>
+      </div>
+    </div>
+  </section>
+
 
   <section class="purchase-layout" id="ticketBox">
     <div class="purchase-copy">
@@ -333,9 +508,19 @@ body::before{z-index:0 !important;opacity:.78}
   </section>
 </div>
 
+
+<div class="v14-sticky-buy" id="v14StickyBuy">
+  <div class="v14-sticky-copy">
+    <small>INGRESSO SELECIONADO</small>
+    <strong id="v14StickyText">Escolha seu ingresso</strong>
+  </div>
+  <button type="button" onclick="hypeV14ScrollToTickets()">COMPRAR AGORA</button>
+</div>
+
+
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260831-v13-1-theme-fix"></script>
-<script src="app.js?v=20260831-v13-1-theme-fix"></script>
+<script src="supabase-config.js?v=20260831-v14"></script>
+<script src="app.js?v=20260831-v14"></script>
 </body>
 </html>

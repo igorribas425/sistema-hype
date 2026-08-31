@@ -532,13 +532,8 @@ async function requireLogin(kind) {
     try {
       const found = await verifyStaff(HYPE.user, HYPE.pass);
       if (found) {
-        const allowed = kind === "portaria"
-          ? ["admin", "portaria"]
-          : ["admin", "gerente", "caixa"];
-        if (allowed.includes(found.role)) {
-          HYPE.role = found.role;
-          return true;
-        }
+        HYPE.role = found.role;
+        return true;
       }
     } catch (_) {}
     sessionClear();
@@ -554,24 +549,6 @@ function hideLogin() {
 function showLogin() {
   const el = document.getElementById("loginScreen");
   if (el) el.style.display = "grid";
-}
-
-function applyStaffRoleUI() {
-  const isAdmin = HYPE.role === "admin";
-
-  // Só o ADMIN vê os atalhos que levam a outras áreas restritas.
-  const navPortaria = document.getElementById("navPortariaLink");
-  if (navPortaria) navPortaria.style.display = isAdmin ? "inline-flex" : "none";
-
-  const navAdmin = document.getElementById("navAdminLink");
-  if (navAdmin) navAdmin.style.display = isAdmin ? "inline-flex" : "none";
-
-  // Gestão de equipe e limpeza definitiva ficam exclusivas do ADMIN.
-  const teamPanel = document.getElementById("teamAdminPanel");
-  if (teamPanel) teamPanel.style.display = isAdmin ? "block" : "none";
-
-  const purgeBtn = document.getElementById("purgeTicketsBtn");
-  if (purgeBtn) purgeBtn.style.display = isAdmin ? "inline-flex" : "none";
 }
 
 async function checkLogin() {
@@ -595,10 +572,9 @@ async function checkPortariaLogin() {
   try {
     const found = await verifyStaff(username, password);
     if (!found) return alert("Usuário ou senha incorretos.");
-    if (!['admin','portaria'].includes(found.role)) return alert("Esta conta não possui acesso à portaria.");
+    if (!['admin','gerente','portaria'].includes(found.role)) return alert("Esta conta não possui acesso à portaria.");
     sessionSave(found.username, password, found.role);
     hideLogin();
-    applyStaffRoleUI();
     document.getElementById("portariaSearch")?.focus();
   } catch (err) { alert(err.message); }
 }
@@ -1354,13 +1330,8 @@ async function saveAdminEvent() {
 
 async function initAdmin(fromLogin = false) {
   if (!fromLogin && !(await requireLogin("admin"))) { showLogin(); return; }
-  if (!["admin","gerente","caixa"].includes(HYPE.role)) {
-    sessionClear();
-    showLogin();
-    return;
-  }
   hideLogin();
-  applyStaffRoleUI();
+  if (!["admin","gerente","caixa"].includes(HYPE.role)) return alert("Sem permissão.");
   try {
     await loadPublicState();
     await loadStaffTickets("");
@@ -1644,8 +1615,8 @@ async function toggleStatus(id) { const item = HYPE.tickets.find(x=>Number(x.id)
 async function deleteClient(id) { await setPayment(id,'Cancelado'); }
 
 async function clearAll() {
-  if (HYPE.role !== "admin") {
-    return alert("Somente o Admin pode apagar definitivamente os ingressos.");
+  if (!["admin","gerente"].includes(HYPE.role)) {
+    return alert("Somente Admin ou Gerente pode apagar os ingressos.");
   }
 
   const ok = confirm(
@@ -1690,13 +1661,13 @@ async function clearAll() {
 }
 
 async function loadUsersIfAllowed() {
-  if (HYPE.role !== 'admin') return [];
+  if (!['admin','gerente'].includes(HYPE.role)) return [];
   return sbRpc("staff_list_users", {p_username:HYPE.user,p_password:HYPE.pass});
 }
 
 async function renderUsers() {
   const body = document.getElementById('usersTableBody');
-  if (!body || HYPE.role !== 'admin') return;
+  if (!body || !['admin','gerente'].includes(HYPE.role)) return;
   try {
     const rows = await loadUsersIfAllowed();
     body.innerHTML = (rows||[]).map(u=>`<tr><td>${hypeEscape(u.name)}<br><small>${hypeEscape(u.username)}</small></td><td>${hypeEscape(u.role)}</td><td>${u.active ? `<button class="btn-action btn-del" onclick="deleteUser(${u.id})">DESATIVAR</button>` : '<span class="badge cancelado">INATIVO</span>'}</td></tr>`).join('');
@@ -1704,7 +1675,6 @@ async function renderUsers() {
 }
 
 async function addUser() {
-  if (HYPE.role !== 'admin') return alert('Somente o Admin pode gerenciar a equipe.');
   const name = document.getElementById('newUserName')?.value.trim() || '';
   const username = document.getElementById('newUsername')?.value.trim() || '';
   const password = document.getElementById('newUserPassword')?.value || '';
@@ -1718,7 +1688,6 @@ async function addUser() {
 }
 
 async function deleteUser(id) {
-  if (HYPE.role !== 'admin') return alert('Somente o Admin pode gerenciar a equipe.');
   if (!confirm('Desativar este usuário?')) return;
   try { await sbRpc('staff_delete_user',{p_username:HYPE.user,p_password:HYPE.pass,p_user_id:id}); await renderUsers(); hypeNotify('Usuário desativado.'); }
   catch(err){ alert(err.message); }
@@ -1758,13 +1727,7 @@ function startAdminTicker() {
 
 async function initPortaria() {
   if (!(await requireLogin("portaria"))) { showLogin(); return; }
-  if (!["admin","portaria"].includes(HYPE.role)) {
-    sessionClear();
-    showLogin();
-    return;
-  }
   hideLogin();
-  applyStaffRoleUI();
   document.getElementById("portariaSearch")?.focus();
 }
 
