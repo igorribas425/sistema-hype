@@ -147,7 +147,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 
   <div class="search-box">
     <label>Pesquisar por nome ou ler o QR Code</label>
-    <input type="text" class="search-input" id="portariaSearch" placeholder="Digite o nome ou use LER QR CODE..." oninput="searchClient()" autocomplete="off">
+    <input type="text" class="search-input" id="portariaSearch" placeholder="Digite o nome ou use LER QR CODE..." oninput="portariaSearchChanged()" onkeydown="portariaSearchEnter(event)" autocomplete="off">
     <div class="portaria-actions">
       <button class="portaria-btn" onclick="startQrScanner()">📷 LER QR CODE</button>
       <button class="portaria-btn secondary" onclick="document.getElementById('portariaSearch').value=''; searchClient(); stopQrScanner()">LIMPAR</button>
@@ -160,7 +160,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
   </div>
 
   <div class="results-grid" id="resultsContainer">
-    <div class="empty-state">Digite o nome ou toque em 📷 LER QR CODE. Ao ler, os dados do cliente aparecem antes de confirmar a entrada.</div>
+    <div class="empty-state">Digite o nome ou toque em 📷 LER QR CODE. Leitor físico também funciona: ao ler, o código vira automaticamente os dados da pessoa. A entrada só acontece depois de CONFIRMAR ENTRADA.</div>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

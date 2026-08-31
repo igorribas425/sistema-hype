@@ -23,6 +23,7 @@ const HYPE = {
   refreshTimer: null,
   scannerStream: null,
   scannerTimer: null,
+  portariaSearchTimer: null,
   currentEntryId: null
 };
 
@@ -1324,7 +1325,7 @@ async function clearAll() {
 
   const ok = confirm(
     "APAGAR TODOS OS INGRESSOS?\n\n" +
-    "Isso remove definitivamente os ingressos e os registros de entrada das festas anteriores.\n" +
+    "Isso remove definitivamente TODOS os ingressos e registros ligados às festas anteriores.\n" +
     "Eventos, lotes, preços e usuários da equipe NÃO serão apagados.\n\n" +
     "Essa ação não pode ser desfeita."
   );
@@ -1335,15 +1336,28 @@ async function clearAll() {
       p_username: HYPE.user,
       p_password: HYPE.pass
     });
-    await loadStaffTickets("");
+
+    // Zera o estado local imediatamente e depois confirma no próprio banco.
+    HYPE.tickets = [];
     renderClientsTable();
+
     const input = document.getElementById("searchInput");
     if (input) input.value = "";
-    hypeNotify(`🗑 ${Number(deleted || 0)} ingresso(s) apagado(s). Lista zerada.`);
+
+    await loadStaffTickets("");
+    renderClientsTable();
+
+    if (HYPE.tickets.length > 0) {
+      throw new Error(
+        `A limpeza respondeu, mas o banco ainda devolveu ${HYPE.tickets.length} ingresso(s). Rode novamente o SQL V10 no Supabase.`
+      );
+    }
+
+    hypeNotify(`🗑 ${Number(deleted || 0)} ingresso(s) apagado(s). Banco zerado.`);
   } catch (err) {
     const msg = String(err?.message || err || "Erro ao limpar ingressos.");
     if (msg.includes("staff_purge_all_tickets")) {
-      alert("A função de limpeza ainda não foi instalada no Supabase. Rode o arquivo SUPABASE_V9_PORTARIA_LIMPEZA.sql uma vez no SQL Editor.");
+      alert("A função de limpeza V10 ainda não foi instalada no Supabase. Rode o arquivo SUPABASE_V10_PORTARIA_LIMPEZA.sql uma vez no SQL Editor.");
     } else {
       alert(msg);
     }
@@ -1450,11 +1464,50 @@ function renderPortariaResults(list) {
     const used = item.entry_status==='Entrada utilizada';
     const canceled = item.payment_status==='Cancelado';
     const cls = canceled ? 'cancelado' : used ? 'used' : paid ? 'pago' : 'pendente';
-    let text = canceled ? 'CANCELADO ❌' : used ? 'JÁ ENTROU ⚠️' : paid ? 'LIBERADO ✅' : 'BLOQUEADO ❌';
+    let text = canceled ? 'CANCELADO ❌' : used ? 'JÁ ENTROU ⚠️' : paid ? 'PAGO — CONFIRMAR ✅' : 'BLOQUEADO ❌';
     const canValidate = paid && !used && !canceled;
     const eventLabel = portariaEventLabel(item);
     return `<div class="result-card ${cls}"><div class="client-info"><h3>${hypeEscape(item.customer_name)}</h3>${eventLabel ? `<div class="portaria-event">${hypeEscape(eventLabel)}</div>` : ''}<div class="client-details"><span class="badge gender">${hypeEscape(item.gender||'N/I')}</span><span>•</span><strong>${hypeEscape(item.lot_name||'')}</strong>${item.sector ? `<span>•</span><span>${hypeEscape(item.sector)}</span>` : ''}</div><div class="portaria-extra">${hypeEscape(item.ticket_code)}${item.entry_at ? ` • Entrada: ${hypeFormatDateTime(item.entry_at)}`:''}</div></div><div class="status-area"><div class="status-tag ${cls}">${text}</div>${canValidate?`<button class="btn-entry" onclick="validateEntry('${hypeEscape(item.ticket_code)}')">✅ CONFIRMAR ENTRADA</button>`:''}</div></div>`;
   }).join('');
+}
+
+function portariaLooksLikeQr(value) {
+  const q = String(value || "").trim();
+  if (!q) return false;
+  // Código #HYPE, UUID/token longo ou valor colado por leitor físico.
+  return /^#?HYPE[-_]/i.test(q) || /^[0-9a-f]{8}-[0-9a-f-]{20,}$/i.test(q) || q.length >= 24;
+}
+
+function portariaSearchChanged() {
+  clearTimeout(HYPE.portariaSearchTimer);
+  HYPE.portariaSearchTimer = setTimeout(async () => {
+    const input = document.getElementById('portariaSearch');
+    const query = input?.value.trim() || '';
+    if (!query) {
+      searchClient();
+      return;
+    }
+
+    if (portariaLooksLikeQr(query)) {
+      // Leitor físico costuma "digitar" o QR no campo. Aqui transformamos
+      // esse código diretamente nos dados da pessoa, sem registrar entrada.
+      const found = await lookupTicketByQr(query, true);
+      if (found) input?.blur();
+      return;
+    }
+
+    await searchClient();
+  }, 260);
+}
+
+async function portariaSearchEnter(event) {
+  if (event?.key !== 'Enter') return;
+  event.preventDefault();
+  clearTimeout(HYPE.portariaSearchTimer);
+  const query = document.getElementById('portariaSearch')?.value.trim() || '';
+  if (!query) return searchClient();
+  const found = await lookupTicketByQr(query, true);
+  if (!found) await searchClient();
 }
 
 async function lookupTicketByQr(code, changeInput = true) {

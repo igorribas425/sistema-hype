@@ -1,22 +1,31 @@
-HYPE GITHUB PIX AUTO V9
+HYPE GITHUB PIX AUTO V10
 
 ALTERAÇÕES DESTA VERSÃO
-- PORTARIA: ao ler o QR, o sistema NÃO libera a entrada imediatamente.
-- PORTARIA: primeiro aparecem nome, evento, lote/setor e status.
-- PORTARIA: a entrada só é registrada ao tocar em “CONFIRMAR ENTRADA”.
-- ADMIN: “LIMPAR INGRESSOS” apaga definitivamente os ingressos/testes antigos e deixa a lista zerada.
-- Eventos, lotes, preços e usuários da equipe são preservados.
+- PORTARIA: QR de ingresso PAGO mostra primeiro nome, evento, lote/setor e status.
+- PORTARIA: NÃO registra entrada ao ler o QR. Só registra após tocar em “CONFIRMAR ENTRADA”.
+- PORTARIA: leitor físico que digita o código no campo agora reconhece o QR automaticamente e troca o código pelos dados da pessoa.
+- PORTARIA: ingresso pago ainda não usado aparece como “PAGO — CONFIRMAR”.
+- PORTARIA: depois de confirmar, nova leitura mostra “JÁ ENTROU”.
+- ADMIN: “LIMPAR INGRESSOS” agora zera de verdade a tabela de ingressos e registros auxiliares ligados a ela.
+- ADMIN: depois da limpeza, o próprio site consulta o banco novamente e avisa se ainda existir algum ingresso.
+- Eventos, lotes, preços, usuários e configurações principais são preservados.
 
 PASSO OBRIGATÓRIO UMA VEZ
 1. Abra Supabase > SQL Editor > New query.
-2. Cole o conteúdo de SUPABASE_V9_PORTARIA_LIMPEZA.sql.
-3. Clique Run. Deve aparecer Success.
-4. Depois envie os arquivos HTML/JS deste pacote para a raiz do GitHub, substituindo os atuais.
+2. Cole o conteúdo de SUPABASE_V10_PORTARIA_LIMPEZA.sql.
+3. Clique Run. Deve aparecer Success / No rows returned.
+4. Depois envie os arquivos HTML/JS desta pasta para a raiz do GitHub, substituindo os atuais.
 
-TESTE DA PORTARIA
-1. Abra Portaria e faça login.
-2. Toque “LER QR CODE”.
-3. Leia um ingresso pago.
-4. Deve aparecer o NOME e os dados do ingresso.
-5. Só então toque “CONFIRMAR ENTRADA”.
-6. Uma segunda leitura deve aparecer como “JÁ ENTROU”.
+TESTE FINAL DA PORTARIA
+1. Gere um ingresso NOVO e deixe-o PAGO.
+2. Abra Portaria e faça login.
+3. Leia o QR.
+4. Deve aparecer o NOME e os dados, mas NÃO deve marcar entrada ainda.
+5. Toque “CONFIRMAR ENTRADA”.
+6. Leia novamente: deve aparecer “JÁ ENTROU”.
+
+TESTE DA LIMPEZA
+1. No Admin, toque “LIMPAR INGRESSOS”.
+2. Confirme.
+3. Atualize a página.
+4. A lista deve continuar zerada.
