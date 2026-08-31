@@ -37,6 +37,38 @@ body{background:radial-gradient(circle at 80% 0%,rgba(255,255,255,.055),transpar
 .highlight-card span{display:block;font-size:10px;letter-spacing:1.3px;font-weight:900;color:#9f9fa7;margin-bottom:4px}
 .highlight-card strong{font-size:14px;color:#fff}
 .cta-link{display:inline-flex;align-items:center;justify-content:center;margin-top:24px;min-height:50px;padding:0 18px;border-radius:14px;background:linear-gradient(135deg,#f7f7f7,#babac0);color:#060606;text-decoration:none;font-weight:950;font-size:13px;letter-spacing:1px;border:1px solid rgba(255,255,255,.35);box-shadow:0 10px 30px rgba(255,255,255,.06);width:fit-content}
+
+.events-wrap{overflow:hidden}
+.events-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:14px}
+.events-head small{font-size:11px;font-weight:900;letter-spacing:2px;color:#bdbdc3;text-transform:uppercase}
+.events-head h2{font-size:clamp(26px,3vw,40px);margin-top:5px}
+.event-carousel{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 8vw 14px 0;overscroll-behavior-inline:contain;scrollbar-width:none}
+.event-carousel::-webkit-scrollbar{display:none}
+.event-card{flex:0 0 min(820px,88%);scroll-snap-align:start;background:linear-gradient(180deg,#111216,#08080a);border:1px solid rgba(255,255,255,.13);border-radius:28px;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);min-height:430px;opacity:.82;transform:scale(.985);transition:.25s}
+.event-card.selected{opacity:1;transform:scale(1);border-color:rgba(255,255,255,.38);box-shadow:0 24px 60px rgba(0,0,0,.48)}
+.event-card-image{position:relative;min-height:430px;background:#0a0a0c}
+.event-card-image img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.event-card-placeholder{position:absolute;inset:0;display:grid;place-items:center;font-size:52px;font-weight:950;letter-spacing:5px;color:#777;background:radial-gradient(circle at 40% 35%,#25252a,#09090b 58%)}
+.event-card-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.08),rgba(0,0,0,.48))}
+.event-card-day{position:absolute;left:20px;top:20px;z-index:2;padding:8px 11px;border-radius:999px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18);font-size:11px;font-weight:950;text-transform:uppercase}
+.event-card-body{padding:30px 26px;display:flex;flex-direction:column;justify-content:center}
+.event-card-body small{color:#bdbdc3;font-size:10px;font-weight:900;letter-spacing:1.6px}
+.event-card-body h2{font-size:clamp(30px,4vw,54px);line-height:.95;text-transform:uppercase;margin:9px 0 8px}
+.event-card-body h3{font-size:20px;color:#d7d7dc}
+.event-card-meta{font-size:12px;font-weight:800;color:#fff;margin-top:12px;line-height:1.6}
+.event-card-body p{font-size:13px;color:#aaaab2;line-height:1.65;margin-top:13px}
+.event-select-btn{margin-top:20px;min-height:48px;border-radius:13px;border:1px solid rgba(255,255,255,.25);background:linear-gradient(135deg,#f7f7f7,#bcbcc2);color:#080808;font-weight:950;letter-spacing:.8px;cursor:pointer}
+.event-card.selected .event-select-btn{background:#15151a;color:#fff}
+.event-dots{display:flex;justify-content:center;gap:7px;margin-top:3px}
+.event-dot{width:8px;height:8px;border-radius:50%;border:0;background:#3c3c43;cursor:pointer}
+.event-dot.active{width:24px;border-radius:999px;background:#f2f2f3}
+.event-empty{padding:34px;border:1px solid rgba(255,255,255,.12);border-radius:20px;color:var(--muted)}
+.manual-area{display:none;text-align:center;margin-top:22px;border-top:1px solid rgba(255,255,255,.1);padding-top:22px}
+.manual-status-card{background:#08080a;border:1px solid rgba(255,255,255,.12);padding:18px;border-radius:16px;margin:14px 0;text-align:left;line-height:1.65}
+.manual-order-code{font-size:18px;font-weight:950;letter-spacing:1px;color:#fff}
+.manual-status{display:inline-block;margin-top:8px;padding:7px 10px;border-radius:999px;background:rgba(255,204,0,.09);border:1px solid rgba(255,204,0,.25);color:#ffcc00;font-size:10px;font-weight:950;letter-spacing:.8px}
+.whatsapp-btn{background:linear-gradient(135deg,#dcffe7,#73e69c)!important;color:#041108!important}
+
 .purchase-layout{display:grid;grid-template-columns:minmax(0,.88fr) minmax(380px,.74fr);gap:24px;align-items:start}
 .purchase-copy{background:linear-gradient(180deg,#0f1013,#09090b);border:1px solid rgba(255,255,255,.12);border-radius:28px;padding:34px;box-shadow:0 20px 40px rgba(0,0,0,.34)}
 .section-head small{display:inline-block;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#bdbdc3;margin-bottom:12px}
@@ -79,14 +111,7 @@ input:focus, select:focus{border-color:#d9d9de}
 .ticket-schedule.expired{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.04);color:#d8d8dc}
 #ticketForm button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(1)}
 @media(max-width:1080px){.event-showcase{grid-template-columns:1fr}.event-visual{min-height:390px}.purchase-layout{grid-template-columns:1fr}.info-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:720px){body{padding:14px}.page-shell{margin-top:74px}.event-panel{padding:24px 20px 22px}.event-visual{min-height:280px}.event-badge{left:16px;top:16px;font-size:10px}.purchase-copy,.box{padding:24px}.section-head h1{font-size:34px}.two-col,.info-grid{grid-template-columns:1fr}.brand-logo{width:min(240px,74vw)}.box-title{font-size:22px}}
-
-
-    .payment-auto-status{margin:14px 0;padding:12px;border:1px solid rgba(255,255,255,.15);border-radius:12px;text-align:center;font-size:12px;font-weight:900;letter-spacing:.7px;background:#08090b;color:#ffd54a}
-    .payment-auto-status[data-status="paid"]{color:#56f58a;border-color:rgba(86,245,138,.35)}
-    .payment-auto-status[data-status="canceled"]{color:#ff6b6b;border-color:rgba(255,107,107,.35)}
-    .auto-confirm-note{font-size:11px;color:var(--muted);line-height:1.45;margin-top:10px;text-align:center}
-    #pixKeyText{max-height:120px;overflow:auto;word-break:break-all}
+@media(max-width:720px){.event-card{flex-basis:92%;grid-template-columns:1fr;min-height:0}.event-card-image{min-height:300px}.event-card-body{padding:22px 20px}.events-head{align-items:start}.event-carousel{padding-right:8%}body{padding:14px}.page-shell{margin-top:74px}.event-panel{padding:24px 20px 22px}.event-visual{min-height:280px}.event-badge{left:16px;top:16px;font-size:10px}.purchase-copy,.box{padding:24px}.section-head h1{font-size:34px}.two-col,.info-grid{grid-template-columns:1fr}.brand-logo{width:min(240px,74vw)}.box-title{font-size:22px}}
 
 </style>
 </head>
@@ -101,25 +126,16 @@ input:focus, select:focus{border-color:#d9d9de}
 <div class="page-shell">
   <div class="brand-logo-wrap page-brand"><img src="logo-hype.png?v=20260830-2110" class="brand-logo" alt="HYPE Lounge Club"></div>
 
-  <section class="event-showcase" id="eventHero">
-    <div class="event-visual">
-      <img id="eventHeroImage" alt="Capa do evento">
-      <div class="event-visual-overlay"></div>
-      <div class="event-badge">HYPE LOUNGE CLUB // EVENTO</div>
-    </div>
-    <div class="event-panel">
-      <small class="eyebrow">NOITE OFICIAL</small>
-      <h2 id="eventHeroArtist">HYPE</h2>
-      <h3 id="eventHeroName">Evento</h3>
-      <div class="event-meta" id="eventHeroMeta"></div>
-      <p id="eventHeroDescription"></p>
-      <div class="event-highlights">
-        <div class="highlight-card"><span>AMBIENTE</span><strong>Lounge premium</strong></div>
-        <div class="highlight-card"><span>EXPERIÊNCIA</span><strong>Ingresso antecipado online</strong></div>
-        <div class="highlight-card"><span>ENTRADA</span><strong>Validação com QR Code</strong></div>
+  <section class="events-wrap">
+    <div class="events-head">
+      <div>
+        <small>PRÓXIMOS EVENTOS</small>
+        <h2>Escolha sua noite na HYPE</h2>
       </div>
-      <a href="#ticketBox" class="cta-link">GARANTIR INGRESSO</a>
+      <small>Arraste para o lado →</small>
     </div>
+    <div class="event-carousel" id="eventCarousel"></div>
+    <div class="event-dots" id="eventDots"></div>
   </section>
 
   <section class="purchase-layout" id="ticketBox">
@@ -127,7 +143,7 @@ input:focus, select:focus{border-color:#d9d9de}
       <div class="section-head">
         <small>HYPE LOUNGE CLUB</small>
         <h1><span class="brand-name">INGRESSOS</span> <span class="brand-subline">OFICIAIS</span></h1>
-        <p class="sub">Escolha seu lote, gere o pagamento por PIX e receba seu ingresso com QR Code para apresentar na portaria.</p>
+        <p class="sub">Escolha o evento e o ingresso. O pedido será enviado pelo WhatsApp e ficará aguardando a confirmação do pagamento no painel.</p>
       </div>
 
       <div class="info-grid">
@@ -138,22 +154,22 @@ input:focus, select:focus{border-color:#d9d9de}
         </div>
         <div class="info-box">
           <span>2</span>
-          <strong>Faça o PIX</strong>
-          <p>Gere o QR Code de pagamento e envie o comprovante quando necessário.</p>
+          <strong>Finalize no WhatsApp</strong>
+          <p>Seu pedido já chega com evento, setor, valor e código prontos para atendimento.</p>
         </div>
         <div class="info-box">
           <span>3</span>
-          <strong>Receba seu ingresso</strong>
-          <p>Seu ingresso fica disponível com QR Code para validação no evento.</p>
+          <strong>Pagamento confirmado</strong>
+          <p>Após a confirmação no Admin, seu ingresso com QR Code é liberado.</p>
         </div>
       </div>
     </div>
 
     <div class="box">
-      <h4 class="box-kicker">COMPRA ONLINE</h4>
+      <h4 class="box-kicker">PEDIDO ONLINE + WHATSAPP</h4>
       <h2 class="box-title">Garanta o seu ingresso antecipado</h2>
 
-      <form id="ticketForm" onsubmit="generatePix(event)">
+      <form id="ticketForm" onsubmit="createManualOrder(event)">
         <div class="group">
           <label>Nome Completo</label>
           <input type="text" id="clientName" placeholder="O seu nome no documento" required autocomplete="off">
@@ -162,6 +178,11 @@ input:focus, select:focus{border-color:#d9d9de}
         <div class="group">
           <label>Telefone / WhatsApp</label>
           <input type="tel" id="clientPhone" placeholder="(54) 99999-9999" autocomplete="tel">
+        </div>
+
+        <div class="group">
+          <label>E-mail para receber o ingresso</label>
+          <input type="email" id="clientEmail" placeholder="seunome@gmail.com" required autocomplete="email">
         </div>
 
         <div class="group two-col">
@@ -189,17 +210,20 @@ input:focus, select:focus{border-color:#d9d9de}
           <input type="text" id="ticketPriceDisplay" readonly class="price-display">
         </div>
 
-        <button type="submit" class="btn">GERAR PIX DE PAGAMENTO</button>
+        <button type="submit" class="btn whatsapp-btn">🟢 FINALIZAR COMPRA PELO WHATSAPP</button>
       </form>
 
-      <div class="pix-area" id="pixArea">
-        <p style="font-size:13px;color:#fff;margin-bottom:5px">Pague pelo QR Code ou use o PIX Copia e Cola:</p>
-        <div class="qrcode"><img id="qrImg" src="" alt="QR Code PIX Mercado Pago"></div>
-        <div class="pix-key" id="pixKeyText"></div>
-        <div id="pixPaymentStatus" class="payment-auto-status" data-status="waiting">AGUARDANDO PAGAMENTO…</div>
-        <button class="btn" type="button" onclick="copyPixCode()">COPIAR PIX COPIA E COLA</button>
-        <button class="btn success-btn" type="button" onclick="showTicketCard()">VERIFICAR PAGAMENTO AGORA</button>
-        <p class="auto-confirm-note">O Mercado Pago confirma automaticamente. Você não precisa enviar comprovante.</p>
+      <div class="manual-area" id="manualArea">
+        <h3 style="font-size:20px">PEDIDO CRIADO ✅</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:7px">Seu ingresso ainda não está liberado. Finalize o pagamento pelo WhatsApp e aguarde a confirmação do Admin.</p>
+        <div class="manual-status-card">
+          <div style="font-size:10px;color:var(--muted);font-weight:900;letter-spacing:1px">CÓDIGO DO PEDIDO</div>
+          <div class="manual-order-code" id="manualOrderCode"></div>
+          <div id="manualOrderSummary" style="font-size:13px;margin-top:10px"></div>
+          <div class="manual-status" id="manualPaymentStatus">AGUARDANDO CONFIRMAÇÃO</div>
+        </div>
+        <button class="btn whatsapp-btn" onclick="reopenOrderWhatsApp()">ABRIR WHATSAPP NOVAMENTE</button>
+        <button class="btn ghost-btn" onclick="refreshCurrentOrderStatus(true)">VERIFICAR SE O PAGAMENTO FOI CONFIRMADO</button>
       </div>
 
       <div class="ticket-card" id="ticketCard">
@@ -207,10 +231,11 @@ input:focus, select:focus{border-color:#d9d9de}
         <div class="ticket-info">
           <p><span>Titular:</span> <strong id="tClientName" style="color:#fff"></strong></p>
           <p><span>WhatsApp:</span> <strong id="tClientPhone" style="color:#fff"></strong></p>
+          <p><span>E-mail:</span> <strong id="tClientEmail" style="color:#fff"></strong></p>
           <p><span>Género:</span> <strong id="tClientGender" style="color:#fff"></strong></p>
           <p><span>Setor:</span> <strong id="tTicketName" style="color:#fff"></strong></p>
           <p><span>Valor:</span> <strong id="tTicketPrice" style="color:var(--green)"></strong></p>
-          <p><span>Estado:</span> <strong id="tTicketStatus" style="color:#ffcc00">Aguardando pagamento</strong></p>
+          <p><span>Estado:</span> <strong id="tTicketStatus" style="color:#ffcc00">Pendente de Confirmação ADM</strong></p>
           <p><span>Código ID:</span> <strong id="tTicketId" style="color:#aaa"></strong></p>
         </div>
         <div class="ticket-qr"><img id="ticketQrImg" src="" alt="QR Code do ingresso"></div>
@@ -223,7 +248,7 @@ input:focus, select:focus{border-color:#d9d9de}
 
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260830-2200"></script>
-<script src="app.js?v=20260830-2305-sem-email"></script>
+<script src="supabase-config.js?v=20260831-manual-v2"></script>
+<script src="app.js?v=20260831-manual-v2"></script>
 </body>
 </html>

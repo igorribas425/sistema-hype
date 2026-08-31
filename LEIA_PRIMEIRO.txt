@@ -1,0 +1,28 @@
+HYPE - TESTE MANUAL WHATSAPP + MULTI EVENTOS
+
+IMPORTANTE: NÃO apague nem substitua o seu supabase-config.js atual do GitHub.
+
+Substitua no GitHub estes arquivos:
+- index.html
+- cliente.html
+- app.js
+- admin.html
+- portaria.html
+- evento.html
+- logo-hype.png (somente se quiser manter a logo desta versão)
+
+O WhatsApp de atendimento já está configurado no app.js: 55 54 9677-6514.
+
+Depois de subir os arquivos, aguarde o GitHub Pages atualizar e teste em aba anônima/privada.
+
+Fluxo de teste:
+1. Abra o site.
+2. Preencha nome, WhatsApp, e-mail, CPF e gênero.
+3. Escolha o ingresso.
+4. Clique em FINALIZAR COMPRA PELO WHATSAPP.
+5. O pedido deve ser criado como PENDENTE no Supabase/Admin.
+6. O WhatsApp deve abrir com a mensagem pronta para o número configurado.
+
+Multi-eventos:
+- O carrossel mostra todos os eventos ativos retornados por public_events().
+- Enquanto existir apenas 1 evento ativo, aparecerá apenas 1 card.

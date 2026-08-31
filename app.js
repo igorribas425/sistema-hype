@@ -3,8 +3,6 @@
    O SQL correspondente está em supabase_schema.sql.
 */
 
-console.info('[HYPE] app.js versão 20260830-2310-MP-AUTO');
-
 const HYPE = {
   sb: null,
   user: null,
@@ -13,17 +11,15 @@ const HYPE = {
   lots: [],
   tickets: [],
   pixKey: "",
+  events: [],
   event: null,
+  selectedEventId: null,
+  currentEntryCode: null,
   eventImageData: null,
-  sectorConfigs: [],
   refreshTimer: null,
   scannerStream: null,
   scannerTimer: null,
-  currentEntryId: null,
-  currentEntry: null,
-  currentTicketCode: null,
-  currentPixCode: null,
-  paymentTicker: null
+  currentEntryId: null
 };
 
 function hypeCfg() {
@@ -106,61 +102,6 @@ function hypeCountdownText(ticket) {
   return "Sem horário de expiração";
 }
 
-
-/* ========================= PIX BR CODE ========================= */
-
-function pixTlv(id, value) {
-  const text = String(value ?? "");
-  return `${id}${String(text.length).padStart(2,"0")}${text}`;
-}
-
-function pixSanitizeText(value, maxLength) {
-  return String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toUpperCase()
-    .replace(/[^A-Z0-9 ]/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, maxLength);
-}
-
-function pixCrc16(payload) {
-  let crc = 0xFFFF;
-  for (let i = 0; i < payload.length; i++) {
-    crc ^= payload.charCodeAt(i) << 8;
-    for (let j = 0; j < 8; j++) {
-      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
-      crc &= 0xFFFF;
-    }
-  }
-  return crc.toString(16).toUpperCase().padStart(4,"0");
-}
-
-function buildPixPayload({ key, amount, merchantName = "HYPE LOUNGE CLUB", merchantCity = "CARAZINHO", txid = "***" }) {
-  const pixKey = String(key || "").trim();
-  if (!pixKey) return "";
-
-  const name = pixSanitizeText(merchantName, 25) || "HYPE LOUNGE CLUB";
-  const city = pixSanitizeText(merchantCity, 15) || "CARAZINHO";
-  const value = Number(amount || 0);
-
-  const merchantAccount = pixTlv("00", "BR.GOV.BCB.PIX") + pixTlv("01", pixKey);
-
-  let payload = "";
-  payload += pixTlv("00", "01");
-  payload += pixTlv("26", merchantAccount);
-  payload += pixTlv("52", "0000");
-  payload += pixTlv("53", "986");
-  if (Number.isFinite(value) && value > 0) payload += pixTlv("54", value.toFixed(2));
-  payload += pixTlv("58", "BR");
-  payload += pixTlv("59", name);
-  payload += pixTlv("60", city);
-  payload += pixTlv("62", pixTlv("05", String(txid || "***").slice(0,25)));
-  payload += "6304";
-  return payload + pixCrc16(payload);
-}
-
 function sessionSave(user, pass, role) {
   HYPE.user = user; HYPE.pass = pass; HYPE.role = role;
   sessionStorage.setItem("hype_staff", JSON.stringify({ user, pass, role }));
@@ -194,84 +135,145 @@ async function sbRpc(name, params = {}) {
 }
 
 async function loadPublicState() {
-  const [lots, pix, eventRows] = await Promise.all([
-    sbRpc("public_lots_gender"),
-    sbRpc("public_pix_key"),
-    sbRpc("public_event")
+  const [events, pix] = await Promise.all([
+    sbRpc("public_events"),
+    sbRpc("public_pix_key")
   ]);
-  HYPE.lots = Array.isArray(lots) ? lots : [];
+
+  HYPE.events = Array.isArray(events) ? events : [];
   HYPE.pixKey = typeof pix === "string" ? pix : "";
-  HYPE.event = Array.isArray(eventRows) ? (eventRows[0] || null) : (eventRows || null);
+
+  if (!HYPE.selectedEventId || !HYPE.events.some(e => Number(e.id) === Number(HYPE.selectedEventId))) {
+    HYPE.selectedEventId = HYPE.events[0]?.id || null;
+  }
+
+  HYPE.event = HYPE.events.find(e => Number(e.id) === Number(HYPE.selectedEventId)) || null;
+
+  if (HYPE.selectedEventId) {
+    const lots = await sbRpc("public_lots_by_event", {
+      p_event_id: Number(HYPE.selectedEventId)
+    });
+    HYPE.lots = Array.isArray(lots) ? lots : [];
+  } else {
+    HYPE.lots = [];
+  }
+
   return HYPE.lots;
 }
 
+function hypeEventDate(event) {
+  if (!event?.event_date) return "Data a confirmar";
+  const d = new Date(`${event.event_date}T12:00:00`);
+  return d.toLocaleDateString("pt-BR", {
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit"
+  }).replace(".", "");
+}
+
+function renderEventCarousel() {
+  const target = document.getElementById("eventCarousel");
+  const dots = document.getElementById("eventDots");
+  if (!target) return;
+
+  const events = HYPE.events || [];
+  if (!events.length) {
+    target.innerHTML = `<div class="event-empty">Nenhum evento disponível no momento.</div>`;
+    if (dots) dots.innerHTML = "";
+    return;
+  }
+
+  target.innerHTML = events.map((e, index) => {
+    const selected = Number(e.id) === Number(HYPE.selectedEventId);
+    const meta = [
+      hypeEventDate(e),
+      e.opening_time ? `Abertura ${String(e.opening_time).slice(0,5)}` : "",
+      e.venue || ""
+    ].filter(Boolean).join(" • ");
+
+    const image = e.cover_image
+      ? `<img src="${hypeEscape(e.cover_image)}" alt="Capa do evento ${hypeEscape(e.name || "")}">`
+      : `<div class="event-card-placeholder">HYPE</div>`;
+
+    return `
+      <article class="event-card ${selected ? "selected" : ""}" data-event-id="${Number(e.id)}">
+        <div class="event-card-image">
+          ${image}
+          <div class="event-card-overlay"></div>
+          <span class="event-card-day">${hypeEscape(hypeEventDate(e))}</span>
+        </div>
+        <div class="event-card-body">
+          <small>${selected ? "EVENTO SELECIONADO" : "PRÓXIMO EVENTO"}</small>
+          <h2>${hypeEscape(e.artist_name || e.name || "HYPE")}</h2>
+          <h3>${hypeEscape(e.name || "Evento HYPE")}</h3>
+          <div class="event-card-meta">${hypeEscape(meta)}</div>
+          <p>${hypeEscape(e.description || "")}</p>
+          <button type="button" class="event-select-btn" onclick="selectEvent(${Number(e.id)})">
+            ${selected ? "✓ SELECIONADO" : "ESCOLHER ESTE EVENTO"}
+          </button>
+        </div>
+      </article>
+    `;
+  }).join("");
+
+  if (dots) {
+    dots.innerHTML = events.map(e =>
+      `<button type="button" class="event-dot ${Number(e.id) === Number(HYPE.selectedEventId) ? "active" : ""}" onclick="selectEvent(${Number(e.id)})" aria-label="Selecionar evento"></button>`
+    ).join("");
+  }
+
+  requestAnimationFrame(() => {
+    target.querySelector(`[data-event-id="${Number(HYPE.selectedEventId)}"]`)?.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest"
+    });
+  });
+}
+
+async function selectEvent(eventId) {
+  HYPE.selectedEventId = Number(eventId);
+  HYPE.event = HYPE.events.find(e => Number(e.id) === Number(eventId)) || null;
+
+  try {
+    const lots = await sbRpc("public_lots_by_event", {
+      p_event_id: Number(eventId)
+    });
+    HYPE.lots = Array.isArray(lots) ? lots : [];
+    renderEventCarousel();
+    renderClientTickets();
+    updateClientTicketState();
+    document.getElementById("ticketBox")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (err) {
+    alert(err.message || "Não foi possível carregar os ingressos deste evento.");
+  }
+}
+
+/* Compatibilidade com páginas antigas */
 function renderPublicEvent() {
-  const e = HYPE.event;
-  const hero = document.getElementById("eventHero");
-  if (!hero || !e) return;
-
-  const artist = document.getElementById("eventHeroArtist");
-  const name = document.getElementById("eventHeroName");
-  const desc = document.getElementById("eventHeroDescription");
-  const meta = document.getElementById("eventHeroMeta");
-  const img = document.getElementById("eventHeroImage");
-
-  if (artist) artist.textContent = e.artist_name || e.name || "HYPE";
-  if (name) name.textContent = e.name || "Evento HYPE LOUNGE CLUB";
-  if (desc) desc.textContent = e.description || "";
-
-  const bits = [];
-  if (e.event_date) {
-    const d = new Date(`${e.event_date}T12:00:00`);
-    bits.push(d.toLocaleDateString("pt-BR"));
-  }
-  if (e.opening_time) bits.push(`Abertura ${String(e.opening_time).slice(0,5)}`);
-  if (e.venue) bits.push(e.venue);
-  if (meta) meta.textContent = bits.join(" • ");
-
-  if (img) {
-    if (e.cover_image) {
-      img.src = e.cover_image;
-      img.style.display = "block";
-    } else {
-      img.removeAttribute("src");
-      img.style.display = "none";
-    }
-  }
-  hero.classList.add("show");
+  renderEventCarousel();
 }
 
 async function loadStaffTickets(search = "") {
   if (!HYPE.user || !HYPE.pass) throw new Error("Usuário não autenticado.");
-  const rows = await sbRpc("staff_list_tickets", {
-    p_username: HYPE.user,
-    p_password: HYPE.pass,
-    p_search: search
-  });
-  HYPE.tickets = Array.isArray(rows) ? rows : [];
-  return HYPE.tickets;
-}
 
-async function loadSectorConfigs() {
-  if (!HYPE.user || !HYPE.pass || !["admin","gerente"].includes(HYPE.role)) {
-    HYPE.sectorConfigs = [];
-    return [];
+  let rows;
+  try {
+    rows = await sbRpc("staff_list_tickets_manual", {
+      p_username: HYPE.user,
+      p_password: HYPE.pass,
+      p_search: search
+    });
+  } catch (_) {
+    rows = await sbRpc("staff_list_tickets", {
+      p_username: HYPE.user,
+      p_password: HYPE.pass,
+      p_search: search
+    });
   }
 
-  const rows = await sbRpc("staff_list_sector_configs", {
-    p_username: HYPE.user,
-    p_password: HYPE.pass
-  });
-
-  // Mantém somente o registro mais recente de cada setor.
-  const map = new Map();
-  (Array.isArray(rows) ? rows : []).forEach(row => {
-    const key = String(row.sector || "").trim().toLowerCase();
-    if (key && !map.has(key)) map.set(key, row);
-  });
-
-  HYPE.sectorConfigs = Array.from(map.values());
-  return HYPE.sectorConfigs;
+  HYPE.tickets = Array.isArray(rows) ? rows : [];
+  return HYPE.tickets;
 }
 
 async function verifyStaff(username, password) {
@@ -342,23 +344,24 @@ let clientTicker = null;
 
 async function initClient() {
   try {
-    const genderSelect = document.getElementById('clientGender');
-    if (genderSelect && !genderSelect.dataset.hypeBound) {
-      genderSelect.dataset.hypeBound = '1';
-      genderSelect.addEventListener('change', () => {
-        renderClientTickets(document.getElementById('ticketType')?.value);
-        updatePrice();
-      });
-    }
     await loadPublicState();
-    renderPublicEvent();
+    renderEventCarousel();
     renderClientTickets();
     updateClientTicketState();
+
     clearInterval(clientTicker);
     clientTicker = setInterval(async () => {
-      try { await loadPublicState(); renderPublicEvent(); renderClientTickets(document.getElementById("ticketType")?.value); updateClientTicketState(); }
-      catch (_) { /* mantém a última tela */ }
-    }, 5000);
+      try {
+        const selectedLot = document.getElementById("ticketType")?.value;
+        await loadPublicState();
+        renderEventCarousel();
+        renderClientTickets(selectedLot);
+        updateClientTicketState();
+        await refreshCurrentOrderStatus(false);
+      } catch (_) {
+        /* mantém a última tela */
+      }
+    }, 8000);
   } catch (err) {
     alert(err.message);
   }
@@ -367,67 +370,26 @@ async function initClient() {
 function renderClientTickets(keepId = null) {
   const select = document.getElementById("ticketType");
   if (!select) return;
-
-  const lots = (HYPE.lots || []).filter(t => t.active !== false);
-  const gender = document.getElementById("clientGender")?.value || "Feminino";
-
+  const lots = HYPE.lots || [];
   select.innerHTML = lots.map(t => {
     const state = hypeStatus(t);
     const unavailable = !state.canBuy;
-    const suffix =
-      state.code === "upcoming" ? " — EM BREVE" :
-      state.code === "expired" ? " — ENCERRADO" :
-      state.code === "soldout" ? " — ESGOTADO" :
-      state.code === "invalid" ? " — CONFIGURAÇÃO INVÁLIDA" : "";
-
-    const genderPrice = hypePriceForGender(t, gender);
-
-    return `<option value="${t.id}" data-price="${genderPrice}" ${unavailable ? "disabled" : ""}>${hypeEscape(t.sector || t.name)} - ${hypeFormatMoney(genderPrice)}${suffix}</option>`;
+    const suffix = state.code === "upcoming" ? " — EM BREVE" : state.code === "expired" ? " — ENCERRADO" : state.code === "soldout" ? " — ESGOTADO" : state.code === "invalid" ? " — CONFIGURAÇÃO INVÁLIDA" : "";
+    const stock = t.quantity_total > 0 ? ` • ${Math.max(0, Number(t.quantity_available || 0))} restantes` : "";
+    return `<option value="${t.id}" data-price="${Number(t.price || 0)}" ${unavailable ? "disabled" : ""}>${hypeEscape(t.name)} - ${hypeFormatMoney(t.price)}${stock}${suffix}</option>`;
   }).join("");
-
   const available = lots.filter(t => hypeStatus(t).canBuy);
-
-  if (keepId && available.some(t => String(t.id) === String(keepId))) {
-    select.value = keepId;
-  } else if (available.length) {
-    select.value = String(available[0].id);
-  }
-
+  if (keepId && available.some(t => String(t.id) === String(keepId))) select.value = keepId;
+  else if (available.length) select.value = String(available[0].id);
   updatePrice();
-}
-
-
-function hypePriceForGender(ticket, gender = null) {
-  if (!ticket) return 0;
-  const selectedGender = gender || document.getElementById("clientGender")?.value || "Feminino";
-  if (selectedGender === "Masculino") {
-    return Number(ticket.price_male ?? ticket.price ?? 0);
-  }
-  if (selectedGender === "Feminino") {
-    return Number(ticket.price_female ?? ticket.price ?? 0);
-  }
-  return Number(ticket.price ?? 0);
 }
 
 function updatePrice() {
   const select = document.getElementById("ticketType");
-  const display = document.getElementById("ticketPriceDisplay");
-  const ticket = (HYPE.lots || []).find(t => String(t.id) === String(select?.value));
-
-  if (!ticket) {
-    if (display) display.value = "NENHUM LOTE DISPONÍVEL";
-    updateClientTicketState();
-    return;
-  }
-
-  const gender = document.getElementById("clientGender")?.value || "Feminino";
-  const price = hypePriceForGender(ticket, gender);
-
-  if (display) display.value = hypeFormatMoney(price);
-
   const opt = select?.options[select.selectedIndex];
-  if (opt) opt.dataset.price = String(price);
-
+  const display = document.getElementById("ticketPriceDisplay");
+  if (!opt) { if (display) display.value = "NENHUM LOTE DISPONÍVEL"; updateClientTicketState(); return; }
+  if (display) display.value = hypeFormatMoney(opt.dataset.price);
   updateClientTicketState();
 }
 
@@ -446,208 +408,203 @@ function updateClientTicketState() {
   if (info) {
     const cls = state.code === "active" ? "active" : state.code === "upcoming" ? "upcoming" : "expired";
     info.className = `ticket-schedule ${cls}`;
-    info.innerHTML = `<div><b>🕒 ${hypeEscape(state.label)}</b></div><div>${hypeEscape(hypeCountdownText(ticket))}</div><small>Setor: ${hypeEscape(ticket.sector || "Pista")}<br>Início: ${ticket.starts_at ? hypeFormatDateTime(ticket.starts_at) : "imediato"} • Fim: ${ticket.ends_at ? hypeFormatDateTime(ticket.ends_at) : "sem limite"}</small>`;
+    info.innerHTML = `<div><b>🕒 ${hypeEscape(state.label)}</b></div><div>${hypeEscape(hypeCountdownText(ticket))}</div><small>Setor: ${hypeEscape(ticket.sector || "Pista")} • Vendidos: ${Number(ticket.quantity_sold || 0)}${ticket.quantity_total ? ` / ${Number(ticket.quantity_total)}` : ""}<br>Início: ${ticket.starts_at ? hypeFormatDateTime(ticket.starts_at) : "imediato"} • Fim: ${ticket.ends_at ? hypeFormatDateTime(ticket.ends_at) : "sem limite"}</small>`;
   }
 }
 
-async function createMercadoPagoPix(ticketId) {
-  const cfg = hypeCfg();
-  // A primeira Edge Function foi publicada no Supabase com este slug.
-  const endpoint = `${cfg.url}/functions/v1/asaas-pix`;
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "apikey": cfg.anonKey,
-      "Authorization": `Bearer ${cfg.anonKey}`
-    },
-    body: JSON.stringify({
-      ticket_id: Number(ticketId)
-    })
-  });
+const HYPE_WHATSAPP = "555496776514";
 
-  let data = {};
-  try { data = await response.json(); } catch (_) {}
-  if (!response.ok || !data?.success) {
-    throw new Error(data?.error || "Não foi possível gerar o PIX no Mercado Pago.");
-  }
-  return data;
+function normalizePhone(value) {
+  return String(value || "").replace(/\D/g, "");
 }
 
-function setPixPaymentStatus(message, type = "waiting") {
-  const el = document.getElementById("pixPaymentStatus");
-  if (!el) return;
-  el.textContent = message;
-  el.dataset.status = type;
+function validEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
 }
 
-async function copyPixCode() {
-  const code = HYPE.currentPixCode || document.getElementById("pixKeyText")?.innerText || "";
-  if (!code) return alert("PIX Copia e Cola ainda não disponível.");
-  try {
-    await navigator.clipboard.writeText(code);
-    hypeNotify("PIX Copia e Cola copiado!");
-  } catch (_) {
-    const area = document.createElement("textarea");
-    area.value = code;
-    document.body.appendChild(area);
-    area.select();
-    document.execCommand("copy");
-    area.remove();
-    hypeNotify("PIX Copia e Cola copiado!");
-  }
-}
-
-function stopPaymentPolling() {
-  if (HYPE.paymentTicker) clearInterval(HYPE.paymentTicker);
-  HYPE.paymentTicker = null;
-}
-
-async function checkCurrentPayment(showPendingMessage = false) {
-  if (!HYPE.currentTicketCode) return null;
-  try {
-    const rows = await sbRpc("public_get_ticket", { p_code: HYPE.currentTicketCode });
-    const entry = Array.isArray(rows) ? rows[0] : rows;
-    if (!entry) return null;
-
-    HYPE.currentEntry = { ...(HYPE.currentEntry || {}), ...entry };
-
-    if (entry.payment_status === "Pago") {
-      stopPaymentPolling();
-      setPixPaymentStatus("PAGAMENTO CONFIRMADO ✅ INGRESSO LIBERADO", "paid");
-      fillTicketCard(HYPE.currentEntry);
-      const pixArea = document.getElementById("pixArea");
-      const ticketCard = document.getElementById("ticketCard");
-      if (pixArea) pixArea.style.display = "none";
-      if (ticketCard) ticketCard.style.display = "block";
-      hypeNotify("Pagamento confirmado! Seu ingresso foi liberado.");
-      return entry;
-    }
-
-    if (entry.payment_status === "Cancelado") {
-      stopPaymentPolling();
-      setPixPaymentStatus("PEDIDO CANCELADO ❌", "canceled");
-      if (showPendingMessage) alert("Este pedido foi cancelado.");
-      return entry;
-    }
-
-    setPixPaymentStatus("AGUARDANDO CONFIRMAÇÃO AUTOMÁTICA DO MERCADO PAGO…", "waiting");
-    if (showPendingMessage) hypeNotify("Pagamento ainda não confirmado.");
-    return entry;
-  } catch (err) {
-    console.warn("[HYPE][payment-check]", err);
-    if (showPendingMessage) alert(err.message || "Não foi possível consultar o pagamento.");
-    return null;
-  }
-}
-
-function startPaymentPolling() {
-  stopPaymentPolling();
-  checkCurrentPayment(false);
-  HYPE.paymentTicker = setInterval(() => checkCurrentPayment(false), 3000);
-}
-
-async function generatePix(e) {
-  e.preventDefault();
+function currentSelectedLot() {
   const select = document.getElementById("ticketType");
-  const lotId = Number(select?.value);
-  if (!lotId) return alert("Nenhum lote disponível.");
+  return (HYPE.lots || []).find(t => String(t.id) === String(select?.value)) || null;
+}
+
+function buildWhatsAppMessage(entry) {
+  const event = HYPE.events.find(e => Number(e.id) === Number(entry.event_id)) || HYPE.event || {};
+  const lines = [
+    "🎟️ *PEDIDO DE INGRESSO — HYPE LOUNGE CLUB*",
+    "",
+    `🎤 Evento: ${event.name || "HYPE"}`,
+    event.artist_name ? `🎧 Artista: ${event.artist_name}` : "",
+    event.event_date ? `📅 Data: ${new Date(`${event.event_date}T12:00:00`).toLocaleDateString("pt-BR")}` : "",
+    "",
+    `👤 Nome: ${entry.customer_name}`,
+    `🎫 Ingresso: ${entry.lot_name || ""}`,
+    `📍 Setor: ${entry.sector || ""}`,
+    `🚻 Gênero: ${entry.gender || "Não informado"}`,
+    `💰 Valor: ${hypeFormatMoney(entry.price)}`,
+    `🔖 Pedido: ${entry.ticket_code}`,
+    `📧 E-mail: ${entry.email || ""}`,
+    "",
+    "Quero finalizar o pagamento deste ingresso.",
+    "Após o pagamento, enviarei o comprovante por aqui."
+  ].filter(Boolean);
+
+  return lines.join("\n");
+}
+
+function openOrderWhatsApp(entry) {
+  const message = buildWhatsAppMessage(entry);
+  const url = `https://wa.me/${HYPE_WHATSAPP}?text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+async function createManualOrder(e) {
+  e.preventDefault();
+
+  const lot = currentSelectedLot();
+  if (!lot) return alert("Escolha um ingresso disponível.");
+
+  const state = hypeStatus(lot);
+  if (!state.canBuy) return alert(`Este lote está ${state.label.toLowerCase()}.`);
 
   const name = document.getElementById("clientName")?.value.trim() || "";
   const phone = document.getElementById("clientPhone")?.value.trim() || "";
+  const email = document.getElementById("clientEmail")?.value.trim() || "";
   const cpf = document.getElementById("clientCpf")?.value.trim() || "";
   const gender = document.getElementById("clientGender")?.value || "";
-  if (!name) return alert("Informe seu nome.");
+
+  if (!name) return alert("Informe seu nome completo.");
+  if (normalizePhone(phone).length < 10) return alert("Informe um WhatsApp válido.");
+  if (!validEmail(email)) return alert("Informe um e-mail válido.");
 
   const submit = document.querySelector('#ticketForm button[type="submit"]');
-  const originalText = submit?.textContent || "GERAR PIX DE PAGAMENTO";
-  if (submit) { submit.disabled = true; submit.textContent = "GERANDO PIX…"; }
+  const oldText = submit?.textContent || "FINALIZAR PELO WHATSAPP";
+  if (submit) {
+    submit.disabled = true;
+    submit.textContent = "CRIANDO PEDIDO...";
+  }
 
   try {
-    let entry = HYPE.currentEntry;
+    const rows = await sbRpc("create_manual_order", {
+      p_name: name,
+      p_phone: phone,
+      p_email: email,
+      p_cpf: cpf,
+      p_gender: gender,
+      p_lot_id: Number(lot.id)
+    });
 
-    // Se a cobrança falhar depois de criar o pedido, o próximo clique reutiliza
-    // o mesmo ingresso e evita duplicar pedidos.
-    if (!entry?.id) {
-      const rows = await sbRpc("create_ticket", {
-        p_name: name,
-        p_phone: phone,
-        p_cpf: cpf,
-        p_gender: gender,
-        p_lot_id: lotId
-      });
-      entry = Array.isArray(rows) ? rows[0] : rows;
-      if (!entry) throw new Error("Não foi possível criar o ingresso.");
-      HYPE.currentEntry = entry;
-      HYPE.currentEntryId = entry.id;
-      HYPE.currentTicketCode = entry.ticket_code;
-    }
+    const entry = Array.isArray(rows) ? rows[0] : rows;
+    if (!entry?.id) throw new Error("Não foi possível criar o pedido.");
 
-    const payment = await createMercadoPagoPix(entry.id);
-    HYPE.currentPixCode = payment.qr_code || "";
+    HYPE.currentEntryId = entry.id;
+    HYPE.currentEntryCode = entry.ticket_code;
 
-    const qrImg = document.getElementById("qrImg");
-    if (qrImg) {
-      if (payment.qr_code_base64) {
-        qrImg.src = `data:image/png;base64,${payment.qr_code_base64}`;
-      } else if (payment.qr_code) {
-        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(payment.qr_code)}`;
-      } else {
-        qrImg.src = "";
-      }
-      qrImg.alt = "QR Code PIX Mercado Pago";
-    }
-
-    const pixText = document.getElementById("pixKeyText");
-    if (pixText) pixText.innerText = payment.qr_code || "PIX Copia e Cola não retornado.";
-
-    const pixArea = document.getElementById("pixArea");
     const form = document.getElementById("ticketForm");
-    if (pixArea) pixArea.style.display = "block";
+    const area = document.getElementById("manualArea");
     if (form) form.style.display = "none";
+    if (area) area.style.display = "block";
 
-    setPixPaymentStatus("AGUARDANDO PAGAMENTO… A CONFIRMAÇÃO É AUTOMÁTICA", "waiting");
-    fillTicketCard(entry);
-    startPaymentPolling();
-    hypeNotify(`PIX do pedido ${entry.ticket_code} gerado!`);
+    const code = document.getElementById("manualOrderCode");
+    const summary = document.getElementById("manualOrderSummary");
+    if (code) code.textContent = entry.ticket_code || "";
+    if (summary) {
+      summary.innerHTML = `
+        <strong>${hypeEscape(entry.customer_name)}</strong><br>
+        ${hypeEscape(entry.lot_name || "")} • ${hypeEscape(entry.sector || "")}<br>
+        ${hypeFormatMoney(entry.price)}<br>
+        <span style="color:#ffcc00">AGUARDANDO CONFIRMAÇÃO DO PAGAMENTO</span>
+      `;
+    }
+
+    window.__hypeCurrentManualEntry = entry;
+    hypeNotify(`Pedido ${entry.ticket_code} criado.`);
+    openOrderWhatsApp(entry);
   } catch (err) {
-    alert(err.message || "Erro ao gerar PIX.");
+    await loadPublicState().catch(() => {});
+    renderEventCarousel();
+    renderClientTickets();
+    alert(err.message || "Erro ao criar pedido.");
   } finally {
-    if (submit) { submit.disabled = false; submit.textContent = originalText; }
+    if (submit) {
+      submit.disabled = false;
+      submit.textContent = oldText;
+    }
+  }
+}
+
+/* Mantém compatibilidade caso alguma página antiga ainda chame generatePix */
+async function generatePix(e) {
+  return createManualOrder(e);
+}
+
+function reopenOrderWhatsApp() {
+  const entry = window.__hypeCurrentManualEntry;
+  if (!entry) return alert("Pedido não encontrado nesta tela.");
+  openOrderWhatsApp(entry);
+}
+
+async function refreshCurrentOrderStatus(showMessage = true) {
+  const code = HYPE.currentEntryCode;
+  if (!code) return;
+
+  try {
+    const rows = await sbRpc("public_get_ticket", { p_code: code });
+    const entry = Array.isArray(rows) ? rows[0] : rows;
+    if (!entry) return;
+
+    const statusEl = document.getElementById("manualPaymentStatus");
+    if (statusEl) {
+      statusEl.textContent = entry.payment_status === "Pago"
+        ? "PAGAMENTO CONFIRMADO ✅"
+        : entry.payment_status === "Cancelado"
+          ? "PEDIDO CANCELADO"
+          : "AGUARDANDO CONFIRMAÇÃO";
+    }
+
+    if (entry.payment_status === "Pago") {
+      fillTicketCard(entry);
+      const area = document.getElementById("manualArea");
+      const card = document.getElementById("ticketCard");
+      if (area) area.style.display = "none";
+      if (card) card.style.display = "block";
+      if (showMessage) hypeNotify("Pagamento confirmado. Ingresso liberado!");
+    } else if (showMessage) {
+      hypeNotify("Pagamento ainda não foi confirmado pelo Admin.");
+    }
+  } catch (err) {
+    if (showMessage) alert(err.message || "Não foi possível consultar o pedido.");
   }
 }
 
 function fillTicketCard(entry) {
   const set = (id, value) => { const el = document.getElementById(id); if (el) el.innerText = value ?? ""; };
-  const isPaid = entry.payment_status === "Pago";
   set("tClientName", entry.customer_name);
   set("tClientPhone", entry.phone || "Não informado");
+  set("tClientEmail", entry.email || "");
   set("tClientGender", entry.gender || "Não especificado");
   set("tTicketName", entry.lot_name || "");
   set("tTicketPrice", hypeFormatMoney(entry.price));
-  set("tTicketStatus", isPaid ? "CONFIRMADO (PAGO ✅)" : entry.payment_status === "Cancelado" ? "CANCELADO ❌" : "Aguardando pagamento");
+  set("tTicketStatus", entry.payment_status === "Pago" ? "CONFIRMADO (PAGO ✅)" : entry.payment_status === "Cancelado" ? "CANCELADO ❌" : "Pendente de Confirmação ADM");
   set("tTicketId", entry.ticket_code || `#${entry.id}`);
-
   const qr = document.getElementById("ticketQrImg");
-  if (qr) {
-    const wrap = qr.closest(".ticket-qr") || qr.parentElement;
-    if (isPaid) {
-      qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(entry.qr_token || entry.ticket_code)}`;
-      if (wrap) wrap.style.display = "block";
-    } else {
-      qr.removeAttribute("src");
-      if (wrap) wrap.style.display = "none";
-    }
-  }
+  if (qr) qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(entry.qr_token || entry.ticket_code)}`;
 }
 
 async function showTicketCard() {
-  const entry = await checkCurrentPayment(true);
-  if (entry?.payment_status !== "Pago") {
-    const pixArea = document.getElementById("pixArea");
-    const ticketCard = document.getElementById("ticketCard");
-    if (pixArea) pixArea.style.display = "block";
-    if (ticketCard) ticketCard.style.display = "none";
+  if (!HYPE.currentEntryId) return;
+  try {
+    const codeEl = document.getElementById("tTicketId");
+    const currentCode = codeEl?.innerText || "";
+    let entry;
+    if (currentCode) {
+      const rows = await sbRpc("public_get_ticket", { p_code: currentCode });
+      entry = Array.isArray(rows) ? rows[0] : rows;
+    }
+    if (entry) fillTicketCard({ ...entry, lot_name: entry.lot_name });
+    document.getElementById("pixArea").style.display = "none";
+    document.getElementById("ticketCard").style.display = "block";
+  } catch (err) {
+    alert(err.message);
   }
 }
 
@@ -658,7 +615,7 @@ async function initAdmin(fromLogin = false) {
   hideLogin();
   if (!['admin','gerente','caixa'].includes(HYPE.role)) return alert("Sem permissão.");
   try {
-    await Promise.all([loadPublicState(), loadStaffTickets(""), loadUsersIfAllowed(), loadSectorConfigs()]);
+    await Promise.all([loadPublicState(), loadStaffTickets(""), loadUsersIfAllowed()]);
     renderConfigTickets();
     renderClientsTable();
     renderUsers();
@@ -666,7 +623,7 @@ async function initAdmin(fromLogin = false) {
     startAdminTicker();
     clearInterval(HYPE.refreshTimer);
     HYPE.refreshTimer = setInterval(async () => {
-      try { await loadPublicState(); await loadStaffTickets(document.getElementById("searchInput")?.value || ""); await loadSectorConfigs(); renderConfigTickets(); renderClientsTable(); }
+      try { await loadPublicState(); await loadStaffTickets(document.getElementById("searchInput")?.value || ""); renderConfigTickets(); renderClientsTable(); }
       catch (_) {}
     }, 5000);
   } catch (err) {
@@ -675,155 +632,26 @@ async function initAdmin(fromLogin = false) {
 }
 
 function renderConfigTickets() {
-  const target = document.getElementById("sectorConfigCards");
+  const target = document.getElementById("ticketConfigList");
   if (!target) return;
-
-  if (!["admin","gerente"].includes(HYPE.role)) {
-    target.innerHTML = `<div class="info-note">Seu perfil não pode alterar setores.</div>`;
+  if (!['admin','gerente'].includes(HYPE.role)) {
+    target.innerHTML = `<div class="info-note">Seu perfil não pode alterar lotes.</div>`;
     return;
   }
-
-  const sectors = ["Pista","VIP","Camarote"];
-
-  target.innerHTML = sectors.map((sector, i) => {
-    const cfg = (HYPE.sectorConfigs || []).find(
-      x => String(x.sector || "").trim().toLowerCase() === sector.toLowerCase()
-    );
-
-    const active = cfg ? !!cfg.active : false;
-    const priceMale = Number(cfg?.price_male ?? 0);
-    const priceFemale = Number(cfg?.price_female ?? 0);
-    const qty = Number(cfg?.quantity_total ?? 0);
-
-    return `
-      <div class="sector-card ${active ? "" : "inactive"}" id="sectorCard_${i}">
-        <div class="sector-card-top">
-          <div>
-            <div class="sector-card-title">${sector.toUpperCase()}</div>
-            <span class="sector-state ${active ? "on" : "off"}" id="sectorState_${i}">
-              ${active ? "ATIVO NA VENDA" : "NÃO MOSTRAR NA VENDA"}
-            </span>
-          </div>
-
-          <label class="sector-toggle">
-            <input type="checkbox" id="sectorActive_${i}" ${active ? "checked" : ""} onchange="toggleSectorCard(${i})">
-            VENDER
-          </label>
-        </div>
-
-        <input type="hidden" id="sectorName_${i}" value="${sector}">
-
-        <div class="sector-fields">
-          <div class="gender-field male">
-            <label>♂ Masculino (R$)</label>
-            <input id="sectorMale_${i}" type="number" step="0.01" min="0" value="${priceMale}">
-          </div>
-
-          <div class="gender-field female">
-            <label>♀ Feminino (R$)</label>
-            <input id="sectorFemale_${i}" type="number" step="0.01" min="0" value="${priceFemale}">
-          </div>
-
-          <div class="form-group">
-            <label>Quantidade (0 = ilimitado)</label>
-            <input id="sectorQty_${i}" type="number" min="0" value="${qty}">
-          </div>
-
-          <div class="form-group">
-            <label>Início da venda</label>
-            <input id="sectorStart_${i}" type="datetime-local" value="${toDateTimeLocal(cfg?.starts_at)}">
-          </div>
-
-          <div class="form-group full">
-            <label>Expiração</label>
-            <input id="sectorEnd_${i}" type="datetime-local" value="${toDateTimeLocal(cfg?.ends_at)}">
-          </div>
-        </div>
+  target.innerHTML = (HYPE.lots || []).map((t, i) => `
+    <div class="ticket-admin-card">
+      <div class="ticket-admin-head"><strong>${hypeEscape(t.name)}</strong><span class="schedule-badge ${hypeStatus(t).code === 'active' ? 'active' : hypeStatus(t).code === 'upcoming' ? 'upcoming' : 'expired'}">${hypeEscape(hypeStatus(t).label)}</span></div>
+      <div class="ticket-admin-grid ticket-admin-grid-wide">
+        <div class="form-group"><label>Nome</label><input id="tName_${i}" value="${hypeEscape(t.name)}"></div>
+        <div class="form-group"><label>Setor</label><input id="tSector_${i}" value="${hypeEscape(t.sector || '')}"></div>
+        <div class="form-group"><label>Preço</label><input id="tPrice_${i}" type="number" step="0.01" min="0" value="${Number(t.price || 0)}"></div>
+        <div class="form-group"><label>Quantidade (0 = ilimitado)</label><input id="tQty_${i}" type="number" min="0" value="${Number(t.quantity_total || 0)}"></div>
+        <div class="form-group"><label>Início</label><input id="tStart_${i}" type="datetime-local" value="${toDateTimeLocal(t.starts_at)}"></div>
+        <div class="form-group"><label>Expiração</label><input id="tEnd_${i}" type="datetime-local" value="${toDateTimeLocal(t.ends_at)}"></div>
       </div>
-    `;
-  }).join("");
-}
-
-function toggleSectorCard(index) {
-  const checked = !!document.getElementById(`sectorActive_${index}`)?.checked;
-  const card = document.getElementById(`sectorCard_${index}`);
-  const state = document.getElementById(`sectorState_${index}`);
-
-  card?.classList.toggle("inactive", !checked);
-
-  if (state) {
-    state.className = `sector-state ${checked ? "on" : "off"}`;
-    state.textContent = checked ? "ATIVO NA VENDA" : "NÃO MOSTRAR NA VENDA";
-  }
-}
-
-async function saveAllSectorConfigs() {
-  if (!["admin","gerente"].includes(HYPE.role)) {
-    return alert("Somente Admin/Gerente pode alterar os setores.");
-  }
-
-  const sectors = ["Pista","VIP","Camarote"];
-  const payloads = [];
-
-  for (let i = 0; i < sectors.length; i++) {
-    const active = !!document.getElementById(`sectorActive_${i}`)?.checked;
-    const priceMale = Number(document.getElementById(`sectorMale_${i}`)?.value || 0);
-    const priceFemale = Number(document.getElementById(`sectorFemale_${i}`)?.value || 0);
-    const qty = Number(document.getElementById(`sectorQty_${i}`)?.value || 0);
-    const startRaw = document.getElementById(`sectorStart_${i}`)?.value || "";
-    const endRaw = document.getElementById(`sectorEnd_${i}`)?.value || "";
-
-    if (active && (!Number.isFinite(priceMale) || priceMale < 0 || !Number.isFinite(priceFemale) || priceFemale < 0)) {
-      return alert(`Confira os valores de ${sectors[i]}.`);
-    }
-
-    if (!Number.isFinite(qty) || qty < 0) {
-      return alert(`Confira a quantidade de ${sectors[i]}.`);
-    }
-
-    let startAt = null;
-    let endAt = null;
-
-    try {
-      startAt = fromDateTimeLocal(startRaw);
-      endAt = fromDateTimeLocal(endRaw);
-    } catch (_) {
-      return alert(`Confira as datas de ${sectors[i]}.`);
-    }
-
-    if (startAt && endAt && new Date(endAt) <= new Date(startAt)) {
-      return alert(`A expiração de ${sectors[i]} precisa ser depois do início.`);
-    }
-
-    payloads.push({
-      p_username: HYPE.user,
-      p_password: HYPE.pass,
-      p_sector: sectors[i],
-      p_price_male: priceMale,
-      p_price_female: priceFemale,
-      p_quantity_total: qty,
-      p_starts_at: startAt,
-      p_ends_at: endAt,
-      p_active: active,
-      p_sort_order: i + 1
-    });
-  }
-
-  if (!payloads.some(x => x.p_active)) {
-    if (!confirm("Nenhum setor ficará disponível para venda. Deseja continuar?")) return;
-  }
-
-  try {
-    for (const payload of payloads) {
-      await sbRpc("staff_save_sector_config", payload);
-    }
-
-    await Promise.all([loadPublicState(), loadSectorConfigs()]);
-    renderConfigTickets();
-    hypeNotify("Setores atualizados. A página de venda já vai mostrar somente os ativos.");
-  } catch (err) {
-    alert(err.message || "Erro ao salvar setores.");
-  }
+      <div class="ticket-admin-preview"><span>Vendidos: <b>${Number(t.quantity_sold || 0)}</b></span><span>Disponíveis: <b>${t.quantity_total ? Math.max(0,Number(t.quantity_available||0)) : '∞'}</b></span><span>Setor: <b>${hypeEscape(t.sector||'Pista')}</b></span><span>${hypeEscape(hypeCountdownText(t))}</span></div>
+      <div class="ticket-admin-actions"><button class="btn-action" onclick="updateTicket(${i})">SALVAR LOTE</button><button class="btn-action" onclick="clearTicketSchedule(${i})">REMOVER HORÁRIOS</button></div>
+    </div>`).join("");
 }
 
 function toDateTimeLocal(value) {
@@ -836,136 +664,28 @@ function toDateTimeLocal(value) {
 
 function fromDateTimeLocal(value) { return value ? new Date(value).toISOString() : null; }
 
-
-async function createNewLot() {
-  if (!["admin","gerente"].includes(HYPE.role)) {
-    return alert("Somente Admin/Gerente pode alterar setores.");
-  }
-
-  const sector = document.getElementById("newLotSector")?.value || "Pista";
-  const maleRaw = document.getElementById("newLotPriceMale")?.value;
-  const femaleRaw = document.getElementById("newLotPriceFemale")?.value;
-  const qtyRaw = document.getElementById("newLotQty")?.value;
-  const startRaw = document.getElementById("newLotStart")?.value || "";
-  const endRaw = document.getElementById("newLotEnd")?.value || "";
-
-  const priceMale = Number(maleRaw);
-  const priceFemale = Number(femaleRaw);
-  const qty = Number(qtyRaw || 0);
-
-  if (maleRaw === "" || !Number.isFinite(priceMale) || priceMale < 0) {
-    return alert("Digite um preço Masculino válido.");
-  }
-
-  if (femaleRaw === "" || !Number.isFinite(priceFemale) || priceFemale < 0) {
-    return alert("Digite um preço Feminino válido.");
-  }
-
-  if (!Number.isFinite(qty) || qty < 0) {
-    return alert("Digite uma quantidade válida.");
-  }
-
-  let startAt = null;
-  let endAt = null;
-  try {
-    startAt = fromDateTimeLocal(startRaw);
-    endAt = fromDateTimeLocal(endRaw);
-  } catch (_) {
-    return alert("Confira as datas e horários.");
-  }
-
-  if (startAt && endAt && new Date(endAt) <= new Date(startAt)) {
-    return alert("A expiração precisa ser depois do início da venda.");
-  }
-
-  const existing = (HYPE.lots || []).find(
-    t => String(t.sector || t.name || "").trim().toLowerCase() === String(sector).trim().toLowerCase()
-  );
-
-  try {
-    await sbRpc("staff_upsert_lot_gender", {
-      p_username: HYPE.user,
-      p_password: HYPE.pass,
-      p_id: existing ? existing.id : 0,
-      p_sector: sector,
-      p_price_male: priceMale,
-      p_price_female: priceFemale,
-      p_quantity_total: qty,
-      p_starts_at: startAt,
-      p_ends_at: endAt,
-      p_active: true,
-      p_sort_order: existing ? ((HYPE.lots || []).findIndex(t => t.id === existing.id) + 1) : ((HYPE.lots?.length || 0) + 1)
-    });
-
-    await loadPublicState();
-    renderConfigTickets();
-    hypeNotify(existing ? "Valores do setor atualizados." : "Setor criado com sucesso.");
-  } catch (err) {
-    alert(err.message || "Erro ao salvar setor.");
-  }
-}
 async function updateTicket(index) {
   const t = HYPE.lots[index];
   if (!t) return;
-
   try {
-    const sector = document.getElementById(`tSector_${index}`).value;
-    const priceMale = Number(document.getElementById(`tPriceMale_${index}`).value);
-    const priceFemale = Number(document.getElementById(`tPriceFemale_${index}`).value);
+    const name = document.getElementById(`tName_${index}`).value.trim();
+    const sector = document.getElementById(`tSector_${index}`).value.trim();
+    const price = Number(document.getElementById(`tPrice_${index}`).value);
     const qty = Number(document.getElementById(`tQty_${index}`).value);
     const startAt = fromDateTimeLocal(document.getElementById(`tStart_${index}`).value);
     const endAt = fromDateTimeLocal(document.getElementById(`tEnd_${index}`).value);
-
-    if (!Number.isFinite(priceMale) || priceMale < 0) return alert("Preço Masculino inválido.");
-    if (!Number.isFinite(priceFemale) || priceFemale < 0) return alert("Preço Feminino inválido.");
-
-    await sbRpc("staff_upsert_lot_gender", {
-      p_username: HYPE.user,
-      p_password: HYPE.pass,
-      p_id: t.id,
-      p_sector: sector,
-      p_price_male: priceMale,
-      p_price_female: priceFemale,
-      p_quantity_total: qty,
-      p_starts_at: startAt,
-      p_ends_at: endAt,
-      p_active: true,
-      p_sort_order: index + 1
-    });
-
-    await loadPublicState();
-    renderConfigTickets();
-    hypeNotify("Valores do setor atualizados.");
-  } catch (err) {
-    alert(err.message);
-  }
+    await sbRpc("staff_upsert_lot", {p_username:HYPE.user,p_password:HYPE.pass,p_id:t.id,p_name:name,p_sector:sector,p_price:price,p_quantity_total:qty,p_starts_at:startAt,p_ends_at:endAt,p_active:true,p_sort_order:index+1});
+    await loadPublicState(); renderConfigTickets(); hypeNotify("Lote atualizado.");
+  } catch (err) { alert(err.message); }
 }
 
 async function clearTicketSchedule(index) {
   const t = HYPE.lots[index];
   if (!t) return;
-
   try {
-    await sbRpc("staff_upsert_lot_gender", {
-      p_username: HYPE.user,
-      p_password: HYPE.pass,
-      p_id: t.id,
-      p_sector: t.sector,
-      p_price_male: Number(t.price_male ?? t.price ?? 0),
-      p_price_female: Number(t.price_female ?? t.price ?? 0),
-      p_quantity_total: Number(t.quantity_total || 0),
-      p_starts_at: null,
-      p_ends_at: null,
-      p_active: true,
-      p_sort_order: index + 1
-    });
-
-    await loadPublicState();
-    renderConfigTickets();
-    hypeNotify("Horários removidos.");
-  } catch (err) {
-    alert(err.message);
-  }
+    await sbRpc("staff_upsert_lot", {p_username:HYPE.user,p_password:HYPE.pass,p_id:t.id,p_name:t.name,p_sector:t.sector,p_price:Number(t.price),p_quantity_total:Number(t.quantity_total),p_starts_at:null,p_ends_at:null,p_active:true,p_sort_order:index+1});
+    await loadPublicState(); renderConfigTickets(); hypeNotify("Horários removidos.");
+  } catch (err) { alert(err.message); }
 }
 
 async function savePixKey() {
@@ -986,7 +706,7 @@ async function renderClientsTable() {
     const status = item.payment_status === 'Pago' ? 'pago' : item.payment_status === 'Cancelado' ? 'cancelado' : 'pendente';
     const entry = item.entry_status === 'Entrada utilizada' ? ` • Entrada ${hypeFormatDateTime(item.entry_at)}` : '';
     const canPay = ['admin','gerente','caixa'].includes(HYPE.role);
-    return `<tr><td><strong>${hypeEscape(item.customer_name)}</strong><br><span class="badge gender">${hypeEscape(item.gender || 'N/I')}</span><small style="color:var(--muted)">${hypeEscape(item.ticket_code)}${entry}</small></td><td>${hypeFormatMoney(item.price)}<br><small style="color:var(--muted)">${hypeEscape(item.lot_name || '')}</small></td><td><span class="badge ${status}">${hypeEscape(item.payment_status.toUpperCase())}</span><br><small>${hypeEscape(item.entry_status)}</small></td><td><div class="actions-cell">${canPay && item.payment_status !== 'Pago' ? `<button class="btn-action" onclick="setPayment(${item.id},'Pago')">CONFIRMAR</button>` : ''}${canPay && item.payment_status === 'Pago' ? `<button class="btn-action" onclick="setPayment(${item.id},'Pendente')">PENDENTE</button>` : ''}${canPay && item.payment_status !== 'Cancelado' ? `<button class="btn-action btn-del" onclick="setPayment(${item.id},'Cancelado')">CANCELAR</button>` : ''}</div></td></tr>`;
+    return `<tr><td><strong>${hypeEscape(item.customer_name)}</strong><br><span class="badge gender">${hypeEscape(item.gender || 'N/I')}</span><small style="color:var(--muted)">${hypeEscape(item.ticket_code)}${entry}</small><small style="display:block;color:var(--muted)">📱 ${hypeEscape(item.phone || '—')}<br>📧 ${hypeEscape(item.email || '—')}</small></td><td>${hypeFormatMoney(item.price)}<br><small style="color:var(--muted)">${hypeEscape(item.lot_name || '')}</small><small style="display:block;color:var(--muted)">${hypeEscape(item.payment_method || 'Pagamento')}</small></td><td><span class="badge ${status}">${hypeEscape(item.payment_status.toUpperCase())}</span><br><small>${hypeEscape(item.entry_status)}</small></td><td><div class="actions-cell">${canPay && item.payment_status !== 'Pago' ? `<button class="btn-action" onclick="setPayment(${item.id},'Pago')">CONFIRMAR</button>` : ''}${canPay && item.payment_status === 'Pago' ? `<button class="btn-action" onclick="setPayment(${item.id},'Pendente')">PENDENTE</button>` : ''}${canPay && item.payment_status !== 'Cancelado' ? `<button class="btn-action btn-del" onclick="setPayment(${item.id},'Cancelado')">CANCELAR</button>` : ''}</div></td></tr>`;
   }).join('');
 
   const total = HYPE.tickets.length;
@@ -1050,7 +770,7 @@ async function deleteUser(id) {
 
 function exportEntriesCSV() {
   const rows = HYPE.tickets || [];
-  const headers = ['id','ticket_code','customer_name','phone','cpf','gender','lot_name','sector','price','payment_status','entry_status','purchased_at','paid_at','entry_at'];
+  const headers = ['id','ticket_code','customer_name','phone','email','cpf','gender','lot_name','sector','price','payment_method','payment_status','entry_status','purchased_at','paid_at','email_sent_at','entry_at'];
   const csv = [headers.join(';'), ...rows.map(r=>headers.map(h=>`"${String(r[h] ?? '').replaceAll('"','""')}"`).join(';'))].join('\n');
   const blob = new Blob(["\uFEFF" + csv], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`hype-ingressos-${new Date().toISOString().slice(0,10)}.csv`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
