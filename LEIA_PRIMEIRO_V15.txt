@@ -1,0 +1,15 @@
+HYPE V15 - CONTROLE DE ACESSO
+
+PERFIS
+- ADMIN: acesso total ao Admin e à Portaria.
+- PORTARIA: somente Portaria (consulta/QR/confirmação de entrada).
+- GERENTE: Admin, mas sem Portaria, gestão de equipe e limpeza definitiva.
+- CAIXA: funções de pedidos/pagamentos já permitidas no Admin; sem Portaria.
+
+INSTALAÇÃO
+1) Supabase > SQL Editor: execute SUPABASE_V15_PERMISSOES.sql uma vez.
+2) GitHub: substitua app.js, admin.html e portaria.html.
+3) Commit changes.
+4) Atualize com Ctrl+F5.
+
+Não altera Asaas, webhook, e-mail, eventos, preços ou ingressos existentes.

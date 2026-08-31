@@ -125,14 +125,14 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 
 <nav class="top-nav">
   <a href="cliente.html">🛒 Comprar</a>
-  <a href="admin.html">⚙️ Admin</a>
+  <a id="navAdminLink" href="admin.html" style="display:none">⚙️ Admin</a>
   <a href="portaria.html" style="color:#fff;border-color:var(--red)">🚪 Portaria</a>
 </nav>
 
 <div id="loginScreen">
   <div class="loginBox">
     <div class="brand-logo-wrap"><img src="logo-hype.png?v=20260830-2110" class="brand-logo" alt="HYPE Lounge Club"></div><h2 style="margin-bottom:5px;color:#fff">PORTARIA // HYPE LOUNGE CLUB</h2>
-    <p style="color:var(--muted);font-size:12px;margin-bottom:20px">Acesso da equipe de portaria</p>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:20px">Acesso exclusivo: Portaria ou Admin</p>
     <input type="text" id="portariaUser" placeholder="Utilizador" value="portaria" style="width:100%;height:42px;background:#060608;border:1px solid var(--line);border-radius:9px;padding:0 12px;color:#fff;margin-bottom:10px">
     <input type="password" id="portariaPass" placeholder="Palavra-passe..." autofocus onkeypress="if(event.key === 'Enter') checkPortariaLogin()">
     <button class="btn" onclick="checkPortariaLogin()">ENTRAR NA PORTARIA</button>

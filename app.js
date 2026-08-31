@@ -446,7 +446,8 @@ async function selectEvent(eventId) {
     renderEventCarousel();
     renderClientTickets();
     updateClientTicketState();
-    document.getElementById("ticketBox")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    hypeV14Render();
+    document.getElementById("v14Spotlight")?.scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (err) {
     alert(err.message || "Não foi possível carregar os ingressos deste evento.");
   }
@@ -531,8 +532,13 @@ async function requireLogin(kind) {
     try {
       const found = await verifyStaff(HYPE.user, HYPE.pass);
       if (found) {
-        HYPE.role = found.role;
-        return true;
+        const allowed = kind === "portaria"
+          ? ["admin", "portaria"]
+          : ["admin", "gerente", "caixa"];
+        if (allowed.includes(found.role)) {
+          HYPE.role = found.role;
+          return true;
+        }
       }
     } catch (_) {}
     sessionClear();
@@ -548,6 +554,24 @@ function hideLogin() {
 function showLogin() {
   const el = document.getElementById("loginScreen");
   if (el) el.style.display = "grid";
+}
+
+function applyStaffRoleUI() {
+  const isAdmin = HYPE.role === "admin";
+
+  // Só o ADMIN vê os atalhos que levam a outras áreas restritas.
+  const navPortaria = document.getElementById("navPortariaLink");
+  if (navPortaria) navPortaria.style.display = isAdmin ? "inline-flex" : "none";
+
+  const navAdmin = document.getElementById("navAdminLink");
+  if (navAdmin) navAdmin.style.display = isAdmin ? "inline-flex" : "none";
+
+  // Gestão de equipe e limpeza definitiva ficam exclusivas do ADMIN.
+  const teamPanel = document.getElementById("teamAdminPanel");
+  if (teamPanel) teamPanel.style.display = isAdmin ? "block" : "none";
+
+  const purgeBtn = document.getElementById("purgeTicketsBtn");
+  if (purgeBtn) purgeBtn.style.display = isAdmin ? "inline-flex" : "none";
 }
 
 async function checkLogin() {
@@ -571,9 +595,10 @@ async function checkPortariaLogin() {
   try {
     const found = await verifyStaff(username, password);
     if (!found) return alert("Usuário ou senha incorretos.");
-    if (!['admin','gerente','portaria'].includes(found.role)) return alert("Esta conta não possui acesso à portaria.");
+    if (!['admin','portaria'].includes(found.role)) return alert("Esta conta não possui acesso à portaria.");
     sessionSave(found.username, password, found.role);
     hideLogin();
+    applyStaffRoleUI();
     document.getElementById("portariaSearch")?.focus();
   } catch (err) { alert(err.message); }
 }
@@ -607,6 +632,7 @@ async function refreshClientCatalogSafely() {
   renderEventCarousel();
   renderClientTickets(selectedLot);
   updateClientTicketState();
+  hypeV14Render();
 
   clientCatalogLastRefresh = Date.now();
 
@@ -620,6 +646,7 @@ async function initClient() {
     renderEventCarousel();
     renderClientTickets();
     updateClientTicketState();
+    hypeV14Render();
     clientCatalogLastRefresh = Date.now();
 
     clearInterval(clientTicker);
@@ -627,6 +654,7 @@ async function initClient() {
       try {
         // Atualiza contagem/status sem reconstruir os campos enquanto o cliente digita.
         updateClientTicketState();
+        hypeV14Tick();
         await refreshCurrentOrderStatus(false);
 
         // Atualiza eventos/lotes no máximo a cada 30s e nunca durante a digitação.
@@ -666,6 +694,7 @@ function renderClientTickets(keepId = null) {
   if (keepId && available.some(t => String(t.id) === String(keepId))) select.value = keepId;
   else if (available.length) select.value = String(available[0].id);
   updatePrice();
+  hypeV14RenderLots();
 }
 
 function updatePrice() {
@@ -679,6 +708,7 @@ function updatePrice() {
   }
   if (display) display.value = hypeFormatMoney(getLotGenderPrice(lot));
   updateClientTicketState();
+  hypeV14RenderLots();
 }
 
 function updateClientTicketState() {
@@ -1324,8 +1354,13 @@ async function saveAdminEvent() {
 
 async function initAdmin(fromLogin = false) {
   if (!fromLogin && !(await requireLogin("admin"))) { showLogin(); return; }
+  if (!["admin","gerente","caixa"].includes(HYPE.role)) {
+    sessionClear();
+    showLogin();
+    return;
+  }
   hideLogin();
-  if (!["admin","gerente","caixa"].includes(HYPE.role)) return alert("Sem permissão.");
+  applyStaffRoleUI();
   try {
     await loadPublicState();
     await loadStaffTickets("");
@@ -1609,8 +1644,8 @@ async function toggleStatus(id) { const item = HYPE.tickets.find(x=>Number(x.id)
 async function deleteClient(id) { await setPayment(id,'Cancelado'); }
 
 async function clearAll() {
-  if (!["admin","gerente"].includes(HYPE.role)) {
-    return alert("Somente Admin ou Gerente pode apagar os ingressos.");
+  if (HYPE.role !== "admin") {
+    return alert("Somente o Admin pode apagar definitivamente os ingressos.");
   }
 
   const ok = confirm(
@@ -1655,13 +1690,13 @@ async function clearAll() {
 }
 
 async function loadUsersIfAllowed() {
-  if (!['admin','gerente'].includes(HYPE.role)) return [];
+  if (HYPE.role !== 'admin') return [];
   return sbRpc("staff_list_users", {p_username:HYPE.user,p_password:HYPE.pass});
 }
 
 async function renderUsers() {
   const body = document.getElementById('usersTableBody');
-  if (!body || !['admin','gerente'].includes(HYPE.role)) return;
+  if (!body || HYPE.role !== 'admin') return;
   try {
     const rows = await loadUsersIfAllowed();
     body.innerHTML = (rows||[]).map(u=>`<tr><td>${hypeEscape(u.name)}<br><small>${hypeEscape(u.username)}</small></td><td>${hypeEscape(u.role)}</td><td>${u.active ? `<button class="btn-action btn-del" onclick="deleteUser(${u.id})">DESATIVAR</button>` : '<span class="badge cancelado">INATIVO</span>'}</td></tr>`).join('');
@@ -1669,6 +1704,7 @@ async function renderUsers() {
 }
 
 async function addUser() {
+  if (HYPE.role !== 'admin') return alert('Somente o Admin pode gerenciar a equipe.');
   const name = document.getElementById('newUserName')?.value.trim() || '';
   const username = document.getElementById('newUsername')?.value.trim() || '';
   const password = document.getElementById('newUserPassword')?.value || '';
@@ -1682,6 +1718,7 @@ async function addUser() {
 }
 
 async function deleteUser(id) {
+  if (HYPE.role !== 'admin') return alert('Somente o Admin pode gerenciar a equipe.');
   if (!confirm('Desativar este usuário?')) return;
   try { await sbRpc('staff_delete_user',{p_username:HYPE.user,p_password:HYPE.pass,p_user_id:id}); await renderUsers(); hypeNotify('Usuário desativado.'); }
   catch(err){ alert(err.message); }
@@ -1721,7 +1758,13 @@ function startAdminTicker() {
 
 async function initPortaria() {
   if (!(await requireLogin("portaria"))) { showLogin(); return; }
+  if (!["admin","portaria"].includes(HYPE.role)) {
+    sessionClear();
+    showLogin();
+    return;
+  }
   hideLogin();
+  applyStaffRoleUI();
   document.getElementById("portariaSearch")?.focus();
 }
 
@@ -2013,6 +2056,273 @@ async function saveEventManager() {
   }
 }
 
+
+
+
+/* ========================= HYPE V14 EXPERIENCE ========================= */
+
+let hypeV14Observer = null;
+let hypeV14ParallaxBound = false;
+
+function hypeV14EventTarget(event = HYPE.event) {
+  if (!event?.event_date) return null;
+  const time = String(event.opening_time || "00:00").slice(0, 5);
+  const d = new Date(`${event.event_date}T${time}:00`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function hypeV14SetText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value ?? "";
+}
+
+function hypeV14Tick() {
+  const event = HYPE.event;
+  const target = hypeV14EventTarget(event);
+  const label = document.getElementById("v14CountdownLabel");
+  const ids = ["v14Days","v14Hours","v14Minutes","v14Seconds"];
+
+  if (!target) {
+    if (label) label.textContent = "DATA A CONFIRMAR";
+    ids.forEach(id => hypeV14SetText(id, "--"));
+    return;
+  }
+
+  let diff = target.getTime() - Date.now();
+  if (diff <= 0) {
+    const sameDay = new Date().toDateString() === target.toDateString();
+    if (label) label.textContent = sameDay ? "É HOJE — A HYPE TE ESPERA" : "EVENTO LIBERADO";
+    diff = 0;
+  } else if (label) {
+    label.textContent = "CONTAGEM REGRESSIVA PARA O EVENTO";
+  }
+
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins = Math.floor((diff % 3600000) / 60000);
+  const secs = Math.floor((diff % 60000) / 1000);
+  hypeV14SetText("v14Days", String(days).padStart(2, "0"));
+  hypeV14SetText("v14Hours", String(hours).padStart(2, "0"));
+  hypeV14SetText("v14Minutes", String(mins).padStart(2, "0"));
+  hypeV14SetText("v14Seconds", String(secs).padStart(2, "0"));
+}
+
+function hypeV14Artists(event = HYPE.event) {
+  const raw = String(event?.artist_name || "").trim();
+  if (!raw) return [];
+  return raw
+    .split(/\s*[•|;,/]\s*/g)
+    .map(x => x.trim())
+    .filter(Boolean)
+    .slice(0, 12);
+}
+
+function hypeV14CurrentShareText() {
+  const e = HYPE.event || {};
+  const parts = [
+    `🔥 ${e.artist_name || e.name || "HYPE LOUNGE CLUB"}`,
+    e.name && e.artist_name ? e.name : "",
+    e.event_date ? `📅 ${hypeEventDate(e)}` : "",
+    e.opening_time ? `🕦 Abertura ${String(e.opening_time).slice(0,5)}` : "",
+    e.venue ? `📍 ${e.venue}` : "",
+    "",
+    "🎟️ Garanta seu ingresso:"
+  ].filter(Boolean);
+  return `${parts.join("\n")}\n${location.href}`;
+}
+
+function hypeV14ShareWhatsApp() {
+  const text = encodeURIComponent(hypeV14CurrentShareText());
+  window.open(`https://wa.me/?text=${text}`, "_blank", "noopener");
+}
+
+async function hypeV14ShareEvent() {
+  const e = HYPE.event || {};
+  const data = {
+    title: `${e.artist_name || e.name || "HYPE LOUNGE CLUB"} — HYPE`,
+    text: hypeV14CurrentShareText().replace(location.href, "").trim(),
+    url: location.href
+  };
+  if (navigator.share) {
+    try { await navigator.share(data); return; } catch (_) {}
+  }
+  try {
+    await navigator.clipboard.writeText(hypeV14CurrentShareText());
+    hypeNotify("Link do evento copiado.");
+  } catch (_) {
+    hypeV14ShareWhatsApp();
+  }
+}
+
+function hypeV14OpenMap() {
+  const venue = String(HYPE.event?.venue || "").trim();
+  if (!venue) return;
+  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue)}`, "_blank", "noopener");
+}
+
+function hypeV14ScrollToTickets() {
+  const form = document.getElementById("ticketForm");
+  const box = document.getElementById("ticketBox");
+  (form || box)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  setTimeout(() => document.getElementById("clientName")?.focus({ preventScroll: true }), 550);
+}
+
+function hypeV14ChooseLot(lotId) {
+  const lot = (HYPE.lots || []).find(x => Number(x.id) === Number(lotId));
+  if (!lot || !hypeStatus(lot).canBuy) return;
+  const select = document.getElementById("ticketType");
+  if (select) select.value = String(lotId);
+  updatePrice();
+  hypeV14RenderLots();
+  hypeV14ScrollToTickets();
+}
+
+function hypeV14RenderLots() {
+  const grid = document.getElementById("v14LotGrid");
+  if (!grid) return;
+
+  const lots = HYPE.lots || [];
+  const selectedId = document.getElementById("ticketType")?.value || "";
+  const gender = document.getElementById("clientGender")?.value || "Feminino";
+
+  if (!lots.length) {
+    grid.innerHTML = `<div class="event-empty">Nenhum ingresso disponível para este evento.</div>`;
+    hypeV14SetText("v14StickyText", "Ingressos indisponíveis");
+    return;
+  }
+
+  grid.innerHTML = lots.map(lot => {
+    const state = hypeStatus(lot);
+    const available = lot.quantity_total > 0 ? Math.max(0, Number(lot.quantity_available || 0)) : null;
+    const total = Number(lot.quantity_total || 0);
+    const hot = available !== null && available > 0 && (available <= 20 || (total > 0 && available / total <= .20));
+    const stockText = available === null
+      ? "Disponibilidade livre"
+      : hot
+        ? `🔥 ÚLTIMOS ${available} INGRESSOS`
+        : `${available} disponível${available === 1 ? "" : "is"}`;
+    const active = String(lot.id) === String(selectedId);
+    const disabled = !state.canBuy;
+    const price = getLotGenderPrice(lot, gender);
+
+    return `
+      <button type="button" class="v14-lot-card ${active ? "active" : ""} ${disabled ? "disabled" : ""}"
+        onclick="hypeV14ChooseLot(${Number(lot.id)})" ${disabled ? "disabled" : ""}>
+        <span class="v14-lot-status">${hypeEscape(state.label)}</span>
+        <small>${hypeEscape(lot.sector || "INGRESSO")}</small>
+        <strong>${hypeEscape(lot.name || lot.sector || "Ingresso HYPE")}</strong>
+        <div class="v14-lot-price">${hypeFormatMoney(price)}</div>
+        <div class="v14-lot-stock ${hot ? "hot" : ""}">${hypeEscape(stockText)}</div>
+      </button>`;
+  }).join("");
+
+  const current = lots.find(l => String(l.id) === String(selectedId)) || lots.find(l => hypeStatus(l).canBuy);
+  if (current) {
+    hypeV14SetText(
+      "v14StickyText",
+      `${current.sector || current.name} • ${hypeFormatMoney(getLotGenderPrice(current, gender))}`
+    );
+  } else {
+    hypeV14SetText("v14StickyText", "Escolha seu ingresso");
+  }
+}
+
+function hypeV14Render() {
+  const root = document.getElementById("v14Spotlight");
+  if (!root) return;
+
+  const e = HYPE.event || {};
+  hypeV14SetText("v14Artist", e.artist_name || e.name || "HYPE LOUNGE CLUB");
+  hypeV14SetText("v14EventName", e.name || "Evento HYPE");
+  hypeV14SetText("v14EventDescription", e.description || "Uma noite para viver a experiência HYPE.");
+
+  const meta = document.getElementById("v14EventMeta");
+  if (meta) {
+    const chips = [
+      e.event_date ? `📅 ${hypeEventDate(e)}` : "",
+      e.opening_time ? `🕦 ${String(e.opening_time).slice(0,5)}` : "",
+      e.venue ? `📍 ${e.venue}` : ""
+    ].filter(Boolean);
+    meta.innerHTML = chips.map(x => `<span class="v14-meta-chip">${hypeEscape(x)}</span>`).join("");
+  }
+
+  const image = document.getElementById("v14HeroImage");
+  const placeholder = document.getElementById("v14HeroPlaceholder");
+  const bg = document.getElementById("v14SpotlightBg");
+  if (e.cover_image) {
+    if (image) {
+      image.src = e.cover_image;
+      image.alt = `Arte do evento ${e.name || "HYPE"}`;
+      image.style.display = "block";
+    }
+    if (placeholder) placeholder.style.display = "none";
+    if (bg) bg.style.backgroundImage = `url(${JSON.stringify(e.cover_image)})`;
+  } else {
+    if (image) {
+      image.removeAttribute("src");
+      image.style.display = "none";
+    }
+    if (placeholder) placeholder.style.display = "grid";
+    if (bg) bg.style.backgroundImage = "none";
+  }
+
+  const artists = hypeV14Artists(e);
+  const lineup = document.getElementById("v14Lineup");
+  const track = document.getElementById("v14LineupTrack");
+  if (lineup && track) {
+    if (artists.length) {
+      lineup.style.display = "block";
+      track.innerHTML = artists.map((artist, index) =>
+        `<span class="v14-lineup-item">${String(index + 1).padStart(2,"0")} • ${hypeEscape(artist)}</span>`
+      ).join("");
+    } else {
+      lineup.style.display = "none";
+      track.innerHTML = "";
+    }
+  }
+
+  const mapButton = document.getElementById("v14MapButton");
+  if (mapButton) mapButton.style.display = e.venue ? "" : "none";
+
+  hypeV14Tick();
+  hypeV14RenderLots();
+  hypeV14InitInteractions();
+}
+
+function hypeV14InitInteractions() {
+  if (!hypeV14Observer && "IntersectionObserver" in window) {
+    hypeV14Observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          hypeV14Observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: .12 });
+  }
+  document.querySelectorAll(".v14-reveal:not(.visible)").forEach(el => {
+    if (hypeV14Observer) hypeV14Observer.observe(el);
+    else el.classList.add("visible");
+  });
+
+  if (!hypeV14ParallaxBound) {
+    const wrap = document.getElementById("v14ArtWrap");
+    const image = document.getElementById("v14HeroImage");
+    if (wrap && image) {
+      wrap.addEventListener("mousemove", ev => {
+        if (window.matchMedia("(max-width: 720px)").matches || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        const r = wrap.getBoundingClientRect();
+        const x = (ev.clientX - r.left) / r.width - .5;
+        const y = (ev.clientY - r.top) / r.height - .5;
+        image.style.transform = `rotateY(${x * 8 - 4}deg) rotateX(${-y * 6 + 1}deg) translateZ(0)`;
+      });
+      wrap.addEventListener("mouseleave", () => {
+        image.style.transform = "rotateY(-4deg) rotateX(1deg) translateZ(0)";
+      });
+      hypeV14ParallaxBound = true;
+    }
+  }
+}
 
 
 /* ========================= BOOT ========================= */

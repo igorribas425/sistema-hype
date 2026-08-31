@@ -248,7 +248,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 <nav class="top-nav">
   <a href="cliente.html">🛒 Comprar</a>
   <a href="admin.html" style="color:#fff;border-color:var(--red)">⚙️ Admin</a>
-  <a href="portaria.html">🚪 Portaria</a>
+  <a id="navPortariaLink" href="portaria.html" style="display:none">🚪 Portaria</a>
 </nav>
 
 <div id="loginScreen">
@@ -358,7 +358,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
       <div id="ticketConfigList"></div>
       <div class="info-note">💡 <b>Limite 0 = ilimitado.</b> Selecione o evento acima antes de criar ou editar seus lotes.</div>
 
-      <div class="admin-only team-panel">
+      <div class="admin-only team-panel" id="teamAdminPanel" style="display:none">
         <h3 style="margin-top:25px">Equipe / Usuários</h3>
         <div class="team-form">
           <input id="newUserName" placeholder="Nome da pessoa">
@@ -380,7 +380,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
     <div class="panel-box">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
         <h3 style="margin-bottom:0">Lista de Clientes & Pagamentos</h3>
-        <div style="display:flex;gap:6px"><button class="btn-action" onclick="refreshAdminOrders(true)">↻ ATUALIZAR</button><button class="btn-action admin-only" onclick="clearAll()" style="color:var(--red)">🗑 LIMPAR INGRESSOS</button></div>
+        <div style="display:flex;gap:6px"><button class="btn-action" onclick="refreshAdminOrders(true)">↻ ATUALIZAR</button><button id="purgeTicketsBtn" class="btn-action admin-only" onclick="clearAll()" style="color:var(--red);display:none">🗑 LIMPAR INGRESSOS</button></div>
       </div>
       <div class="admin-sync-wrap"><div id="adminOrdersStatus" class="admin-sync-status">Carregando pedidos...</div></div>
 
