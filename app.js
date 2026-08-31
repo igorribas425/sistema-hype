@@ -17,6 +17,9 @@ const HYPE = {
   selectedEventId: null,
   adminEditingEventId: null,
   adminEventImageData: "",
+  themeCache: {},
+  appliedThemeSignature: "",
+  themeApplyToken: 0,
   ticketLoadSource: "",
   currentEntryCode: null,
   eventImageData: null,
@@ -147,13 +150,196 @@ function hypeWithTimeout(promise, ms = 8000, label = "Operação") {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
+
+/* ========================= TEMA DINÂMICO DO EVENTO (V13) ========================= */
+
+function hypeNormalizeHexColor(value, fallback = "") {
+  const raw = String(value || "").trim();
+  const short = raw.match(/^#?([0-9a-f]{3})$/i);
+  if (short) {
+    const h = short[1].split("").map(ch => ch + ch).join("");
+    return `#${h.toUpperCase()}`;
+  }
+  const full = raw.match(/^#?([0-9a-f]{6})$/i);
+  return full ? `#${full[1].toUpperCase()}` : fallback;
+}
+
+function hypeHexToRgb(hex) {
+  const h = hypeNormalizeHexColor(hex, "#D8D8DC").slice(1);
+  return {
+    r: parseInt(h.slice(0, 2), 16),
+    g: parseInt(h.slice(2, 4), 16),
+    b: parseInt(h.slice(4, 6), 16)
+  };
+}
+
+function hypeRgbToHex(r, g, b) {
+  const c = n => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, "0").toUpperCase();
+  return `#${c(r)}${c(g)}${c(b)}`;
+}
+
+function hypeColorFromName(text) {
+  const palette = ["#FF2F8F", "#8B5CF6", "#06B6D4", "#F97316", "#22C55E", "#E11D48", "#3B82F6"];
+  const str = String(text || "HYPE");
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  return palette[Math.abs(hash) % palette.length];
+}
+
+function hypeRgbToHsv(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const d = max - min;
+  let h = 0;
+  if (d) {
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  return { h, s: max === 0 ? 0 : d / max, v: max };
+}
+
+function hypeExtractAccentFromImage(src) {
+  return new Promise(resolve => {
+    if (!src) return resolve(null);
+    const img = new Image();
+    if (!String(src).startsWith("data:") && !String(src).startsWith("blob:")) img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        const size = 48;
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        ctx.drawImage(img, 0, 0, size, size);
+        const data = ctx.getImageData(0, 0, size, size).data;
+        const bins = Array.from({ length: 24 }, () => ({ weight: 0, r: 0, g: 0, b: 0 }));
+
+        for (let i = 0; i < data.length; i += 4) {
+          if (data[i + 3] < 180) continue;
+          const r = data[i], g = data[i + 1], b = data[i + 2];
+          const hsv = hypeRgbToHsv(r, g, b);
+          // Ignora preto/cinza/branco para pegar a cor visual da arte.
+          if (hsv.v < 0.20 || hsv.v > 0.97 || hsv.s < 0.24) continue;
+          const bin = Math.min(23, Math.floor(hsv.h / 15));
+          const weight = Math.pow(hsv.s, 1.7) * (0.55 + hsv.v);
+          bins[bin].weight += weight;
+          bins[bin].r += r * weight;
+          bins[bin].g += g * weight;
+          bins[bin].b += b * weight;
+        }
+
+        const winner = bins.reduce((best, current) => current.weight > best.weight ? current : best, bins[0]);
+        if (!winner || winner.weight < 0.2) return resolve(null);
+        let r = winner.r / winner.weight;
+        let g = winner.g / winner.weight;
+        let b = winner.b / winner.weight;
+
+        // Dá um pouco mais de presença à cor para o glow, sem estourar o visual.
+        const hsv = hypeRgbToHsv(r, g, b);
+        if (hsv.v < 0.52) {
+          const boost = 0.52 / Math.max(hsv.v, 0.01);
+          r *= boost; g *= boost; b *= boost;
+        }
+        resolve(hypeRgbToHex(r, g, b));
+      } catch (_) {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+async function hypeResolveEventTheme(event) {
+  if (!event) return "#D8D8DC";
+  const manual = hypeNormalizeHexColor(event.theme_color);
+  if (manual) return manual;
+
+  const cacheKey = `${event.id || "x"}:${String(event.cover_image || "").slice(0, 80)}`;
+  if (HYPE.themeCache[cacheKey]) return HYPE.themeCache[cacheKey];
+
+  const extracted = event.cover_image ? await hypeExtractAccentFromImage(event.cover_image) : null;
+  const color = extracted || hypeColorFromName(event.artist_name || event.name);
+  HYPE.themeCache[cacheKey] = color;
+  return color;
+}
+
+async function applyEventTheme(event, force = false) {
+  if (!document?.documentElement) return;
+  const token = ++HYPE.themeApplyToken;
+  const signature = event ? `${event.id}|${event.theme_color || ""}|${String(event.cover_image || "").slice(0, 60)}` : "none";
+  if (!force && signature === HYPE.appliedThemeSignature) return;
+
+  const ambient = document.getElementById("eventAmbient");
+  if (ambient) ambient.style.opacity = "0";
+
+  const color = await hypeResolveEventTheme(event);
+  if (token !== HYPE.themeApplyToken) return;
+  const rgb = hypeHexToRgb(color);
+  const root = document.documentElement;
+  root.style.setProperty("--event-accent", color);
+  root.style.setProperty("--event-accent-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+  root.style.setProperty("--event-accent-soft", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, .18)`);
+  root.style.setProperty("--event-accent-glow", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, .32)`);
+  document.body?.setAttribute("data-theme-color", color);
+
+  if (ambient) {
+    if (event?.cover_image) {
+      ambient.style.backgroundImage = `linear-gradient(180deg, rgba(5,5,5,.06), rgba(5,5,5,.82)), url(${JSON.stringify(event.cover_image)})`;
+    } else {
+      ambient.style.backgroundImage = "none";
+    }
+    requestAnimationFrame(() => { ambient.style.opacity = event?.cover_image ? ".18" : ".08"; });
+  }
+
+  HYPE.appliedThemeSignature = signature;
+}
+
+async function hypeAutoThemeFromAdminCover(showMessage = true) {
+  const src = HYPE.adminEventImageData || document.getElementById("adminEventPreviewImg")?.src || "";
+  if (!src) {
+    if (showMessage) alert("Escolha uma imagem do evento primeiro.");
+    return null;
+  }
+  const color = await hypeExtractAccentFromImage(src);
+  if (!color) {
+    if (showMessage) alert("Não consegui identificar uma cor forte nessa imagem. Você pode escolher manualmente.");
+    return null;
+  }
+  const picker = document.getElementById("adminEventThemeColor");
+  const hex = document.getElementById("adminEventThemeHex");
+  if (picker) picker.value = color.toLowerCase();
+  if (hex) hex.value = color;
+  const preview = document.getElementById("adminEventThemePreview");
+  if (preview) preview.style.background = color;
+  if (showMessage) hypeNotify(`Cor da arte detectada: ${color}`);
+  return color;
+}
+
+function hypeSyncAdminTheme(source = "picker") {
+  const picker = document.getElementById("adminEventThemeColor");
+  const hex = document.getElementById("adminEventThemeHex");
+  const preview = document.getElementById("adminEventThemePreview");
+  if (!picker || !hex) return;
+  let color = source === "hex" ? hypeNormalizeHexColor(hex.value) : hypeNormalizeHexColor(picker.value);
+  if (!color) return;
+  picker.value = color.toLowerCase();
+  hex.value = color;
+  if (preview) preview.style.background = color;
+}
+
 async function loadPublicState() {
-  const [events, pix] = await Promise.all([
-    sbRpc("public_events"),
+  const [eventResult, pix] = await Promise.all([
+    (async () => {
+      try { return await sbRpc("public_events_v13"); }
+      catch (_) { return await sbRpc("public_events"); }
+    })(),
     sbRpc("public_pix_key")
   ]);
 
-  HYPE.events = Array.isArray(events) ? events : [];
+  HYPE.events = Array.isArray(eventResult) ? eventResult : [];
   HYPE.pixKey = typeof pix === "string" ? pix : "";
 
   if (!HYPE.selectedEventId || !HYPE.events.some(e => Number(e.id) === Number(HYPE.selectedEventId))) {
@@ -161,6 +347,7 @@ async function loadPublicState() {
   }
 
   HYPE.event = HYPE.events.find(e => Number(e.id) === Number(HYPE.selectedEventId)) || null;
+  applyEventTheme(HYPE.event).catch(() => {});
 
   if (HYPE.selectedEventId) {
     const lots = await sbRpc("public_lots_by_event_v12", {
@@ -198,6 +385,8 @@ function renderEventCarousel() {
 
   target.innerHTML = events.map((e, index) => {
     const selected = Number(e.id) === Number(HYPE.selectedEventId);
+    const cardColor = hypeNormalizeHexColor(e.theme_color, selected ? (document.body?.getAttribute("data-theme-color") || "#D8D8DC") : "#D8D8DC");
+    const cardRgb = hypeHexToRgb(cardColor);
     const meta = [
       hypeEventDate(e),
       e.opening_time ? `Abertura ${String(e.opening_time).slice(0,5)}` : "",
@@ -209,7 +398,7 @@ function renderEventCarousel() {
       : `<div class="event-card-placeholder">HYPE</div>`;
 
     return `
-      <article class="event-card ${selected ? "selected" : ""}" data-event-id="${Number(e.id)}">
+      <article class="event-card ${selected ? "selected" : ""}" data-event-id="${Number(e.id)}" style="--card-accent:${cardColor};--card-accent-rgb:${cardRgb.r},${cardRgb.g},${cardRgb.b}">
         <div class="event-card-image">
           ${image}
           <div class="event-card-overlay"></div>
@@ -247,6 +436,7 @@ function renderEventCarousel() {
 async function selectEvent(eventId) {
   HYPE.selectedEventId = Number(eventId);
   HYPE.event = HYPE.events.find(e => Number(e.id) === Number(eventId)) || null;
+  applyEventTheme(HYPE.event, true).catch(() => {});
 
   try {
     const lots = await sbRpc("public_lots_by_event_v12", {
@@ -452,11 +642,11 @@ async function initClient() {
   }
 }
 
-function hypeLotPrice(ticket, gender = null) {
-  const selectedGender = String(gender || document.getElementById("clientGender")?.value || "Feminino").trim().toLowerCase();
-  if (selectedGender === "masculino") return Number(ticket?.price_male ?? ticket?.price ?? 0);
-  if (selectedGender === "feminino") return Number(ticket?.price_female ?? ticket?.price ?? 0);
-  return Number(ticket?.price ?? ticket?.price_female ?? ticket?.price_male ?? 0);
+function getLotGenderPrice(lot, gender = null) {
+  const selectedGender = String(gender || document.getElementById("clientGender")?.value || "Feminino").toLowerCase();
+  const female = Number(lot?.price_female ?? lot?.price ?? 0);
+  const male = Number(lot?.price_male ?? lot?.price ?? female);
+  return selectedGender === "masculino" ? male : female;
 }
 
 function renderClientTickets(keepId = null) {
@@ -469,9 +659,8 @@ function renderClientTickets(keepId = null) {
     const unavailable = !state.canBuy;
     const suffix = state.code === "upcoming" ? " — EM BREVE" : state.code === "expired" ? " — ENCERRADO" : state.code === "soldout" ? " — ESGOTADO" : state.code === "invalid" ? " — CONFIGURAÇÃO INVÁLIDA" : "";
     const stock = t.quantity_total > 0 ? ` • ${Math.max(0, Number(t.quantity_available || 0))} restantes` : "";
-    const genderPrice = hypeLotPrice(t, gender);
-    const category = t.sector ? ` • ${hypeEscape(t.sector)}` : "";
-    return `<option value="${t.id}" data-price="${genderPrice}" ${unavailable ? "disabled" : ""}>${hypeEscape(t.name)}${category} — ${hypeEscape(gender)} ${hypeFormatMoney(genderPrice)}${stock}${suffix}</option>`;
+    const price = getLotGenderPrice(t, gender);
+    return `<option value="${t.id}" data-price-female="${Number(t.price_female ?? t.price ?? 0)}" data-price-male="${Number(t.price_male ?? t.price ?? 0)}" ${unavailable ? "disabled" : ""}>${hypeEscape(t.sector || t.name)} • ${hypeEscape(t.name)} - ${hypeFormatMoney(price)}${stock}${suffix}</option>`;
   }).join("");
   const available = lots.filter(t => hypeStatus(t).canBuy);
   if (keepId && available.some(t => String(t.id) === String(keepId))) select.value = keepId;
@@ -482,9 +671,13 @@ function renderClientTickets(keepId = null) {
 function updatePrice() {
   const select = document.getElementById("ticketType");
   const display = document.getElementById("ticketPriceDisplay");
-  const ticket = (HYPE.lots || []).find(t => String(t.id) === String(select?.value));
-  if (!ticket) { if (display) display.value = "NENHUM LOTE DISPONÍVEL"; updateClientTicketState(); return; }
-  if (display) display.value = hypeFormatMoney(hypeLotPrice(ticket));
+  const lot = (HYPE.lots || []).find(t => String(t.id) === String(select?.value));
+  if (!lot) {
+    if (display) display.value = "NENHUMA CATEGORIA DISPONÍVEL";
+    updateClientTicketState();
+    return;
+  }
+  if (display) display.value = hypeFormatMoney(getLotGenderPrice(lot));
   updateClientTicketState();
 }
 
@@ -503,7 +696,7 @@ function updateClientTicketState() {
   if (info) {
     const cls = state.code === "active" ? "active" : state.code === "upcoming" ? "upcoming" : "expired";
     info.className = `ticket-schedule ${cls}`;
-    info.innerHTML = `<div><b>🕒 ${hypeEscape(state.label)}</b></div><div>${hypeEscape(hypeCountdownText(ticket))}</div><small>Categoria: ${hypeEscape(ticket.sector || "Pista")} • Feminino: <b>${hypeFormatMoney(ticket.price_female ?? ticket.price)}</b> • Masculino: <b>${hypeFormatMoney(ticket.price_male ?? ticket.price)}</b><br>Vendidos: ${Number(ticket.quantity_sold || 0)}${ticket.quantity_total ? ` / ${Number(ticket.quantity_total)}` : ""} • Início: ${ticket.starts_at ? hypeFormatDateTime(ticket.starts_at) : "imediato"} • Fim: ${ticket.ends_at ? hypeFormatDateTime(ticket.ends_at) : "sem limite"}</small>`;
+    info.innerHTML = `<div><b>🕒 ${hypeEscape(state.label)}</b></div><div>${hypeEscape(hypeCountdownText(ticket))}</div><small>Categoria: ${hypeEscape(ticket.sector || "Pista")} • Feminino: ${hypeFormatMoney(ticket.price_female ?? ticket.price)} • Masculino: ${hypeFormatMoney(ticket.price_male ?? ticket.price)}<br>Vendidos: ${Number(ticket.quantity_sold || 0)}${ticket.quantity_total ? ` / ${Number(ticket.quantity_total)}` : ""} • Início: ${ticket.starts_at ? hypeFormatDateTime(ticket.starts_at) : "imediato"} • Fim: ${ticket.ends_at ? hypeFormatDateTime(ticket.ends_at) : "sem limite"}</small>`;
   }
 }
 
@@ -579,7 +772,7 @@ async function createManualOrder(e) {
   }
 
   try {
-    const rows = await sbRpc("create_gender_order_v12", {
+    const rows = await sbRpc("create_manual_order_v12", {
       p_name: name,
       p_phone: phone,
       p_email: email,
@@ -702,7 +895,7 @@ async function createPixOrder(e) {
   try {
     // Usa o RPC manual porque ele já grava o e-mail do cliente no ticket.
     // O pagamento, porém, é criado no Asaas logo em seguida.
-    const rows = await sbRpc("create_gender_order_v12", {
+    const rows = await sbRpc("create_manual_order_v12", {
       p_name: name,
       p_phone: phone,
       p_email: email,
@@ -886,10 +1079,19 @@ async function loadAdminEvents() {
 
   try {
     const rows = await hypeWithTimeout(
-      sbRpc("staff_list_events", {
-        p_username: HYPE.user,
-        p_password: HYPE.pass
-      }),
+      (async () => {
+        try {
+          return await sbRpc("staff_list_events_v13", {
+            p_username: HYPE.user,
+            p_password: HYPE.pass
+          });
+        } catch (_) {
+          return await sbRpc("staff_list_events", {
+            p_username: HYPE.user,
+            p_password: HYPE.pass
+          });
+        }
+      })(),
       8000,
       "Carregamento dos eventos"
     );
@@ -912,9 +1114,13 @@ async function loadAdminLots(eventId = HYPE.selectedEventId) {
     return HYPE.lots;
   }
   const rows = await hypeWithTimeout(
-    sbRpc("public_lots_by_event_v12", { p_event_id: Number(eventId) }),
+    sbRpc("staff_list_lots_v12", {
+      p_username: HYPE.user,
+      p_password: HYPE.pass,
+      p_event_id: Number(eventId)
+    }),
     8000,
-    "Carregamento dos lotes"
+    "Carregamento das categorias"
   );
   HYPE.lots = Array.isArray(rows) ? rows : [];
   return HYPE.lots;
@@ -953,12 +1159,13 @@ function renderAdminEvents() {
           <div class="admin-event-card-main">
             <div>
               <span class="admin-event-state ${active ? "on" : "off"}">${active ? "ATIVO" : "INATIVO"}</span>
+              <span class="admin-event-color-dot" style="background:${hypeNormalizeHexColor(e.theme_color, "#D8D8DC")}"></span>
               <strong>${hypeEscape(e.artist_name || e.name || "Evento HYPE")}</strong>
               <small>${hypeEscape(e.name || "Evento HYPE")} • ${hypeEscape(adminEventDateLabel(e))}${e.venue ? ` • ${hypeEscape(e.venue)}` : ""}</small>
             </div>
           </div>
           <div class="admin-event-actions">
-            <button class="btn-action" onclick="selectAdminEvent(${Number(e.id)})">${selected ? "✓ CATEGORIAS & PREÇOS" : "🎟️ CATEGORIAS & PREÇOS"}</button>
+            <button class="btn-action" onclick="selectAdminEvent(${Number(e.id)})">${selected ? "✓ LOTES DESTE EVENTO" : "VER LOTES"}</button>
             <button class="btn-action" onclick="openAdminEventEditor(${Number(e.id)})">EDITAR</button>
           </div>
         </div>`;
@@ -1009,6 +1216,12 @@ function openAdminEventEditor(eventId = null) {
   set("adminEventVenue", e?.venue || "");
   set("adminEventDescription", e?.description || "");
   set("adminEventSort", e?.sort_order ?? (HYPE.adminEvents?.length || 0) + 1);
+  const startColor = hypeNormalizeHexColor(e?.theme_color, "#D8D8DC");
+  set("adminEventThemeHex", startColor);
+  const picker = document.getElementById("adminEventThemeColor");
+  if (picker) picker.value = startColor.toLowerCase();
+  const themePreview = document.getElementById("adminEventThemePreview");
+  if (themePreview) themePreview.style.background = startColor;
   const active = document.getElementById("adminEventActive");
   if (active) active.checked = e ? e.active !== false : true;
   const title = document.getElementById("adminEventEditorTitle");
@@ -1018,6 +1231,9 @@ function openAdminEventEditor(eventId = null) {
   resetAdminEventImagePreview(e?.cover_image || "");
   editor.style.display = "block";
   editor.scrollIntoView({behavior:"smooth",block:"center"});
+  if (e?.cover_image && !hypeNormalizeHexColor(e?.theme_color)) {
+    setTimeout(() => hypeAutoThemeFromAdminCover(false), 60);
+  }
 }
 
 function closeAdminEventEditor() {
@@ -1046,6 +1262,7 @@ function previewAdminEventImage(input) {
       canvas.getContext("2d").drawImage(original, 0, 0, w, h);
       const data = canvas.toDataURL("image/jpeg", 0.80);
       resetAdminEventImagePreview(data);
+      hypeAutoThemeFromAdminCover(false).catch(() => {});
     };
     original.src = reader.result;
   };
@@ -1061,7 +1278,7 @@ async function saveAdminEvent() {
   const btn = document.getElementById("saveAdminEventBtn");
   if (btn) { btn.disabled = true; btn.textContent = "SALVANDO..."; }
   try {
-    const saved = await sbRpc("staff_save_event_v2", {
+    const baseEventParams = {
       p_username: HYPE.user,
       p_password: HYPE.pass,
       p_event_id: HYPE.adminEditingEventId ? Number(HYPE.adminEditingEventId) : null,
@@ -1075,7 +1292,19 @@ async function saveAdminEvent() {
       p_cover_image: HYPE.adminEventImageData || "",
       p_active: document.getElementById("adminEventActive")?.checked !== false,
       p_sort_order: Number(val("adminEventSort") || 0)
-    });
+    };
+    let saved;
+    try {
+      saved = await sbRpc("staff_save_event_v13", {
+        ...baseEventParams,
+        p_theme_color: hypeNormalizeHexColor(val("adminEventThemeHex"), "#D8D8DC")
+      });
+    } catch (v13Error) {
+      const missingFunction = /staff_save_event_v13|schema cache|function/i.test(String(v13Error?.message || ""));
+      if (!missingFunction) throw v13Error;
+      saved = await sbRpc("staff_save_event_v2", baseEventParams);
+      hypeNotify("Evento salvo. Rode o SQL da V13 para gravar a cor personalizada.");
+    }
 
     const eventSaved = Array.isArray(saved) ? saved[0] : saved;
     if (eventSaved?.id) HYPE.selectedEventId = Number(eventSaved.id);
@@ -1085,8 +1314,7 @@ async function saveAdminEvent() {
     renderAdminEvents();
     renderConfigTickets();
     closeAdminEventEditor();
-    document.getElementById("lotsAdminPanel")?.scrollIntoView({behavior:"smooth",block:"start"});
-    hypeNotify("Evento salvo. Agora configure as categorias e preços.");
+    hypeNotify("Evento salvo e publicado.");
   } catch (err) {
     alert(err.message || "Erro ao salvar evento.");
   } finally {
@@ -1109,7 +1337,7 @@ async function initAdmin(fromLogin = false) {
         try {
           await loadAdminLots(HYPE.selectedEventId);
         } catch (lotErr) {
-          console.warn("[HYPE][public_lots_by_event_v12]", lotErr);
+          console.warn("[HYPE][public_lots_by_event]", lotErr);
           HYPE.lots = [];
           const lotTarget = document.getElementById("ticketConfigList");
           if (lotTarget) lotTarget.innerHTML = `<div class="empty-lots">Não foi possível carregar os lotes. Use ↻ ATUALIZAR e tente novamente.<br><small>${hypeEscape(lotErr.message || "Erro ao carregar lotes")}</small></div>`;
@@ -1147,7 +1375,7 @@ function renderConfigTickets() {
   const target = document.getElementById("ticketConfigList");
   if (!target) return;
   if (!["admin","gerente"].includes(HYPE.role)) {
-    target.innerHTML = `<div class="info-note">Seu perfil não pode alterar lotes.</div>`;
+    target.innerHTML = `<div class="info-note">Seu perfil não pode alterar categorias.</div>`;
     return;
   }
 
@@ -1161,24 +1389,25 @@ function renderConfigTickets() {
   }
 
   if (!(HYPE.lots || []).length) {
-    target.innerHTML = `<div class="empty-lots">Este evento ainda não tem lotes. Use o formulário acima para adicionar o primeiro ingresso.</div>`;
+    target.innerHTML = `<div class="empty-lots">Este evento ainda não tem categorias. Use o formulário acima para criar Pista, VIP, Camarote ou outra categoria.</div>`;
     return;
   }
 
   target.innerHTML = (HYPE.lots || []).map((t, i) => `
     <div class="ticket-admin-card">
-      <div class="ticket-admin-head"><strong>${hypeEscape(t.name)}</strong><span data-admin-status="${i}" class="schedule-badge ${hypeStatus(t).code === "active" ? "active" : hypeStatus(t).code === "upcoming" ? "upcoming" : "expired"}">${hypeEscape(hypeStatus(t).label)}</span></div>
+      <div class="ticket-admin-head"><strong>${hypeEscape(t.sector || t.name)}</strong><span data-admin-status="${i}" class="schedule-badge ${t.active === false ? "expired" : hypeStatus(t).code === "active" ? "active" : hypeStatus(t).code === "upcoming" ? "upcoming" : "expired"}">${t.active === false ? "INATIVO" : hypeEscape(hypeStatus(t).label)}</span></div>
       <div class="ticket-admin-grid ticket-admin-grid-wide">
-        <div class="form-group"><label>Nome do lote</label><input id="tName_${i}" value="${hypeEscape(t.name)}" placeholder="Ex.: 1º Lote"></div>
-        <div class="form-group"><label>Categoria / Setor</label><input id="tSector_${i}" list="hypeCategoryOptions" value="${hypeEscape(t.sector || "")}" placeholder="Pista / VIP / Camarote"></div>
-        <div class="form-group"><label>♀ Feminino (R$)</label><input id="tPriceFemale_${i}" type="number" step="0.01" min="0" value="${Number(t.price_female ?? t.price ?? 0)}"></div>
-        <div class="form-group"><label>♂ Masculino (R$)</label><input id="tPriceMale_${i}" type="number" step="0.01" min="0" value="${Number(t.price_male ?? t.price ?? 0)}"></div>
+        <div class="form-group"><label>Nome do lote</label><input id="tName_${i}" value="${hypeEscape(t.name)}"></div>
+        <div class="form-group"><label>Categoria / Setor</label><input id="tSector_${i}" value="${hypeEscape(t.sector || "")}" placeholder="Pista / VIP / Camarote"></div>
+        <div class="form-group"><label>Preço Feminino</label><input id="tPriceFemale_${i}" type="number" step="0.01" min="0" value="${Number(t.price_female ?? t.price ?? 0).toFixed(2)}"></div>
+        <div class="form-group"><label>Preço Masculino</label><input id="tPriceMale_${i}" type="number" step="0.01" min="0" value="${Number(t.price_male ?? t.price ?? 0).toFixed(2)}"></div>
         <div class="form-group"><label>Quantidade</label><input id="tQty_${i}" type="number" min="0" value="${Number(t.quantity_total || 0)}"></div>
         <div class="form-group"><label>Início</label><input id="tStart_${i}" type="datetime-local" value="${toDateTimeLocal(t.starts_at)}"></div>
         <div class="form-group"><label>Expiração</label><input id="tEnd_${i}" type="datetime-local" value="${toDateTimeLocal(t.ends_at)}"></div>
+        <div class="form-group"><label>Status</label><select id="tActive_${i}"><option value="true" ${t.active !== false ? "selected" : ""}>ATIVO</option><option value="false" ${t.active === false ? "selected" : ""}>INATIVO</option></select></div>
       </div>
-      <div class="ticket-admin-preview"><span>♀ Feminino: <b>${hypeFormatMoney(t.price_female ?? t.price)}</b></span><span>♂ Masculino: <b>${hypeFormatMoney(t.price_male ?? t.price)}</b></span><span>Vendidos: <b>${Number(t.quantity_sold || 0)}</b></span><span>Disponíveis: <b>${t.quantity_total ? Math.max(0, Number(t.quantity_available || 0)) : "∞"}</b></span><span>Categoria: <b>${hypeEscape(t.sector || "Pista")}</b></span><span data-admin-countdown="${i}">${hypeEscape(hypeCountdownText(t))}</span></div>
-      <div class="ticket-admin-actions"><button class="btn-action" onclick="updateTicket(${i})">💾 SALVAR CATEGORIA</button><button class="btn-action" onclick="clearTicketSchedule(${i})">REMOVER HORÁRIOS</button></div>
+      <div class="ticket-admin-preview"><span>Feminino: <b>${hypeFormatMoney(t.price_female ?? t.price)}</b></span><span>Masculino: <b>${hypeFormatMoney(t.price_male ?? t.price)}</b></span><span>Vendidos: <b>${Number(t.quantity_sold || 0)}</b></span><span>Disponíveis: <b>${t.quantity_total ? Math.max(0, Number(t.quantity_available || 0)) : "∞"}</b></span><span data-admin-countdown="${i}">${t.active === false ? "Categoria oculta no site" : hypeEscape(hypeCountdownText(t))}</span></div>
+      <div class="ticket-admin-actions"><button class="btn-action" onclick="updateTicket(${i})">SALVAR CATEGORIA</button><button class="btn-action" onclick="clearTicketSchedule(${i})">REMOVER HORÁRIOS</button></div>
     </div>`).join("");
 }
 
@@ -1194,18 +1423,16 @@ function fromDateTimeLocal(value) { return value ? new Date(value).toISOString()
 
 async function createAdminLot() {
   if (!HYPE.selectedEventId) return alert("Selecione um evento primeiro.");
-  const name = document.getElementById("newLotName")?.value.trim() || "";
-  const sector = document.getElementById("newLotSector")?.value.trim() || "";
-  const femaleRaw = document.getElementById("newLotPriceFemale")?.value ?? "";
-  const maleRaw = document.getElementById("newLotPriceMale")?.value ?? "";
-  const priceFemale = Number(femaleRaw);
-  const priceMale = Number(maleRaw);
+  const name = document.getElementById("newLotName")?.value.trim() || "1º Lote";
+  const sector = document.getElementById("newLotSector")?.value.trim() || "Pista";
+  const priceFemale = Number(document.getElementById("newLotPriceFemale")?.value || 0);
+  const priceMale = Number(document.getElementById("newLotPriceMale")?.value || 0);
   const qty = Number(document.getElementById("newLotQty")?.value || 0);
   const startAt = fromDateTimeLocal(document.getElementById("newLotStart")?.value || "");
   const endAt = fromDateTimeLocal(document.getElementById("newLotEnd")?.value || "");
-  if (!sector) return alert("Informe a categoria: Pista, VIP, Camarote ou outra.");
-  if (femaleRaw === "" || !Number.isFinite(priceFemale) || priceFemale < 0) return alert("Informe o preço Feminino.");
-  if (maleRaw === "" || !Number.isFinite(priceMale) || priceMale < 0) return alert("Informe o preço Masculino.");
+  const active = (document.getElementById("newLotActive")?.value || "true") === "true";
+  if (!sector) return alert("Informe a categoria/setor.");
+  if (priceFemale < 0 || priceMale < 0) return alert("Informe valores válidos.");
 
   try {
     await sbRpc("staff_upsert_lot_v12", {
@@ -1213,20 +1440,21 @@ async function createAdminLot() {
       p_password: HYPE.pass,
       p_event_id: Number(HYPE.selectedEventId),
       p_id: 0,
-      p_name: name || sector,
+      p_name: name,
       p_sector: sector,
-      p_price_male: priceMale,
       p_price_female: priceFemale,
+      p_price_male: priceMale,
       p_quantity_total: qty,
       p_starts_at: startAt,
       p_ends_at: endAt,
-      p_active: true,
+      p_active: active,
       p_sort_order: (HYPE.lots?.length || 0) + 1
     });
     ["newLotName","newLotSector","newLotPriceFemale","newLotPriceMale","newLotQty","newLotStart","newLotEnd"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+    const a = document.getElementById("newLotActive"); if (a) a.value = "true";
     await loadAdminLots(HYPE.selectedEventId);
     renderConfigTickets();
-    hypeNotify("Categoria e preços criados para este evento.");
+    hypeNotify("Categoria criada para o evento selecionado.");
   } catch (err) {
     alert(err.message || "Erro ao criar categoria.");
   }
@@ -1236,23 +1464,21 @@ async function updateTicket(index) {
   const t = HYPE.lots[index];
   if (!t || !HYPE.selectedEventId) return;
   try {
-    const name = document.getElementById(`tName_${index}`).value.trim();
+    const name = document.getElementById(`tName_${index}`).value.trim() || "1º Lote";
     const sector = document.getElementById(`tSector_${index}`).value.trim();
     const priceFemale = Number(document.getElementById(`tPriceFemale_${index}`).value);
     const priceMale = Number(document.getElementById(`tPriceMale_${index}`).value);
     const qty = Number(document.getElementById(`tQty_${index}`).value);
     const startAt = fromDateTimeLocal(document.getElementById(`tStart_${index}`).value);
     const endAt = fromDateTimeLocal(document.getElementById(`tEnd_${index}`).value);
-    if (!sector) return alert("Informe a categoria/setor.");
-    if (!Number.isFinite(priceFemale) || priceFemale < 0) return alert("Preço Feminino inválido.");
-    if (!Number.isFinite(priceMale) || priceMale < 0) return alert("Preço Masculino inválido.");
+    const active = document.getElementById(`tActive_${index}`).value === "true";
     await sbRpc("staff_upsert_lot_v12", {
       p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:t.id,
-      p_name:name || sector,p_sector:sector,p_price_male:priceMale,p_price_female:priceFemale,p_quantity_total:qty,p_starts_at:startAt,p_ends_at:endAt,p_active:true,p_sort_order:index+1
+      p_name:name,p_sector:sector,p_price_female:priceFemale,p_price_male:priceMale,p_quantity_total:qty,p_starts_at:startAt,p_ends_at:endAt,p_active:active,p_sort_order:index+1
     });
     await loadAdminLots(HYPE.selectedEventId);
     renderConfigTickets();
-    hypeNotify("Categoria e valores atualizados.");
+    hypeNotify("Categoria atualizada.");
   } catch (err) { alert(err.message); }
 }
 
@@ -1262,7 +1488,7 @@ async function clearTicketSchedule(index) {
   try {
     await sbRpc("staff_upsert_lot_v12", {
       p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:t.id,
-      p_name:t.name,p_sector:t.sector,p_price_male:Number(t.price_male ?? t.price ?? 0),p_price_female:Number(t.price_female ?? t.price ?? 0),p_quantity_total:Number(t.quantity_total),p_starts_at:null,p_ends_at:null,p_active:true,p_sort_order:index+1
+      p_name:t.name,p_sector:t.sector,p_price_female:Number(t.price_female ?? t.price ?? 0),p_price_male:Number(t.price_male ?? t.price ?? 0),p_quantity_total:Number(t.quantity_total),p_starts_at:null,p_ends_at:null,p_active:t.active !== false,p_sort_order:index+1
     });
     await loadAdminLots(HYPE.selectedEventId);
     renderConfigTickets();
@@ -1756,7 +1982,7 @@ async function saveEventManager() {
   if (!HYPE.user || !HYPE.pass) return alert("Faça login novamente.");
   const val = id => document.getElementById(id)?.value || "";
   try {
-    await sbRpc("staff_save_event_v2", {
+    const eventParams = {
       p_username: HYPE.user,
       p_password: HYPE.pass,
       p_event_id: HYPE.event?.id ? Number(HYPE.event.id) : null,
@@ -1770,7 +1996,15 @@ async function saveEventManager() {
       p_cover_image: HYPE.eventImageData || "",
       p_active: true,
       p_sort_order: Number(HYPE.event?.sort_order || 0)
-    });
+    };
+    try {
+      await sbRpc("staff_save_event_v13", {
+        ...eventParams,
+        p_theme_color: hypeNormalizeHexColor(HYPE.event?.theme_color, "#D8D8DC")
+      });
+    } catch (_) {
+      await sbRpc("staff_save_event_v2", eventParams);
+    }
     await loadPublicState();
     fillEventManager();
     hypeNotify("Evento publicado no site!");

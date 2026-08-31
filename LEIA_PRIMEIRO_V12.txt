@@ -1,0 +1,18 @@
+HYPE V12 — CATEGORIAS + PREÇOS POR GÊNERO
+
+NOVIDADES
+- Pista, VIP, Camarote ou qualquer categoria personalizada.
+- Preço Feminino e Masculino separados em cada categoria.
+- Editar nome do lote, categoria, quantidade, início, expiração e status.
+- Categoria inativa some do site do cliente, mas permanece no Admin.
+- O preço final é calculado no Supabase e gravado no ingresso antes do PIX Asaas.
+- Ingressos antigos não têm o preço alterado.
+- Webhook Asaas V11 e envio automático de e-mail foram mantidos.
+
+INSTALAÇÃO
+1. Execute SUPABASE_V12_CATEGORIAS_PRECOS_GENERO.sql UMA VEZ no SQL Editor do Supabase.
+2. Depois substitua no GitHub os arquivos do site desta pasta (admin.html, app.js, cliente.html, index.html e os demais arquivos mantidos).
+3. Faça um teste com um pedido novo, sem confirmar manualmente no Admin.
+
+IMPORTANTE
+Não execute o SQL antes de ter o ZIP V12 salvo. O SQL é retrocompatível e não apaga dados.

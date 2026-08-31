@@ -9,7 +9,7 @@
 <title>HYPE LOUNGE CLUB // Ingressos</title>
 <style>
 
-:root{--bg:#050505;--panel:#0d0d10;--line:#222228;--red:#f5f5f5;--green:#28d17c;--text:#f7f7f8;--muted:#96969e;--silver:#d8d8dc}
+:root{--bg:#050505;--panel:#0d0d10;--line:#222228;--red:#f5f5f5;--green:#28d17c;--text:#f7f7f8;--muted:#96969e;--silver:#d8d8dc;--event-accent:#d8d8dc;--event-accent-rgb:216,216,220;--event-accent-soft:rgba(216,216,220,.18);--event-accent-glow:rgba(216,216,220,.32)}
 *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,sans-serif}
 html{scroll-behavior:smooth}
 body{background:radial-gradient(circle at 80% 0%,rgba(255,255,255,.055),transparent 28%),radial-gradient(circle at 10% 30%,rgba(255,255,255,.025),transparent 25%),#050505;color:var(--text);min-height:100vh;padding:20px;display:block}
@@ -114,6 +114,35 @@ input:focus, select:focus{border-color:#d9d9de}
 @media(max-width:720px){.event-card{flex-basis:92%;grid-template-columns:1fr;min-height:0}.event-card-image{min-height:300px}.event-card-body{padding:22px 20px}.events-head{align-items:start}.event-carousel{padding-right:8%}body{padding:14px}.page-shell{margin-top:18px}.event-panel{padding:24px 20px 22px}.event-visual{min-height:280px}.event-badge{left:16px;top:16px;font-size:10px}.purchase-copy,.box{padding:24px}.section-head h1{font-size:34px}.two-col,.info-grid{grid-template-columns:1fr}.brand-logo{width:min(240px,74vw)}.box-title{font-size:22px}}
 
 
+/* V13 — atmosfera dinâmica por evento */
+body{transition:background-color .55s ease}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-3;pointer-events:none;
+  background:
+    radial-gradient(circle at 12% 18%,rgba(var(--event-accent-rgb),.22),transparent 30%),
+    radial-gradient(circle at 88% 8%,rgba(var(--event-accent-rgb),.13),transparent 28%),
+    radial-gradient(circle at 50% 92%,rgba(var(--event-accent-rgb),.08),transparent 36%),
+    #050505;
+  transition:background .65s ease;
+}
+.event-ambient{position:fixed;inset:-8%;z-index:-2;pointer-events:none;background-size:cover;background-position:center;filter:blur(74px) saturate(1.55) contrast(1.05);transform:scale(1.10);opacity:0;transition:opacity .48s ease;mix-blend-mode:screen}
+.events-head small:first-child,.section-head small,.box-kicker{color:var(--event-accent)!important;transition:color .45s ease}
+.event-card{transition:border-color .45s ease,box-shadow .45s ease,transform .25s ease}
+.event-card.selected{border-color:rgba(var(--event-accent-rgb),.68)!important;box-shadow:0 18px 56px rgba(0,0,0,.46),0 0 34px rgba(var(--event-accent-rgb),.16)!important}
+.event-card.selected .event-card-day{border-color:rgba(var(--event-accent-rgb),.72)!important;background:rgba(var(--event-accent-rgb),.18)!important;box-shadow:0 0 22px rgba(var(--event-accent-rgb),.16)}
+.event-card.selected .event-card-body small{color:var(--event-accent)!important}
+.event-card .event-select-btn{transition:all .35s ease}
+.event-card.selected .event-select-btn{background:linear-gradient(135deg,var(--event-accent),#f3f3f5)!important;color:#050505!important;border-color:rgba(var(--event-accent-rgb),.75)!important;box-shadow:0 10px 30px rgba(var(--event-accent-rgb),.16)}
+.event-dot.active{background:var(--event-accent)!important;box-shadow:0 0 16px rgba(var(--event-accent-rgb),.55)!important}
+.purchase-copy,.box{transition:border-color .5s ease,box-shadow .5s ease;background-color .5s ease}
+.purchase-copy{border-color:rgba(var(--event-accent-rgb),.22)!important;box-shadow:0 20px 40px rgba(0,0,0,.34),0 0 48px rgba(var(--event-accent-rgb),.06)!important}
+.box{border-color:rgba(var(--event-accent-rgb),.25)!important;box-shadow:0 20px 46px rgba(0,0,0,.42),0 0 56px rgba(var(--event-accent-rgb),.07)!important}
+input:focus,select:focus{border-color:var(--event-accent)!important;box-shadow:0 0 0 3px rgba(var(--event-accent-rgb),.08)}
+.btn:not(.success-btn):not(.ghost-btn):not(.whatsapp-btn){background:linear-gradient(135deg,var(--event-accent),#ededf0)!important;color:#070707!important;box-shadow:0 10px 30px rgba(var(--event-accent-rgb),.12)!important}
+.brand-name{text-shadow:0 0 28px rgba(var(--event-accent-rgb),.18)!important}
+@media(max-width:720px){.event-ambient{filter:blur(54px) saturate(1.45);opacity:.14!important}}
+
+
 
 .payment-success{
   display:none;
@@ -138,9 +167,25 @@ input:focus, select:focus{border-color:#d9d9de}
   font-size:11px;
   line-height:1.45;
 }
+
+
+/* V13.1 — correção: tema visível no fundo */
+body{
+  background:
+    radial-gradient(circle at 12% 12%, rgba(var(--event-accent-rgb),.32), transparent 34%),
+    radial-gradient(circle at 88% 18%, rgba(var(--event-accent-rgb),.20), transparent 32%),
+    radial-gradient(circle at 50% 88%, rgba(var(--event-accent-rgb),.10), transparent 40%),
+    linear-gradient(180deg, rgba(var(--event-accent-rgb),.08) 0%, rgba(5,5,5,.97) 48%, #050505 100%) !important;
+  background-attachment:fixed !important;
+}
+body::before{z-index:0 !important;opacity:.78}
+.event-ambient{z-index:0 !important;mix-blend-mode:screen}
+.page-shell{position:relative;z-index:1}
+
 </style>
 </head>
 <body>
+<div class="event-ambient" id="eventAmbient" aria-hidden="true"></div>
 
 <div class="page-shell">
   <div class="brand-logo-wrap page-brand"><img src="logo-hype.png?v=20260830-2110" class="brand-logo" alt="HYPE Lounge Club"></div>
@@ -219,7 +264,7 @@ input:focus, select:focus{border-color:#d9d9de}
         </div>
         
         <div class="group">
-          <label>Escolha o Lote / Setor</label>
+          <label>Escolha a Categoria / Lote</label>
           <select id="ticketType" onchange="updatePrice()" required></select>
           <div id="ticketScheduleInfo" class="ticket-schedule active"></div>
         </div>
@@ -290,7 +335,7 @@ input:focus, select:focus{border-color:#d9d9de}
 
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260831-v12-categorias-genero"></script>
-<script src="app.js?v=20260831-v12-categorias-genero"></script>
+<script src="supabase-config.js?v=20260831-v13-1-theme-fix"></script>
+<script src="app.js?v=20260831-v13-1-theme-fix"></script>
 </body>
 </html>

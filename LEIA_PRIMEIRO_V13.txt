@@ -1,0 +1,17 @@
+HYPE V13 — TEMA DINÂMICO POR EVENTO
+
+NOVIDADE
+- Ao selecionar um evento, o fundo muda com a arte/cor dele.
+- Glow, botões, bordas e pontos do carrossel acompanham a cor do evento.
+- No Admin > Eventos > Editar existe “Cor do evento”.
+- O botão “AUTO DA CAPA” tenta detectar a cor principal da arte.
+- Você também pode escolher a cor manualmente.
+
+INSTALAÇÃO
+1. No Supabase > SQL Editor, execute SUPABASE_V13_TEMA_DINAMICO_EVENTO.sql UMA VEZ.
+2. Depois envie para a raiz do GitHub: index.html, cliente.html, admin.html e app.js.
+3. Pode enviar também evento.html e portaria.html para atualizar o cache-busting, mas a lógica de pagamento/portaria não foi alterada.
+
+SEGURANÇA / PAGAMENTO
+- Não altera Asaas, webhook, PIX, e-mail ou validação da portaria.
+- Não apaga nenhum ingresso ou evento.

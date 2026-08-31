@@ -1,0 +1,8 @@
+HYPE V13.1 - CORREÇÃO DO TEMA DINÂMICO
+
+O SQL da V13 já pode permanecer como está. Não precisa executar novamente.
+
+No GitHub, substitua: index.html e cliente.html.
+Opcionalmente envie também admin.html, evento.html e portaria.html para atualizar o cache-busting.
+
+Correção: o efeito de fundo da V13 ficava atrás do background opaco da página em alguns navegadores. Agora a cor do evento aparece diretamente no fundo e o ambient da capa fica na camada correta.

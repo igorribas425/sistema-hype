@@ -193,7 +193,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 .admin-toolbar{margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
 .admin-toolbar strong{display:block;font-size:13px;letter-spacing:1px}.admin-toolbar span{display:block;color:var(--muted);font-size:11px;margin-top:4px}.export-btn{width:auto}
 .info-note{margin-top:16px;padding:12px;border:1px dashed #493038;border-radius:10px;color:var(--muted);font-size:11px;background:#10090b}.info-note b{color:#fff}
-.ticket-admin-grid-wide{grid-template-columns:1.2fr .9fr .75fr .75fr .7fr}
+.ticket-admin-grid-wide{grid-template-columns:1.4fr .75fr .75fr 1fr 1fr}
 .badge.cancelado{background:rgba(255,180,0,.1);color:#ffcc00;border:1px solid rgba(255,180,0,.25)}
 @media(max-width:1100px){.stats-extended{grid-template-columns:repeat(4,1fr)}.ticket-admin-grid-wide{grid-template-columns:1fr 1fr}}
 @media(max-width:650px){.stats-extended{grid-template-columns:1fr 1fr}.admin-toolbar{align-items:stretch;flex-direction:column}.export-btn{width:100%}}
@@ -223,13 +223,21 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 .admin-event-editor-actions{display:flex;gap:8px;margin-top:12px}.admin-event-editor-actions .btn{flex:1}
 .admin-event-active{display:flex;align-items:center;gap:8px;height:42px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:#060608}
 .admin-event-active input{width:18px;height:18px;accent-color:#28d17c}.admin-event-active label{margin:0;color:#fff}
+.admin-event-color-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:7px;vertical-align:middle;border:1px solid rgba(255,255,255,.35);box-shadow:0 0 12px currentColor}
+.admin-theme-row{display:grid;grid-template-columns:54px 130px 1fr;gap:8px;align-items:center}
+.admin-theme-row input[type=color]{width:54px;height:42px;padding:3px;border-radius:10px;cursor:pointer}
+.admin-theme-row input[type=text]{height:42px;text-transform:uppercase;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.admin-theme-auto{height:42px;border-radius:9px;border:1px solid var(--line);background:#15151a;color:#fff;font-size:10px;font-weight:900;cursor:pointer;padding:0 10px}
+.admin-theme-preview{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:-1px;background:#d8d8dc;box-shadow:0 0 14px rgba(255,255,255,.18)}
+.admin-theme-note{display:block;color:var(--muted);font-size:10px;line-height:1.45;margin-top:7px}
+@media(max-width:560px){.admin-theme-row{grid-template-columns:54px 1fr}.admin-theme-auto{grid-column:1/-1;width:100%}}
 .admin-sync-wrap{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 14px}
 .admin-sync-status{font-size:11px;color:var(--muted)}.admin-sync-status.ok{color:#9ff0be}.admin-sync-status.error{color:#ff8b9b}
 .btn-confirm{border-color:rgba(40,209,124,.4)!important;color:#9ff0be!important;background:rgba(40,209,124,.08)!important}
 .selected-event-box{padding:12px 14px;border:1px solid rgba(40,209,124,.28);background:rgba(40,209,124,.05);border-radius:12px;margin-bottom:14px}
 .selected-event-box small{display:block;color:var(--muted);font-size:9px;font-weight:900;letter-spacing:1px}.selected-event-box strong{display:block;margin-top:4px;font-size:13px}
 .new-lot-box{border:1px solid rgba(255,255,255,.13);border-radius:14px;padding:14px;background:#08080a;margin-bottom:14px}
-.new-lot-box h4{font-size:12px;margin-bottom:10px}.new-lot-grid{display:grid;grid-template-columns:1.2fr .9fr .75fr .75fr .65fr;gap:8px}.new-lot-grid .form-group{margin-bottom:0}
+.new-lot-box h4{font-size:12px;margin-bottom:10px}.new-lot-grid{display:grid;grid-template-columns:1.2fr .8fr .7fr .7fr;gap:8px}.new-lot-grid .form-group{margin-bottom:0}
 .new-lot-time-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 @media(max-width:760px){.admin-events-grid{grid-template-columns:1fr}.events-admin-head{align-items:stretch;flex-direction:column}.events-admin-head .btn{width:100%}.admin-event-editor-grid{grid-template-columns:1fr}.admin-event-editor-grid .full{grid-column:auto}.new-lot-grid{grid-template-columns:1fr 1fr}.new-lot-time-grid{grid-template-columns:1fr}.admin-sync-wrap{align-items:stretch;flex-direction:column}}
 @media(max-width:500px){.new-lot-grid{grid-template-columns:1fr}.admin-event-editor-actions{flex-direction:column}}
@@ -299,10 +307,18 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
         <div class="form-group"><label>Encerramento</label><input id="adminEventClosing" type="time"></div>
         <div class="form-group full"><label>Descrição</label><textarea id="adminEventDescription" placeholder="Informações que aparecem no card do evento."></textarea></div>
         <div class="form-group full"><label>Imagem / capa</label><input id="adminEventImageFile" type="file" accept="image/*" onchange="previewAdminEventImage(this)"><img id="adminEventPreviewImg" class="admin-event-image-preview" alt="Prévia da capa"></div>
+        <div class="form-group full">
+          <label><span class="admin-theme-preview" id="adminEventThemePreview"></span>Cor do evento</label>
+          <div class="admin-theme-row">
+            <input id="adminEventThemeColor" type="color" value="#d8d8dc" oninput="hypeSyncAdminTheme('picker')" aria-label="Escolher cor do evento">
+            <input id="adminEventThemeHex" type="text" value="#D8D8DC" maxlength="7" placeholder="#FF2F8F" oninput="hypeSyncAdminTheme('hex')">
+            <button class="admin-theme-auto" type="button" onclick="hypeAutoThemeFromAdminCover(true)">✨ AUTO DA CAPA</button>
+          </div>
+          <small class="admin-theme-note">Essa cor muda o glow, botões e fundo do site quando o cliente selecionar este evento. “AUTO DA CAPA” tenta pegar a cor principal da arte.</small>
+        </div>
         <div class="form-group"><label>Ordem no carrossel</label><input id="adminEventSort" type="number" min="0" value="1"></div>
         <div class="form-group"><label>Status</label><div class="admin-event-active"><input id="adminEventActive" type="checkbox" checked><label for="adminEventActive">Evento ativo no site</label></div></div>
       </div>
-      <div class="info-note" style="margin:12px 0 0">🎟️ Depois de salvar o evento, use <b>CATEGORIAS & PREÇOS</b> para cadastrar Pista, VIP, Camarote e os valores Feminino/Masculino.</div>
       <div class="admin-event-editor-actions">
         <button class="btn" id="saveAdminEventBtn" onclick="saveAdminEvent()">SALVAR EVENTO</button>
         <button class="btn" style="background:#15151a!important;color:#fff!important" onclick="closeAdminEventEditor()">CANCELAR</button>
@@ -311,10 +327,10 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
   </section>
 
   <div class="grid-admin">
-    <div class="panel-box admin-only" id="lotsAdminPanel">
+    <div class="panel-box admin-only">
       <h3>Gerenciar Categorias, Preços & Horários</h3>
       <p style="color:var(--muted);font-size:12px;margin-bottom:15px">
-        Crie Pista, VIP, Camarote ou qualquer outra categoria e defina valores separados para Feminino e Masculino. Os horários continuam opcionais.
+        Crie Pista, VIP, Camarote ou qualquer categoria. Cada uma pode ter preço Feminino e Masculino diferentes, quantidade, período de venda e status.
       </p>
       
       <div class="selected-event-box">
@@ -323,31 +339,24 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
       </div>
 
       <div class="new-lot-box">
-        <h4>+ ADICIONAR INGRESSO / LOTE NESTE EVENTO</h4>
+        <h4>+ ADICIONAR CATEGORIA / LOTE NESTE EVENTO</h4>
         <div class="new-lot-grid">
-          <div class="form-group"><label>Nome do lote</label><input id="newLotName" placeholder="Ex.: 1º Lote / Open Bar"></div>
-          <div class="form-group"><label>Categoria / Setor</label><input id="newLotSector" list="hypeCategoryOptions" placeholder="Pista / VIP / Camarote"></div>
-          <div class="form-group"><label>♀ Feminino (R$)</label><input id="newLotPriceFemale" type="number" step="0.01" min="0" placeholder="30,00"></div>
-          <div class="form-group"><label>♂ Masculino (R$)</label><input id="newLotPriceMale" type="number" step="0.01" min="0" placeholder="40,00"></div>
+          <div class="form-group"><label>Nome do lote</label><input id="newLotName" placeholder="Ex.: 1º Lote"></div>
+          <div class="form-group"><label>Categoria / Setor</label><input id="newLotSector" placeholder="Pista / VIP / Camarote"></div>
+          <div class="form-group"><label>Preço Feminino</label><input id="newLotPriceFemale" type="number" step="0.01" min="0" placeholder="30,00"></div>
+          <div class="form-group"><label>Preço Masculino</label><input id="newLotPriceMale" type="number" step="0.01" min="0" placeholder="40,00"></div>
           <div class="form-group"><label>Quantidade</label><input id="newLotQty" type="number" min="0" placeholder="100"></div>
+          <div class="form-group"><label>Status</label><select id="newLotActive"><option value="true" selected>ATIVO</option><option value="false">INATIVO</option></select></div>
         </div>
-        <datalist id="hypeCategoryOptions">
-          <option value="Pista"></option>
-          <option value="VIP"></option>
-          <option value="Camarote"></option>
-          <option value="Backstage"></option>
-          <option value="Open Bar"></option>
-          <option value="Camarote Premium"></option>
-        </datalist>
         <div class="new-lot-time-grid">
           <div class="form-group"><label>Início da venda</label><input id="newLotStart" type="datetime-local"></div>
           <div class="form-group"><label>Expiração</label><input id="newLotEnd" type="datetime-local"></div>
         </div>
-        <button class="btn" onclick="createAdminLot()">+ CRIAR CATEGORIA / LOTE NESTE EVENTO</button>
+        <button class="btn" onclick="createAdminLot()">+ CRIAR CATEGORIA NESTE EVENTO</button>
       </div>
 
       <div id="ticketConfigList"></div>
-      <div class="info-note">💡 <b>Limite 0 = ilimitado.</b> Cada categoria pode ter preço Feminino e Masculino diferentes. Selecione o evento acima para editar os valores.</div>
+      <div class="info-note">💡 <b>Limite 0 = ilimitado.</b> Selecione o evento acima antes de criar ou editar seus lotes.</div>
 
       <div class="admin-only team-panel">
         <h3 style="margin-top:25px">Equipe / Usuários</h3>
@@ -396,7 +405,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260831-v12-categorias-genero"></script>
-<script src="app.js?v=20260831-v12-categorias-genero"></script>
+<script src="supabase-config.js?v=20260831-v13-1-theme-fix"></script>
+<script src="app.js?v=20260831-v13-1-theme-fix"></script>
 </body>
 </html>
