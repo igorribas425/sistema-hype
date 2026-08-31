@@ -3,6 +3,8 @@
    O SQL correspondente está em supabase_schema.sql.
 */
 
+console.info('[HYPE] app.js versão 20260830-2110');
+
 const HYPE = {
   sb: null,
   user: null,
@@ -13,6 +15,7 @@ const HYPE = {
   pixKey: "",
   event: null,
   eventImageData: null,
+  sectorConfigs: [],
   refreshTimer: null,
   scannerStream: null,
   scannerTimer: null,
@@ -190,6 +193,28 @@ async function loadStaffTickets(search = "") {
   return HYPE.tickets;
 }
 
+async function loadSectorConfigs() {
+  if (!HYPE.user || !HYPE.pass || !["admin","gerente"].includes(HYPE.role)) {
+    HYPE.sectorConfigs = [];
+    return [];
+  }
+
+  const rows = await sbRpc("staff_list_sector_configs", {
+    p_username: HYPE.user,
+    p_password: HYPE.pass
+  });
+
+  // Mantém somente o registro mais recente de cada setor.
+  const map = new Map();
+  (Array.isArray(rows) ? rows : []).forEach(row => {
+    const key = String(row.sector || "").trim().toLowerCase();
+    if (key && !map.has(key)) map.set(key, row);
+  });
+
+  HYPE.sectorConfigs = Array.from(map.values());
+  return HYPE.sectorConfigs;
+}
+
 async function verifyStaff(username, password) {
   const rows = await sbRpc("verify_staff", { p_username: username, p_password: password });
   return Array.isArray(rows) && rows.length ? rows[0] : null;
@@ -258,6 +283,14 @@ let clientTicker = null;
 
 async function initClient() {
   try {
+    const genderSelect = document.getElementById('clientGender');
+    if (genderSelect && !genderSelect.dataset.hypeBound) {
+      genderSelect.dataset.hypeBound = '1';
+      genderSelect.addEventListener('change', () => {
+        renderClientTickets(document.getElementById('ticketType')?.value);
+        updatePrice();
+      });
+    }
     await loadPublicState();
     renderPublicEvent();
     renderClientTickets();
@@ -276,7 +309,7 @@ function renderClientTickets(keepId = null) {
   const select = document.getElementById("ticketType");
   if (!select) return;
 
-  const lots = HYPE.lots || [];
+  const lots = (HYPE.lots || []).filter(t => t.active !== false);
   const gender = document.getElementById("clientGender")?.value || "Feminino";
 
   select.innerHTML = lots.map(t => {
@@ -434,7 +467,7 @@ async function initAdmin(fromLogin = false) {
   hideLogin();
   if (!['admin','gerente','caixa'].includes(HYPE.role)) return alert("Sem permissão.");
   try {
-    await Promise.all([loadPublicState(), loadStaffTickets(""), loadUsersIfAllowed()]);
+    await Promise.all([loadPublicState(), loadStaffTickets(""), loadUsersIfAllowed(), loadSectorConfigs()]);
     renderConfigTickets();
     renderClientsTable();
     renderUsers();
@@ -442,7 +475,7 @@ async function initAdmin(fromLogin = false) {
     startAdminTicker();
     clearInterval(HYPE.refreshTimer);
     HYPE.refreshTimer = setInterval(async () => {
-      try { await loadPublicState(); await loadStaffTickets(document.getElementById("searchInput")?.value || ""); renderConfigTickets(); renderClientsTable(); }
+      try { await loadPublicState(); await loadStaffTickets(document.getElementById("searchInput")?.value || ""); await loadSectorConfigs(); renderConfigTickets(); renderClientsTable(); }
       catch (_) {}
     }, 5000);
   } catch (err) {
@@ -451,7 +484,7 @@ async function initAdmin(fromLogin = false) {
 }
 
 function renderConfigTickets() {
-  const target = document.getElementById("ticketConfigList");
+  const target = document.getElementById("sectorConfigCards");
   if (!target) return;
 
   if (!["admin","gerente"].includes(HYPE.role)) {
@@ -459,69 +492,147 @@ function renderConfigTickets() {
     return;
   }
 
-  const lots = HYPE.lots || [];
+  const sectors = ["Pista","VIP","Camarote"];
 
-  if (!lots.length) {
-    target.innerHTML = `<div class="empty-lots">Nenhum setor cadastrado ainda. Use o formulário acima para adicionar Pista, VIP ou Camarote.</div>`;
-    return;
+  target.innerHTML = sectors.map((sector, i) => {
+    const cfg = (HYPE.sectorConfigs || []).find(
+      x => String(x.sector || "").trim().toLowerCase() === sector.toLowerCase()
+    );
+
+    const active = cfg ? !!cfg.active : false;
+    const priceMale = Number(cfg?.price_male ?? 0);
+    const priceFemale = Number(cfg?.price_female ?? 0);
+    const qty = Number(cfg?.quantity_total ?? 0);
+
+    return `
+      <div class="sector-card ${active ? "" : "inactive"}" id="sectorCard_${i}">
+        <div class="sector-card-top">
+          <div>
+            <div class="sector-card-title">${sector.toUpperCase()}</div>
+            <span class="sector-state ${active ? "on" : "off"}" id="sectorState_${i}">
+              ${active ? "ATIVO NA VENDA" : "NÃO MOSTRAR NA VENDA"}
+            </span>
+          </div>
+
+          <label class="sector-toggle">
+            <input type="checkbox" id="sectorActive_${i}" ${active ? "checked" : ""} onchange="toggleSectorCard(${i})">
+            VENDER
+          </label>
+        </div>
+
+        <input type="hidden" id="sectorName_${i}" value="${sector}">
+
+        <div class="sector-fields">
+          <div class="gender-field male">
+            <label>♂ Masculino (R$)</label>
+            <input id="sectorMale_${i}" type="number" step="0.01" min="0" value="${priceMale}">
+          </div>
+
+          <div class="gender-field female">
+            <label>♀ Feminino (R$)</label>
+            <input id="sectorFemale_${i}" type="number" step="0.01" min="0" value="${priceFemale}">
+          </div>
+
+          <div class="form-group">
+            <label>Quantidade (0 = ilimitado)</label>
+            <input id="sectorQty_${i}" type="number" min="0" value="${qty}">
+          </div>
+
+          <div class="form-group">
+            <label>Início da venda</label>
+            <input id="sectorStart_${i}" type="datetime-local" value="${toDateTimeLocal(cfg?.starts_at)}">
+          </div>
+
+          <div class="form-group full">
+            <label>Expiração</label>
+            <input id="sectorEnd_${i}" type="datetime-local" value="${toDateTimeLocal(cfg?.ends_at)}">
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function toggleSectorCard(index) {
+  const checked = !!document.getElementById(`sectorActive_${index}`)?.checked;
+  const card = document.getElementById(`sectorCard_${index}`);
+  const state = document.getElementById(`sectorState_${index}`);
+
+  card?.classList.toggle("inactive", !checked);
+
+  if (state) {
+    state.className = `sector-state ${checked ? "on" : "off"}`;
+    state.textContent = checked ? "ATIVO NA VENDA" : "NÃO MOSTRAR NA VENDA";
+  }
+}
+
+async function saveAllSectorConfigs() {
+  if (!["admin","gerente"].includes(HYPE.role)) {
+    return alert("Somente Admin/Gerente pode alterar os setores.");
   }
 
-  const sectorOptions = current => ["Pista","VIP","Camarote"]
-    .map(s => `<option value="${s}" ${String(current).toLowerCase() === s.toLowerCase() ? "selected" : ""}>${s.toUpperCase()}</option>`)
-    .join("");
+  const sectors = ["Pista","VIP","Camarote"];
+  const payloads = [];
 
-  target.innerHTML = lots.map((t, i) => `
-    <div class="ticket-admin-card">
-      <div class="ticket-admin-head">
-        <strong>${hypeEscape(t.sector || t.name)}</strong>
-        <span class="schedule-badge ${hypeStatus(t).code === "active" ? "active" : hypeStatus(t).code === "upcoming" ? "upcoming" : "expired"}">${hypeEscape(hypeStatus(t).label)}</span>
-      </div>
+  for (let i = 0; i < sectors.length; i++) {
+    const active = !!document.getElementById(`sectorActive_${i}`)?.checked;
+    const priceMale = Number(document.getElementById(`sectorMale_${i}`)?.value || 0);
+    const priceFemale = Number(document.getElementById(`sectorFemale_${i}`)?.value || 0);
+    const qty = Number(document.getElementById(`sectorQty_${i}`)?.value || 0);
+    const startRaw = document.getElementById(`sectorStart_${i}`)?.value || "";
+    const endRaw = document.getElementById(`sectorEnd_${i}`)?.value || "";
 
-      <div class="ticket-admin-grid-gender">
-        <div class="form-group">
-          <label>Tipo / Setor</label>
-          <select id="tSector_${i}">${sectorOptions(t.sector)}</select>
-        </div>
+    if (active && (!Number.isFinite(priceMale) || priceMale < 0 || !Number.isFinite(priceFemale) || priceFemale < 0)) {
+      return alert(`Confira os valores de ${sectors[i]}.`);
+    }
 
-        <div class="gender-price-box male">
-          <label>♂ Preço Masculino</label>
-          <input id="tPriceMale_${i}" type="number" step="0.01" min="0" value="${Number(t.price_male ?? t.price ?? 0)}">
-        </div>
+    if (!Number.isFinite(qty) || qty < 0) {
+      return alert(`Confira a quantidade de ${sectors[i]}.`);
+    }
 
-        <div class="gender-price-box female">
-          <label>♀ Preço Feminino</label>
-          <input id="tPriceFemale_${i}" type="number" step="0.01" min="0" value="${Number(t.price_female ?? t.price ?? 0)}">
-        </div>
+    let startAt = null;
+    let endAt = null;
 
-        <div class="form-group">
-          <label>Quantidade (0 = ilimitado)</label>
-          <input id="tQty_${i}" type="number" min="0" value="${Number(t.quantity_total || 0)}">
-        </div>
+    try {
+      startAt = fromDateTimeLocal(startRaw);
+      endAt = fromDateTimeLocal(endRaw);
+    } catch (_) {
+      return alert(`Confira as datas de ${sectors[i]}.`);
+    }
 
-        <div class="form-group">
-          <label>Início</label>
-          <input id="tStart_${i}" type="datetime-local" value="${toDateTimeLocal(t.starts_at)}">
-        </div>
+    if (startAt && endAt && new Date(endAt) <= new Date(startAt)) {
+      return alert(`A expiração de ${sectors[i]} precisa ser depois do início.`);
+    }
 
-        <div class="form-group">
-          <label>Expiração</label>
-          <input id="tEnd_${i}" type="datetime-local" value="${toDateTimeLocal(t.ends_at)}">
-        </div>
-      </div>
+    payloads.push({
+      p_username: HYPE.user,
+      p_password: HYPE.pass,
+      p_sector: sectors[i],
+      p_price_male: priceMale,
+      p_price_female: priceFemale,
+      p_quantity_total: qty,
+      p_starts_at: startAt,
+      p_ends_at: endAt,
+      p_active: active,
+      p_sort_order: i + 1
+    });
+  }
 
-      <div class="ticket-admin-preview">
-        <span>Masculino: <b>${hypeFormatMoney(t.price_male ?? t.price)}</b></span>
-        <span>Feminino: <b>${hypeFormatMoney(t.price_female ?? t.price)}</b></span>
-        <span>Vendidos: <b>${Number(t.quantity_sold || 0)}</b></span>
-        <span>${hypeEscape(hypeCountdownText(t))}</span>
-      </div>
+  if (!payloads.some(x => x.p_active)) {
+    if (!confirm("Nenhum setor ficará disponível para venda. Deseja continuar?")) return;
+  }
 
-      <div class="ticket-admin-actions">
-        <button class="btn-action" onclick="updateTicket(${i})">SALVAR VALORES</button>
-        <button class="btn-action" onclick="clearTicketSchedule(${i})">REMOVER HORÁRIOS</button>
-      </div>
-    </div>
-  `).join("");
+  try {
+    for (const payload of payloads) {
+      await sbRpc("staff_save_sector_config", payload);
+    }
+
+    await Promise.all([loadPublicState(), loadSectorConfigs()]);
+    renderConfigTickets();
+    hypeNotify("Setores atualizados. A página de venda já vai mostrar somente os ativos.");
+  } catch (err) {
+    alert(err.message || "Erro ao salvar setores.");
+  }
 }
 
 function toDateTimeLocal(value) {
@@ -537,7 +648,7 @@ function fromDateTimeLocal(value) { return value ? new Date(value).toISOString()
 
 async function createNewLot() {
   if (!["admin","gerente"].includes(HYPE.role)) {
-    return alert("Somente Admin/Gerente pode criar setores.");
+    return alert("Somente Admin/Gerente pode alterar setores.");
   }
 
   const sector = document.getElementById("newLotSector")?.value || "Pista";
@@ -565,7 +676,6 @@ async function createNewLot() {
 
   let startAt = null;
   let endAt = null;
-
   try {
     startAt = fromDateTimeLocal(startRaw);
     endAt = fromDateTimeLocal(endRaw);
@@ -577,11 +687,15 @@ async function createNewLot() {
     return alert("A expiração precisa ser depois do início da venda.");
   }
 
+  const existing = (HYPE.lots || []).find(
+    t => String(t.sector || t.name || "").trim().toLowerCase() === String(sector).trim().toLowerCase()
+  );
+
   try {
     await sbRpc("staff_upsert_lot_gender", {
       p_username: HYPE.user,
       p_password: HYPE.pass,
-      p_id: 0,
+      p_id: existing ? existing.id : 0,
       p_sector: sector,
       p_price_male: priceMale,
       p_price_female: priceFemale,
@@ -589,23 +703,16 @@ async function createNewLot() {
       p_starts_at: startAt,
       p_ends_at: endAt,
       p_active: true,
-      p_sort_order: (HYPE.lots?.length || 0) + 1
+      p_sort_order: existing ? ((HYPE.lots || []).findIndex(t => t.id === existing.id) + 1) : ((HYPE.lots?.length || 0) + 1)
     });
-
-    document.getElementById("newLotPriceMale").value = "";
-    document.getElementById("newLotPriceFemale").value = "";
-    document.getElementById("newLotStart").value = "";
-    document.getElementById("newLotEnd").value = "";
-    document.getElementById("newLotQty").value = "0";
 
     await loadPublicState();
     renderConfigTickets();
-    hypeNotify("Setor criado com valores por gênero.");
+    hypeNotify(existing ? "Valores do setor atualizados." : "Setor criado com sucesso.");
   } catch (err) {
-    alert(err.message || "Erro ao criar setor.");
+    alert(err.message || "Erro ao salvar setor.");
   }
 }
-
 async function updateTicket(index) {
   const t = HYPE.lots[index];
   if (!t) return;

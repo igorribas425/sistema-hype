@@ -40,3 +40,26 @@ PREÇOS POR GÊNERO
 4. Defina Preço Masculino e Preço Feminino.
 5. O cliente escolhe o gênero e o site mostra o valor correspondente.
 6. A quantidade restante NÃO aparece para o cliente.
+
+
+CORREÇÃO DE CACHE / PREÇOS POR GÊNERO
+--------------------------------------
+Versão: 20260830-2110
+- Remove definitivamente a lógica antiga de Nome do ingresso.
+- Pista / VIP / Camarote são selecionados em lista.
+- Masculino e Feminino têm preços separados.
+- O botão SALVAR VALORES DO SETOR atualiza o setor se ele já existir.
+- app.js, config e logo recebem versão na URL para celulares não usarem cache antigo.
+- O preço da página de venda muda quando o gênero é alterado.
+
+
+SETORES SELETIVOS
+-----------------
+Agora o Admin mostra PISTA, VIP e CAMAROTE ao mesmo tempo.
+Cada setor tem a opção VENDER.
+- Se os 3 estiverem ativos, os 3 aparecem na página de venda.
+- Se só 1 estiver ativo, somente ele aparece para o cliente.
+- Se 2 estiverem ativos, somente esses 2 aparecem.
+Cada setor mantém preço Masculino/Feminino, quantidade e horários.
+
+Execute ATUALIZACAO_SETORES_ATIVOS.sql UMA VEZ no Supabase antes de usar esta versão.
