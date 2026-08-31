@@ -1,31 +1,71 @@
-HYPE GITHUB PIX AUTO V10
+HYPE GITHUB PIX AUTO V11
+========================
 
-ALTERAÇÕES DESTA VERSÃO
-- PORTARIA: QR de ingresso PAGO mostra primeiro nome, evento, lote/setor e status.
-- PORTARIA: NÃO registra entrada ao ler o QR. Só registra após tocar em “CONFIRMAR ENTRADA”.
-- PORTARIA: leitor físico que digita o código no campo agora reconhece o QR automaticamente e troca o código pelos dados da pessoa.
-- PORTARIA: ingresso pago ainda não usado aparece como “PAGO — CONFIRMAR”.
-- PORTARIA: depois de confirmar, nova leitura mostra “JÁ ENTROU”.
-- ADMIN: “LIMPAR INGRESSOS” agora zera de verdade a tabela de ingressos e registros auxiliares ligados a ela.
-- ADMIN: depois da limpeza, o próprio site consulta o banco novamente e avisa se ainda existir algum ingresso.
-- Eventos, lotes, preços, usuários e configurações principais são preservados.
+O que mudou nesta versão
+------------------------
+1. PIX continua sendo gerado pelo Asaas.
+2. Quando o banco recebe "Pago", a página do cliente mostra:
+   PAGAMENTO CONFIRMADO -> ACESSAR MEU INGRESSO.
+3. O ingresso oficial continua no próprio site, com QR Code para a Portaria.
+4. O Gmail é enviado automaticamente pelo webhook do Asaas, sem depender
+   do botão "Confirmar" do Admin.
+5. A tela informa se o e-mail já foi enviado ou se ainda está processando.
+6. As correções da V10 de Portaria e limpeza foram mantidas.
 
-PASSO OBRIGATÓRIO UMA VEZ
-1. Abra Supabase > SQL Editor > New query.
-2. Cole o conteúdo de SUPABASE_V10_PORTARIA_LIMPEZA.sql.
-3. Clique Run. Deve aparecer Success / No rows returned.
-4. Depois envie os arquivos HTML/JS desta pasta para a raiz do GitHub, substituindo os atuais.
+ARQUIVOS DO GITHUB
+------------------
+Suba para a raiz do repositório:
+- index.html
+- cliente.html
+- admin.html
+- evento.html
+- portaria.html
+- app.js
+- supabase-config.js
+- logo-hype.png
 
-TESTE FINAL DA PORTARIA
-1. Gere um ingresso NOVO e deixe-o PAGO.
-2. Abra Portaria e faça login.
-3. Leia o QR.
-4. Deve aparecer o NOME e os dados, mas NÃO deve marcar entrada ainda.
-5. Toque “CONFIRMAR ENTRADA”.
-6. Leia novamente: deve aparecer “JÁ ENTROU”.
+NÃO é necessário subir para o GitHub:
+- SUPABASE_V11_EMAIL_AUTOMATICO.sql
+- ASAAS_WEBHOOK_EMAIL_AUTOMATICO_V11.ts
+- pasta BACKEND_SUPABASE_V11
 
-TESTE DA LIMPEZA
-1. No Admin, toque “LIMPAR INGRESSOS”.
-2. Confirme.
-3. Atualize a página.
-4. A lista deve continuar zerada.
+SUPABASE - SQL (uma vez)
+------------------------
+Abra Supabase > SQL Editor > New query.
+Cole SUPABASE_V11_EMAIL_AUTOMATICO.sql e clique Run UMA VEZ.
+Este SQL não apaga ingressos/eventos/lotes.
+
+SUPABASE - EDGE FUNCTION ASAAS
+------------------------------
+Abra a Edge Function que recebe o webhook do Asaas (asaas-webhook).
+Substitua o código pelo arquivo:
+ASAAS_WEBHOOK_EMAIL_AUTOMATICO_V11.ts
+
+A função precisa estar com Verify JWT DESATIVADO, porque o Asaas chama
+o webhook diretamente e não envia JWT do Supabase.
+
+Secrets necessários no Supabase:
+- HYPE_APPS_SCRIPT_URL
+- HYPE_WEBHOOK_SECRET
+- SUPABASE_URL
+- SUPABASE_SERVICE_ROLE_KEY
+
+Opcional, para validar o webhook:
+- ASAAS_WEBHOOK_TOKEN
+
+IMPORTANTE
+----------
+Não coloque SERVICE_ROLE, token do Asaas ou HYPE_WEBHOOK_SECRET no GitHub.
+
+Fluxo final esperado
+--------------------
+Cliente gera PIX
+-> paga
+-> Asaas confirma
+-> webhook muda ticket para Pago
+-> webhook chama Gmail/Apps Script
+-> site mostra PAGAMENTO CONFIRMADO
+-> botão ACESSAR MEU INGRESSO
+-> QR Code do ingresso
+-> e-mail enviado automaticamente
+-> Portaria lê QR, mostra os dados e pede confirmação de entrada.

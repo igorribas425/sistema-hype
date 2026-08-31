@@ -759,6 +759,12 @@ async function refreshCurrentOrderStatus(showMessage = true) {
     const entry = Array.isArray(rows) ? rows[0] : rows;
     if (!entry) return;
 
+    const localOrder = window.__hypeCurrentManualEntry || {};
+    const mergedEntry = {
+      ...entry,
+      email: entry.email || localOrder.email || ""
+    };
+
     const statusEls = [
       document.getElementById("manualPaymentStatus"),
       document.getElementById("pixPaymentStatus")
@@ -772,14 +778,30 @@ async function refreshCurrentOrderStatus(showMessage = true) {
     });
 
     if (entry.payment_status === "Pago") {
-      fillTicketCard(entry);
+      fillTicketCard(mergedEntry);
+
       const manualArea = document.getElementById("manualArea");
       const pixArea = document.getElementById("pixArea");
+      const successArea = document.getElementById("paymentSuccessArea");
       const card = document.getElementById("ticketCard");
+
       if (manualArea) manualArea.style.display = "none";
       if (pixArea) pixArea.style.display = "none";
-      if (card) card.style.display = "block";
-      if (showMessage) hypeNotify("Pagamento confirmado. Ingresso liberado!");
+
+      // Primeiro mostra uma confirmação clara. O cliente decide quando abrir o ingresso.
+      if (!window.__hypeTicketOpened) {
+        if (successArea) successArea.style.display = "block";
+        if (card) card.style.display = "none";
+      }
+
+      const successEmail = document.getElementById("paymentSuccessEmail");
+      if (successEmail) {
+        successEmail.textContent = entry.email_sent
+          ? "📧 Uma cópia do ingresso já foi enviada para o e-mail informado na compra."
+          : "📧 Pagamento confirmado. O envio do ingresso por e-mail está sendo processado automaticamente.";
+      }
+
+      if (showMessage) hypeNotify("Pagamento confirmado. Seu ingresso está liberado!");
     } else if (showMessage) {
       hypeNotify("Pagamento ainda não foi confirmado.");
     }
@@ -790,16 +812,36 @@ async function refreshCurrentOrderStatus(showMessage = true) {
 
 function fillTicketCard(entry) {
   const set = (id, value) => { const el = document.getElementById(id); if (el) el.innerText = value ?? ""; };
+  const localOrder = window.__hypeCurrentManualEntry || {};
+  const customerEmail = entry.email || localOrder.email || "";
+
   set("tClientName", entry.customer_name);
-  set("tClientPhone", entry.phone || "Não informado");
-  set("tClientEmail", entry.email || "");
-  set("tClientGender", entry.gender || "Não especificado");
-  set("tTicketName", entry.lot_name || "");
+  set("tClientPhone", entry.phone || localOrder.phone || "Não informado");
+  set("tClientEmail", customerEmail || "E-mail informado na compra");
+  set("tClientGender", entry.gender || localOrder.gender || "Não especificado");
+  set("tTicketName", entry.lot_name || localOrder.lot_name || "");
   set("tTicketPrice", hypeFormatMoney(entry.price));
   set("tTicketStatus", entry.payment_status === "Pago" ? "CONFIRMADO (PAGO ✅)" : entry.payment_status === "Cancelado" ? "CANCELADO ❌" : "Pendente de Confirmação ADM");
   set("tTicketId", entry.ticket_code || `#${entry.id}`);
+
+  const emailNotice = document.getElementById("ticketEmailNotice");
+  if (emailNotice) {
+    emailNotice.textContent = entry.email_sent
+      ? "📧 Cópia enviada automaticamente para o e-mail informado na compra."
+      : "📧 O envio do ingresso por e-mail está sendo processado automaticamente.";
+  }
+
   const qr = document.getElementById("ticketQrImg");
   if (qr) qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(entry.qr_token || entry.ticket_code)}`;
+}
+
+function openPaidTicket() {
+  window.__hypeTicketOpened = true;
+  const successArea = document.getElementById("paymentSuccessArea");
+  const card = document.getElementById("ticketCard");
+  if (successArea) successArea.style.display = "none";
+  if (card) card.style.display = "block";
+  requestAnimationFrame(() => card?.scrollIntoView({ behavior: "smooth", block: "start" }));
 }
 
 async function showTicketCard() {

@@ -113,6 +113,31 @@ input:focus, select:focus{border-color:#d9d9de}
 @media(max-width:1080px){.event-showcase{grid-template-columns:1fr}.event-visual{min-height:390px}.purchase-layout{grid-template-columns:1fr}.info-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:720px){.event-card{flex-basis:92%;grid-template-columns:1fr;min-height:0}.event-card-image{min-height:300px}.event-card-body{padding:22px 20px}.events-head{align-items:start}.event-carousel{padding-right:8%}body{padding:14px}.page-shell{margin-top:18px}.event-panel{padding:24px 20px 22px}.event-visual{min-height:280px}.event-badge{left:16px;top:16px;font-size:10px}.purchase-copy,.box{padding:24px}.section-head h1{font-size:34px}.two-col,.info-grid{grid-template-columns:1fr}.brand-logo{width:min(240px,74vw)}.box-title{font-size:22px}}
 
+
+
+.payment-success{
+  display:none;
+  margin-top:22px;
+  padding:22px;
+  border-radius:18px;
+  text-align:center;
+  background:linear-gradient(180deg,rgba(40,209,124,.15),rgba(40,209,124,.05));
+  border:1px solid rgba(40,209,124,.45);
+}
+.payment-success .success-icon{font-size:42px;line-height:1;margin-bottom:10px}
+.payment-success h3{font-size:22px;color:var(--green);margin-bottom:7px}
+.payment-success p{font-size:13px;color:#f4f4f5;line-height:1.5}
+.payment-success small{display:block;color:var(--muted);margin:9px 0 14px;line-height:1.5}
+.ticket-email-notice{
+  margin:12px 0 0;
+  padding:10px 12px;
+  border-radius:10px;
+  background:rgba(40,209,124,.08);
+  border:1px solid rgba(40,209,124,.25);
+  color:#b9f6d4;
+  font-size:11px;
+  line-height:1.45;
+}
 </style>
 </head>
 <body>
@@ -221,6 +246,14 @@ input:focus, select:focus{border-color:#d9d9de}
         <button class="btn ghost-btn" onclick="refreshCurrentOrderStatus(true)">VERIFICAR PAGAMENTO</button>
       </div>
 
+      <div class="payment-success" id="paymentSuccessArea">
+        <div class="success-icon">✅</div>
+        <h3>PAGAMENTO CONFIRMADO</h3>
+        <p>Seu ingresso HYPE está liberado.</p>
+        <small id="paymentSuccessEmail">📧 O ingresso também será enviado automaticamente para o e-mail informado na compra.</small>
+        <button class="btn" onclick="openPaidTicket()">ACESSAR MEU INGRESSO</button>
+      </div>
+
       <div class="manual-area" id="manualArea">
         <h3 style="font-size:20px">PEDIDO CRIADO ✅</h3>
         <p style="font-size:13px;color:var(--muted);margin-top:7px">Seu ingresso ainda não está liberado. Finalize o pagamento pelo WhatsApp e aguarde a confirmação do Admin.</p>
@@ -247,7 +280,8 @@ input:focus, select:focus{border-color:#d9d9de}
           <p><span>Código ID:</span> <strong id="tTicketId" style="color:#aaa"></strong></p>
         </div>
         <div class="ticket-qr"><img id="ticketQrImg" src="" alt="QR Code do ingresso"></div>
-        <p style="font-size:11px;color:var(--muted);line-height:1.4">Apresente o QR Code, seu ID ou seu nome na portaria com documento.</p>
+        <div class="ticket-email-notice" id="ticketEmailNotice">📧 O ingresso também será enviado automaticamente para o e-mail informado na compra.</div>
+        <p style="font-size:11px;color:var(--muted);line-height:1.4;margin-top:10px">Apresente o QR Code, seu ID ou seu nome na portaria com documento.</p>
         <button class="btn ghost-btn" onclick="location.reload()">Comprar Outro</button>
       </div>
     </div>
@@ -256,7 +290,7 @@ input:focus, select:focus{border-color:#d9d9de}
 
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260831-v9-portaria-limpeza"></script>
-<script src="app.js?v=20260831-v9-portaria-limpeza"></script>
+<script src="supabase-config.js?v=20260831-v11-email-auto"></script>
+<script src="app.js?v=20260831-v11-email-auto"></script>
 </body>
 </html>
