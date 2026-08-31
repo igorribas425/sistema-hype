@@ -138,6 +138,14 @@ async function sbRpc(name, params = {}) {
   }
 }
 
+function hypeWithTimeout(promise, ms = 8000, label = "Operação") {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} demorou demais para responder.`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 async function loadPublicState() {
   const [events, pix] = await Promise.all([
     sbRpc("public_events"),
@@ -814,20 +822,27 @@ async function showTicketCard() {
 /* ========================= ADMIN ========================= */
 
 async function loadAdminEvents() {
+  // Sempre começa com os eventos públicos já carregados. Assim o painel nunca fica
+  // preso em “Carregando...” se a RPC administrativa estiver lenta ou ausente.
+  const publicFallback = Array.isArray(HYPE.events) ? [...HYPE.events] : [];
+  HYPE.adminEvents = publicFallback;
+
   if (!HYPE.user || !HYPE.pass || !["admin","gerente"].includes(HYPE.role)) {
-    HYPE.adminEvents = HYPE.events || [];
     return HYPE.adminEvents;
   }
 
   try {
-    const rows = await sbRpc("staff_list_events", {
-      p_username: HYPE.user,
-      p_password: HYPE.pass
-    });
-    HYPE.adminEvents = Array.isArray(rows) ? rows : [];
+    const rows = await hypeWithTimeout(
+      sbRpc("staff_list_events", {
+        p_username: HYPE.user,
+        p_password: HYPE.pass
+      }),
+      8000,
+      "Carregamento dos eventos"
+    );
+    if (Array.isArray(rows) && rows.length) HYPE.adminEvents = rows;
   } catch (err) {
-    console.warn("[HYPE][staff_list_events]", err);
-    HYPE.adminEvents = HYPE.events || [];
+    console.warn("[HYPE][staff_list_events] usando fallback público:", err);
   }
 
   if (!HYPE.selectedEventId || !HYPE.adminEvents.some(e => Number(e.id) === Number(HYPE.selectedEventId))) {
@@ -843,7 +858,11 @@ async function loadAdminLots(eventId = HYPE.selectedEventId) {
     HYPE.lots = [];
     return HYPE.lots;
   }
-  const rows = await sbRpc("public_lots_by_event", { p_event_id: Number(eventId) });
+  const rows = await hypeWithTimeout(
+    sbRpc("public_lots_by_event", { p_event_id: Number(eventId) }),
+    8000,
+    "Carregamento dos lotes"
+  );
   HYPE.lots = Array.isArray(rows) ? rows : [];
   return HYPE.lots;
 }
@@ -858,12 +877,18 @@ function renderAdminEvents() {
   const listEl = document.getElementById("adminEventsList");
   if (!listEl) return;
 
+  const events = HYPE.adminEvents || HYPE.events || [];
+  const selected = events.find(e => Number(e.id) === Number(HYPE.selectedEventId));
+  const selectedName = document.getElementById("adminSelectedEventName");
+  if (selectedName) selectedName.textContent = selected
+    ? `${selected.name || "Evento"}${selected.event_date ? ` • ${adminEventDateLabel(selected)}` : ""}`
+    : (events.length ? "Selecione um evento" : "Nenhum evento cadastrado");
+
   if (!["admin","gerente"].includes(HYPE.role)) {
     listEl.innerHTML = `<div class="admin-event-empty">Seu perfil não pode criar ou editar eventos.</div>`;
     return;
   }
 
-  const events = HYPE.adminEvents || [];
   if (!events.length) {
     listEl.innerHTML = `<div class="admin-event-empty">Nenhum evento cadastrado. Clique em <b>+ NOVO EVENTO</b>.</div>`;
   } else {
@@ -887,9 +912,6 @@ function renderAdminEvents() {
     }).join("");
   }
 
-  const selected = events.find(e => Number(e.id) === Number(HYPE.selectedEventId));
-  const selectedName = document.getElementById("adminSelectedEventName");
-  if (selectedName) selectedName.textContent = selected ? `${selected.name || "Evento"}${selected.event_date ? ` • ${adminEventDateLabel(selected)}` : ""}` : "Nenhum evento selecionado";
 }
 
 async function selectAdminEvent(eventId) {
@@ -1027,7 +1049,18 @@ async function initAdmin(fromLogin = false) {
     await loadStaffTickets("");
     if (["admin","gerente"].includes(HYPE.role)) {
       await loadAdminEvents();
-      if (HYPE.selectedEventId) await loadAdminLots(HYPE.selectedEventId);
+      // Mostra o evento imediatamente, antes de buscar os lotes.
+      renderAdminEvents();
+      if (HYPE.selectedEventId) {
+        try {
+          await loadAdminLots(HYPE.selectedEventId);
+        } catch (lotErr) {
+          console.warn("[HYPE][public_lots_by_event]", lotErr);
+          HYPE.lots = [];
+          const lotTarget = document.getElementById("ticketConfigList");
+          if (lotTarget) lotTarget.innerHTML = `<div class="empty-lots">Não foi possível carregar os lotes. Use ↻ ATUALIZAR e tente novamente.<br><small>${hypeEscape(lotErr.message || "Erro ao carregar lotes")}</small></div>`;
+        }
+      }
     }
     await loadUsersIfAllowed();
 
@@ -1080,7 +1113,7 @@ function renderConfigTickets() {
 
   target.innerHTML = (HYPE.lots || []).map((t, i) => `
     <div class="ticket-admin-card">
-      <div class="ticket-admin-head"><strong>${hypeEscape(t.name)}</strong><span class="schedule-badge ${hypeStatus(t).code === "active" ? "active" : hypeStatus(t).code === "upcoming" ? "upcoming" : "expired"}">${hypeEscape(hypeStatus(t).label)}</span></div>
+      <div class="ticket-admin-head"><strong>${hypeEscape(t.name)}</strong><span data-admin-status="${i}" class="schedule-badge ${hypeStatus(t).code === "active" ? "active" : hypeStatus(t).code === "upcoming" ? "upcoming" : "expired"}">${hypeEscape(hypeStatus(t).label)}</span></div>
       <div class="ticket-admin-grid ticket-admin-grid-wide">
         <div class="form-group"><label>Nome</label><input id="tName_${i}" value="${hypeEscape(t.name)}"></div>
         <div class="form-group"><label>Setor</label><input id="tSector_${i}" value="${hypeEscape(t.sector || "")}"></div>
@@ -1089,7 +1122,7 @@ function renderConfigTickets() {
         <div class="form-group"><label>Início</label><input id="tStart_${i}" type="datetime-local" value="${toDateTimeLocal(t.starts_at)}"></div>
         <div class="form-group"><label>Expiração</label><input id="tEnd_${i}" type="datetime-local" value="${toDateTimeLocal(t.ends_at)}"></div>
       </div>
-      <div class="ticket-admin-preview"><span>Vendidos: <b>${Number(t.quantity_sold || 0)}</b></span><span>Disponíveis: <b>${t.quantity_total ? Math.max(0, Number(t.quantity_available || 0)) : "∞"}</b></span><span>Setor: <b>${hypeEscape(t.sector || "Pista")}</b></span><span>${hypeEscape(hypeCountdownText(t))}</span></div>
+      <div class="ticket-admin-preview"><span>Vendidos: <b>${Number(t.quantity_sold || 0)}</b></span><span>Disponíveis: <b>${t.quantity_total ? Math.max(0, Number(t.quantity_available || 0)) : "∞"}</b></span><span>Setor: <b>${hypeEscape(t.sector || "Pista")}</b></span><span data-admin-countdown="${i}">${hypeEscape(hypeCountdownText(t))}</span></div>
       <div class="ticket-admin-actions"><button class="btn-action" onclick="updateTicket(${i})">SALVAR LOTE</button><button class="btn-action" onclick="clearTicketSchedule(${i})">REMOVER HORÁRIOS</button></div>
     </div>`).join("");
 }
@@ -1331,9 +1364,26 @@ function exportEntriesCSV() {
   const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`hype-ingressos-${new Date().toISOString().slice(0,10)}.csv`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 
+function updateAdminCountdowns() {
+  (HYPE.lots || []).forEach((t, i) => {
+    const countdown = document.querySelector(`[data-admin-countdown="${i}"]`);
+    if (countdown) countdown.textContent = hypeCountdownText(t);
+
+    const badge = document.querySelector(`[data-admin-status="${i}"]`);
+    if (badge) {
+      const state = hypeStatus(t);
+      badge.textContent = state.label;
+      badge.className = `schedule-badge ${state.code === "active" ? "active" : state.code === "upcoming" ? "upcoming" : "expired"}`;
+    }
+  });
+}
+
 function startAdminTicker() {
   clearInterval(window.__hypeAdminTicker);
-  window.__hypeAdminTicker = setInterval(()=>renderConfigTickets(),1000);
+  // IMPORTANTE: não recria os inputs a cada segundo. Isso preserva o que o
+  // administrador está digitando no preço, quantidade, nome e horários.
+  updateAdminCountdowns();
+  window.__hypeAdminTicker = setInterval(updateAdminCountdowns, 1000);
 }
 
 /* ========================= PORTARIA ========================= */

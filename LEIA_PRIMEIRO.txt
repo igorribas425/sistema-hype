@@ -46,3 +46,10 @@ A equipe acessa diretamente:
 
 O Admin continua com navegação interna para Comprar, Admin e Portaria.
 A segurança é feita pelo login do Supabase; esconder links não substitui autenticação.
+
+
+=== V8 - CORREÇÃO DO ADMIN ===
+- Corrigido “Carregando...” no evento selecionado: o Admin usa fallback dos eventos públicos e timeout nas RPCs.
+- Corrigida alteração de preço/lote: o painel NÃO recria mais os campos a cada 1 segundo enquanto você digita.
+- O contador continua atualizando sem apagar o valor digitado.
+- Cache do app.js atualizado para forçar o navegador/GitHub Pages a carregar a versão nova.
