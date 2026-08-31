@@ -1318,9 +1318,36 @@ async function toggleStatus(id) { const item = HYPE.tickets.find(x=>Number(x.id)
 async function deleteClient(id) { await setPayment(id,'Cancelado'); }
 
 async function clearAll() {
-  if (!confirm("Isso vai CANCELAR todos os ingressos atuais. Continuar?")) return;
-  try { await sbRpc("staff_cancel_all", {p_username:HYPE.user,p_password:HYPE.pass}); await loadStaffTickets(''); renderClientsTable(); hypeNotify('Ingressos cancelados.'); }
-  catch (err) { alert(err.message); }
+  if (!["admin","gerente"].includes(HYPE.role)) {
+    return alert("Somente Admin ou Gerente pode apagar os ingressos.");
+  }
+
+  const ok = confirm(
+    "APAGAR TODOS OS INGRESSOS?\n\n" +
+    "Isso remove definitivamente os ingressos e os registros de entrada das festas anteriores.\n" +
+    "Eventos, lotes, preços e usuários da equipe NÃO serão apagados.\n\n" +
+    "Essa ação não pode ser desfeita."
+  );
+  if (!ok) return;
+
+  try {
+    const deleted = await sbRpc("staff_purge_all_tickets", {
+      p_username: HYPE.user,
+      p_password: HYPE.pass
+    });
+    await loadStaffTickets("");
+    renderClientsTable();
+    const input = document.getElementById("searchInput");
+    if (input) input.value = "";
+    hypeNotify(`🗑 ${Number(deleted || 0)} ingresso(s) apagado(s). Lista zerada.`);
+  } catch (err) {
+    const msg = String(err?.message || err || "Erro ao limpar ingressos.");
+    if (msg.includes("staff_purge_all_tickets")) {
+      alert("A função de limpeza ainda não foi instalada no Supabase. Rode o arquivo SUPABASE_V9_PORTARIA_LIMPEZA.sql uma vez no SQL Editor.");
+    } else {
+      alert(msg);
+    }
+  }
 }
 
 async function loadUsersIfAllowed() {
@@ -1405,6 +1432,16 @@ async function searchClient() {
   } catch(err){ container.innerHTML=`<div class="empty-state" style="color:var(--red)">${hypeEscape(err.message)}</div>`; }
 }
 
+function portariaEventLabel(item) {
+  const bits = [];
+  if (item.event_name) bits.push(`🎤 ${item.event_name}`);
+  if (item.event_date) {
+    const d = new Date(`${String(item.event_date).slice(0,10)}T12:00:00`);
+    if (!Number.isNaN(d.getTime())) bits.push(d.toLocaleDateString("pt-BR"));
+  }
+  return bits.join(" • ");
+}
+
 function renderPortariaResults(list) {
   const container = document.getElementById('resultsContainer');
   if (!list.length) { container.innerHTML='<div class="empty-state" style="color:var(--red)">❌ Nenhum ingresso encontrado.</div>'; return; }
@@ -1415,8 +1452,42 @@ function renderPortariaResults(list) {
     const cls = canceled ? 'cancelado' : used ? 'used' : paid ? 'pago' : 'pendente';
     let text = canceled ? 'CANCELADO ❌' : used ? 'JÁ ENTROU ⚠️' : paid ? 'LIBERADO ✅' : 'BLOQUEADO ❌';
     const canValidate = paid && !used && !canceled;
-    return `<div class="result-card ${cls}"><div class="client-info"><h3>${hypeEscape(item.customer_name)}</h3><div class="client-details"><span class="badge gender">${hypeEscape(item.gender||'N/I')}</span><span>•</span><strong>${hypeEscape(item.lot_name||'')}</strong></div><div class="portaria-extra">${hypeEscape(item.ticket_code)}${item.entry_at ? ` • Entrada: ${hypeFormatDateTime(item.entry_at)}`:''}</div></div><div class="status-area"><div class="status-tag ${cls}">${text}</div>${canValidate?`<button class="btn-entry" onclick="validateEntry('${hypeEscape(item.ticket_code)}')">✅ LIBERAR ENTRADA</button>`:''}</div></div>`;
+    const eventLabel = portariaEventLabel(item);
+    return `<div class="result-card ${cls}"><div class="client-info"><h3>${hypeEscape(item.customer_name)}</h3>${eventLabel ? `<div class="portaria-event">${hypeEscape(eventLabel)}</div>` : ''}<div class="client-details"><span class="badge gender">${hypeEscape(item.gender||'N/I')}</span><span>•</span><strong>${hypeEscape(item.lot_name||'')}</strong>${item.sector ? `<span>•</span><span>${hypeEscape(item.sector)}</span>` : ''}</div><div class="portaria-extra">${hypeEscape(item.ticket_code)}${item.entry_at ? ` • Entrada: ${hypeFormatDateTime(item.entry_at)}`:''}</div></div><div class="status-area"><div class="status-tag ${cls}">${text}</div>${canValidate?`<button class="btn-entry" onclick="validateEntry('${hypeEscape(item.ticket_code)}')">✅ CONFIRMAR ENTRADA</button>`:''}</div></div>`;
   }).join('');
+}
+
+async function lookupTicketByQr(code, changeInput = true) {
+  const container = document.getElementById('resultsContainer');
+  try {
+    const rows = await sbRpc('staff_lookup_ticket', {
+      p_username: HYPE.user,
+      p_password: HYPE.pass,
+      p_code: String(code || '').trim()
+    });
+    const list = Array.isArray(rows) ? rows : (rows ? [rows] : []);
+    if (!list.length) {
+      if (container) container.innerHTML = '<div class="empty-state" style="color:var(--red)">❌ QR CODE NÃO ENCONTRADO.</div>';
+      return null;
+    }
+
+    const item = list[0];
+    if (changeInput) {
+      const input = document.getElementById('portariaSearch');
+      if (input) input.value = item.customer_name || item.ticket_code || '';
+    }
+    renderPortariaResults([item]);
+    hypeNotify(`✅ QR lido: ${item.customer_name || 'Ingresso encontrado'}`);
+    return item;
+  } catch (err) {
+    const msg = String(err?.message || err || 'Erro ao consultar QR.');
+    if (msg.includes('staff_lookup_ticket')) {
+      alert('A leitura nova do QR ainda não foi instalada no Supabase. Rode o arquivo SUPABASE_V9_PORTARIA_LIMPEZA.sql uma vez no SQL Editor.');
+    } else {
+      alert(msg);
+    }
+    return null;
+  }
 }
 
 async function validateEntry(code) {
@@ -1426,7 +1497,7 @@ async function validateEntry(code) {
     const result = Array.isArray(rows)?rows[0]:rows;
     if (!result?.ok) { alert(result?.message || 'Entrada negada.'); return; }
     hypeNotify('✅ ENTRADA LIBERADA');
-    await searchClient();
+    await lookupTicketByQr(code, false);
   } catch(err){ alert(err.message); }
 }
 
@@ -1448,9 +1519,11 @@ async function startQrScanner() {
       try {
         const codes = await detector.detect(video);
         if (codes?.length && codes[0].rawValue) {
-          document.getElementById('portariaSearch').value = codes[0].rawValue;
+          const qrCode = codes[0].rawValue;
           stopQrScanner();
-          await validateEntry(codes[0].rawValue);
+          // Primeiro mostra os dados do ingresso. A entrada só é registrada
+          // quando a portaria tocar em CONFIRMAR ENTRADA.
+          await lookupTicketByQr(qrCode, true);
         }
       } catch (_) {}
     }, 450);

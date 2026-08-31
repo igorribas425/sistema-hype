@@ -361,7 +361,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
     <div class="panel-box">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
         <h3 style="margin-bottom:0">Lista de Clientes & Pagamentos</h3>
-        <div style="display:flex;gap:6px"><button class="btn-action" onclick="refreshAdminOrders(true)">↻ ATUALIZAR</button><button class="btn-action" onclick="clearAll()" style="color:var(--red)">Limpar Tudo</button></div>
+        <div style="display:flex;gap:6px"><button class="btn-action" onclick="refreshAdminOrders(true)">↻ ATUALIZAR</button><button class="btn-action admin-only" onclick="clearAll()" style="color:var(--red)">🗑 LIMPAR INGRESSOS</button></div>
       </div>
       <div class="admin-sync-wrap"><div id="adminOrdersStatus" class="admin-sync-status">Carregando pedidos...</div></div>
 
@@ -386,7 +386,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260831-v8-admin-fix"></script>
-<script src="app.js?v=20260831-v8-admin-fix"></script>
+<script src="supabase-config.js?v=20260831-v9-portaria-limpeza"></script>
+<script src="app.js?v=20260831-v9-portaria-limpeza"></script>
 </body>
 </html>

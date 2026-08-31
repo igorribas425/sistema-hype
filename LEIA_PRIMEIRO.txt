@@ -1,55 +1,22 @@
-HYPE LOUNGE CLUB — GITHUB PIX AUTO V6
+HYPE GITHUB PIX AUTO V9
 
-ARQUIVOS PARA ENVIAR À RAIZ DO GITHUB:
-- index.html
-- cliente.html
-- admin.html
-- evento.html
-- portaria.html
-- app.js
-- supabase-config.js
-- logo-hype.png
+ALTERAÇÕES DESTA VERSÃO
+- PORTARIA: ao ler o QR, o sistema NÃO libera a entrada imediatamente.
+- PORTARIA: primeiro aparecem nome, evento, lote/setor e status.
+- PORTARIA: a entrada só é registrada ao tocar em “CONFIRMAR ENTRADA”.
+- ADMIN: “LIMPAR INGRESSOS” apaga definitivamente os ingressos/testes antigos e deixa a lista zerada.
+- Eventos, lotes, preços e usuários da equipe são preservados.
 
-O QUE ESTA VERSÃO TEM:
-- Dois ou mais eventos com carrossel lateral.
-- Admin seleciona o evento e gerencia seus próprios lotes.
-- Alteração de preço, quantidade e horários dos lotes.
-- Formulário do cliente não fica pulando enquanto a pessoa digita.
-- Criação do pedido com nome, WhatsApp, e-mail, CPF, gênero e lote.
-- Geração de PIX chamando a Edge Function `asaas-pix`.
-- Consulta automática do status do pedido.
-- Quando o webhook do Asaas muda o ticket para Pago, o QR do ingresso é liberado.
-- Portaria bloqueia ingresso Pendente, Cancelado ou já utilizado.
-- Admin mantém confirmação manual e reenvio de ingresso por e-mail como contingência.
+PASSO OBRIGATÓRIO UMA VEZ
+1. Abra Supabase > SQL Editor > New query.
+2. Cole o conteúdo de SUPABASE_V9_PORTARIA_LIMPEZA.sql.
+3. Clique Run. Deve aparecer Success.
+4. Depois envie os arquivos HTML/JS deste pacote para a raiz do GitHub, substituindo os atuais.
 
-IMPORTANTE:
-- NÃO coloque ASAAS_API_KEY, ASAAS_WEBHOOK_TOKEN, HYPE_WEBHOOK_SECRET ou SUPABASE_SERVICE_ROLE_KEY no GitHub.
-- Essas chaves devem continuar somente nos Secrets das Edge Functions do Supabase.
-- A URL e a chave publishable/anon de supabase-config.js são próprias do frontend.
-- O GitHub Pages pode levar alguns minutos para atualizar. Use uma aba anônima no primeiro teste.
-
-TESTE FINAL:
-1. Fazer pedido novo.
-2. Ver QR e PIX Copia e Cola do Asaas.
-3. Pagar.
-4. Aguardar o webhook marcar Pago.
-5. Confirmar que o ingresso aparece liberado.
-6. Ler o QR na Portaria uma vez; a segunda leitura deve informar que já foi utilizado.
-
-
-ACESSO DA EQUIPE
------------------
-A página de compra não mostra links para Admin ou Portaria.
-A equipe acessa diretamente:
-- https://igorribas425.github.io/sistema-hype/admin.html
-- https://igorribas425.github.io/sistema-hype/portaria.html
-
-O Admin continua com navegação interna para Comprar, Admin e Portaria.
-A segurança é feita pelo login do Supabase; esconder links não substitui autenticação.
-
-
-=== V8 - CORREÇÃO DO ADMIN ===
-- Corrigido “Carregando...” no evento selecionado: o Admin usa fallback dos eventos públicos e timeout nas RPCs.
-- Corrigida alteração de preço/lote: o painel NÃO recria mais os campos a cada 1 segundo enquanto você digita.
-- O contador continua atualizando sem apagar o valor digitado.
-- Cache do app.js atualizado para forçar o navegador/GitHub Pages a carregar a versão nova.
+TESTE DA PORTARIA
+1. Abra Portaria e faça login.
+2. Toque “LER QR CODE”.
+3. Leia um ingresso pago.
+4. Deve aparecer o NOME e os dados do ingresso.
+5. Só então toque “CONFIRMAR ENTRADA”.
+6. Uma segunda leitura deve aparecer como “JÁ ENTROU”.
