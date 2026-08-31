@@ -1,28 +1,59 @@
-HYPE - TESTE MANUAL WHATSAPP + MULTI EVENTOS
+HYPE LOUNGE CLUB — PACOTE COMPLETO V5
+Data: 31/08/2026
 
-IMPORTANTE: NÃO apague nem substitua o seu supabase-config.js atual do GitHub.
+ESTE ZIP JÁ JUNTA TODAS AS ALTERAÇÕES DO SITE PEDIDAS ATÉ AGORA:
 
-Substitua no GitHub estes arquivos:
+1. Compra manual pelo WhatsApp 555496776514.
+2. Pedido criado no Supabase como PENDENTE.
+3. Cliente informa nome, WhatsApp, e-mail, CPF e gênero.
+4. Admin lista os pedidos novos com nome, telefone, e-mail, CPF, ingresso e status.
+5. Botão ✅ CONFIRMAR no Admin.
+6. Ao confirmar, o status muda para PAGO.
+7. Somente depois de ficar PAGO o sistema chama a Edge Function send-ticket-email.
+8. A Edge Function chama o Google Apps Script configurado.
+9. O Gmail envia o ingresso automaticamente com QR Code ao e-mail do cliente.
+10. O Admin mostra 📧 INGRESSO ENVIADO.
+11. Se o envio falhar, o pagamento continua PAGO e aparece opção 📧 REENVIAR.
+12. Vários eventos no mesmo site, com carrossel para sexta/sábado/outros eventos.
+13. Admin com + NOVO EVENTO e edição dos eventos.
+14. Cada evento possui seus próprios lotes, sem misturar sexta com sábado.
+15. Portaria continua bloqueando ingresso PENDENTE e liberando somente PAGO.
+
+COMO ATUALIZAR O GITHUB
+
+Substitua os arquivos da raiz do seu repositório pelos arquivos da raiz desta pasta:
 - index.html
 - cliente.html
-- app.js
 - admin.html
-- portaria.html
 - evento.html
-- logo-hype.png (somente se quiser manter a logo desta versão)
+- portaria.html
+- app.js
+- logo-hype.png
+- supabase-config.js
 
-O WhatsApp de atendimento já está configurado no app.js: 55 54 9677-6514.
+O supabase-config.js incluído usa a configuração pública do projeto HYPE já usada no site.
+NÃO coloque nenhuma senha, service_role, HYPE_WEBHOOK_SECRET ou senha do Gmail no GitHub.
 
-Depois de subir os arquivos, aguarde o GitHub Pages atualizar e teste em aba anônima/privada.
+SUPABASE / GOOGLE
 
-Fluxo de teste:
-1. Abra o site.
-2. Preencha nome, WhatsApp, e-mail, CPF e gênero.
-3. Escolha o ingresso.
-4. Clique em FINALIZAR COMPRA PELO WHATSAPP.
-5. O pedido deve ser criado como PENDENTE no Supabase/Admin.
-6. O WhatsApp deve abrir com a mensagem pronta para o número configurado.
+A pasta BACKEND_BACKUP é apenas uma cópia dos códigos que você já configurou:
+- BACKEND_BACKUP/supabase/functions/send-ticket-email/index.ts
+- BACKEND_BACKUP/google-apps-script/Codigo.gs
 
-Multi-eventos:
-- O carrossel mostra todos os eventos ativos retornados por public_events().
-- Enquanto existir apenas 1 evento ativo, aparecerá apenas 1 card.
+Como você já criou a função e os Secrets no Supabase e já publicou o Google Apps Script,
+não precisa refazer isso só para atualizar o GitHub.
+
+TESTE FINAL RECOMENDADO
+
+1. Faça um pedido com seu próprio nome/e-mail.
+2. O site deve abrir o WhatsApp com a mensagem pronta.
+3. Entre no Admin e clique ATUALIZAR PEDIDOS.
+4. O pedido deve aparecer como PENDENTE.
+5. Clique ✅ CONFIRMAR.
+6. O pedido deve mudar para PAGO.
+7. O ingresso deve chegar no e-mail informado.
+8. O Admin deve mostrar 📧 INGRESSO ENVIADO.
+9. Teste o QR na Portaria.
+
+IMPORTANTE
+Não teste o primeiro envio com cliente real. Faça primeiro com seu próprio e-mail.

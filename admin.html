@@ -197,6 +197,42 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 .badge.cancelado{background:rgba(255,180,0,.1);color:#ffcc00;border:1px solid rgba(255,180,0,.25)}
 @media(max-width:1100px){.stats-extended{grid-template-columns:repeat(4,1fr)}.ticket-admin-grid-wide{grid-template-columns:1fr 1fr}}
 @media(max-width:650px){.stats-extended{grid-template-columns:1fr 1fr}.admin-toolbar{align-items:stretch;flex-direction:column}.export-btn{width:100%}}
+
+
+/* MULTI EVENTOS + SINCRONIZAÇÃO */
+.events-admin-panel{margin-bottom:20px}
+.events-admin-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.events-admin-head p{color:var(--muted);font-size:12px;line-height:1.5;margin-top:4px}
+.events-admin-head .btn{width:auto;padding:0 18px;white-space:nowrap}
+.admin-events-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.admin-event-card{border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:13px;background:#08080a}
+.admin-event-card.selected{border-color:rgba(40,209,124,.5);box-shadow:0 0 0 1px rgba(40,209,124,.08) inset}
+.admin-event-card-main strong{display:block;font-size:15px;margin:7px 0 4px}
+.admin-event-card-main small{display:block;color:var(--muted);font-size:11px;line-height:1.5}
+.admin-event-state{font-size:9px;font-weight:950;padding:4px 7px;border-radius:999px;border:1px solid var(--line)}
+.admin-event-state.on{color:var(--green);border-color:rgba(40,209,124,.35);background:rgba(40,209,124,.08)}
+.admin-event-state.off{color:#aaa}
+.admin-event-actions{display:flex;gap:7px;margin-top:12px}.admin-event-actions .btn-action{flex:1}
+.admin-event-empty{padding:18px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);text-align:center;font-size:12px}
+.admin-event-editor{display:none;margin-top:15px;border-top:1px solid var(--line);padding-top:15px}
+.admin-event-editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.admin-event-editor-grid .full{grid-column:1/-1}
+.admin-event-editor textarea{width:100%;min-height:90px;resize:vertical;background:#060608;border:1px solid var(--line);border-radius:9px;padding:11px 12px;color:#fff;outline:none}
+.admin-event-editor textarea:focus{border-color:#d9d9de}
+.admin-event-image-preview{width:100%;max-height:240px;object-fit:cover;border-radius:12px;border:1px solid var(--line);display:none;margin-top:10px}
+.admin-event-editor-actions{display:flex;gap:8px;margin-top:12px}.admin-event-editor-actions .btn{flex:1}
+.admin-event-active{display:flex;align-items:center;gap:8px;height:42px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:#060608}
+.admin-event-active input{width:18px;height:18px;accent-color:#28d17c}.admin-event-active label{margin:0;color:#fff}
+.admin-sync-wrap{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 14px}
+.admin-sync-status{font-size:11px;color:var(--muted)}.admin-sync-status.ok{color:#9ff0be}.admin-sync-status.error{color:#ff8b9b}
+.btn-confirm{border-color:rgba(40,209,124,.4)!important;color:#9ff0be!important;background:rgba(40,209,124,.08)!important}
+.selected-event-box{padding:12px 14px;border:1px solid rgba(40,209,124,.28);background:rgba(40,209,124,.05);border-radius:12px;margin-bottom:14px}
+.selected-event-box small{display:block;color:var(--muted);font-size:9px;font-weight:900;letter-spacing:1px}.selected-event-box strong{display:block;margin-top:4px;font-size:13px}
+.new-lot-box{border:1px solid rgba(255,255,255,.13);border-radius:14px;padding:14px;background:#08080a;margin-bottom:14px}
+.new-lot-box h4{font-size:12px;margin-bottom:10px}.new-lot-grid{display:grid;grid-template-columns:1.2fr .8fr .7fr .7fr;gap:8px}.new-lot-grid .form-group{margin-bottom:0}
+.new-lot-time-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+@media(max-width:760px){.admin-events-grid{grid-template-columns:1fr}.events-admin-head{align-items:stretch;flex-direction:column}.events-admin-head .btn{width:100%}.admin-event-editor-grid{grid-template-columns:1fr}.admin-event-editor-grid .full{grid-column:auto}.new-lot-grid{grid-template-columns:1fr 1fr}.new-lot-time-grid{grid-template-columns:1fr}.admin-sync-wrap{align-items:stretch;flex-direction:column}}
+@media(max-width:500px){.new-lot-grid{grid-template-columns:1fr}.admin-event-editor-actions{flex-direction:column}}
 </style>
 </head>
 <body>
@@ -235,10 +271,43 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
   <div class="admin-toolbar panel-box">
     <div><strong>CONTROLE DO EVENTO</strong><span>estoque, caixa e entradas em tempo real neste navegador</span></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <a class="btn-action export-btn" href="evento.html" style="text-decoration:none">🎤 Evento & Artista</a>
+      <button class="btn-action export-btn" onclick="document.getElementById('eventsAdminPanel')?.scrollIntoView({behavior:'smooth'})">🎤 EVENTOS</button>
+      <button class="btn-action export-btn" onclick="refreshAdminOrders(true)">↻ ATUALIZAR PEDIDOS</button>
       <button class="btn-action export-btn" onclick="exportEntriesCSV()">⬇ Exportar CSV</button>
     </div>
   </div>
+
+  <section class="panel-box events-admin-panel admin-only" id="eventsAdminPanel">
+    <div class="events-admin-head">
+      <div>
+        <h3 style="margin-bottom:0">🎤 EVENTOS / SHOWS</h3>
+        <p>Aqui você pode ter sexta, sábado e quantos eventos quiser. Cada evento fica com seus próprios lotes e ingressos.</p>
+      </div>
+      <button class="btn" onclick="openAdminEventEditor()">+ NOVO EVENTO</button>
+    </div>
+
+    <div id="adminEventsList" class="admin-events-grid"></div>
+
+    <div class="admin-event-editor" id="adminEventEditor">
+      <h3 id="adminEventEditorTitle">NOVO EVENTO</h3>
+      <div class="admin-event-editor-grid">
+        <div class="form-group"><label>Nome do evento</label><input id="adminEventName" placeholder="Ex.: HYPE Sexta"></div>
+        <div class="form-group"><label>Artista / DJ</label><input id="adminEventArtist" placeholder="Ex.: DJ Oliveira"></div>
+        <div class="form-group"><label>Data</label><input id="adminEventDate" type="date"></div>
+        <div class="form-group"><label>Local</label><input id="adminEventVenue" placeholder="Passo Fundo/RS"></div>
+        <div class="form-group"><label>Abertura</label><input id="adminEventOpening" type="time"></div>
+        <div class="form-group"><label>Encerramento</label><input id="adminEventClosing" type="time"></div>
+        <div class="form-group full"><label>Descrição</label><textarea id="adminEventDescription" placeholder="Informações que aparecem no card do evento."></textarea></div>
+        <div class="form-group full"><label>Imagem / capa</label><input id="adminEventImageFile" type="file" accept="image/*" onchange="previewAdminEventImage(this)"><img id="adminEventPreviewImg" class="admin-event-image-preview" alt="Prévia da capa"></div>
+        <div class="form-group"><label>Ordem no carrossel</label><input id="adminEventSort" type="number" min="0" value="1"></div>
+        <div class="form-group"><label>Status</label><div class="admin-event-active"><input id="adminEventActive" type="checkbox" checked><label for="adminEventActive">Evento ativo no site</label></div></div>
+      </div>
+      <div class="admin-event-editor-actions">
+        <button class="btn" id="saveAdminEventBtn" onclick="saveAdminEvent()">SALVAR EVENTO</button>
+        <button class="btn" style="background:#15151a!important;color:#fff!important" onclick="closeAdminEventEditor()">CANCELAR</button>
+      </div>
+    </div>
+  </section>
 
   <div class="grid-admin">
     <div class="panel-box admin-only">
@@ -247,23 +316,29 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
         Defina quando cada lote começa a vender e quando a venda expira. Deixe os horários vazios para manter o lote sem limite.
       </p>
       
-      <div class="sector-config-box">
-        <div class="sector-config-head">
-          <div>
-            <h4>🎟️ SETORES DISPONÍVEIS NA VENDA</h4>
-            <p>Ative somente os setores que quer vender. Pode usar os três ou apenas um.</p>
-          </div>
-        </div>
-
-        <div class="sector-cards" id="sectorConfigCards"></div>
-
-        <button class="btn save-all-sectors" onclick="saveAllSectorConfigs()">
-          SALVAR CONFIGURAÇÃO DOS SETORES
-        </button>
+      <div class="selected-event-box">
+        <small>EVENTO SELECIONADO PARA OS LOTES</small>
+        <strong id="adminSelectedEventName">Carregando...</strong>
       </div>
 
-      
-      <div class="info-note">💡 <b>Limite 0 = ilimitado.</b> O estoque conta reservas pendentes e pagamentos pagos; cancelados liberam a vaga.</div>
+      <div class="new-lot-box">
+        <h4>+ ADICIONAR INGRESSO / LOTE NESTE EVENTO</h4>
+        <div class="new-lot-grid">
+          <div class="form-group"><label>Nome</label><input id="newLotName" placeholder="Ex.: Pista - 1º Lote"></div>
+          <div class="form-group"><label>Setor</label><input id="newLotSector" placeholder="Pista / VIP / Camarote"></div>
+          <div class="form-group"><label>Preço</label><input id="newLotPrice" type="number" step="0.01" min="0" placeholder="30,00"></div>
+          <div class="form-group"><label>Quantidade</label><input id="newLotQty" type="number" min="0" placeholder="100"></div>
+        </div>
+        <div class="new-lot-time-grid">
+          <div class="form-group"><label>Início da venda</label><input id="newLotStart" type="datetime-local"></div>
+          <div class="form-group"><label>Expiração</label><input id="newLotEnd" type="datetime-local"></div>
+        </div>
+        <button class="btn" onclick="createAdminLot()">+ CRIAR LOTE NESTE EVENTO</button>
+      </div>
+
+      <div id="ticketConfigList"></div>
+      <div class="info-note">💡 <b>Limite 0 = ilimitado.</b> Selecione o evento acima antes de criar ou editar seus lotes.</div>
+
       <div class="admin-only team-panel">
         <h3 style="margin-top:25px">Equipe / Usuários</h3>
         <div class="team-form">
@@ -284,10 +359,11 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
     </div>
 
     <div class="panel-box">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
-        <h3>Lista de Clientes & Pagamentos</h3>
-        <button class="btn-action" onclick="clearAll()" style="color:var(--red)">Limpar Tudo</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+        <h3 style="margin-bottom:0">Lista de Clientes & Pagamentos</h3>
+        <div style="display:flex;gap:6px"><button class="btn-action" onclick="refreshAdminOrders(true)">↻ ATUALIZAR</button><button class="btn-action" onclick="clearAll()" style="color:var(--red)">Limpar Tudo</button></div>
       </div>
+      <div class="admin-sync-wrap"><div id="adminOrdersStatus" class="admin-sync-status">Carregando pedidos...</div></div>
 
       <div class="search-bar">
         <input type="text" id="searchInput" placeholder="🔍 Pesquisar por nome ou tipo de ingresso..." oninput="renderClientsTable()">
@@ -310,7 +386,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260831-manual-v2"></script>
-<script src="app.js?v=20260831-manual-v2"></script>
+<script src="supabase-config.js?v=20260831-v5-gmail"></script>
+<script src="app.js?v=20260831-v5-gmail"></script>
 </body>
 </html>
