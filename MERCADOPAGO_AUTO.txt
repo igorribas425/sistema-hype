@@ -1,0 +1,18 @@
+HYPE LOUNGE CLUB — MERCADO PAGO AUTOMÁTICO
+
+Edge Functions já configuradas no Supabase:
+- bright-handler: gera o PIX no Mercado Pago
+- mercadopago-webhook: recebe a confirmação e marca o ingresso como Pago
+
+IMPORTANTE:
+- Nunca coloque o Access Token do Mercado Pago neste ZIP ou no GitHub.
+- O token deve permanecer somente em Edge Functions > Secrets como MERCADOPAGO_ACCESS_TOKEN.
+- A função mercadopago-webhook deve permanecer com Verify JWT = OFF.
+- A função bright-handler deve permanecer com Verify JWT = OFF para o site público conseguir gerar a cobrança.
+
+No cliente:
+1. O comprador informa e-mail.
+2. O pedido é criado no Supabase.
+3. A função bright-handler gera PIX do Mercado Pago.
+4. O site consulta o status automaticamente a cada 3 segundos.
+5. Quando o webhook marca como Pago, o QR do ingresso é liberado automaticamente.

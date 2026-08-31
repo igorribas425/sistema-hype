@@ -63,3 +63,9 @@ Cada setor tem a opção VENDER.
 Cada setor mantém preço Masculino/Feminino, quantidade e horários.
 
 Execute ATUALIZACAO_SETORES_ATIVOS.sql UMA VEZ no Supabase antes de usar esta versão.
+
+
+CORREÇÃO QR PIX
+----------------
+O QR PIX agora usa BR Code dinâmico com valor, tamanho correto da chave e CRC16.
+A página força uma nova versão do app.js para evitar cache antigo nos celulares.

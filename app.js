@@ -3,7 +3,7 @@
    O SQL correspondente está em supabase_schema.sql.
 */
 
-console.info('[HYPE] app.js versão 20260830-2110');
+console.info('[HYPE] app.js versão 20260830-2310-MP-AUTO');
 
 const HYPE = {
   sb: null,
@@ -19,7 +19,11 @@ const HYPE = {
   refreshTimer: null,
   scannerStream: null,
   scannerTimer: null,
-  currentEntryId: null
+  currentEntryId: null,
+  currentEntry: null,
+  currentTicketCode: null,
+  currentPixCode: null,
+  paymentTicker: null
 };
 
 function hypeCfg() {
@@ -100,6 +104,61 @@ function hypeCountdownText(ticket) {
   if (state.code === "expired") return "Prazo encerrado";
   if (state.code === "invalid") return "Corrija a data/hora no painel";
   return "Sem horário de expiração";
+}
+
+
+/* ========================= PIX BR CODE ========================= */
+
+function pixTlv(id, value) {
+  const text = String(value ?? "");
+  return `${id}${String(text.length).padStart(2,"0")}${text}`;
+}
+
+function pixSanitizeText(value, maxLength) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9 ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLength);
+}
+
+function pixCrc16(payload) {
+  let crc = 0xFFFF;
+  for (let i = 0; i < payload.length; i++) {
+    crc ^= payload.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) {
+      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+      crc &= 0xFFFF;
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4,"0");
+}
+
+function buildPixPayload({ key, amount, merchantName = "HYPE LOUNGE CLUB", merchantCity = "CARAZINHO", txid = "***" }) {
+  const pixKey = String(key || "").trim();
+  if (!pixKey) return "";
+
+  const name = pixSanitizeText(merchantName, 25) || "HYPE LOUNGE CLUB";
+  const city = pixSanitizeText(merchantCity, 15) || "CARAZINHO";
+  const value = Number(amount || 0);
+
+  const merchantAccount = pixTlv("00", "BR.GOV.BCB.PIX") + pixTlv("01", pixKey);
+
+  let payload = "";
+  payload += pixTlv("00", "01");
+  payload += pixTlv("26", merchantAccount);
+  payload += pixTlv("52", "0000");
+  payload += pixTlv("53", "986");
+  if (Number.isFinite(value) && value > 0) payload += pixTlv("54", value.toFixed(2));
+  payload += pixTlv("58", "BR");
+  payload += pixTlv("59", name);
+  payload += pixTlv("60", city);
+  payload += pixTlv("62", pixTlv("05", String(txid || "***").slice(0,25)));
+  payload += "6304";
+  return payload + pixCrc16(payload);
 }
 
 function sessionSave(user, pass, role) {
@@ -391,72 +450,207 @@ function updateClientTicketState() {
   }
 }
 
+async function createMercadoPagoPix(ticketId, email) {
+  const cfg = hypeCfg();
+  // A primeira Edge Function foi publicada no Supabase com este slug.
+  const endpoint = `${cfg.url}/functions/v1/bright-handler`;
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": cfg.anonKey,
+      "Authorization": `Bearer ${cfg.anonKey}`
+    },
+    body: JSON.stringify({
+      ticket_id: Number(ticketId),
+      email: String(email || "").trim()
+    })
+  });
+
+  let data = {};
+  try { data = await response.json(); } catch (_) {}
+  if (!response.ok || !data?.success) {
+    throw new Error(data?.error || "Não foi possível gerar o PIX no Mercado Pago.");
+  }
+  return data;
+}
+
+function setPixPaymentStatus(message, type = "waiting") {
+  const el = document.getElementById("pixPaymentStatus");
+  if (!el) return;
+  el.textContent = message;
+  el.dataset.status = type;
+}
+
+async function copyPixCode() {
+  const code = HYPE.currentPixCode || document.getElementById("pixKeyText")?.innerText || "";
+  if (!code) return alert("PIX Copia e Cola ainda não disponível.");
+  try {
+    await navigator.clipboard.writeText(code);
+    hypeNotify("PIX Copia e Cola copiado!");
+  } catch (_) {
+    const area = document.createElement("textarea");
+    area.value = code;
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand("copy");
+    area.remove();
+    hypeNotify("PIX Copia e Cola copiado!");
+  }
+}
+
+function stopPaymentPolling() {
+  if (HYPE.paymentTicker) clearInterval(HYPE.paymentTicker);
+  HYPE.paymentTicker = null;
+}
+
+async function checkCurrentPayment(showPendingMessage = false) {
+  if (!HYPE.currentTicketCode) return null;
+  try {
+    const rows = await sbRpc("public_get_ticket", { p_code: HYPE.currentTicketCode });
+    const entry = Array.isArray(rows) ? rows[0] : rows;
+    if (!entry) return null;
+
+    HYPE.currentEntry = { ...(HYPE.currentEntry || {}), ...entry };
+
+    if (entry.payment_status === "Pago") {
+      stopPaymentPolling();
+      setPixPaymentStatus("PAGAMENTO CONFIRMADO ✅ INGRESSO LIBERADO", "paid");
+      fillTicketCard(HYPE.currentEntry);
+      const pixArea = document.getElementById("pixArea");
+      const ticketCard = document.getElementById("ticketCard");
+      if (pixArea) pixArea.style.display = "none";
+      if (ticketCard) ticketCard.style.display = "block";
+      hypeNotify("Pagamento confirmado! Seu ingresso foi liberado.");
+      return entry;
+    }
+
+    if (entry.payment_status === "Cancelado") {
+      stopPaymentPolling();
+      setPixPaymentStatus("PEDIDO CANCELADO ❌", "canceled");
+      if (showPendingMessage) alert("Este pedido foi cancelado.");
+      return entry;
+    }
+
+    setPixPaymentStatus("AGUARDANDO CONFIRMAÇÃO AUTOMÁTICA DO MERCADO PAGO…", "waiting");
+    if (showPendingMessage) hypeNotify("Pagamento ainda não confirmado.");
+    return entry;
+  } catch (err) {
+    console.warn("[HYPE][payment-check]", err);
+    if (showPendingMessage) alert(err.message || "Não foi possível consultar o pagamento.");
+    return null;
+  }
+}
+
+function startPaymentPolling() {
+  stopPaymentPolling();
+  checkCurrentPayment(false);
+  HYPE.paymentTicker = setInterval(() => checkCurrentPayment(false), 3000);
+}
+
 async function generatePix(e) {
   e.preventDefault();
   const select = document.getElementById("ticketType");
   const lotId = Number(select?.value);
   if (!lotId) return alert("Nenhum lote disponível.");
+
   const name = document.getElementById("clientName")?.value.trim() || "";
   const phone = document.getElementById("clientPhone")?.value.trim() || "";
+  const email = document.getElementById("clientEmail")?.value.trim() || "";
   const cpf = document.getElementById("clientCpf")?.value.trim() || "";
   const gender = document.getElementById("clientGender")?.value || "";
   if (!name) return alert("Informe seu nome.");
-  try {
-    const rows = await sbRpc("create_ticket", { p_name:name, p_phone:phone, p_cpf:cpf, p_gender:gender, p_lot_id:lotId });
-    const entry = Array.isArray(rows) ? rows[0] : rows;
-    if (!entry) throw new Error("Não foi possível criar o ingresso.");
-    HYPE.currentEntryId = entry.id;
+  if (!email || !email.includes("@")) return alert("Informe um e-mail válido.");
 
-    const qrValue = entry.qr_token || entry.ticket_code;
-    const pixKey = HYPE.pixKey || "";
-    const pixPayload = pixKey ? `00020126580014br.gov.bcb.pix0136${pixKey}5204000053039865802BR5910BOATE HYPE6009CARAZINHO62070503***6304` : "";
+  const submit = document.querySelector('#ticketForm button[type="submit"]');
+  const originalText = submit?.textContent || "GERAR PIX DE PAGAMENTO";
+  if (submit) { submit.disabled = true; submit.textContent = "GERANDO PIX…"; }
+
+  try {
+    let entry = HYPE.currentEntry;
+
+    // Se a cobrança falhar depois de criar o pedido, o próximo clique reutiliza
+    // o mesmo ingresso e evita duplicar pedidos.
+    if (!entry?.id) {
+      const rows = await sbRpc("create_ticket", {
+        p_name: name,
+        p_phone: phone,
+        p_cpf: cpf,
+        p_gender: gender,
+        p_lot_id: lotId
+      });
+      entry = Array.isArray(rows) ? rows[0] : rows;
+      if (!entry) throw new Error("Não foi possível criar o ingresso.");
+      HYPE.currentEntry = entry;
+      HYPE.currentEntryId = entry.id;
+      HYPE.currentTicketCode = entry.ticket_code;
+    }
+
+    const payment = await createMercadoPagoPix(entry.id, email);
+    HYPE.currentPixCode = payment.qr_code || "";
+
     const qrImg = document.getElementById("qrImg");
     if (qrImg) {
-      // QR do pagamento (PIX) continua separado do QR do ingresso.
-      qrImg.src = pixPayload ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(pixPayload)}` : "";
+      if (payment.qr_code_base64) {
+        qrImg.src = `data:image/png;base64,${payment.qr_code_base64}`;
+      } else if (payment.qr_code) {
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(payment.qr_code)}`;
+      } else {
+        qrImg.src = "";
+      }
+      qrImg.alt = "QR Code PIX Mercado Pago";
     }
-    const pixText = document.getElementById("pixKeyText");
-    if (pixText) pixText.innerText = pixKey || "Chave PIX ainda não cadastrada no Admin.";
-    document.getElementById("pixArea").style.display = "block";
-    document.getElementById("ticketForm").style.display = "none";
-    hypeNotify(`Pedido ${entry.ticket_code} criado com sucesso!`);
 
+    const pixText = document.getElementById("pixKeyText");
+    if (pixText) pixText.innerText = payment.qr_code || "PIX Copia e Cola não retornado.";
+
+    const pixArea = document.getElementById("pixArea");
+    const form = document.getElementById("ticketForm");
+    if (pixArea) pixArea.style.display = "block";
+    if (form) form.style.display = "none";
+
+    setPixPaymentStatus("AGUARDANDO PAGAMENTO… A CONFIRMAÇÃO É AUTOMÁTICA", "waiting");
     fillTicketCard(entry);
+    startPaymentPolling();
+    hypeNotify(`PIX do pedido ${entry.ticket_code} gerado!`);
   } catch (err) {
-    await loadPublicState().catch(()=>{});
-    renderClientTickets();
-    alert(err.message || "Erro ao criar ingresso.");
+    alert(err.message || "Erro ao gerar PIX.");
+  } finally {
+    if (submit) { submit.disabled = false; submit.textContent = originalText; }
   }
 }
 
 function fillTicketCard(entry) {
   const set = (id, value) => { const el = document.getElementById(id); if (el) el.innerText = value ?? ""; };
+  const isPaid = entry.payment_status === "Pago";
   set("tClientName", entry.customer_name);
   set("tClientPhone", entry.phone || "Não informado");
   set("tClientGender", entry.gender || "Não especificado");
   set("tTicketName", entry.lot_name || "");
   set("tTicketPrice", hypeFormatMoney(entry.price));
-  set("tTicketStatus", entry.payment_status === "Pago" ? "CONFIRMADO (PAGO ✅)" : entry.payment_status === "Cancelado" ? "CANCELADO ❌" : "Pendente de Confirmação ADM");
+  set("tTicketStatus", isPaid ? "CONFIRMADO (PAGO ✅)" : entry.payment_status === "Cancelado" ? "CANCELADO ❌" : "Aguardando pagamento");
   set("tTicketId", entry.ticket_code || `#${entry.id}`);
+
   const qr = document.getElementById("ticketQrImg");
-  if (qr) qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(entry.qr_token || entry.ticket_code)}`;
+  if (qr) {
+    const wrap = qr.closest(".ticket-qr") || qr.parentElement;
+    if (isPaid) {
+      qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(entry.qr_token || entry.ticket_code)}`;
+      if (wrap) wrap.style.display = "block";
+    } else {
+      qr.removeAttribute("src");
+      if (wrap) wrap.style.display = "none";
+    }
+  }
 }
 
 async function showTicketCard() {
-  if (!HYPE.currentEntryId) return;
-  try {
-    const codeEl = document.getElementById("tTicketId");
-    const currentCode = codeEl?.innerText || "";
-    let entry;
-    if (currentCode) {
-      const rows = await sbRpc("public_get_ticket", { p_code: currentCode });
-      entry = Array.isArray(rows) ? rows[0] : rows;
-    }
-    if (entry) fillTicketCard({ ...entry, lot_name: entry.lot_name });
-    document.getElementById("pixArea").style.display = "none";
-    document.getElementById("ticketCard").style.display = "block";
-  } catch (err) {
-    alert(err.message);
+  const entry = await checkCurrentPayment(true);
+  if (entry?.payment_status !== "Pago") {
+    const pixArea = document.getElementById("pixArea");
+    const ticketCard = document.getElementById("ticketCard");
+    if (pixArea) pixArea.style.display = "block";
+    if (ticketCard) ticketCard.style.display = "none";
   }
 }
 
