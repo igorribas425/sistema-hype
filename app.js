@@ -163,7 +163,7 @@ async function loadPublicState() {
   HYPE.event = HYPE.events.find(e => Number(e.id) === Number(HYPE.selectedEventId)) || null;
 
   if (HYPE.selectedEventId) {
-    const lots = await sbRpc("public_lots_by_event", {
+    const lots = await sbRpc("public_lots_by_event_v12", {
       p_event_id: Number(HYPE.selectedEventId)
     });
     HYPE.lots = Array.isArray(lots) ? lots : [];
@@ -249,7 +249,7 @@ async function selectEvent(eventId) {
   HYPE.event = HYPE.events.find(e => Number(e.id) === Number(eventId)) || null;
 
   try {
-    const lots = await sbRpc("public_lots_by_event", {
+    const lots = await sbRpc("public_lots_by_event_v12", {
       p_event_id: Number(eventId)
     });
     HYPE.lots = Array.isArray(lots) ? lots : [];
@@ -452,16 +452,26 @@ async function initClient() {
   }
 }
 
+function hypeLotPrice(ticket, gender = null) {
+  const selectedGender = String(gender || document.getElementById("clientGender")?.value || "Feminino").trim().toLowerCase();
+  if (selectedGender === "masculino") return Number(ticket?.price_male ?? ticket?.price ?? 0);
+  if (selectedGender === "feminino") return Number(ticket?.price_female ?? ticket?.price ?? 0);
+  return Number(ticket?.price ?? ticket?.price_female ?? ticket?.price_male ?? 0);
+}
+
 function renderClientTickets(keepId = null) {
   const select = document.getElementById("ticketType");
   if (!select) return;
   const lots = HYPE.lots || [];
+  const gender = document.getElementById("clientGender")?.value || "Feminino";
   select.innerHTML = lots.map(t => {
     const state = hypeStatus(t);
     const unavailable = !state.canBuy;
     const suffix = state.code === "upcoming" ? " — EM BREVE" : state.code === "expired" ? " — ENCERRADO" : state.code === "soldout" ? " — ESGOTADO" : state.code === "invalid" ? " — CONFIGURAÇÃO INVÁLIDA" : "";
     const stock = t.quantity_total > 0 ? ` • ${Math.max(0, Number(t.quantity_available || 0))} restantes` : "";
-    return `<option value="${t.id}" data-price="${Number(t.price || 0)}" ${unavailable ? "disabled" : ""}>${hypeEscape(t.name)} - ${hypeFormatMoney(t.price)}${stock}${suffix}</option>`;
+    const genderPrice = hypeLotPrice(t, gender);
+    const category = t.sector ? ` • ${hypeEscape(t.sector)}` : "";
+    return `<option value="${t.id}" data-price="${genderPrice}" ${unavailable ? "disabled" : ""}>${hypeEscape(t.name)}${category} — ${hypeEscape(gender)} ${hypeFormatMoney(genderPrice)}${stock}${suffix}</option>`;
   }).join("");
   const available = lots.filter(t => hypeStatus(t).canBuy);
   if (keepId && available.some(t => String(t.id) === String(keepId))) select.value = keepId;
@@ -471,10 +481,10 @@ function renderClientTickets(keepId = null) {
 
 function updatePrice() {
   const select = document.getElementById("ticketType");
-  const opt = select?.options[select.selectedIndex];
   const display = document.getElementById("ticketPriceDisplay");
-  if (!opt) { if (display) display.value = "NENHUM LOTE DISPONÍVEL"; updateClientTicketState(); return; }
-  if (display) display.value = hypeFormatMoney(opt.dataset.price);
+  const ticket = (HYPE.lots || []).find(t => String(t.id) === String(select?.value));
+  if (!ticket) { if (display) display.value = "NENHUM LOTE DISPONÍVEL"; updateClientTicketState(); return; }
+  if (display) display.value = hypeFormatMoney(hypeLotPrice(ticket));
   updateClientTicketState();
 }
 
@@ -493,7 +503,7 @@ function updateClientTicketState() {
   if (info) {
     const cls = state.code === "active" ? "active" : state.code === "upcoming" ? "upcoming" : "expired";
     info.className = `ticket-schedule ${cls}`;
-    info.innerHTML = `<div><b>🕒 ${hypeEscape(state.label)}</b></div><div>${hypeEscape(hypeCountdownText(ticket))}</div><small>Setor: ${hypeEscape(ticket.sector || "Pista")} • Vendidos: ${Number(ticket.quantity_sold || 0)}${ticket.quantity_total ? ` / ${Number(ticket.quantity_total)}` : ""}<br>Início: ${ticket.starts_at ? hypeFormatDateTime(ticket.starts_at) : "imediato"} • Fim: ${ticket.ends_at ? hypeFormatDateTime(ticket.ends_at) : "sem limite"}</small>`;
+    info.innerHTML = `<div><b>🕒 ${hypeEscape(state.label)}</b></div><div>${hypeEscape(hypeCountdownText(ticket))}</div><small>Categoria: ${hypeEscape(ticket.sector || "Pista")} • Feminino: <b>${hypeFormatMoney(ticket.price_female ?? ticket.price)}</b> • Masculino: <b>${hypeFormatMoney(ticket.price_male ?? ticket.price)}</b><br>Vendidos: ${Number(ticket.quantity_sold || 0)}${ticket.quantity_total ? ` / ${Number(ticket.quantity_total)}` : ""} • Início: ${ticket.starts_at ? hypeFormatDateTime(ticket.starts_at) : "imediato"} • Fim: ${ticket.ends_at ? hypeFormatDateTime(ticket.ends_at) : "sem limite"}</small>`;
   }
 }
 
@@ -569,7 +579,7 @@ async function createManualOrder(e) {
   }
 
   try {
-    const rows = await sbRpc("create_manual_order", {
+    const rows = await sbRpc("create_gender_order_v12", {
       p_name: name,
       p_phone: phone,
       p_email: email,
@@ -692,7 +702,7 @@ async function createPixOrder(e) {
   try {
     // Usa o RPC manual porque ele já grava o e-mail do cliente no ticket.
     // O pagamento, porém, é criado no Asaas logo em seguida.
-    const rows = await sbRpc("create_manual_order", {
+    const rows = await sbRpc("create_gender_order_v12", {
       p_name: name,
       p_phone: phone,
       p_email: email,
@@ -902,7 +912,7 @@ async function loadAdminLots(eventId = HYPE.selectedEventId) {
     return HYPE.lots;
   }
   const rows = await hypeWithTimeout(
-    sbRpc("public_lots_by_event", { p_event_id: Number(eventId) }),
+    sbRpc("public_lots_by_event_v12", { p_event_id: Number(eventId) }),
     8000,
     "Carregamento dos lotes"
   );
@@ -948,7 +958,7 @@ function renderAdminEvents() {
             </div>
           </div>
           <div class="admin-event-actions">
-            <button class="btn-action" onclick="selectAdminEvent(${Number(e.id)})">${selected ? "✓ LOTES DESTE EVENTO" : "VER LOTES"}</button>
+            <button class="btn-action" onclick="selectAdminEvent(${Number(e.id)})">${selected ? "✓ CATEGORIAS & PREÇOS" : "🎟️ CATEGORIAS & PREÇOS"}</button>
             <button class="btn-action" onclick="openAdminEventEditor(${Number(e.id)})">EDITAR</button>
           </div>
         </div>`;
@@ -1075,7 +1085,8 @@ async function saveAdminEvent() {
     renderAdminEvents();
     renderConfigTickets();
     closeAdminEventEditor();
-    hypeNotify("Evento salvo e publicado.");
+    document.getElementById("lotsAdminPanel")?.scrollIntoView({behavior:"smooth",block:"start"});
+    hypeNotify("Evento salvo. Agora configure as categorias e preços.");
   } catch (err) {
     alert(err.message || "Erro ao salvar evento.");
   } finally {
@@ -1098,7 +1109,7 @@ async function initAdmin(fromLogin = false) {
         try {
           await loadAdminLots(HYPE.selectedEventId);
         } catch (lotErr) {
-          console.warn("[HYPE][public_lots_by_event]", lotErr);
+          console.warn("[HYPE][public_lots_by_event_v12]", lotErr);
           HYPE.lots = [];
           const lotTarget = document.getElementById("ticketConfigList");
           if (lotTarget) lotTarget.innerHTML = `<div class="empty-lots">Não foi possível carregar os lotes. Use ↻ ATUALIZAR e tente novamente.<br><small>${hypeEscape(lotErr.message || "Erro ao carregar lotes")}</small></div>`;
@@ -1158,15 +1169,16 @@ function renderConfigTickets() {
     <div class="ticket-admin-card">
       <div class="ticket-admin-head"><strong>${hypeEscape(t.name)}</strong><span data-admin-status="${i}" class="schedule-badge ${hypeStatus(t).code === "active" ? "active" : hypeStatus(t).code === "upcoming" ? "upcoming" : "expired"}">${hypeEscape(hypeStatus(t).label)}</span></div>
       <div class="ticket-admin-grid ticket-admin-grid-wide">
-        <div class="form-group"><label>Nome</label><input id="tName_${i}" value="${hypeEscape(t.name)}"></div>
-        <div class="form-group"><label>Setor</label><input id="tSector_${i}" value="${hypeEscape(t.sector || "")}"></div>
-        <div class="form-group"><label>Preço</label><input id="tPrice_${i}" type="number" step="0.01" min="0" value="${Number(t.price || 0)}"></div>
+        <div class="form-group"><label>Nome do lote</label><input id="tName_${i}" value="${hypeEscape(t.name)}" placeholder="Ex.: 1º Lote"></div>
+        <div class="form-group"><label>Categoria / Setor</label><input id="tSector_${i}" list="hypeCategoryOptions" value="${hypeEscape(t.sector || "")}" placeholder="Pista / VIP / Camarote"></div>
+        <div class="form-group"><label>♀ Feminino (R$)</label><input id="tPriceFemale_${i}" type="number" step="0.01" min="0" value="${Number(t.price_female ?? t.price ?? 0)}"></div>
+        <div class="form-group"><label>♂ Masculino (R$)</label><input id="tPriceMale_${i}" type="number" step="0.01" min="0" value="${Number(t.price_male ?? t.price ?? 0)}"></div>
         <div class="form-group"><label>Quantidade</label><input id="tQty_${i}" type="number" min="0" value="${Number(t.quantity_total || 0)}"></div>
         <div class="form-group"><label>Início</label><input id="tStart_${i}" type="datetime-local" value="${toDateTimeLocal(t.starts_at)}"></div>
         <div class="form-group"><label>Expiração</label><input id="tEnd_${i}" type="datetime-local" value="${toDateTimeLocal(t.ends_at)}"></div>
       </div>
-      <div class="ticket-admin-preview"><span>Vendidos: <b>${Number(t.quantity_sold || 0)}</b></span><span>Disponíveis: <b>${t.quantity_total ? Math.max(0, Number(t.quantity_available || 0)) : "∞"}</b></span><span>Setor: <b>${hypeEscape(t.sector || "Pista")}</b></span><span data-admin-countdown="${i}">${hypeEscape(hypeCountdownText(t))}</span></div>
-      <div class="ticket-admin-actions"><button class="btn-action" onclick="updateTicket(${i})">SALVAR LOTE</button><button class="btn-action" onclick="clearTicketSchedule(${i})">REMOVER HORÁRIOS</button></div>
+      <div class="ticket-admin-preview"><span>♀ Feminino: <b>${hypeFormatMoney(t.price_female ?? t.price)}</b></span><span>♂ Masculino: <b>${hypeFormatMoney(t.price_male ?? t.price)}</b></span><span>Vendidos: <b>${Number(t.quantity_sold || 0)}</b></span><span>Disponíveis: <b>${t.quantity_total ? Math.max(0, Number(t.quantity_available || 0)) : "∞"}</b></span><span>Categoria: <b>${hypeEscape(t.sector || "Pista")}</b></span><span data-admin-countdown="${i}">${hypeEscape(hypeCountdownText(t))}</span></div>
+      <div class="ticket-admin-actions"><button class="btn-action" onclick="updateTicket(${i})">💾 SALVAR CATEGORIA</button><button class="btn-action" onclick="clearTicketSchedule(${i})">REMOVER HORÁRIOS</button></div>
     </div>`).join("");
 }
 
@@ -1183,34 +1195,40 @@ function fromDateTimeLocal(value) { return value ? new Date(value).toISOString()
 async function createAdminLot() {
   if (!HYPE.selectedEventId) return alert("Selecione um evento primeiro.");
   const name = document.getElementById("newLotName")?.value.trim() || "";
-  const sector = document.getElementById("newLotSector")?.value.trim() || "Pista";
-  const price = Number(document.getElementById("newLotPrice")?.value || 0);
+  const sector = document.getElementById("newLotSector")?.value.trim() || "";
+  const femaleRaw = document.getElementById("newLotPriceFemale")?.value ?? "";
+  const maleRaw = document.getElementById("newLotPriceMale")?.value ?? "";
+  const priceFemale = Number(femaleRaw);
+  const priceMale = Number(maleRaw);
   const qty = Number(document.getElementById("newLotQty")?.value || 0);
   const startAt = fromDateTimeLocal(document.getElementById("newLotStart")?.value || "");
   const endAt = fromDateTimeLocal(document.getElementById("newLotEnd")?.value || "");
-  if (!name) return alert("Informe o nome do lote.");
+  if (!sector) return alert("Informe a categoria: Pista, VIP, Camarote ou outra.");
+  if (femaleRaw === "" || !Number.isFinite(priceFemale) || priceFemale < 0) return alert("Informe o preço Feminino.");
+  if (maleRaw === "" || !Number.isFinite(priceMale) || priceMale < 0) return alert("Informe o preço Masculino.");
 
   try {
-    await sbRpc("staff_upsert_lot_v2", {
+    await sbRpc("staff_upsert_lot_v12", {
       p_username: HYPE.user,
       p_password: HYPE.pass,
       p_event_id: Number(HYPE.selectedEventId),
       p_id: 0,
-      p_name: name,
+      p_name: name || sector,
       p_sector: sector,
-      p_price: price,
+      p_price_male: priceMale,
+      p_price_female: priceFemale,
       p_quantity_total: qty,
       p_starts_at: startAt,
       p_ends_at: endAt,
       p_active: true,
       p_sort_order: (HYPE.lots?.length || 0) + 1
     });
-    ["newLotName","newLotSector","newLotPrice","newLotQty","newLotStart","newLotEnd"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+    ["newLotName","newLotSector","newLotPriceFemale","newLotPriceMale","newLotQty","newLotStart","newLotEnd"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
     await loadAdminLots(HYPE.selectedEventId);
     renderConfigTickets();
-    hypeNotify("Lote criado para o evento selecionado.");
+    hypeNotify("Categoria e preços criados para este evento.");
   } catch (err) {
-    alert(err.message || "Erro ao criar lote.");
+    alert(err.message || "Erro ao criar categoria.");
   }
 }
 
@@ -1220,17 +1238,21 @@ async function updateTicket(index) {
   try {
     const name = document.getElementById(`tName_${index}`).value.trim();
     const sector = document.getElementById(`tSector_${index}`).value.trim();
-    const price = Number(document.getElementById(`tPrice_${index}`).value);
+    const priceFemale = Number(document.getElementById(`tPriceFemale_${index}`).value);
+    const priceMale = Number(document.getElementById(`tPriceMale_${index}`).value);
     const qty = Number(document.getElementById(`tQty_${index}`).value);
     const startAt = fromDateTimeLocal(document.getElementById(`tStart_${index}`).value);
     const endAt = fromDateTimeLocal(document.getElementById(`tEnd_${index}`).value);
-    await sbRpc("staff_upsert_lot_v2", {
+    if (!sector) return alert("Informe a categoria/setor.");
+    if (!Number.isFinite(priceFemale) || priceFemale < 0) return alert("Preço Feminino inválido.");
+    if (!Number.isFinite(priceMale) || priceMale < 0) return alert("Preço Masculino inválido.");
+    await sbRpc("staff_upsert_lot_v12", {
       p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:t.id,
-      p_name:name,p_sector:sector,p_price:price,p_quantity_total:qty,p_starts_at:startAt,p_ends_at:endAt,p_active:true,p_sort_order:index+1
+      p_name:name || sector,p_sector:sector,p_price_male:priceMale,p_price_female:priceFemale,p_quantity_total:qty,p_starts_at:startAt,p_ends_at:endAt,p_active:true,p_sort_order:index+1
     });
     await loadAdminLots(HYPE.selectedEventId);
     renderConfigTickets();
-    hypeNotify("Lote atualizado.");
+    hypeNotify("Categoria e valores atualizados.");
   } catch (err) { alert(err.message); }
 }
 
@@ -1238,9 +1260,9 @@ async function clearTicketSchedule(index) {
   const t = HYPE.lots[index];
   if (!t || !HYPE.selectedEventId) return;
   try {
-    await sbRpc("staff_upsert_lot_v2", {
+    await sbRpc("staff_upsert_lot_v12", {
       p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:t.id,
-      p_name:t.name,p_sector:t.sector,p_price:Number(t.price),p_quantity_total:Number(t.quantity_total),p_starts_at:null,p_ends_at:null,p_active:true,p_sort_order:index+1
+      p_name:t.name,p_sector:t.sector,p_price_male:Number(t.price_male ?? t.price ?? 0),p_price_female:Number(t.price_female ?? t.price ?? 0),p_quantity_total:Number(t.quantity_total),p_starts_at:null,p_ends_at:null,p_active:true,p_sort_order:index+1
     });
     await loadAdminLots(HYPE.selectedEventId);
     renderConfigTickets();

@@ -1,20 +1,34 @@
-HYPE GITHUB PIX AUTO V11
+HYPE GITHUB PIX AUTO V12
 ========================
 
 O que mudou nesta versão
 ------------------------
-1. PIX continua sendo gerado pelo Asaas.
-2. Quando o banco recebe "Pago", a página do cliente mostra:
-   PAGAMENTO CONFIRMADO -> ACESSAR MEU INGRESSO.
-3. O ingresso oficial continua no próprio site, com QR Code para a Portaria.
-4. O Gmail é enviado automaticamente pelo webhook do Asaas, sem depender
-   do botão "Confirmar" do Admin.
-5. A tela informa se o e-mail já foi enviado ou se ainda está processando.
-6. As correções da V10 de Portaria e limpeza foram mantidas.
+1. Cada evento pode ter suas próprias categorias/setores: Pista, VIP,
+   Camarote, Backstage, Open Bar ou qualquer nome que você quiser.
+2. Cada categoria tem PREÇO FEMININO e PREÇO MASCULINO separados.
+3. O Admin consegue criar categorias novas e editar os dois valores depois.
+4. Quantidade, início da venda e expiração continuam configuráveis por categoria.
+5. O cliente escolhe o gênero e o sistema mostra automaticamente o preço correto.
+6. O ticket é criado no Supabase já com o valor correto para aquele gênero.
+7. O PIX continua usando a integração Asaas já instalada; a V12 grava no ticket o preço escolhido.
+8. Ingressos antigos não têm o valor alterado.
+9. Tudo da V11 continua: pagamento automático, Gmail, QR do ingresso e Portaria.
 
-ARQUIVOS DO GITHUB
-------------------
-Suba para a raiz do repositório:
+PASSO 1 - SUPABASE (FAZER PRIMEIRO)
+-----------------------------------
+Abra Supabase > SQL Editor > New query.
+Cole TODO o arquivo:
+SUPABASE_V12_CATEGORIAS_PRECOS_GENERO.sql
+
+Clique em Run UMA VEZ.
+O esperado é: Success / No rows returned.
+
+Esse SQL NÃO apaga ingressos, eventos nem usuários.
+Ele apenas adiciona os dois preços e cria as funções V12.
+
+PASSO 2 - GITHUB
+----------------
+Depois do SQL funcionar, substitua na raiz do repositório os arquivos:
 - index.html
 - cliente.html
 - admin.html
@@ -24,48 +38,30 @@ Suba para a raiz do repositório:
 - supabase-config.js
 - logo-hype.png
 
-NÃO é necessário subir para o GitHub:
-- SUPABASE_V11_EMAIL_AUTOMATICO.sql
-- ASAAS_WEBHOOK_EMAIL_AUTOMATICO_V11.ts
-- pasta BACKEND_SUPABASE_V11
+Você também pode enviar a pasta inteira do ZIP para substituir a versão anterior,
+mas NÃO publique arquivos de backend/secrets em repositório público.
 
-SUPABASE - SQL (uma vez)
-------------------------
-Abra Supabase > SQL Editor > New query.
-Cole SUPABASE_V11_EMAIL_AUTOMATICO.sql e clique Run UMA VEZ.
-Este SQL não apaga ingressos/eventos/lotes.
+NÃO PRECISA ALTERAR O WEBHOOK DO ASAAS
+---------------------------------------
+O webhook da V11 continua igual.
+Não troque HYPE_APPS_SCRIPT_URL, HYPE_WEBHOOK_SECRET, ASAAS_WEBHOOK_TOKEN,
+SUPABASE_SERVICE_ROLE_KEY nem ASAAS_API_KEY.
 
-SUPABASE - EDGE FUNCTION ASAAS
-------------------------------
-Abra a Edge Function que recebe o webhook do Asaas (asaas-webhook).
-Substitua o código pelo arquivo:
-ASAAS_WEBHOOK_EMAIL_AUTOMATICO_V11.ts
+COMO USAR NO ADMIN
+------------------
+1. Crie ou selecione um evento.
+2. Clique em CATEGORIAS & PREÇOS.
+3. Informe o nome do lote e a categoria (Pista, VIP, Camarote etc.).
+4. Informe Preço Feminino e Preço Masculino.
+5. Informe quantidade e, se quiser, início/expiração.
+6. Clique em CRIAR CATEGORIA / LOTE.
+7. Para mudar valores depois, altere os campos e clique SALVAR CATEGORIA.
 
-A função precisa estar com Verify JWT DESATIVADO, porque o Asaas chama
-o webhook diretamente e não envia JWT do Supabase.
+TESTE RECOMENDADO
+-----------------
+Crie uma categoria de teste com valores diferentes:
+- Feminino: R$ 10,00
+- Masculino: R$ 20,00
 
-Secrets necessários no Supabase:
-- HYPE_APPS_SCRIPT_URL
-- HYPE_WEBHOOK_SECRET
-- SUPABASE_URL
-- SUPABASE_SERVICE_ROLE_KEY
-
-Opcional, para validar o webhook:
-- ASAAS_WEBHOOK_TOKEN
-
-IMPORTANTE
-----------
-Não coloque SERVICE_ROLE, token do Asaas ou HYPE_WEBHOOK_SECRET no GitHub.
-
-Fluxo final esperado
---------------------
-Cliente gera PIX
--> paga
--> Asaas confirma
--> webhook muda ticket para Pago
--> webhook chama Gmail/Apps Script
--> site mostra PAGAMENTO CONFIRMADO
--> botão ACESSAR MEU INGRESSO
--> QR Code do ingresso
--> e-mail enviado automaticamente
--> Portaria lê QR, mostra os dados e pede confirmação de entrada.
+No site do cliente, troque o gênero e confira se o preço muda.
+Depois gere um PIX novo e confira se o banco mostra o mesmo valor escolhido.
