@@ -453,7 +453,7 @@ function updateClientTicketState() {
 async function createMercadoPagoPix(ticketId) {
   const cfg = hypeCfg();
   // A primeira Edge Function foi publicada no Supabase com este slug.
-  const endpoint = `${cfg.url}/functions/v1/bright-handler`;
+  const endpoint = `${cfg.url}/functions/v1/asaas-pix`;
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
