@@ -242,6 +242,10 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 @media(max-width:760px){.admin-events-grid{grid-template-columns:1fr}.events-admin-head{align-items:stretch;flex-direction:column}.events-admin-head .btn{width:100%}.admin-event-editor-grid{grid-template-columns:1fr}.admin-event-editor-grid .full{grid-column:auto}.new-lot-grid{grid-template-columns:1fr 1fr}.new-lot-time-grid{grid-template-columns:1fr}.admin-sync-wrap{align-items:stretch;flex-direction:column}}
 @media(max-width:500px){.new-lot-grid{grid-template-columns:1fr}.admin-event-editor-actions{flex-direction:column}}
 </style>
+
+<style id="hype-v16-admin-style">
+.v16-dashboard{margin-top:14px}.v16-dashboard-head,.v16-management-head{display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap}.v16-dashboard-head p,.v16-management-head p{margin:5px 0 0;color:var(--muted);font-size:11px}.v16-dashboard-head select{max-width:260px}.v16-dashboard-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:14px}.v16-dashboard-grid>div{padding:14px;border:1px solid var(--line);border-radius:12px;background:#0d0d10}.v16-dashboard-grid span{display:block;color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase}.v16-dashboard-grid b{display:block;margin-top:7px;font-size:20px}.v16-dashboard-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.v16-dashboard-breakdown>div{padding:12px;border:1px solid var(--line);border-radius:10px}.v16-dashboard-breakdown b,.v16-dashboard-breakdown span{display:block}.v16-dashboard-breakdown span{margin-top:5px;color:var(--muted);font-size:11px}.v16-management{margin-top:14px}.v16-management-grid{display:grid;grid-template-columns:1fr 1.25fr;gap:12px;margin-top:14px}.v16-manage-card{border:1px solid var(--line);border-radius:12px;padding:14px;background:#0b0b0e}.v16-form-row{display:grid;grid-template-columns:1fr 1fr auto;gap:7px}.v16-coupon-admin-grid{display:grid;grid-template-columns:1.15fr .55fr .8fr .8fr 1fr 1fr auto;gap:7px}.v16-manage-list{display:grid;gap:7px;margin-top:10px}.v16-manage-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:9px}.v16-manage-row small{display:block;color:var(--muted);margin-top:3px;font-size:10px}@media(max-width:1100px){.v16-dashboard-grid{grid-template-columns:repeat(3,1fr)}.v16-management-grid{grid-template-columns:1fr}.v16-coupon-admin-grid{grid-template-columns:1fr 1fr 1fr}}@media(max-width:700px){.v16-dashboard-grid{grid-template-columns:repeat(2,1fr)}.v16-dashboard-breakdown{grid-template-columns:1fr}.v16-form-row,.v16-coupon-admin-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 
@@ -253,7 +257,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 
 <div id="loginScreen">
   <div class="loginBox">
-    <div class="brand-logo-wrap"><img src="logo-hype.png?v=20260830-2110" class="brand-logo" alt="HYPE Lounge Club"></div><h2 style="margin-bottom:5px;color:#fff">ADMIN // HYPE LOUNGE CLUB</h2>
+    <div class="brand-logo-wrap"><img src="logo-hype.png?v=20260831-v16-1" class="brand-logo" alt="HYPE Lounge Club"></div><h2 style="margin-bottom:5px;color:#fff">ADMIN // HYPE LOUNGE CLUB</h2>
     <p style="color:var(--muted);font-size:12px;margin-bottom:20px">Entre com a conta da equipe</p>
     <input type="text" id="adminUser" placeholder="Utilizador" value="admin" style="margin-bottom:10px" onkeypress="if(event.key === 'Enter') checkLogin()">
     <input type="password" id="adminPass" placeholder="Palavra-passe..." style="margin-bottom:12px" onkeypress="if(event.key === 'Enter') checkLogin()">
@@ -263,7 +267,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 
 <div class="container">
   <header>
-    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><img src="logo-hype.png?v=20260830-2110" class="brand-mini" alt="HYPE Lounge Club"><h1>PAINEL <span>HYPE</span> LOUNGE CLUB // ADMIN</h1></div>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><img src="logo-hype.png?v=20260831-v16-1" class="brand-mini" alt="HYPE Lounge Club"><h1>PAINEL <span>HYPE</span> LOUNGE CLUB // ADMIN</h1></div>
   </header>
 
   <div class="stats stats-extended">
@@ -275,6 +279,19 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
     <div class="stat-card red"><span>Cancelados</span><h3 id="canceledCount">0</h3></div>
     <div class="stat-card blue"><span>Pendente em R$</span><h3 id="pendingValue">R$ 0,00</h3></div>
   </div>
+
+  <section class="panel-box v16-dashboard" id="v16DashboardPanel">
+    <div class="v16-dashboard-head"><div><h3>📊 DASHBOARD DE VENDAS</h3><p>Resumo por evento, gênero, descontos, entradas e promoters.</p></div><select id="v16DashboardEvent" onchange="renderV16Dashboard()"><option value="all">TODOS OS EVENTOS</option></select></div>
+    <div class="v16-dashboard-grid">
+      <div><span>Ingressos pagos</span><b id="v16DashSold">0</b></div>
+      <div><span>Faturamento</span><b id="v16DashRevenue">R$ 0,00</b></div>
+      <div><span>Feminino</span><b id="v16DashFemale">0</b></div>
+      <div><span>Masculino</span><b id="v16DashMale">0</b></div>
+      <div><span>Descontos</span><b id="v16DashDiscount">R$ 0,00</b></div>
+      <div><span>Entraram</span><b id="v16DashEntered">0</b></div>
+    </div>
+    <div id="v16DashboardBreakdown" class="v16-dashboard-breakdown"></div>
+  </section>
 
   <div class="admin-toolbar panel-box">
     <div><strong>CONTROLE DO EVENTO</strong><span>estoque, caixa e entradas em tempo real neste navegador</span></div>
@@ -326,11 +343,27 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
     </div>
   </section>
 
+  <section class="panel-box v16-management admin-only" id="v16ManagementPanel">
+    <div class="v16-management-head"><div><h3>🎯 VENDAS / PROMOTERS / CUPONS</h3><p>As configurações abaixo usam o evento selecionado em EVENTOS / SHOWS.</p></div></div>
+    <div class="v16-management-grid">
+      <div class="v16-manage-card">
+        <h4>Promoters</h4>
+        <div class="v16-form-row"><input id="v16PromoterName" placeholder="Nome do promoter"><input id="v16PromoterCode" placeholder="Código, ex.: OLIVEIRA" oninput="this.value=this.value.toUpperCase()"><button class="btn-action" onclick="createPromoterV16()">+ ADICIONAR</button></div>
+        <div id="v16PromoterList" class="v16-manage-list"></div>
+      </div>
+      <div class="v16-manage-card">
+        <h4>Cupons de desconto</h4>
+        <div class="v16-coupon-admin-grid"><input id="v16CouponCode" placeholder="Código, ex.: HYPE10" oninput="this.value=this.value.toUpperCase()"><select id="v16CouponType"><option value="percent">%</option><option value="fixed">R$</option></select><input id="v16CouponValue" type="number" step="0.01" min="0" placeholder="Desconto"><input id="v16CouponLimit" type="number" min="0" placeholder="Limite (0=∞)"><input id="v16CouponStart" type="datetime-local"><input id="v16CouponEnd" type="datetime-local"><button class="btn-action" onclick="createCouponV16()">+ CRIAR CUPOM</button></div>
+        <div id="v16CouponList" class="v16-manage-list"></div>
+      </div>
+    </div>
+  </section>
+
   <div class="grid-admin">
     <div class="panel-box admin-only">
       <h3>Gerenciar Categorias, Preços & Horários</h3>
       <p style="color:var(--muted);font-size:12px;margin-bottom:15px">
-        Crie Pista, VIP, Camarote ou qualquer categoria. Cada uma pode ter preço Feminino e Masculino diferentes, quantidade, período de venda e status.
+        Crie Pista, VIP, Camarote ou qualquer categoria. Cada uma pode ter preço Feminino e Masculino, quantidade, período de venda e lote automático. Para sequência automática, use quantidade maior que zero e a mesma Categoria/Setor nos lotes em sequência.
       </p>
       
       <div class="selected-event-box">
@@ -347,6 +380,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
           <div class="form-group"><label>Preço Masculino</label><input id="newLotPriceMale" type="number" step="0.01" min="0" placeholder="40,00"></div>
           <div class="form-group"><label>Quantidade</label><input id="newLotQty" type="number" min="0" placeholder="100"></div>
           <div class="form-group"><label>Status</label><select id="newLotActive"><option value="true" selected>ATIVO</option><option value="false">INATIVO</option></select></div>
+          <div class="form-group"><label>Lote automático</label><select id="newLotAutoSequence"><option value="false" selected>NÃO</option><option value="true">SIM — LIBERA APÓS O ANTERIOR</option></select></div>
         </div>
         <div class="new-lot-time-grid">
           <div class="form-group"><label>Início da venda</label><input id="newLotStart" type="datetime-local"></div>
@@ -385,7 +419,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
       <div class="admin-sync-wrap"><div id="adminOrdersStatus" class="admin-sync-status">Carregando pedidos...</div></div>
 
       <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="🔍 Pesquisar por nome ou tipo de ingresso..." oninput="renderClientsTable()">
+        <input type="text" id="searchInput" placeholder="🔍 Nome, ingresso, evento, promoter, cupom..." oninput="renderClientsTable()">
       </div>
 
       <div style="overflow-x:auto">
@@ -405,7 +439,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260831-v13-1-theme-fix"></script>
-<script src="app.js?v=20260831-v13-1-theme-fix"></script>
+<script src="supabase-config.js?v=20260831-v16-1"></script>
+<script src="app.js?v=20260831-v16-1"></script>
 </body>
 </html>

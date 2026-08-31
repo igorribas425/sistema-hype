@@ -1,0 +1,23 @@
+HYPE V16.1 - PACOTE COMPLETO
+
+O que foi corrigido:
+1) Logo HYPE com fundo transparente.
+2) Cache-busting nos HTMLs para carregar app.js novo.
+3) app.js V16 chamando create_manual_order_v16.
+4) SQL completo V16 + ponte de compatibilidade create_manual_order_v12.
+5) Mantidos os acessos: Admin total; Portaria somente Portaria.
+
+ARQUIVOS PARA O GITHUB:
+- index.html
+- cliente.html
+- admin.html
+- portaria.html
+- evento.html
+- app.js
+- supabase-config.js
+- logo-hype.png
+
+ARQUIVO PARA O SUPABASE:
+- SUPABASE_V16_1_COMPLETO.sql
+
+Depois do upload no GitHub, abra o site e pressione Ctrl+F5.

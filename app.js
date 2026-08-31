@@ -10,6 +10,9 @@ const HYPE = {
   role: null,
   lots: [],
   tickets: [],
+  promoters: [],
+  coupons: [],
+  currentQuote: null,
   pixKey: "",
   events: [],
   adminEvents: [],
@@ -80,6 +83,7 @@ function hypeStatus(ticket, now = new Date()) {
   if (endMs !== null && !Number.isFinite(endMs)) return {code:"invalid",label:"CONFIGURAÇÃO INVÁLIDA",canBuy:false};
   if (startMs !== null && endMs !== null && endMs <= startMs) return {code:"invalid",label:"HORÁRIO INVÁLIDO",canBuy:false};
   if (!ticket.active) return {code:"expired",label:"ENCERRADO",canBuy:false,at:endMs};
+  if (ticket.auto_locked) return {code:"auto_locked",label:"AGUARDANDO LOTE ANTERIOR",canBuy:false};
   if (ticket.quantity_total > 0 && Number(ticket.quantity_available || 0) <= 0) return {code:"soldout",label:"ESGOTADO",canBuy:false};
   if (startMs !== null && nowMs < startMs) return {code:"upcoming",label:"EM BREVE",canBuy:false,at:startMs};
   if (endMs !== null && nowMs >= endMs) return {code:"expired",label:"ENCERRADO",canBuy:false,at:endMs};
@@ -89,6 +93,7 @@ function hypeStatus(ticket, now = new Date()) {
 function hypeCountdownText(ticket) {
   const state = hypeStatus(ticket);
   if (state.code === "soldout") return "Lote esgotado";
+  if (state.code === "auto_locked") return "Libera automaticamente quando o lote anterior esgotar";
   if (state.code === "upcoming" && state.at) {
     const diff = Math.max(0, state.at - Date.now());
     const days = Math.floor(diff / 86400000);
@@ -350,7 +355,7 @@ async function loadPublicState() {
   applyEventTheme(HYPE.event).catch(() => {});
 
   if (HYPE.selectedEventId) {
-    const lots = await sbRpc("public_lots_by_event_v12", {
+    const lots = await sbRpc("public_lots_by_event_v16", {
       p_event_id: Number(HYPE.selectedEventId)
     });
     HYPE.lots = Array.isArray(lots) ? lots : [];
@@ -439,7 +444,7 @@ async function selectEvent(eventId) {
   applyEventTheme(HYPE.event, true).catch(() => {});
 
   try {
-    const lots = await sbRpc("public_lots_by_event_v12", {
+    const lots = await sbRpc("public_lots_by_event_v16", {
       p_event_id: Number(eventId)
     });
     HYPE.lots = Array.isArray(lots) ? lots : [];
@@ -469,27 +474,25 @@ async function loadStaffTickets(search = "") {
 
   // Carrega as duas versões da listagem. A versão manual traz e-mail/método
   // e a versão antiga funciona como segurança para nenhum pedido sumir do Admin.
-  const [manualResult, legacyResult] = await Promise.allSettled([
+  const [v16Result, manualResult, legacyResult] = await Promise.allSettled([
+    sbRpc("staff_list_tickets_v16", params),
     sbRpc("staff_list_tickets_manual", params),
     sbRpc("staff_list_tickets", params)
   ]);
 
-  const manual = manualResult.status === "fulfilled" && Array.isArray(manualResult.value)
-    ? manualResult.value : [];
-  const legacy = legacyResult.status === "fulfilled" && Array.isArray(legacyResult.value)
-    ? legacyResult.value : [];
+  const v16 = v16Result.status === "fulfilled" && Array.isArray(v16Result.value) ? v16Result.value : [];
+  const manual = manualResult.status === "fulfilled" && Array.isArray(manualResult.value) ? manualResult.value : [];
+  const legacy = legacyResult.status === "fulfilled" && Array.isArray(legacyResult.value) ? legacyResult.value : [];
 
-  if (manualResult.status === "rejected" && legacyResult.status === "rejected") {
-    const msg = manualResult.reason?.message || legacyResult.reason?.message || "Não foi possível carregar os pedidos.";
+  if (v16Result.status === "rejected" && manualResult.status === "rejected" && legacyResult.status === "rejected") {
+    const msg = v16Result.reason?.message || manualResult.reason?.message || legacyResult.reason?.message || "Não foi possível carregar os pedidos.";
     throw new Error(msg);
   }
 
   const byId = new Map();
   legacy.forEach(row => byId.set(Number(row.id), { ...row }));
-  manual.forEach(row => {
-    const old = byId.get(Number(row.id)) || {};
-    byId.set(Number(row.id), { ...old, ...row });
-  });
+  manual.forEach(row => { const old = byId.get(Number(row.id)) || {}; byId.set(Number(row.id), { ...old, ...row }); });
+  v16.forEach(row => { const old = byId.get(Number(row.id)) || {}; byId.set(Number(row.id), { ...old, ...row }); });
 
   HYPE.tickets = [...byId.values()].sort((a, b) => {
     const ad = new Date(a.purchased_at || 0).getTime();
@@ -497,7 +500,7 @@ async function loadStaffTickets(search = "") {
     return bd - ad;
   });
 
-  HYPE.ticketLoadSource = manual.length ? "manual+compatibilidade" : "compatibilidade";
+  HYPE.ticketLoadSource = v16.length ? "v16" : manual.length ? "manual+compatibilidade" : "compatibilidade";
   const status = document.getElementById("adminOrdersStatus");
   if (status) {
     status.textContent = `${HYPE.tickets.length} pedido(s) carregado(s) • atualizado ${new Date().toLocaleTimeString("pt-BR", {hour:"2-digit",minute:"2-digit",second:"2-digit"})}`;
@@ -511,6 +514,7 @@ async function refreshAdminOrders(showToast = true) {
   try {
     await loadStaffTickets(document.getElementById("searchInput")?.value || "");
     renderClientsTable();
+    renderV16Dashboard();
     if (showToast) hypeNotify("Pedidos atualizados.");
   } catch (err) {
     const status = document.getElementById("adminOrdersStatus");
@@ -577,6 +581,9 @@ function applyStaffRoleUI() {
 
   const purgeBtn = document.getElementById("purgeTicketsBtn");
   if (purgeBtn) purgeBtn.style.display = isAdmin ? "inline-flex" : "none";
+
+  const v16Management = document.getElementById("v16ManagementPanel");
+  if (v16Management) v16Management.style.display = isAdmin ? "block" : "none";
 }
 
 async function checkLogin() {
@@ -690,7 +697,7 @@ function renderClientTickets(keepId = null) {
   select.innerHTML = lots.map(t => {
     const state = hypeStatus(t);
     const unavailable = !state.canBuy;
-    const suffix = state.code === "upcoming" ? " — EM BREVE" : state.code === "expired" ? " — ENCERRADO" : state.code === "soldout" ? " — ESGOTADO" : state.code === "invalid" ? " — CONFIGURAÇÃO INVÁLIDA" : "";
+    const suffix = state.code === "upcoming" ? " — EM BREVE" : state.code === "auto_locked" ? " — AGUARDANDO LOTE ANTERIOR" : state.code === "expired" ? " — ENCERRADO" : state.code === "soldout" ? " — ESGOTADO" : state.code === "invalid" ? " — CONFIGURAÇÃO INVÁLIDA" : "";
     const stock = t.quantity_total > 0 ? ` • ${Math.max(0, Number(t.quantity_available || 0))} restantes` : "";
     const price = getLotGenderPrice(t, gender);
     return `<option value="${t.id}" data-price-female="${Number(t.price_female ?? t.price ?? 0)}" data-price-male="${Number(t.price_male ?? t.price ?? 0)}" ${unavailable ? "disabled" : ""}>${hypeEscape(t.sector || t.name)} • ${hypeEscape(t.name)} - ${hypeFormatMoney(price)}${stock}${suffix}</option>`;
@@ -702,18 +709,53 @@ function renderClientTickets(keepId = null) {
   hypeV14RenderLots();
 }
 
-function updatePrice() {
+async function updatePrice() {
   const select = document.getElementById("ticketType");
   const display = document.getElementById("ticketPriceDisplay");
+  const status = document.getElementById("couponStatus");
   const lot = (HYPE.lots || []).find(t => String(t.id) === String(select?.value));
+  HYPE.currentQuote = null;
   if (!lot) {
     if (display) display.value = "NENHUMA CATEGORIA DISPONÍVEL";
+    if (status) status.textContent = "";
     updateClientTicketState();
     return;
   }
-  if (display) display.value = hypeFormatMoney(getLotGenderPrice(lot));
+
+  const basePrice = getLotGenderPrice(lot);
+  if (display) display.value = hypeFormatMoney(basePrice);
+  const coupon = (document.getElementById("clientCoupon")?.value || "").trim().toUpperCase();
+  if (status) { status.textContent = ""; status.className = "v16-coupon-status"; }
+
+  if (coupon) {
+    try {
+      const rows = await sbRpc("public_quote_v16", {
+        p_lot_id: Number(lot.id),
+        p_gender: document.getElementById("clientGender")?.value || "Feminino",
+        p_coupon_code: coupon
+      });
+      const quote = Array.isArray(rows) ? rows[0] : rows;
+      HYPE.currentQuote = quote || null;
+      if (quote?.ok) {
+        if (display) display.value = `${hypeFormatMoney(quote.final_price)} (de ${hypeFormatMoney(quote.original_price)})`;
+        if (status) { status.textContent = `✅ ${quote.message} • desconto ${hypeFormatMoney(quote.discount_amount)}`; status.className = "v16-coupon-status ok"; }
+      } else if (status) {
+        status.textContent = `⚠️ ${quote?.message || "Cupom inválido"}`;
+        status.className = "v16-coupon-status error";
+      }
+    } catch (err) {
+      if (status) { status.textContent = `⚠️ ${err.message || "Não foi possível validar o cupom"}`; status.className = "v16-coupon-status error"; }
+    }
+  }
+
   updateClientTicketState();
   hypeV14RenderLots();
+}
+
+function applyCouponV16() {
+  const input = document.getElementById("clientCoupon");
+  if (input) input.value = input.value.trim().toUpperCase();
+  updatePrice();
 }
 
 function updateClientTicketState() {
@@ -807,13 +849,15 @@ async function createManualOrder(e) {
   }
 
   try {
-    const rows = await sbRpc("create_manual_order_v12", {
+    const rows = await sbRpc("create_manual_order_v16", {
       p_name: name,
       p_phone: phone,
       p_email: email,
       p_cpf: cpf,
       p_gender: gender,
-      p_lot_id: Number(lot.id)
+      p_lot_id: Number(lot.id),
+      p_coupon_code: (document.getElementById("clientCoupon")?.value || "").trim().toUpperCase(),
+      p_promoter_code: (document.getElementById("clientPromoter")?.value || "").trim().toUpperCase()
     });
 
     const entry = Array.isArray(rows) ? rows[0] : rows;
@@ -834,7 +878,9 @@ async function createManualOrder(e) {
       summary.innerHTML = `
         <strong>${hypeEscape(entry.customer_name)}</strong><br>
         ${hypeEscape(entry.lot_name || "")} • ${hypeEscape(entry.sector || "")}<br>
-        ${hypeFormatMoney(entry.price)}<br>
+        ${hypeFormatMoney(entry.price)}${Number(entry.discount_amount || 0) > 0 ? ` <small style="color:#28d17c">(desconto ${hypeFormatMoney(entry.discount_amount)})</small>` : ""}<br>
+        ${entry.coupon_code ? `Cupom: <b>${hypeEscape(entry.coupon_code)}</b><br>` : ""}
+        ${entry.promoter_code ? `Promoter: <b>${hypeEscape(entry.promoter_code)}</b><br>` : ""}
         <span style="color:#ffcc00">AGUARDANDO CONFIRMAÇÃO DO PAGAMENTO</span>
       `;
     }
@@ -930,13 +976,15 @@ async function createPixOrder(e) {
   try {
     // Usa o RPC manual porque ele já grava o e-mail do cliente no ticket.
     // O pagamento, porém, é criado no Asaas logo em seguida.
-    const rows = await sbRpc("create_manual_order_v12", {
+    const rows = await sbRpc("create_manual_order_v16", {
       p_name: name,
       p_phone: phone,
       p_email: email,
       p_cpf: cpf,
       p_gender: gender,
-      p_lot_id: Number(lot.id)
+      p_lot_id: Number(lot.id),
+      p_coupon_code: (document.getElementById("clientCoupon")?.value || "").trim().toUpperCase(),
+      p_promoter_code: (document.getElementById("clientPromoter")?.value || "").trim().toUpperCase()
     });
 
     const entry = Array.isArray(rows) ? rows[0] : rows;
@@ -1149,7 +1197,7 @@ async function loadAdminLots(eventId = HYPE.selectedEventId) {
     return HYPE.lots;
   }
   const rows = await hypeWithTimeout(
-    sbRpc("staff_list_lots_v12", {
+    sbRpc("staff_list_lots_v16", {
       p_username: HYPE.user,
       p_password: HYPE.pass,
       p_event_id: Number(eventId)
@@ -1216,6 +1264,8 @@ async function selectAdminEvent(eventId) {
     await loadAdminLots(eventId);
     renderAdminEvents();
     renderConfigTickets();
+    await loadV16AdminData().catch(() => {});
+    renderV16Dashboard();
     document.getElementById("lotsAdminPanel")?.scrollIntoView({behavior:"smooth",block:"start"});
   } catch (err) {
     alert(err.message || "Erro ao carregar os lotes deste evento.");
@@ -1390,6 +1440,8 @@ async function initAdmin(fromLogin = false) {
     renderConfigTickets();
     renderClientsTable();
     renderUsers();
+    await loadV16AdminData().catch(err => console.warn("[HYPE][V16 admin]", err));
+    renderV16Dashboard();
     const pix = document.getElementById("pixKeyInput");
     if (pix) pix.value = HYPE.pixKey || "";
     startAdminTicker();
@@ -1399,6 +1451,7 @@ async function initAdmin(fromLogin = false) {
       try {
         await loadStaffTickets(document.getElementById("searchInput")?.value || "");
         renderClientsTable();
+        renderV16Dashboard();
       } catch (_) {}
     }, 5000);
   } catch (err) {
@@ -1445,8 +1498,9 @@ function renderConfigTickets() {
         <div class="form-group"><label>Início</label><input id="tStart_${i}" type="datetime-local" value="${toDateTimeLocal(t.starts_at)}"></div>
         <div class="form-group"><label>Expiração</label><input id="tEnd_${i}" type="datetime-local" value="${toDateTimeLocal(t.ends_at)}"></div>
         <div class="form-group"><label>Status</label><select id="tActive_${i}"><option value="true" ${t.active !== false ? "selected" : ""}>ATIVO</option><option value="false" ${t.active === false ? "selected" : ""}>INATIVO</option></select></div>
+        <div class="form-group"><label>Lote automático</label><select id="tAuto_${i}"><option value="false" ${!t.auto_sequence ? "selected" : ""}>NÃO</option><option value="true" ${t.auto_sequence ? "selected" : ""}>SIM</option></select></div>
       </div>
-      <div class="ticket-admin-preview"><span>Feminino: <b>${hypeFormatMoney(t.price_female ?? t.price)}</b></span><span>Masculino: <b>${hypeFormatMoney(t.price_male ?? t.price)}</b></span><span>Vendidos: <b>${Number(t.quantity_sold || 0)}</b></span><span>Disponíveis: <b>${t.quantity_total ? Math.max(0, Number(t.quantity_available || 0)) : "∞"}</b></span><span data-admin-countdown="${i}">${t.active === false ? "Categoria oculta no site" : hypeEscape(hypeCountdownText(t))}</span></div>
+      <div class="ticket-admin-preview"><span>Feminino: <b>${hypeFormatMoney(t.price_female ?? t.price)}</b></span><span>Masculino: <b>${hypeFormatMoney(t.price_male ?? t.price)}</b></span><span>Vendidos: <b>${Number(t.quantity_sold || 0)}</b></span><span>Disponíveis: <b>${t.quantity_total ? Math.max(0, Number(t.quantity_available || 0)) : "∞"}</b></span><span>Auto: <b>${t.auto_sequence ? (t.auto_locked ? "AGUARDANDO" : "LIBERADO") : "NÃO"}</b></span><span data-admin-countdown="${i}">${t.active === false ? "Categoria oculta no site" : hypeEscape(hypeCountdownText(t))}</span></div>
       <div class="ticket-admin-actions"><button class="btn-action" onclick="updateTicket(${i})">SALVAR CATEGORIA</button><button class="btn-action" onclick="clearTicketSchedule(${i})">REMOVER HORÁRIOS</button></div>
     </div>`).join("");
 }
@@ -1471,11 +1525,12 @@ async function createAdminLot() {
   const startAt = fromDateTimeLocal(document.getElementById("newLotStart")?.value || "");
   const endAt = fromDateTimeLocal(document.getElementById("newLotEnd")?.value || "");
   const active = (document.getElementById("newLotActive")?.value || "true") === "true";
+  const autoSequence = (document.getElementById("newLotAutoSequence")?.value || "false") === "true";
   if (!sector) return alert("Informe a categoria/setor.");
   if (priceFemale < 0 || priceMale < 0) return alert("Informe valores válidos.");
 
   try {
-    await sbRpc("staff_upsert_lot_v12", {
+    await sbRpc("staff_upsert_lot_v16", {
       p_username: HYPE.user,
       p_password: HYPE.pass,
       p_event_id: Number(HYPE.selectedEventId),
@@ -1488,10 +1543,12 @@ async function createAdminLot() {
       p_starts_at: startAt,
       p_ends_at: endAt,
       p_active: active,
-      p_sort_order: (HYPE.lots?.length || 0) + 1
+      p_sort_order: (HYPE.lots?.length || 0) + 1,
+      p_auto_sequence: autoSequence
     });
     ["newLotName","newLotSector","newLotPriceFemale","newLotPriceMale","newLotQty","newLotStart","newLotEnd"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
     const a = document.getElementById("newLotActive"); if (a) a.value = "true";
+    const au = document.getElementById("newLotAutoSequence"); if (au) au.value = "false";
     await loadAdminLots(HYPE.selectedEventId);
     renderConfigTickets();
     hypeNotify("Categoria criada para o evento selecionado.");
@@ -1512,9 +1569,10 @@ async function updateTicket(index) {
     const startAt = fromDateTimeLocal(document.getElementById(`tStart_${index}`).value);
     const endAt = fromDateTimeLocal(document.getElementById(`tEnd_${index}`).value);
     const active = document.getElementById(`tActive_${index}`).value === "true";
-    await sbRpc("staff_upsert_lot_v12", {
+    const autoSequence = document.getElementById(`tAuto_${index}`)?.value === "true";
+    await sbRpc("staff_upsert_lot_v16", {
       p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:t.id,
-      p_name:name,p_sector:sector,p_price_female:priceFemale,p_price_male:priceMale,p_quantity_total:qty,p_starts_at:startAt,p_ends_at:endAt,p_active:active,p_sort_order:index+1
+      p_name:name,p_sector:sector,p_price_female:priceFemale,p_price_male:priceMale,p_quantity_total:qty,p_starts_at:startAt,p_ends_at:endAt,p_active:active,p_sort_order:index+1,p_auto_sequence:autoSequence
     });
     await loadAdminLots(HYPE.selectedEventId);
     renderConfigTickets();
@@ -1526,9 +1584,9 @@ async function clearTicketSchedule(index) {
   const t = HYPE.lots[index];
   if (!t || !HYPE.selectedEventId) return;
   try {
-    await sbRpc("staff_upsert_lot_v12", {
+    await sbRpc("staff_upsert_lot_v16", {
       p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:t.id,
-      p_name:t.name,p_sector:t.sector,p_price_female:Number(t.price_female ?? t.price ?? 0),p_price_male:Number(t.price_male ?? t.price ?? 0),p_quantity_total:Number(t.quantity_total),p_starts_at:null,p_ends_at:null,p_active:t.active !== false,p_sort_order:index+1
+      p_name:t.name,p_sector:t.sector,p_price_female:Number(t.price_female ?? t.price ?? 0),p_price_male:Number(t.price_male ?? t.price ?? 0),p_quantity_total:Number(t.quantity_total),p_starts_at:null,p_ends_at:null,p_active:t.active !== false,p_sort_order:index+1,p_auto_sequence:Boolean(t.auto_sequence)
     });
     await loadAdminLots(HYPE.selectedEventId);
     renderConfigTickets();
@@ -1548,7 +1606,7 @@ async function renderClientsTable() {
   const tbody = document.getElementById("adminTableBody");
   if (!tbody) return;
   const term = (document.getElementById("searchInput")?.value || "").toLowerCase();
-  const list = (HYPE.tickets || []).filter(item => String(item.customer_name || '').toLowerCase().includes(term) || String(item.lot_name || '').toLowerCase().includes(term) || String(item.ticket_code || '').toLowerCase().includes(term) || String(item.phone || '').toLowerCase().includes(term) || String(item.email || '').toLowerCase().includes(term));
+  const list = (HYPE.tickets || []).filter(item => String(item.customer_name || '').toLowerCase().includes(term) || String(item.lot_name || '').toLowerCase().includes(term) || String(item.ticket_code || '').toLowerCase().includes(term) || String(item.phone || '').toLowerCase().includes(term) || String(item.email || '').toLowerCase().includes(term) || String(item.event_name || '').toLowerCase().includes(term) || String(item.promoter_code || '').toLowerCase().includes(term) || String(item.coupon_code || '').toLowerCase().includes(term));
   if (!list.length) tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">Nenhum cliente encontrado.</td></tr>`;
   else tbody.innerHTML = list.map(item => {
     const status = item.payment_status === 'Pago' ? 'pago' : item.payment_status === 'Cancelado' ? 'cancelado' : 'pendente';
@@ -1561,7 +1619,7 @@ async function renderClientsTable() {
       : paymentStatus === "Pago" && item.email
         ? `<small style="display:block;color:#ffcc00;margin-top:4px">📧 E-MAIL AINDA NÃO ENVIADO</small>`
         : "";
-    return `<tr><td><strong>${hypeEscape(item.customer_name || "SEM NOME")}</strong><br><span class="badge gender">${hypeEscape(item.gender || "N/I")}</span><small style="color:var(--muted)">${hypeEscape(item.ticket_code || "")} ${entry}</small><small style="display:block;color:var(--muted);line-height:1.55">📱 ${hypeEscape(item.phone || "—")}<br>📧 ${hypeEscape(item.email || "—")}<br>CPF: ${cpf}</small>${emailState}</td><td>${hypeFormatMoney(item.price)}<br><small style="color:var(--muted)">${hypeEscape(item.lot_name || "")}</small><small style="display:block;color:var(--muted)">${hypeEscape(item.sector || "")} • ${hypeEscape(item.payment_method || "Manual")}</small></td><td><span class="badge ${status}">${hypeEscape(paymentStatus.toUpperCase())}</span><br><small>${hypeEscape(item.entry_status || "Não utilizado")}</small></td><td><div class="actions-cell">${canPay && paymentStatus !== "Pago" ? `<button class="btn-action btn-confirm" onclick="setPayment(${item.id},'Pago')">✅ CONFIRMAR</button>` : ""}${canPay && paymentStatus === "Pago" && item.email ? `<button class="btn-action" onclick="sendTicketEmail(${item.id},true)">📧 REENVIAR</button>` : ""}${canPay && paymentStatus === "Pago" ? `<button class="btn-action" onclick="setPayment(${item.id},'Pendente')">PENDENTE</button>` : ""}${canPay && paymentStatus !== "Cancelado" ? `<button class="btn-action btn-del" onclick="setPayment(${item.id},'Cancelado')">CANCELAR</button>` : ""}</div></td></tr>`;
+    return `<tr><td><strong>${hypeEscape(item.customer_name || "SEM NOME")}</strong><br><span class="badge gender">${hypeEscape(item.gender || "N/I")}</span><small style="color:var(--muted)">${hypeEscape(item.ticket_code || "")} ${entry}</small><small style="display:block;color:var(--muted);line-height:1.55">📱 ${hypeEscape(item.phone || "—")}<br>📧 ${hypeEscape(item.email || "—")}<br>CPF: ${cpf}</small>${emailState}</td><td>${hypeFormatMoney(item.price)}<br><small style="color:var(--muted)">${hypeEscape(item.lot_name || "")}</small><small style="display:block;color:var(--muted)">${hypeEscape(item.sector || "")} • ${hypeEscape(item.payment_method || "Manual")}</small>${item.event_name ? `<small style="display:block;color:var(--muted)">🎤 ${hypeEscape(item.event_name)}</small>` : ""}${item.promoter_code ? `<small style="display:block;color:#7dd3fc">Promoter: ${hypeEscape(item.promoter_code)}</small>` : ""}${item.coupon_code ? `<small style="display:block;color:#86efac">Cupom: ${hypeEscape(item.coupon_code)} • -${hypeFormatMoney(item.discount_amount || 0)}</small>` : ""}</td><td><span class="badge ${status}">${hypeEscape(paymentStatus.toUpperCase())}</span><br><small>${hypeEscape(item.entry_status || "Não utilizado")}</small></td><td><div class="actions-cell">${canPay && paymentStatus !== "Pago" ? `<button class="btn-action btn-confirm" onclick="setPayment(${item.id},'Pago')">✅ CONFIRMAR</button>` : ""}${canPay && paymentStatus === "Pago" && item.email ? `<button class="btn-action" onclick="sendTicketEmail(${item.id},true)">📧 REENVIAR</button>` : ""}${canPay && paymentStatus === "Pago" ? `<button class="btn-action" onclick="setPayment(${item.id},'Pendente')">PENDENTE</button>` : ""}${canPay && paymentStatus !== "Cancelado" ? `<button class="btn-action btn-del" onclick="setPayment(${item.id},'Cancelado')">CANCELAR</button>` : ""}</div></td></tr>`;
   }).join('');
 
   const total = HYPE.tickets.length;
@@ -2350,6 +2408,94 @@ function hypeV14InitInteractions() {
   }
 }
 
+
+/* ========================= V16: VENDAS / GESTAO ========================= */
+
+async function loadV16AdminData() {
+  if (HYPE.role !== "admin" || !HYPE.selectedEventId) { HYPE.promoters = []; HYPE.coupons = []; renderV16Management(); return; }
+  const params = { p_username:HYPE.user, p_password:HYPE.pass, p_event_id:Number(HYPE.selectedEventId) };
+  const [promoters, coupons] = await Promise.all([
+    sbRpc("staff_list_promoters_v16", params),
+    sbRpc("staff_list_coupons_v16", params)
+  ]);
+  HYPE.promoters = Array.isArray(promoters) ? promoters : [];
+  HYPE.coupons = Array.isArray(coupons) ? coupons : [];
+  renderV16Management();
+}
+
+function renderV16Management() {
+  const pList = document.getElementById("v16PromoterList");
+  const cList = document.getElementById("v16CouponList");
+  if (pList) pList.innerHTML = (HYPE.promoters || []).length ? HYPE.promoters.map(p => `
+    <div class="v16-manage-row"><div><b>${hypeEscape(p.name)}</b><small>Código: ${hypeEscape(p.code)} • ${Number(p.paid_count||0)} pagos • ${hypeFormatMoney(p.revenue||0)}</small></div><button class="btn-action" onclick="togglePromoterV16(${Number(p.id)})">${p.active ? "DESATIVAR" : "ATIVAR"}</button></div>`).join("") : '<div class="info-note">Nenhum promoter cadastrado neste evento.</div>';
+  if (cList) cList.innerHTML = (HYPE.coupons || []).length ? HYPE.coupons.map(c => `
+    <div class="v16-manage-row"><div><b>${hypeEscape(c.code)}</b><small>${c.discount_type === "percent" ? `${Number(c.discount_value)}%` : hypeFormatMoney(c.discount_value)} • usos ${Number(c.uses_count||0)}${Number(c.usage_limit||0)>0 ? `/${Number(c.usage_limit)}` : "/∞"}</small></div><button class="btn-action" onclick="toggleCouponV16(${Number(c.id)})">${c.active ? "DESATIVAR" : "ATIVAR"}</button></div>`).join("") : '<div class="info-note">Nenhum cupom cadastrado neste evento.</div>';
+}
+
+async function createPromoterV16() {
+  if (HYPE.role !== "admin") return alert("Somente o Admin pode gerenciar promoters.");
+  if (!HYPE.selectedEventId) return alert("Selecione um evento.");
+  const name = document.getElementById("v16PromoterName")?.value.trim() || "";
+  const code = document.getElementById("v16PromoterCode")?.value.trim().toUpperCase() || "";
+  if (!name || !code) return alert("Informe nome e código do promoter.");
+  try {
+    await sbRpc("staff_upsert_promoter_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:0,p_name:name,p_code:code,p_active:true});
+    document.getElementById("v16PromoterName").value=""; document.getElementById("v16PromoterCode").value="";
+    await loadV16AdminData(); hypeNotify("Promoter cadastrado.");
+  } catch (err) { alert(err.message); }
+}
+
+async function togglePromoterV16(id) {
+  const p=(HYPE.promoters||[]).find(x=>Number(x.id)===Number(id)); if(!p)return;
+  try { await sbRpc("staff_upsert_promoter_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:Number(p.id),p_name:p.name,p_code:p.code,p_active:!p.active}); await loadV16AdminData(); } catch(err){ alert(err.message); }
+}
+
+async function createCouponV16() {
+  if (HYPE.role !== "admin") return alert("Somente o Admin pode gerenciar cupons.");
+  if (!HYPE.selectedEventId) return alert("Selecione um evento.");
+  const code=document.getElementById("v16CouponCode")?.value.trim().toUpperCase()||"";
+  const type=document.getElementById("v16CouponType")?.value||"percent";
+  const value=Number(document.getElementById("v16CouponValue")?.value||0);
+  const limit=Number(document.getElementById("v16CouponLimit")?.value||0);
+  const starts=fromDateTimeLocal(document.getElementById("v16CouponStart")?.value||"");
+  const ends=fromDateTimeLocal(document.getElementById("v16CouponEnd")?.value||"");
+  if(!code)return alert("Informe o código do cupom.");
+  try {
+    await sbRpc("staff_upsert_coupon_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:0,p_code:code,p_discount_type:type,p_discount_value:value,p_usage_limit:limit,p_starts_at:starts,p_ends_at:ends,p_active:true});
+    ["v16CouponCode","v16CouponValue","v16CouponLimit","v16CouponStart","v16CouponEnd"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+    await loadV16AdminData(); hypeNotify("Cupom criado.");
+  } catch(err){ alert(err.message); }
+}
+
+async function toggleCouponV16(id) {
+  const c=(HYPE.coupons||[]).find(x=>Number(x.id)===Number(id)); if(!c)return;
+  try { await sbRpc("staff_upsert_coupon_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:Number(c.id),p_code:c.code,p_discount_type:c.discount_type,p_discount_value:Number(c.discount_value),p_usage_limit:Number(c.usage_limit),p_starts_at:c.starts_at,p_ends_at:c.ends_at,p_active:!c.active}); await loadV16AdminData(); } catch(err){ alert(err.message); }
+}
+
+function renderV16Dashboard() {
+  const panel=document.getElementById("v16DashboardPanel"); if(!panel)return;
+  const eventSelect=document.getElementById("v16DashboardEvent");
+  const events=HYPE.adminEvents?.length ? HYPE.adminEvents : HYPE.events || [];
+  if(eventSelect){
+    const currentValue=eventSelect.value||"all";
+    eventSelect.innerHTML='<option value="all">TODOS OS EVENTOS</option>'+events.map(e=>`<option value="${Number(e.id)}">${hypeEscape(e.name||"Evento")}</option>`).join("");
+    eventSelect.value=[...eventSelect.options].some(o=>o.value===currentValue)?currentValue:"all";
+  }
+  const eventId=eventSelect?.value||"all";
+  const list=(HYPE.tickets||[]).filter(t=>eventId==="all"||Number(t.event_id)===Number(eventId));
+  const paid=list.filter(t=>t.payment_status==="Pago");
+  const revenue=paid.reduce((s,t)=>s+Number(t.price||0),0);
+  const female=paid.filter(t=>String(t.gender).toLowerCase()==="feminino").length;
+  const male=paid.filter(t=>String(t.gender).toLowerCase()==="masculino").length;
+  const discounts=paid.reduce((s,t)=>s+Number(t.discount_amount||0),0);
+  const entered=paid.filter(t=>t.entry_status==="Entrada utilizada").length;
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set("v16DashSold",paid.length); set("v16DashRevenue",hypeFormatMoney(revenue)); set("v16DashFemale",female); set("v16DashMale",male); set("v16DashDiscount",hypeFormatMoney(discounts)); set("v16DashEntered",entered);
+  const sectors={}; paid.forEach(t=>{const k=t.sector||t.lot_name||"Outro"; sectors[k]=(sectors[k]||0)+1;});
+  const promoters={}; paid.filter(t=>t.promoter_code).forEach(t=>{promoters[t.promoter_code]=(promoters[t.promoter_code]||0)+1;});
+  const breakdown=document.getElementById("v16DashboardBreakdown");
+  if(breakdown) breakdown.innerHTML=`<div><b>Por setor</b><span>${Object.entries(sectors).map(([k,v])=>`${hypeEscape(k)}: ${v}`).join(" • ")||"Sem vendas pagas"}</span></div><div><b>Promoters</b><span>${Object.entries(promoters).map(([k,v])=>`${hypeEscape(k)}: ${v}`).join(" • ")||"Sem vendas por promoter"}</span></div>`;
+}
 
 /* ========================= BOOT ========================= */
 

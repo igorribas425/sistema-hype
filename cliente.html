@@ -314,12 +314,16 @@ body{overflow-x:hidden}
 }
 
 </style>
+
+<style id="hype-v16-sales-style">
+.v16-sales-fields small{font-size:9px;color:var(--muted);font-weight:700}.v16-coupon-row{display:grid;grid-template-columns:1fr auto;gap:8px}.v16-mini-btn{border:1px solid rgba(var(--event-rgb,216,216,220),.45);background:rgba(var(--event-rgb,216,216,220),.12);color:#fff;border-radius:10px;padding:0 14px;font-weight:900;cursor:pointer}.v16-coupon-status{font-size:10px;min-height:15px;margin-top:6px;color:var(--muted);font-weight:800}.v16-coupon-status.ok{color:#28d17c}.v16-coupon-status.error{color:#ff7676}@media(max-width:700px){.v16-sales-fields{grid-template-columns:1fr!important}.v16-mini-btn{min-height:46px}}
+</style>
 </head>
 <body>
 <div class="event-ambient" id="eventAmbient" aria-hidden="true"></div>
 
 <div class="page-shell">
-  <div class="brand-logo-wrap page-brand"><img src="logo-hype.png?v=20260830-2110" class="brand-logo" alt="HYPE Lounge Club"></div>
+  <div class="brand-logo-wrap page-brand"><img src="logo-hype.png?v=20260831-v16-1" class="brand-logo" alt="HYPE Lounge Club"></div>
 
   <section class="events-wrap">
     <div class="events-head">
@@ -445,6 +449,22 @@ body{overflow-x:hidden}
           </div>
         </div>
         
+
+        <div class="group two-col v16-sales-fields">
+          <div>
+            <label>Cupom de desconto <small>(opcional)</small></label>
+            <div class="v16-coupon-row">
+              <input type="text" id="clientCoupon" placeholder="Ex.: HYPE10" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
+              <button type="button" class="v16-mini-btn" onclick="applyCouponV16()">APLICAR</button>
+            </div>
+            <div id="couponStatus" class="v16-coupon-status"></div>
+          </div>
+          <div>
+            <label>Código do promoter <small>(opcional)</small></label>
+            <input type="text" id="clientPromoter" placeholder="Ex.: OLIVEIRA" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
+          </div>
+        </div>
+
         <div class="group">
           <label>Escolha a Categoria / Lote</label>
           <select id="ticketType" onchange="updatePrice()" required></select>
@@ -527,7 +547,7 @@ body{overflow-x:hidden}
 
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260831-v15-2"></script>
-<script src="app.js?v=20260831-v15-2"></script>
+<script src="supabase-config.js?v=20260831-v16-1"></script>
+<script src="app.js?v=20260831-v16-1"></script>
 </body>
 </html>
