@@ -387,6 +387,33 @@ function logoutStaff() {
 /* ========================= CLIENTE ========================= */
 
 let clientTicker = null;
+let clientCatalogLastRefresh = 0;
+
+function clientIsEditingForm() {
+  const active = document.activeElement;
+  if (!active || !active.closest) return false;
+  return Boolean(
+    active.closest("#ticketForm") &&
+    ["INPUT", "SELECT", "TEXTAREA"].includes(active.tagName)
+  );
+}
+
+async function refreshClientCatalogSafely() {
+  if (clientIsEditingForm()) return;
+
+  const selectedLot = document.getElementById("ticketType")?.value;
+  const currentScroll = window.scrollY;
+
+  await loadPublicState();
+  renderEventCarousel();
+  renderClientTickets(selectedLot);
+  updateClientTicketState();
+
+  clientCatalogLastRefresh = Date.now();
+
+  // Impede a tela de pular quando o catálogo é atualizado.
+  requestAnimationFrame(() => window.scrollTo(0, currentScroll));
+}
 
 async function initClient() {
   try {
@@ -394,20 +421,23 @@ async function initClient() {
     renderEventCarousel();
     renderClientTickets();
     updateClientTicketState();
+    clientCatalogLastRefresh = Date.now();
 
     clearInterval(clientTicker);
     clientTicker = setInterval(async () => {
       try {
-        const selectedLot = document.getElementById("ticketType")?.value;
-        await loadPublicState();
-        renderEventCarousel();
-        renderClientTickets(selectedLot);
+        // Atualiza contagem/status sem reconstruir os campos enquanto o cliente digita.
         updateClientTicketState();
         await refreshCurrentOrderStatus(false);
+
+        // Atualiza eventos/lotes no máximo a cada 30s e nunca durante a digitação.
+        if (Date.now() - clientCatalogLastRefresh >= 30000) {
+          await refreshClientCatalogSafely();
+        }
       } catch (_) {
         /* mantém a última tela */
       }
-    }, 8000);
+    }, 1000);
   } catch (err) {
     alert(err.message);
   }
@@ -578,9 +608,131 @@ async function createManualOrder(e) {
   }
 }
 
-/* Mantém compatibilidade caso alguma página antiga ainda chame generatePix */
+async function createAsaasPix(ticketId) {
+  const cfg = window.HYPE_SUPABASE_CONFIG;
+  if (!cfg?.url || !cfg?.anonKey) throw new Error("Supabase não configurado.");
+
+  const response = await fetch(`${cfg.url}/functions/v1/asaas-pix`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: cfg.anonKey,
+      Authorization: `Bearer ${cfg.anonKey}`
+    },
+    body: JSON.stringify({ ticket_id: Number(ticketId) })
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data?.success === false) {
+    throw new Error(data?.error || "Não foi possível gerar o PIX no Asaas.");
+  }
+  if (!data?.qr_code) throw new Error("O Asaas não retornou o PIX Copia e Cola.");
+  return data;
+}
+
+function renderAsaasPayment(entry, payment) {
+  const area = document.getElementById("pixArea");
+  const form = document.getElementById("ticketForm");
+  const qrImg = document.getElementById("qrImg");
+  const pixText = document.getElementById("pixKeyText");
+  const code = document.getElementById("pixOrderCode");
+  const status = document.getElementById("pixPaymentStatus");
+
+  if (code) code.textContent = entry.ticket_code || "";
+  if (status) status.textContent = "AGUARDANDO PAGAMENTO";
+  if (pixText) pixText.textContent = payment.qr_code || "";
+
+  if (qrImg) {
+    if (payment.qr_code_base64) {
+      const raw = String(payment.qr_code_base64);
+      qrImg.src = raw.startsWith("data:") ? raw : `data:image/png;base64,${raw}`;
+    } else {
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payment.qr_code)}`;
+    }
+  }
+
+  if (form) form.style.display = "none";
+  if (area) area.style.display = "block";
+}
+
+async function createPixOrder(e) {
+  e.preventDefault();
+
+  const lot = currentSelectedLot();
+  if (!lot) return alert("Escolha um ingresso disponível.");
+  const state = hypeStatus(lot);
+  if (!state.canBuy) return alert(`Este lote está ${state.label.toLowerCase()}.`);
+
+  const name = document.getElementById("clientName")?.value.trim() || "";
+  const phone = document.getElementById("clientPhone")?.value.trim() || "";
+  const email = document.getElementById("clientEmail")?.value.trim() || "";
+  const cpf = document.getElementById("clientCpf")?.value.trim() || "";
+  const gender = document.getElementById("clientGender")?.value || "";
+
+  if (!name) return alert("Informe seu nome completo.");
+  if (normalizePhone(phone).length < 10) return alert("Informe um WhatsApp válido.");
+  if (!validEmail(email)) return alert("Informe um e-mail válido.");
+
+  const submit = document.querySelector('#ticketForm button[type="submit"]');
+  const oldText = submit?.textContent || "GERAR PIX";
+  if (submit) {
+    submit.disabled = true;
+    submit.textContent = "GERANDO PIX...";
+  }
+
+  try {
+    // Usa o RPC manual porque ele já grava o e-mail do cliente no ticket.
+    // O pagamento, porém, é criado no Asaas logo em seguida.
+    const rows = await sbRpc("create_manual_order", {
+      p_name: name,
+      p_phone: phone,
+      p_email: email,
+      p_cpf: cpf,
+      p_gender: gender,
+      p_lot_id: Number(lot.id)
+    });
+
+    const entry = Array.isArray(rows) ? rows[0] : rows;
+    if (!entry?.id) throw new Error("Não foi possível criar o pedido.");
+
+    HYPE.currentEntryId = entry.id;
+    HYPE.currentEntryCode = entry.ticket_code;
+    window.__hypeCurrentManualEntry = entry;
+
+    const payment = await createAsaasPix(entry.id);
+    window.__hypeCurrentPix = payment;
+    renderAsaasPayment(entry, payment);
+    hypeNotify(`PIX do pedido ${entry.ticket_code} gerado.`);
+  } catch (err) {
+    alert(err.message || "Erro ao gerar PIX.");
+  } finally {
+    if (submit) {
+      submit.disabled = false;
+      submit.textContent = oldText;
+    }
+  }
+}
+
+async function copyPixCode() {
+  const value = document.getElementById("pixKeyText")?.textContent?.trim() || "";
+  if (!value) return alert("PIX Copia e Cola não encontrado.");
+  try {
+    await navigator.clipboard.writeText(value);
+    hypeNotify("PIX Copia e Cola copiado.");
+  } catch (_) {
+    const ta = document.createElement("textarea");
+    ta.value = value;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+    hypeNotify("PIX Copia e Cola copiado.");
+  }
+}
+
+/* Mantém compatibilidade com as páginas atuais */
 async function generatePix(e) {
-  return createManualOrder(e);
+  return createPixOrder(e);
 }
 
 function reopenOrderWhatsApp() {
@@ -598,24 +750,29 @@ async function refreshCurrentOrderStatus(showMessage = true) {
     const entry = Array.isArray(rows) ? rows[0] : rows;
     if (!entry) return;
 
-    const statusEl = document.getElementById("manualPaymentStatus");
-    if (statusEl) {
+    const statusEls = [
+      document.getElementById("manualPaymentStatus"),
+      document.getElementById("pixPaymentStatus")
+    ].filter(Boolean);
+    statusEls.forEach(statusEl => {
       statusEl.textContent = entry.payment_status === "Pago"
         ? "PAGAMENTO CONFIRMADO ✅"
         : entry.payment_status === "Cancelado"
           ? "PEDIDO CANCELADO"
-          : "AGUARDANDO CONFIRMAÇÃO";
-    }
+          : "AGUARDANDO PAGAMENTO";
+    });
 
     if (entry.payment_status === "Pago") {
       fillTicketCard(entry);
-      const area = document.getElementById("manualArea");
+      const manualArea = document.getElementById("manualArea");
+      const pixArea = document.getElementById("pixArea");
       const card = document.getElementById("ticketCard");
-      if (area) area.style.display = "none";
+      if (manualArea) manualArea.style.display = "none";
+      if (pixArea) pixArea.style.display = "none";
       if (card) card.style.display = "block";
       if (showMessage) hypeNotify("Pagamento confirmado. Ingresso liberado!");
     } else if (showMessage) {
-      hypeNotify("Pagamento ainda não foi confirmado pelo Admin.");
+      hypeNotify("Pagamento ainda não foi confirmado.");
     }
   } catch (err) {
     if (showMessage) alert(err.message || "Não foi possível consultar o pedido.");

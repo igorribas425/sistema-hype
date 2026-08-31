@@ -1,0 +1,9 @@
+NÃO coloque os valores abaixo no GitHub:
+
+HYPE_APPS_SCRIPT_URL
+HYPE_WEBHOOK_SECRET
+SUPABASE_SERVICE_ROLE_KEY
+senha do Gmail
+senha do Admin
+
+Esses valores ficam apenas nos Secrets do Supabase / Propriedades do Google Apps Script.

@@ -16,7 +16,7 @@ body{background:radial-gradient(circle at 80% 0%,rgba(255,255,255,.055),transpar
 .top-nav{position:fixed;top:0;left:0;width:100%;background:rgba(5,5,5,.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.13);padding:12px 20px;display:flex;justify-content:center;gap:15px;z-index:1000}
 .top-nav a{color:var(--muted);text-decoration:none;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.17);transition:.2s}
 .top-nav a:hover{color:#fff;border-color:#fff;background:rgba(255,255,255,.07)}
-.page-shell{width:min(1240px,100%);margin:82px auto 28px;display:grid;gap:24px}
+.page-shell{width:min(1240px,100%);margin:24px auto 28px;display:grid;gap:24px}
 .page-brand{margin:0 auto -6px}
 .brand-logo-wrap{display:flex;justify-content:center;align-items:center}
 .brand-logo{display:block;width:min(320px,80vw);height:auto;object-fit:contain;filter:drop-shadow(0 16px 34px rgba(255,255,255,.08))}
@@ -63,7 +63,7 @@ body{background:radial-gradient(circle at 80% 0%,rgba(255,255,255,.055),transpar
 .event-dot{width:8px;height:8px;border-radius:50%;border:0;background:#3c3c43;cursor:pointer}
 .event-dot.active{width:24px;border-radius:999px;background:#f2f2f3}
 .event-empty{padding:34px;border:1px solid rgba(255,255,255,.12);border-radius:20px;color:var(--muted)}
-.manual-area{display:none;text-align:center;margin-top:22px;border-top:1px solid rgba(255,255,255,.1);padding-top:22px}
+.manual-area,.pix-area{display:none;text-align:center;margin-top:22px;border-top:1px solid rgba(255,255,255,.1);padding-top:22px}
 .manual-status-card{background:#08080a;border:1px solid rgba(255,255,255,.12);padding:18px;border-radius:16px;margin:14px 0;text-align:left;line-height:1.65}
 .manual-order-code{font-size:18px;font-weight:950;letter-spacing:1px;color:#fff}
 .manual-status{display:inline-block;margin-top:8px;padding:7px 10px;border-radius:999px;background:rgba(255,204,0,.09);border:1px solid rgba(255,204,0,.25);color:#ffcc00;font-size:10px;font-weight:950;letter-spacing:.8px}
@@ -111,17 +111,11 @@ input:focus, select:focus{border-color:#d9d9de}
 .ticket-schedule.expired{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.04);color:#d8d8dc}
 #ticketForm button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(1)}
 @media(max-width:1080px){.event-showcase{grid-template-columns:1fr}.event-visual{min-height:390px}.purchase-layout{grid-template-columns:1fr}.info-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:720px){.event-card{flex-basis:92%;grid-template-columns:1fr;min-height:0}.event-card-image{min-height:300px}.event-card-body{padding:22px 20px}.events-head{align-items:start}.event-carousel{padding-right:8%}body{padding:14px}.page-shell{margin-top:74px}.event-panel{padding:24px 20px 22px}.event-visual{min-height:280px}.event-badge{left:16px;top:16px;font-size:10px}.purchase-copy,.box{padding:24px}.section-head h1{font-size:34px}.two-col,.info-grid{grid-template-columns:1fr}.brand-logo{width:min(240px,74vw)}.box-title{font-size:22px}}
+@media(max-width:720px){.event-card{flex-basis:92%;grid-template-columns:1fr;min-height:0}.event-card-image{min-height:300px}.event-card-body{padding:22px 20px}.events-head{align-items:start}.event-carousel{padding-right:8%}body{padding:14px}.page-shell{margin-top:18px}.event-panel{padding:24px 20px 22px}.event-visual{min-height:280px}.event-badge{left:16px;top:16px;font-size:10px}.purchase-copy,.box{padding:24px}.section-head h1{font-size:34px}.two-col,.info-grid{grid-template-columns:1fr}.brand-logo{width:min(240px,74vw)}.box-title{font-size:22px}}
 
 </style>
 </head>
 <body>
-
-<nav class="top-nav">
-  <a href="cliente.html" style="color:#fff;border-color:var(--red)">🛒 Comprar</a>
-  <a href="admin.html">⚙️ Admin</a>
-  <a href="portaria.html">🚪 Portaria</a>
-</nav>
 
 <div class="page-shell">
   <div class="brand-logo-wrap page-brand"><img src="logo-hype.png?v=20260830-2110" class="brand-logo" alt="HYPE Lounge Club"></div>
@@ -143,7 +137,7 @@ input:focus, select:focus{border-color:#d9d9de}
       <div class="section-head">
         <small>HYPE LOUNGE CLUB</small>
         <h1><span class="brand-name">INGRESSOS</span> <span class="brand-subline">OFICIAIS</span></h1>
-        <p class="sub">Escolha o evento e o ingresso. O pedido será enviado pelo WhatsApp e ficará aguardando a confirmação do pagamento no painel.</p>
+        <p class="sub">Escolha o evento e o ingresso. Gere o PIX pelo Asaas e o sistema libera o ingresso quando o pagamento for confirmado.</p>
       </div>
 
       <div class="info-grid">
@@ -154,22 +148,22 @@ input:focus, select:focus{border-color:#d9d9de}
         </div>
         <div class="info-box">
           <span>2</span>
-          <strong>Finalize no WhatsApp</strong>
-          <p>Seu pedido já chega com evento, setor, valor e código prontos para atendimento.</p>
+          <strong>Pague pelo PIX</strong>
+          <p>O QR Code e o PIX Copia e Cola são gerados automaticamente.</p>
         </div>
         <div class="info-box">
           <span>3</span>
-          <strong>Pagamento confirmado</strong>
-          <p>Após a confirmação no Admin, seu ingresso com QR Code é liberado.</p>
+          <strong>Liberação automática</strong>
+          <p>Quando o Asaas confirmar o pagamento, o ingresso com QR Code é liberado.</p>
         </div>
       </div>
     </div>
 
     <div class="box">
-      <h4 class="box-kicker">PEDIDO ONLINE + WHATSAPP</h4>
+      <h4 class="box-kicker">PAGAMENTO PIX AUTOMÁTICO</h4>
       <h2 class="box-title">Garanta o seu ingresso antecipado</h2>
 
-      <form id="ticketForm" onsubmit="createManualOrder(event)">
+      <form id="ticketForm" onsubmit="generatePix(event)">
         <div class="group">
           <label>Nome Completo</label>
           <input type="text" id="clientName" placeholder="O seu nome no documento" required autocomplete="off">
@@ -210,8 +204,22 @@ input:focus, select:focus{border-color:#d9d9de}
           <input type="text" id="ticketPriceDisplay" readonly class="price-display">
         </div>
 
-        <button type="submit" class="btn whatsapp-btn">🟢 FINALIZAR COMPRA PELO WHATSAPP</button>
+        <button type="submit" class="btn">GERAR PIX DE PAGAMENTO</button>
       </form>
+
+      <div class="pix-area" id="pixArea">
+        <h3 style="font-size:20px">PIX GERADO ✅</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:7px">Pague pelo QR Code ou use o PIX Copia e Cola. A liberação acontece quando o Asaas confirmar o pagamento.</p>
+        <div class="manual-status-card">
+          <div style="font-size:10px;color:var(--muted);font-weight:900;letter-spacing:1px">CÓDIGO DO PEDIDO</div>
+          <div class="manual-order-code" id="pixOrderCode"></div>
+          <div class="qrcode"><img id="qrImg" src="" alt="QR Code PIX"></div>
+          <div class="pix-key" id="pixKeyText"></div>
+          <div class="manual-status" id="pixPaymentStatus">AGUARDANDO PAGAMENTO</div>
+        </div>
+        <button class="btn" onclick="copyPixCode()">COPIAR PIX COPIA E COLA</button>
+        <button class="btn ghost-btn" onclick="refreshCurrentOrderStatus(true)">VERIFICAR PAGAMENTO</button>
+      </div>
 
       <div class="manual-area" id="manualArea">
         <h3 style="font-size:20px">PEDIDO CRIADO ✅</h3>
@@ -248,7 +256,7 @@ input:focus, select:focus{border-color:#d9d9de}
 
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260831-v5-gmail"></script>
-<script src="app.js?v=20260831-v5-gmail"></script>
+<script src="supabase-config.js?v=20260831-v6-asaas"></script>
+<script src="app.js?v=20260831-v6-asaas"></script>
 </body>
 </html>

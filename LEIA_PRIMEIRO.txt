@@ -1,59 +1,48 @@
-HYPE LOUNGE CLUB — PACOTE COMPLETO V5
-Data: 31/08/2026
+HYPE LOUNGE CLUB — GITHUB PIX AUTO V6
 
-ESTE ZIP JÁ JUNTA TODAS AS ALTERAÇÕES DO SITE PEDIDAS ATÉ AGORA:
-
-1. Compra manual pelo WhatsApp 555496776514.
-2. Pedido criado no Supabase como PENDENTE.
-3. Cliente informa nome, WhatsApp, e-mail, CPF e gênero.
-4. Admin lista os pedidos novos com nome, telefone, e-mail, CPF, ingresso e status.
-5. Botão ✅ CONFIRMAR no Admin.
-6. Ao confirmar, o status muda para PAGO.
-7. Somente depois de ficar PAGO o sistema chama a Edge Function send-ticket-email.
-8. A Edge Function chama o Google Apps Script configurado.
-9. O Gmail envia o ingresso automaticamente com QR Code ao e-mail do cliente.
-10. O Admin mostra 📧 INGRESSO ENVIADO.
-11. Se o envio falhar, o pagamento continua PAGO e aparece opção 📧 REENVIAR.
-12. Vários eventos no mesmo site, com carrossel para sexta/sábado/outros eventos.
-13. Admin com + NOVO EVENTO e edição dos eventos.
-14. Cada evento possui seus próprios lotes, sem misturar sexta com sábado.
-15. Portaria continua bloqueando ingresso PENDENTE e liberando somente PAGO.
-
-COMO ATUALIZAR O GITHUB
-
-Substitua os arquivos da raiz do seu repositório pelos arquivos da raiz desta pasta:
+ARQUIVOS PARA ENVIAR À RAIZ DO GITHUB:
 - index.html
 - cliente.html
 - admin.html
 - evento.html
 - portaria.html
 - app.js
-- logo-hype.png
 - supabase-config.js
+- logo-hype.png
 
-O supabase-config.js incluído usa a configuração pública do projeto HYPE já usada no site.
-NÃO coloque nenhuma senha, service_role, HYPE_WEBHOOK_SECRET ou senha do Gmail no GitHub.
+O QUE ESTA VERSÃO TEM:
+- Dois ou mais eventos com carrossel lateral.
+- Admin seleciona o evento e gerencia seus próprios lotes.
+- Alteração de preço, quantidade e horários dos lotes.
+- Formulário do cliente não fica pulando enquanto a pessoa digita.
+- Criação do pedido com nome, WhatsApp, e-mail, CPF, gênero e lote.
+- Geração de PIX chamando a Edge Function `asaas-pix`.
+- Consulta automática do status do pedido.
+- Quando o webhook do Asaas muda o ticket para Pago, o QR do ingresso é liberado.
+- Portaria bloqueia ingresso Pendente, Cancelado ou já utilizado.
+- Admin mantém confirmação manual e reenvio de ingresso por e-mail como contingência.
 
-SUPABASE / GOOGLE
+IMPORTANTE:
+- NÃO coloque ASAAS_API_KEY, ASAAS_WEBHOOK_TOKEN, HYPE_WEBHOOK_SECRET ou SUPABASE_SERVICE_ROLE_KEY no GitHub.
+- Essas chaves devem continuar somente nos Secrets das Edge Functions do Supabase.
+- A URL e a chave publishable/anon de supabase-config.js são próprias do frontend.
+- O GitHub Pages pode levar alguns minutos para atualizar. Use uma aba anônima no primeiro teste.
 
-A pasta BACKEND_BACKUP é apenas uma cópia dos códigos que você já configurou:
-- BACKEND_BACKUP/supabase/functions/send-ticket-email/index.ts
-- BACKEND_BACKUP/google-apps-script/Codigo.gs
+TESTE FINAL:
+1. Fazer pedido novo.
+2. Ver QR e PIX Copia e Cola do Asaas.
+3. Pagar.
+4. Aguardar o webhook marcar Pago.
+5. Confirmar que o ingresso aparece liberado.
+6. Ler o QR na Portaria uma vez; a segunda leitura deve informar que já foi utilizado.
 
-Como você já criou a função e os Secrets no Supabase e já publicou o Google Apps Script,
-não precisa refazer isso só para atualizar o GitHub.
 
-TESTE FINAL RECOMENDADO
+ACESSO DA EQUIPE
+-----------------
+A página de compra não mostra links para Admin ou Portaria.
+A equipe acessa diretamente:
+- https://igorribas425.github.io/sistema-hype/admin.html
+- https://igorribas425.github.io/sistema-hype/portaria.html
 
-1. Faça um pedido com seu próprio nome/e-mail.
-2. O site deve abrir o WhatsApp com a mensagem pronta.
-3. Entre no Admin e clique ATUALIZAR PEDIDOS.
-4. O pedido deve aparecer como PENDENTE.
-5. Clique ✅ CONFIRMAR.
-6. O pedido deve mudar para PAGO.
-7. O ingresso deve chegar no e-mail informado.
-8. O Admin deve mostrar 📧 INGRESSO ENVIADO.
-9. Teste o QR na Portaria.
-
-IMPORTANTE
-Não teste o primeiro envio com cliente real. Faça primeiro com seu próprio e-mail.
+O Admin continua com navegação interna para Comprar, Admin e Portaria.
+A segurança é feita pelo login do Supabase; esconder links não substitui autenticação.
