@@ -30,3 +30,13 @@ BRANDING HYPE LOUNGE CLUB
 - Tema principal atualizado para preto, branco e prata/cinza.
 - Funções do Supabase, ingressos, Admin e Portaria foram mantidas.
 - Não é necessário executar SQL novo.
+
+
+PREÇOS POR GÊNERO
+-----------------
+1. Execute ATUALIZACAO_PRECOS_GENERO.sql UMA VEZ no SQL Editor do Supabase.
+2. Depois suba os arquivos do site para o GitHub.
+3. No Admin, escolha Pista, VIP ou Camarote.
+4. Defina Preço Masculino e Preço Feminino.
+5. O cliente escolhe o gênero e o site mostra o valor correspondente.
+6. A quantidade restante NÃO aparece para o cliente.

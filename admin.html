@@ -151,6 +151,16 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 .price-section-title{color:#ddd!important}
 .schedule-badge.active{color:#f4f4f4!important;border-color:rgba(255,255,255,.28)!important;background:rgba(255,255,255,.06)!important}
 
+
+.gender-price-grid{grid-template-columns:repeat(2,1fr)}
+.ticket-admin-grid-gender{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.gender-price-box{border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:11px;background:#09090b}
+.gender-price-box.male{border-color:rgba(56,189,248,.28)}
+.gender-price-box.female{border-color:rgba(244,114,182,.28)}
+.gender-price-box label{margin-bottom:6px}
+@media(max-width:900px){.ticket-admin-grid-gender{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.gender-price-grid,.ticket-admin-grid-gender{grid-template-columns:1fr}}
+
 </style>
 <style>
 .stats-extended{grid-template-columns:repeat(7,1fr)}
@@ -211,23 +221,27 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
         Defina quando cada lote começa a vender e quando a venda expira. Deixe os horários vazios para manter o lote sem limite.
       </p>
       <div class="quick-lot-box">
-        <h4>💰 CRIAR / ADICIONAR INGRESSO</h4>
-        <p>Crie um ingresso novo e escolha o valor que aparecerá para o cliente.</p>
+        <h4>🎟️ CONFIGURAR SETOR E VALORES</h4>
+        <p>Escolha Pista, VIP ou Camarote e defina um valor para Masculino e outro para Feminino.</p>
 
-        <div class="quick-lot-grid">
+        <div class="quick-lot-grid gender-price-grid">
           <div class="form-group">
-            <label>Nome do ingresso</label>
-            <input id="newLotName" placeholder="Ex.: Pista - 1º Lote">
+            <label>Tipo / Setor</label>
+            <select id="newLotSector">
+              <option value="Pista">PISTA</option>
+              <option value="VIP">VIP</option>
+              <option value="Camarote">CAMAROTE</option>
+            </select>
           </div>
 
           <div class="form-group">
-            <label>Setor</label>
-            <input id="newLotSector" placeholder="Ex.: Pista">
+            <label>Preço Masculino (R$)</label>
+            <input id="newLotPriceMale" type="number" min="0" step="0.01" placeholder="Ex.: 40,00">
           </div>
 
           <div class="form-group">
-            <label>Preço (R$)</label>
-            <input id="newLotPrice" type="number" min="0" step="0.01" placeholder="30,00">
+            <label>Preço Feminino (R$)</label>
+            <input id="newLotPriceFemale" type="number" min="0" step="0.01" placeholder="Ex.: 30,00">
           </div>
 
           <div class="form-group">
@@ -246,10 +260,10 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
           </div>
         </div>
 
-        <button class="btn" onclick="createNewLot()" style="margin-bottom:18px">+ CRIAR INGRESSO / LOTE</button>
+        <button class="btn" onclick="createNewLot()" style="margin-bottom:18px">+ ADICIONAR SETOR</button>
       </div>
 
-      <div class="price-section-title">INGRESSOS CADASTRADOS / ALTERAR VALORES</div>
+      <div class="price-section-title">SETORES CADASTRADOS / ALTERAR VALORES</div>
       <div id="ticketConfigList"></div>
       
       <div class="info-note">💡 <b>Limite 0 = ilimitado.</b> O estoque conta reservas pendentes e pagamentos pagos; cancelados liberam a vaga.</div>

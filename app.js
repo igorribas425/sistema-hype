@@ -133,7 +133,7 @@ async function sbRpc(name, params = {}) {
 
 async function loadPublicState() {
   const [lots, pix, eventRows] = await Promise.all([
-    sbRpc("public_lots"),
+    sbRpc("public_lots_gender"),
     sbRpc("public_pix_key"),
     sbRpc("public_event")
   ]);
@@ -275,25 +275,67 @@ async function initClient() {
 function renderClientTickets(keepId = null) {
   const select = document.getElementById("ticketType");
   if (!select) return;
+
   const lots = HYPE.lots || [];
+  const gender = document.getElementById("clientGender")?.value || "Feminino";
+
   select.innerHTML = lots.map(t => {
     const state = hypeStatus(t);
     const unavailable = !state.canBuy;
-    const suffix = state.code === "upcoming" ? " — EM BREVE" : state.code === "expired" ? " — ENCERRADO" : state.code === "soldout" ? " — ESGOTADO" : state.code === "invalid" ? " — CONFIGURAÇÃO INVÁLIDA" : "";
-    return `<option value="${t.id}" data-price="${Number(t.price || 0)}" ${unavailable ? "disabled" : ""}>${hypeEscape(t.name)} - ${hypeFormatMoney(t.price)}${suffix}</option>`;
+    const suffix =
+      state.code === "upcoming" ? " — EM BREVE" :
+      state.code === "expired" ? " — ENCERRADO" :
+      state.code === "soldout" ? " — ESGOTADO" :
+      state.code === "invalid" ? " — CONFIGURAÇÃO INVÁLIDA" : "";
+
+    const genderPrice = hypePriceForGender(t, gender);
+
+    return `<option value="${t.id}" data-price="${genderPrice}" ${unavailable ? "disabled" : ""}>${hypeEscape(t.sector || t.name)} - ${hypeFormatMoney(genderPrice)}${suffix}</option>`;
   }).join("");
+
   const available = lots.filter(t => hypeStatus(t).canBuy);
-  if (keepId && available.some(t => String(t.id) === String(keepId))) select.value = keepId;
-  else if (available.length) select.value = String(available[0].id);
+
+  if (keepId && available.some(t => String(t.id) === String(keepId))) {
+    select.value = keepId;
+  } else if (available.length) {
+    select.value = String(available[0].id);
+  }
+
   updatePrice();
+}
+
+
+function hypePriceForGender(ticket, gender = null) {
+  if (!ticket) return 0;
+  const selectedGender = gender || document.getElementById("clientGender")?.value || "Feminino";
+  if (selectedGender === "Masculino") {
+    return Number(ticket.price_male ?? ticket.price ?? 0);
+  }
+  if (selectedGender === "Feminino") {
+    return Number(ticket.price_female ?? ticket.price ?? 0);
+  }
+  return Number(ticket.price ?? 0);
 }
 
 function updatePrice() {
   const select = document.getElementById("ticketType");
-  const opt = select?.options[select.selectedIndex];
   const display = document.getElementById("ticketPriceDisplay");
-  if (!opt) { if (display) display.value = "NENHUM LOTE DISPONÍVEL"; updateClientTicketState(); return; }
-  if (display) display.value = hypeFormatMoney(opt.dataset.price);
+  const ticket = (HYPE.lots || []).find(t => String(t.id) === String(select?.value));
+
+  if (!ticket) {
+    if (display) display.value = "NENHUM LOTE DISPONÍVEL";
+    updateClientTicketState();
+    return;
+  }
+
+  const gender = document.getElementById("clientGender")?.value || "Feminino";
+  const price = hypePriceForGender(ticket, gender);
+
+  if (display) display.value = hypeFormatMoney(price);
+
+  const opt = select?.options[select.selectedIndex];
+  if (opt) opt.dataset.price = String(price);
+
   updateClientTicketState();
 }
 
@@ -411,29 +453,75 @@ async function initAdmin(fromLogin = false) {
 function renderConfigTickets() {
   const target = document.getElementById("ticketConfigList");
   if (!target) return;
-  if (!['admin','gerente'].includes(HYPE.role)) {
-    target.innerHTML = `<div class="info-note">Seu perfil não pode alterar lotes.</div>`;
+
+  if (!["admin","gerente"].includes(HYPE.role)) {
+    target.innerHTML = `<div class="info-note">Seu perfil não pode alterar setores.</div>`;
     return;
   }
+
   const lots = HYPE.lots || [];
+
   if (!lots.length) {
-    target.innerHTML = `<div class="empty-lots">Nenhum ingresso/lote cadastrado ainda. Use o formulário acima para criar o primeiro e definir o preço.</div>`;
+    target.innerHTML = `<div class="empty-lots">Nenhum setor cadastrado ainda. Use o formulário acima para adicionar Pista, VIP ou Camarote.</div>`;
     return;
   }
+
+  const sectorOptions = current => ["Pista","VIP","Camarote"]
+    .map(s => `<option value="${s}" ${String(current).toLowerCase() === s.toLowerCase() ? "selected" : ""}>${s.toUpperCase()}</option>`)
+    .join("");
+
   target.innerHTML = lots.map((t, i) => `
     <div class="ticket-admin-card">
-      <div class="ticket-admin-head"><strong>${hypeEscape(t.name)}</strong><span class="schedule-badge ${hypeStatus(t).code === 'active' ? 'active' : hypeStatus(t).code === 'upcoming' ? 'upcoming' : 'expired'}">${hypeEscape(hypeStatus(t).label)}</span></div>
-      <div class="ticket-admin-grid ticket-admin-grid-wide">
-        <div class="form-group"><label>Nome</label><input id="tName_${i}" value="${hypeEscape(t.name)}"></div>
-        <div class="form-group"><label>Setor</label><input id="tSector_${i}" value="${hypeEscape(t.sector || '')}"></div>
-        <div class="form-group"><label>Preço</label><input id="tPrice_${i}" type="number" step="0.01" min="0" value="${Number(t.price || 0)}"></div>
-        <div class="form-group"><label>Quantidade (0 = ilimitado)</label><input id="tQty_${i}" type="number" min="0" value="${Number(t.quantity_total || 0)}"></div>
-        <div class="form-group"><label>Início</label><input id="tStart_${i}" type="datetime-local" value="${toDateTimeLocal(t.starts_at)}"></div>
-        <div class="form-group"><label>Expiração</label><input id="tEnd_${i}" type="datetime-local" value="${toDateTimeLocal(t.ends_at)}"></div>
+      <div class="ticket-admin-head">
+        <strong>${hypeEscape(t.sector || t.name)}</strong>
+        <span class="schedule-badge ${hypeStatus(t).code === "active" ? "active" : hypeStatus(t).code === "upcoming" ? "upcoming" : "expired"}">${hypeEscape(hypeStatus(t).label)}</span>
       </div>
-      <div class="ticket-admin-preview"><span>Vendidos: <b>${Number(t.quantity_sold || 0)}</b></span><span>Disponíveis: <b>${t.quantity_total ? Math.max(0,Number(t.quantity_available||0)) : '∞'}</b></span><span>Setor: <b>${hypeEscape(t.sector||'Pista')}</b></span><span>${hypeEscape(hypeCountdownText(t))}</span></div>
-      <div class="ticket-admin-actions"><button class="btn-action" onclick="updateTicket(${i})">SALVAR LOTE</button><button class="btn-action" onclick="clearTicketSchedule(${i})">REMOVER HORÁRIOS</button></div>
-    </div>`).join("");
+
+      <div class="ticket-admin-grid-gender">
+        <div class="form-group">
+          <label>Tipo / Setor</label>
+          <select id="tSector_${i}">${sectorOptions(t.sector)}</select>
+        </div>
+
+        <div class="gender-price-box male">
+          <label>♂ Preço Masculino</label>
+          <input id="tPriceMale_${i}" type="number" step="0.01" min="0" value="${Number(t.price_male ?? t.price ?? 0)}">
+        </div>
+
+        <div class="gender-price-box female">
+          <label>♀ Preço Feminino</label>
+          <input id="tPriceFemale_${i}" type="number" step="0.01" min="0" value="${Number(t.price_female ?? t.price ?? 0)}">
+        </div>
+
+        <div class="form-group">
+          <label>Quantidade (0 = ilimitado)</label>
+          <input id="tQty_${i}" type="number" min="0" value="${Number(t.quantity_total || 0)}">
+        </div>
+
+        <div class="form-group">
+          <label>Início</label>
+          <input id="tStart_${i}" type="datetime-local" value="${toDateTimeLocal(t.starts_at)}">
+        </div>
+
+        <div class="form-group">
+          <label>Expiração</label>
+          <input id="tEnd_${i}" type="datetime-local" value="${toDateTimeLocal(t.ends_at)}">
+        </div>
+      </div>
+
+      <div class="ticket-admin-preview">
+        <span>Masculino: <b>${hypeFormatMoney(t.price_male ?? t.price)}</b></span>
+        <span>Feminino: <b>${hypeFormatMoney(t.price_female ?? t.price)}</b></span>
+        <span>Vendidos: <b>${Number(t.quantity_sold || 0)}</b></span>
+        <span>${hypeEscape(hypeCountdownText(t))}</span>
+      </div>
+
+      <div class="ticket-admin-actions">
+        <button class="btn-action" onclick="updateTicket(${i})">SALVAR VALORES</button>
+        <button class="btn-action" onclick="clearTicketSchedule(${i})">REMOVER HORÁRIOS</button>
+      </div>
+    </div>
+  `).join("");
 }
 
 function toDateTimeLocal(value) {
@@ -448,22 +536,36 @@ function fromDateTimeLocal(value) { return value ? new Date(value).toISOString()
 
 
 async function createNewLot() {
-  if (!['admin','gerente'].includes(HYPE.role)) return alert("Somente Admin/Gerente pode criar ingressos.");
-  const name = document.getElementById("newLotName")?.value.trim() || "";
-  const sector = document.getElementById("newLotSector")?.value.trim() || "Pista";
-  const priceRaw = document.getElementById("newLotPrice")?.value;
+  if (!["admin","gerente"].includes(HYPE.role)) {
+    return alert("Somente Admin/Gerente pode criar setores.");
+  }
+
+  const sector = document.getElementById("newLotSector")?.value || "Pista";
+  const maleRaw = document.getElementById("newLotPriceMale")?.value;
+  const femaleRaw = document.getElementById("newLotPriceFemale")?.value;
   const qtyRaw = document.getElementById("newLotQty")?.value;
   const startRaw = document.getElementById("newLotStart")?.value || "";
   const endRaw = document.getElementById("newLotEnd")?.value || "";
 
-  const price = Number(priceRaw);
+  const priceMale = Number(maleRaw);
+  const priceFemale = Number(femaleRaw);
   const qty = Number(qtyRaw || 0);
 
-  if (!name) return alert("Digite o nome do ingresso.");
-  if (priceRaw === "" || !Number.isFinite(price) || price < 0) return alert("Digite um preço válido.");
-  if (!Number.isFinite(qty) || qty < 0) return alert("Digite uma quantidade válida.");
+  if (maleRaw === "" || !Number.isFinite(priceMale) || priceMale < 0) {
+    return alert("Digite um preço Masculino válido.");
+  }
 
-  let startAt = null, endAt = null;
+  if (femaleRaw === "" || !Number.isFinite(priceFemale) || priceFemale < 0) {
+    return alert("Digite um preço Feminino válido.");
+  }
+
+  if (!Number.isFinite(qty) || qty < 0) {
+    return alert("Digite uma quantidade válida.");
+  }
+
+  let startAt = null;
+  let endAt = null;
+
   try {
     startAt = fromDateTimeLocal(startRaw);
     endAt = fromDateTimeLocal(endRaw);
@@ -476,13 +578,13 @@ async function createNewLot() {
   }
 
   try {
-    await sbRpc("staff_upsert_lot", {
+    await sbRpc("staff_upsert_lot_gender", {
       p_username: HYPE.user,
       p_password: HYPE.pass,
       p_id: 0,
-      p_name: name,
       p_sector: sector,
-      p_price: price,
+      p_price_male: priceMale,
+      p_price_female: priceFemale,
       p_quantity_total: qty,
       p_starts_at: startAt,
       p_ends_at: endAt,
@@ -490,43 +592,82 @@ async function createNewLot() {
       p_sort_order: (HYPE.lots?.length || 0) + 1
     });
 
-    ["newLotName","newLotSector","newLotPrice","newLotStart","newLotEnd"].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = "";
-    });
-    const qtyEl = document.getElementById("newLotQty");
-    if (qtyEl) qtyEl.value = "0";
+    document.getElementById("newLotPriceMale").value = "";
+    document.getElementById("newLotPriceFemale").value = "";
+    document.getElementById("newLotStart").value = "";
+    document.getElementById("newLotEnd").value = "";
+    document.getElementById("newLotQty").value = "0";
 
     await loadPublicState();
     renderConfigTickets();
-    hypeNotify("Ingresso criado com sucesso.");
+    hypeNotify("Setor criado com valores por gênero.");
   } catch (err) {
-    alert(err.message || "Erro ao criar ingresso.");
+    alert(err.message || "Erro ao criar setor.");
   }
 }
 
 async function updateTicket(index) {
   const t = HYPE.lots[index];
   if (!t) return;
+
   try {
-    const name = document.getElementById(`tName_${index}`).value.trim();
-    const sector = document.getElementById(`tSector_${index}`).value.trim();
-    const price = Number(document.getElementById(`tPrice_${index}`).value);
+    const sector = document.getElementById(`tSector_${index}`).value;
+    const priceMale = Number(document.getElementById(`tPriceMale_${index}`).value);
+    const priceFemale = Number(document.getElementById(`tPriceFemale_${index}`).value);
     const qty = Number(document.getElementById(`tQty_${index}`).value);
     const startAt = fromDateTimeLocal(document.getElementById(`tStart_${index}`).value);
     const endAt = fromDateTimeLocal(document.getElementById(`tEnd_${index}`).value);
-    await sbRpc("staff_upsert_lot", {p_username:HYPE.user,p_password:HYPE.pass,p_id:t.id,p_name:name,p_sector:sector,p_price:price,p_quantity_total:qty,p_starts_at:startAt,p_ends_at:endAt,p_active:true,p_sort_order:index+1});
-    await loadPublicState(); renderConfigTickets(); hypeNotify("Lote atualizado.");
-  } catch (err) { alert(err.message); }
+
+    if (!Number.isFinite(priceMale) || priceMale < 0) return alert("Preço Masculino inválido.");
+    if (!Number.isFinite(priceFemale) || priceFemale < 0) return alert("Preço Feminino inválido.");
+
+    await sbRpc("staff_upsert_lot_gender", {
+      p_username: HYPE.user,
+      p_password: HYPE.pass,
+      p_id: t.id,
+      p_sector: sector,
+      p_price_male: priceMale,
+      p_price_female: priceFemale,
+      p_quantity_total: qty,
+      p_starts_at: startAt,
+      p_ends_at: endAt,
+      p_active: true,
+      p_sort_order: index + 1
+    });
+
+    await loadPublicState();
+    renderConfigTickets();
+    hypeNotify("Valores do setor atualizados.");
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
 async function clearTicketSchedule(index) {
   const t = HYPE.lots[index];
   if (!t) return;
+
   try {
-    await sbRpc("staff_upsert_lot", {p_username:HYPE.user,p_password:HYPE.pass,p_id:t.id,p_name:t.name,p_sector:t.sector,p_price:Number(t.price),p_quantity_total:Number(t.quantity_total),p_starts_at:null,p_ends_at:null,p_active:true,p_sort_order:index+1});
-    await loadPublicState(); renderConfigTickets(); hypeNotify("Horários removidos.");
-  } catch (err) { alert(err.message); }
+    await sbRpc("staff_upsert_lot_gender", {
+      p_username: HYPE.user,
+      p_password: HYPE.pass,
+      p_id: t.id,
+      p_sector: t.sector,
+      p_price_male: Number(t.price_male ?? t.price ?? 0),
+      p_price_female: Number(t.price_female ?? t.price ?? 0),
+      p_quantity_total: Number(t.quantity_total || 0),
+      p_starts_at: null,
+      p_ends_at: null,
+      p_active: true,
+      p_sort_order: index + 1
+    });
+
+    await loadPublicState();
+    renderConfigTickets();
+    hypeNotify("Horários removidos.");
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
 async function savePixKey() {
