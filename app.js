@@ -532,8 +532,13 @@ async function requireLogin(kind) {
     try {
       const found = await verifyStaff(HYPE.user, HYPE.pass);
       if (found) {
-        HYPE.role = found.role;
-        return true;
+        const allowed = kind === "portaria"
+          ? ["admin", "portaria"]
+          : ["admin", "gerente", "caixa"];
+        if (allowed.includes(found.role)) {
+          HYPE.role = found.role;
+          return true;
+        }
       }
     } catch (_) {}
     sessionClear();
@@ -549,6 +554,29 @@ function hideLogin() {
 function showLogin() {
   const el = document.getElementById("loginScreen");
   if (el) el.style.display = "grid";
+}
+
+function applyStaffRoleUI() {
+  const isAdmin = HYPE.role === "admin";
+
+  // Só o ADMIN vê os atalhos que levam a outras áreas restritas.
+  const navPortaria = document.getElementById("navPortariaLink");
+  if (navPortaria) navPortaria.style.display = isAdmin ? "inline-flex" : "none";
+
+  const navAdmin = document.getElementById("navAdminLink");
+  if (navAdmin) navAdmin.style.display = isAdmin ? "inline-flex" : "none";
+
+  // Na tela da Portaria, a conta PORTARIA vê somente a própria área.
+  // Quando o ADMIN entra na Portaria, aparecem os 3 acessos: Compra + Admin + Portaria.
+  const navCompraPortaria = document.getElementById("navCompraPortariaLink");
+  if (navCompraPortaria) navCompraPortaria.style.display = isAdmin ? "inline-flex" : "none";
+
+  // Gestão de equipe e limpeza definitiva ficam exclusivas do ADMIN.
+  const teamPanel = document.getElementById("teamAdminPanel");
+  if (teamPanel) teamPanel.style.display = isAdmin ? "block" : "none";
+
+  const purgeBtn = document.getElementById("purgeTicketsBtn");
+  if (purgeBtn) purgeBtn.style.display = isAdmin ? "inline-flex" : "none";
 }
 
 async function checkLogin() {
@@ -572,9 +600,10 @@ async function checkPortariaLogin() {
   try {
     const found = await verifyStaff(username, password);
     if (!found) return alert("Usuário ou senha incorretos.");
-    if (!['admin','gerente','portaria'].includes(found.role)) return alert("Esta conta não possui acesso à portaria.");
+    if (!['admin','portaria'].includes(found.role)) return alert("Esta conta não possui acesso à portaria.");
     sessionSave(found.username, password, found.role);
     hideLogin();
+    applyStaffRoleUI();
     document.getElementById("portariaSearch")?.focus();
   } catch (err) { alert(err.message); }
 }
@@ -1330,8 +1359,13 @@ async function saveAdminEvent() {
 
 async function initAdmin(fromLogin = false) {
   if (!fromLogin && !(await requireLogin("admin"))) { showLogin(); return; }
+  if (!["admin","gerente","caixa"].includes(HYPE.role)) {
+    sessionClear();
+    showLogin();
+    return;
+  }
   hideLogin();
-  if (!["admin","gerente","caixa"].includes(HYPE.role)) return alert("Sem permissão.");
+  applyStaffRoleUI();
   try {
     await loadPublicState();
     await loadStaffTickets("");
@@ -1615,8 +1649,8 @@ async function toggleStatus(id) { const item = HYPE.tickets.find(x=>Number(x.id)
 async function deleteClient(id) { await setPayment(id,'Cancelado'); }
 
 async function clearAll() {
-  if (!["admin","gerente"].includes(HYPE.role)) {
-    return alert("Somente Admin ou Gerente pode apagar os ingressos.");
+  if (HYPE.role !== "admin") {
+    return alert("Somente o Admin pode apagar definitivamente os ingressos.");
   }
 
   const ok = confirm(
@@ -1661,13 +1695,13 @@ async function clearAll() {
 }
 
 async function loadUsersIfAllowed() {
-  if (!['admin','gerente'].includes(HYPE.role)) return [];
+  if (HYPE.role !== 'admin') return [];
   return sbRpc("staff_list_users", {p_username:HYPE.user,p_password:HYPE.pass});
 }
 
 async function renderUsers() {
   const body = document.getElementById('usersTableBody');
-  if (!body || !['admin','gerente'].includes(HYPE.role)) return;
+  if (!body || HYPE.role !== 'admin') return;
   try {
     const rows = await loadUsersIfAllowed();
     body.innerHTML = (rows||[]).map(u=>`<tr><td>${hypeEscape(u.name)}<br><small>${hypeEscape(u.username)}</small></td><td>${hypeEscape(u.role)}</td><td>${u.active ? `<button class="btn-action btn-del" onclick="deleteUser(${u.id})">DESATIVAR</button>` : '<span class="badge cancelado">INATIVO</span>'}</td></tr>`).join('');
@@ -1675,6 +1709,7 @@ async function renderUsers() {
 }
 
 async function addUser() {
+  if (HYPE.role !== 'admin') return alert('Somente o Admin pode gerenciar a equipe.');
   const name = document.getElementById('newUserName')?.value.trim() || '';
   const username = document.getElementById('newUsername')?.value.trim() || '';
   const password = document.getElementById('newUserPassword')?.value || '';
@@ -1688,6 +1723,7 @@ async function addUser() {
 }
 
 async function deleteUser(id) {
+  if (HYPE.role !== 'admin') return alert('Somente o Admin pode gerenciar a equipe.');
   if (!confirm('Desativar este usuário?')) return;
   try { await sbRpc('staff_delete_user',{p_username:HYPE.user,p_password:HYPE.pass,p_user_id:id}); await renderUsers(); hypeNotify('Usuário desativado.'); }
   catch(err){ alert(err.message); }
@@ -1727,7 +1763,13 @@ function startAdminTicker() {
 
 async function initPortaria() {
   if (!(await requireLogin("portaria"))) { showLogin(); return; }
+  if (!["admin","portaria"].includes(HYPE.role)) {
+    sessionClear();
+    showLogin();
+    return;
+  }
   hideLogin();
+  applyStaffRoleUI();
   document.getElementById("portariaSearch")?.focus();
 }
 
@@ -2094,6 +2136,18 @@ function hypeV14CurrentShareText() {
   return `${parts.join("\n")}\n${location.href}`;
 }
 
+const HYPE_V15_CONTACT_PHONE_DISPLAY = "(54) 9695-6070";
+const HYPE_V15_CONTACT_PHONE_WA = "555496956070";
+const HYPE_V15_MAP_URL = "https://maps.app.goo.gl/NxRfJDYs9iR2uk2v8";
+
+function hypeV14OpenWhatsAppContact() {
+  const e = HYPE.event || {};
+  const message = encodeURIComponent(
+    `Olá! Quero informações sobre ${e.name || e.artist_name || "um evento da HYPE"}.`
+  );
+  window.open(`https://wa.me/${HYPE_V15_CONTACT_PHONE_WA}?text=${message}`, "_blank", "noopener");
+}
+
 function hypeV14ShareWhatsApp() {
   const text = encodeURIComponent(hypeV14CurrentShareText());
   window.open(`https://wa.me/?text=${text}`, "_blank", "noopener");
@@ -2118,9 +2172,7 @@ async function hypeV14ShareEvent() {
 }
 
 function hypeV14OpenMap() {
-  const venue = String(HYPE.event?.venue || "").trim();
-  if (!venue) return;
-  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue)}`, "_blank", "noopener");
+  window.open(HYPE_V15_MAP_URL, "_blank", "noopener");
 }
 
 function hypeV14ScrollToTickets() {
@@ -2166,7 +2218,11 @@ function hypeV14RenderLots() {
         : `${available} disponível${available === 1 ? "" : "is"}`;
     const active = String(lot.id) === String(selectedId);
     const disabled = !state.canBuy;
-    const price = getLotGenderPrice(lot, gender);
+    const femalePrice = getLotGenderPrice(lot, "Feminino");
+    const malePrice = getLotGenderPrice(lot, "Masculino");
+    const genderKey = String(gender || "").trim().toLowerCase();
+    const femaleSelected = genderKey.startsWith("f");
+    const maleSelected = genderKey.startsWith("m");
 
     return `
       <button type="button" class="v14-lot-card ${active ? "active" : ""} ${disabled ? "disabled" : ""}"
@@ -2174,7 +2230,14 @@ function hypeV14RenderLots() {
         <span class="v14-lot-status">${hypeEscape(state.label)}</span>
         <small>${hypeEscape(lot.sector || "INGRESSO")}</small>
         <strong>${hypeEscape(lot.name || lot.sector || "Ingresso HYPE")}</strong>
-        <div class="v14-lot-price">${hypeFormatMoney(price)}</div>
+        <div class="v15-gender-prices">
+          <div class="v15-gender-price ${femaleSelected ? "selected" : ""}">
+            <span>♀ FEMININO</span><b>${hypeFormatMoney(femalePrice)}</b>
+          </div>
+          <div class="v15-gender-price ${maleSelected ? "selected" : ""}">
+            <span>♂ MASCULINO</span><b>${hypeFormatMoney(malePrice)}</b>
+          </div>
+        </div>
         <div class="v14-lot-stock ${hot ? "hot" : ""}">${hypeEscape(stockText)}</div>
       </button>`;
   }).join("");
@@ -2183,7 +2246,7 @@ function hypeV14RenderLots() {
   if (current) {
     hypeV14SetText(
       "v14StickyText",
-      `${current.sector || current.name} • ${hypeFormatMoney(getLotGenderPrice(current, gender))}`
+      `${current.sector || current.name} • F ${hypeFormatMoney(getLotGenderPrice(current, "Feminino"))} • M ${hypeFormatMoney(getLotGenderPrice(current, "Masculino"))}`
     );
   } else {
     hypeV14SetText("v14StickyText", "Escolha seu ingresso");
@@ -2245,7 +2308,7 @@ function hypeV14Render() {
   }
 
   const mapButton = document.getElementById("v14MapButton");
-  if (mapButton) mapButton.style.display = e.venue ? "" : "none";
+  if (mapButton) mapButton.style.display = "";
 
   hypeV14Tick();
   hypeV14RenderLots();

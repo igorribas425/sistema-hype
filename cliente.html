@@ -260,6 +260,13 @@ body{overflow-x:hidden}
 .v14-lot-card small{display:block;color:#9c9ca5;font-size:9px;font-weight:950;letter-spacing:1.25px;text-transform:uppercase}
 .v14-lot-card strong{display:block;font-size:18px;margin:7px 0 2px}
 .v14-lot-price{font-size:24px;font-weight:950;color:var(--event-accent);margin-top:9px}
+.v15-gender-prices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+.v15-gender-price{display:flex;flex-direction:column;gap:3px;padding:10px 11px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.035);text-align:left}
+.v15-gender-price span{font-size:8px;font-weight:950;letter-spacing:.8px;color:#9d9da6}
+.v15-gender-price b{font-size:18px;line-height:1.1;color:#fff}
+.v15-gender-price.selected{border-color:rgba(var(--event-accent-rgb),.62);background:rgba(var(--event-accent-rgb),.11);box-shadow:0 0 18px rgba(var(--event-accent-rgb),.08)}
+.v15-gender-price.selected span,.v15-gender-price.selected b{color:var(--event-accent)}
+.v14-action small{display:block;font-size:8px;line-height:1.15;margin-top:2px;opacity:.82;letter-spacing:.3px}
 .v14-lot-stock{margin-top:6px;font-size:10px;font-weight:850;color:#babac1}
 .v14-lot-stock.hot{color:#ffce58}
 .v14-lot-status{position:absolute;right:12px;top:12px;padding:5px 8px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);font-size:8px;font-weight:950;letter-spacing:.7px}
@@ -355,9 +362,9 @@ body{overflow-x:hidden}
 
         <div class="v14-actions">
           <button type="button" class="v14-action primary" onclick="hypeV14ScrollToTickets()">🎟 GARANTIR INGRESSO</button>
-          <button type="button" class="v14-action" onclick="hypeV14ShareWhatsApp()">WHATSAPP</button>
+          <button type="button" class="v14-action" onclick="hypeV14OpenWhatsAppContact()">💬 WHATSAPP<small>(54) 9695-6070</small></button>
           <button type="button" class="v14-action" onclick="hypeV14ShareEvent()">COMPARTILHAR</button>
-          <button type="button" class="v14-action" id="v14MapButton" onclick="hypeV14OpenMap()">📍 ABRIR MAPA</button>
+          <button type="button" class="v14-action" id="v14MapButton" onclick="hypeV14OpenMap()">📍 LOCALIZAÇÃO<small>ABRIR NO MAPS</small></button>
         </div>
 
         <div class="v14-lineup" id="v14Lineup">
@@ -520,7 +527,7 @@ body{overflow-x:hidden}
 
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260831-v14"></script>
-<script src="app.js?v=20260831-v14"></script>
+<script src="supabase-config.js?v=20260831-v15-2"></script>
+<script src="app.js?v=20260831-v15-2"></script>
 </body>
 </html>

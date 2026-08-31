@@ -1,0 +1,15 @@
+HYPE V15.2 — PREÇOS POR GÊNERO + CONTATO + LOCALIZAÇÃO
+
+Substitua no GitHub somente:
+- index.html
+- cliente.html
+- app.js
+
+Não precisa rodar SQL no Supabase para esta atualização.
+
+Alterações:
+- Cards mostram Feminino e Masculino ao mesmo tempo, com os dois valores.
+- O gênero selecionado continua destacado e é o valor usado na compra.
+- WhatsApp direto: (54) 9695-6070.
+- Localização abre: https://maps.app.goo.gl/NxRfJDYs9iR2uk2v8
+- Mantém as permissões da V15.1.
