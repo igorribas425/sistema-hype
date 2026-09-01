@@ -1,0 +1,20 @@
+HYPE V16.8 - EXCLUIR PROMOTER
+
+NOVIDADE
+- A aba Promoters agora tem o botão vermelho "🗑 EXCLUIR".
+- Ao excluir, o promoter some da lista.
+- O link antigo desse promoter deixa de funcionar.
+- As vendas antigas vinculadas ao código dele continuam salvas no histórico.
+- É possível cadastrar novamente um promoter com o mesmo nome/código-base depois.
+- Não precisa executar SQL novo no Supabase.
+
+IMPORTANTE
+Esta versão foi criada em cima da HYPE V16.7 com o favicon/logo da HYPE.
+As demais funções do site foram mantidas.
+
+COMO ATUALIZAR
+1. Extraia este ZIP.
+2. Envie TODOS os arquivos para o mesmo repositório/pasta do site no GitHub.
+3. Substitua os arquivos antigos.
+4. Aguarde o GitHub Pages atualizar.
+5. Se o botão novo não aparecer, use Ctrl+F5 ou abra uma aba anônima.
