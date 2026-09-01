@@ -33,6 +33,28 @@ const HYPE = {
   currentEntryId: null
 };
 
+// HYPE V16.3 - taxa de serviço fixa repassada no PIX.
+// Base usada: ingresso R$ 15,00 -> líquido observado R$ 13,02, diferença R$ 1,98.
+const HYPE_SERVICE_FEE = 1.98;
+
+function hypeTotalWithServiceFee(ticketValue) {
+  return Math.round((Number(ticketValue || 0) + HYPE_SERVICE_FEE) * 100) / 100;
+}
+
+function updateServiceFeeInfo(ticketValue) {
+  const el = document.getElementById("serviceFeeInfo");
+  if (!el) return;
+  const base = Number(ticketValue || 0);
+  if (!(base > 0)) { el.innerHTML = ""; return; }
+  const total = hypeTotalWithServiceFee(base);
+  el.innerHTML = `
+    <div class="fee-title">Resumo do pagamento</div>
+    <div class="fee-row"><span>Valor do ingresso</span><b>${hypeFormatMoney(base)}</b></div>
+    <div class="fee-row fee-service"><span>Taxa de serviço</span><b>${hypeFormatMoney(HYPE_SERVICE_FEE)}</b></div>
+    <div class="fee-row fee-total"><span>Total a pagar no PIX</span><b>${hypeFormatMoney(total)}</b></div>
+    <div class="fee-note">A taxa de serviço é exibida antes da geração do PIX. O total acima é o valor que será cobrado.</div>`;
+}
+
 function hypeCfg() {
   const cfg = window.HYPE_SUPABASE_CONFIG || {};
   if (!cfg.url || cfg.url.includes("COLE_AQUI") || !cfg.anonKey || cfg.anonKey.includes("COLE_AQUI")) {
@@ -718,12 +740,14 @@ async function updatePrice() {
   if (!lot) {
     if (display) display.value = "NENHUMA CATEGORIA DISPONÍVEL";
     if (status) status.textContent = "";
+    updateServiceFeeInfo(0);
     updateClientTicketState();
     return;
   }
 
   const basePrice = getLotGenderPrice(lot);
-  if (display) display.value = hypeFormatMoney(basePrice);
+  if (display) display.value = hypeFormatMoney(hypeTotalWithServiceFee(basePrice));
+  updateServiceFeeInfo(basePrice);
   const coupon = (document.getElementById("clientCoupon")?.value || "").trim().toUpperCase();
   if (status) { status.textContent = ""; status.className = "v16-coupon-status"; }
 
@@ -737,7 +761,8 @@ async function updatePrice() {
       const quote = Array.isArray(rows) ? rows[0] : rows;
       HYPE.currentQuote = quote || null;
       if (quote?.ok) {
-        if (display) display.value = `${hypeFormatMoney(quote.final_price)} (de ${hypeFormatMoney(quote.original_price)})`;
+        if (display) display.value = hypeFormatMoney(hypeTotalWithServiceFee(quote.final_price));
+        updateServiceFeeInfo(quote.final_price);
         if (status) { status.textContent = `✅ ${quote.message} • desconto ${hypeFormatMoney(quote.discount_amount)}`; status.className = "v16-coupon-status ok"; }
       } else if (status) {
         status.textContent = `⚠️ ${quote?.message || "Cupom inválido"}`;
@@ -805,7 +830,8 @@ function buildWhatsAppMessage(entry) {
     `🎫 Ingresso: ${entry.lot_name || ""}`,
     `📍 Setor: ${entry.sector || ""}`,
     `🚻 Gênero: ${entry.gender || "Não informado"}`,
-    `💰 Valor: ${hypeFormatMoney(entry.price)}`,
+    `💰 Total no PIX: ${hypeFormatMoney(entry.price)}`,
+    `🧾 Taxa de serviço incluída: ${hypeFormatMoney(HYPE_SERVICE_FEE)}`,
     `🔖 Pedido: ${entry.ticket_code}`,
     `📧 E-mail: ${entry.email || ""}`,
     "",
@@ -878,7 +904,7 @@ async function createManualOrder(e) {
       summary.innerHTML = `
         <strong>${hypeEscape(entry.customer_name)}</strong><br>
         ${hypeEscape(entry.lot_name || "")} • ${hypeEscape(entry.sector || "")}<br>
-        ${hypeFormatMoney(entry.price)}${Number(entry.discount_amount || 0) > 0 ? ` <small style="color:#28d17c">(desconto ${hypeFormatMoney(entry.discount_amount)})</small>` : ""}<br>
+        Total no PIX: ${hypeFormatMoney(entry.price)}${Number(entry.discount_amount || 0) > 0 ? ` <small style="color:#28d17c">(desconto ${hypeFormatMoney(entry.discount_amount)})</small>` : ""}<br>
         ${entry.coupon_code ? `Cupom: <b>${hypeEscape(entry.coupon_code)}</b><br>` : ""}
         ${entry.promoter_code ? `Promoter: <b>${hypeEscape(entry.promoter_code)}</b><br>` : ""}
         <span style="color:#ffcc00">AGUARDANDO CONFIRMAÇÃO DO PAGAMENTO</span>
@@ -2297,6 +2323,7 @@ function hypeV14RenderLots() {
           </div>
         </div>
         <div class="v14-lot-stock ${hot ? "hot" : ""}">${hypeEscape(stockText)}</div>
+        <div style="margin-top:8px;font-size:10px;color:var(--muted)">+ taxa de serviço ${hypeFormatMoney(HYPE_SERVICE_FEE)} no PIX</div>
       </button>`;
   }).join("");
 

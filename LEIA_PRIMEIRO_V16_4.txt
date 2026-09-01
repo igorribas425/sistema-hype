@@ -1,0 +1,17 @@
+HYPE V16.4 - TAXA DESTACADA PARA O CLIENTE
+
+Atualização apenas visual do checkout.
+
+Trocar no GitHub:
+- index.html
+- cliente.html
+- app.js
+
+Não precisa rodar SQL novamente se a V16.3 já foi aplicada.
+
+O cliente passa a ver claramente:
+- Valor do ingresso
+- Taxa de serviço R$ 1,98
+- Total a pagar no PIX
+
+A lógica de PIX/Asaas permanece a mesma da V16.3.
