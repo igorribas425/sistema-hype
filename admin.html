@@ -348,7 +348,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
     <div class="v16-management-grid">
       <div class="v16-manage-card">
         <h4>Promoters</h4>
-        <div class="v16-form-row"><input id="v16PromoterName" placeholder="Nome do promoter"><input id="v16PromoterCode" placeholder="Código, ex.: OLIVEIRA" oninput="this.value=this.value.toUpperCase()"><button class="btn-action" onclick="createPromoterV16()">+ ADICIONAR</button></div>
+        <div class="v16-form-row"><input id="v16PromoterName" placeholder="Nome do promoter"><button class="btn-action" onclick="createPromoterV16()">+ GERAR LINK</button></div><small style="display:block;margin-top:7px;color:var(--muted)">Digite só o nome. O código e o link oficial do promoter são gerados automaticamente.</small>
         <div id="v16PromoterList" class="v16-manage-list"></div>
       </div>
       <div class="v16-manage-card">
@@ -440,6 +440,6 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260831-v16-2"></script>
-<script src="app.js?v=20260831-v16-2"></script>
+<script src="app.js?v=20260831-v16-6-auto-link-promoter"></script>
 </body>
 </html>

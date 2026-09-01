@@ -468,8 +468,10 @@ body{overflow-x:hidden}
             <div id="couponStatus" class="v16-coupon-status"></div>
           </div>
           <div>
-            <label>Código do promoter <small>(opcional)</small></label>
-            <input type="text" id="clientPromoter" placeholder="Ex.: OLIVEIRA" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
+            <label>Promoter</label>
+            <input type="hidden" id="clientPromoter" value="">
+            <div id="clientPromoterStatus" class="v16-coupon-status">Compra direta: nenhum promoter vinculado.</div>
+            <small style="display:block;margin-top:6px;color:var(--muted)">O promoter é identificado automaticamente quando você entra pelo link oficial dele.</small>
           </div>
         </div>
 
@@ -557,6 +559,6 @@ body{overflow-x:hidden}
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260831-v16-2"></script>
-<script src="app.js?v=20260831-v16-4-taxa-destacada"></script>
+<script src="app.js?v=20260831-v16-6-auto-link-promoter"></script>
 </body>
 </html>

@@ -12,6 +12,8 @@ const HYPE = {
   tickets: [],
   promoters: [],
   coupons: [],
+  promoterLinkCode: "",
+  promoterLinkEventId: null,
   currentQuote: null,
   pixKey: "",
   events: [],
@@ -357,6 +359,43 @@ function hypeSyncAdminTheme(source = "picker") {
   if (preview) preview.style.background = color;
 }
 
+
+function hypeReadPromoterLinkV16() {
+  try {
+    const params = new URLSearchParams(window.location.search || "");
+    const code = String(params.get("promoter") || "").trim().toUpperCase();
+    const eventId = Number(params.get("event") || 0) || null;
+    HYPE.promoterLinkCode = code;
+    HYPE.promoterLinkEventId = eventId;
+    return { code, eventId };
+  } catch (_) {
+    HYPE.promoterLinkCode = "";
+    HYPE.promoterLinkEventId = null;
+    return { code: "", eventId: null };
+  }
+}
+
+function hypeApplyPromoterLinkV16() {
+  const input = document.getElementById("clientPromoter");
+  const status = document.getElementById("clientPromoterStatus");
+  const hasCode = Boolean(HYPE.promoterLinkCode);
+  const eventMatches = !HYPE.promoterLinkEventId || Number(HYPE.selectedEventId) === Number(HYPE.promoterLinkEventId);
+  const activeCode = hasCode && eventMatches ? HYPE.promoterLinkCode : "";
+  if (input) input.value = activeCode;
+  if (status) {
+    if (activeCode) {
+      status.innerHTML = `✅ Compra vinculada ao promoter <b>${hypeEscape(activeCode)}</b> pelo link oficial.`;
+      status.className = "v16-coupon-status ok";
+    } else if (hasCode && !eventMatches) {
+      status.textContent = "ℹ️ Este link de promoter pertence a outro evento. A venda deste evento não será atribuída.";
+      status.className = "v16-coupon-status";
+    } else {
+      status.textContent = "Compra direta: nenhum promoter vinculado.";
+      status.className = "v16-coupon-status";
+    }
+  }
+}
+
 async function loadPublicState() {
   const [eventResult, pix] = await Promise.all([
     (async () => {
@@ -369,7 +408,10 @@ async function loadPublicState() {
   HYPE.events = Array.isArray(eventResult) ? eventResult : [];
   HYPE.pixKey = typeof pix === "string" ? pix : "";
 
-  if (!HYPE.selectedEventId || !HYPE.events.some(e => Number(e.id) === Number(HYPE.selectedEventId))) {
+  const promoterLink = hypeReadPromoterLinkV16();
+  if (promoterLink.eventId && HYPE.events.some(e => Number(e.id) === Number(promoterLink.eventId))) {
+    HYPE.selectedEventId = Number(promoterLink.eventId);
+  } else if (!HYPE.selectedEventId || !HYPE.events.some(e => Number(e.id) === Number(HYPE.selectedEventId))) {
     HYPE.selectedEventId = HYPE.events[0]?.id || null;
   }
 
@@ -472,6 +514,7 @@ async function selectEvent(eventId) {
     HYPE.lots = Array.isArray(lots) ? lots : [];
     renderEventCarousel();
     renderClientTickets();
+    hypeApplyPromoterLinkV16();
     updateClientTicketState();
     hypeV14Render();
     document.getElementById("v14Spotlight")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -665,6 +708,7 @@ async function refreshClientCatalogSafely() {
   await loadPublicState();
   renderEventCarousel();
   renderClientTickets(selectedLot);
+  hypeApplyPromoterLinkV16();
   updateClientTicketState();
   hypeV14Render();
 
@@ -679,6 +723,7 @@ async function initClient() {
     await loadPublicState();
     renderEventCarousel();
     renderClientTickets();
+    hypeApplyPromoterLinkV16();
     updateClientTicketState();
     hypeV14Render();
     clientCatalogLastRefresh = Date.now();
@@ -2454,22 +2499,61 @@ function renderV16Management() {
   const pList = document.getElementById("v16PromoterList");
   const cList = document.getElementById("v16CouponList");
   if (pList) pList.innerHTML = (HYPE.promoters || []).length ? HYPE.promoters.map(p => `
-    <div class="v16-manage-row"><div><b>${hypeEscape(p.name)}</b><small>Código: ${hypeEscape(p.code)} • ${Number(p.paid_count||0)} pagos • ${hypeFormatMoney(p.revenue||0)}</small></div><button class="btn-action" onclick="togglePromoterV16(${Number(p.id)})">${p.active ? "DESATIVAR" : "ATIVAR"}</button></div>`).join("") : '<div class="info-note">Nenhum promoter cadastrado neste evento.</div>';
+    <div class="v16-manage-row"><div><b>${hypeEscape(p.name)}</b><small>Código: ${hypeEscape(p.code)} • ${Number(p.paid_count||0)} pagos • ${hypeFormatMoney(p.revenue||0)}</small><small style="color:#7dd3fc">Ranking considera somente ingressos pagos.</small></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn-action" onclick="copyPromoterLinkV16(${Number(p.id)})">🔗 COPIAR LINK</button><button class="btn-action" onclick="togglePromoterV16(${Number(p.id)})">${p.active ? "DESATIVAR" : "ATIVAR"}</button></div></div>`).join("") : '<div class="info-note">Nenhum promoter cadastrado neste evento.</div>';
   if (cList) cList.innerHTML = (HYPE.coupons || []).length ? HYPE.coupons.map(c => `
     <div class="v16-manage-row"><div><b>${hypeEscape(c.code)}</b><small>${c.discount_type === "percent" ? `${Number(c.discount_value)}%` : hypeFormatMoney(c.discount_value)} • usos ${Number(c.uses_count||0)}${Number(c.usage_limit||0)>0 ? `/${Number(c.usage_limit)}` : "/∞"}</small></div><button class="btn-action" onclick="toggleCouponV16(${Number(c.id)})">${c.active ? "DESATIVAR" : "ATIVAR"}</button></div>`).join("") : '<div class="info-note">Nenhum cupom cadastrado neste evento.</div>';
+}
+
+function hypePromoterSlugV16(name) {
+  return String(name || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 36);
+}
+
+function hypeNextPromoterCodeV16(name) {
+  const base = hypePromoterSlugV16(name) || "PROMOTER";
+  const used = new Set((HYPE.promoters || []).map(p => String(p.code || "").trim().toUpperCase()));
+  if (!used.has(base)) return base;
+  let n = 2;
+  while (used.has(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
 }
 
 async function createPromoterV16() {
   if (HYPE.role !== "admin") return alert("Somente o Admin pode gerenciar promoters.");
   if (!HYPE.selectedEventId) return alert("Selecione um evento.");
   const name = document.getElementById("v16PromoterName")?.value.trim() || "";
-  const code = document.getElementById("v16PromoterCode")?.value.trim().toUpperCase() || "";
-  if (!name || !code) return alert("Informe nome e código do promoter.");
+  if (!name) return alert("Informe o nome do promoter.");
+  const code = hypeNextPromoterCodeV16(name);
   try {
     await sbRpc("staff_upsert_promoter_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:0,p_name:name,p_code:code,p_active:true});
-    document.getElementById("v16PromoterName").value=""; document.getElementById("v16PromoterCode").value="";
-    await loadV16AdminData(); hypeNotify("Promoter cadastrado.");
+    document.getElementById("v16PromoterName").value="";
+    await loadV16AdminData();
+    const created = (HYPE.promoters || []).find(p => String(p.code || "").toUpperCase() === code);
+    hypeNotify(`Promoter cadastrado. Link oficial gerado automaticamente.`);
+    if (created) await copyPromoterLinkV16(Number(created.id));
   } catch (err) { alert(err.message); }
+}
+
+
+async function copyPromoterLinkV16(id) {
+  const p = (HYPE.promoters || []).find(x => Number(x.id) === Number(id));
+  if (!p) return alert("Promoter não encontrado.");
+  if (!HYPE.selectedEventId) return alert("Selecione um evento.");
+  const url = new URL("https://hypeloungeclub.com.br/cliente.html");
+  url.searchParams.set("event", String(Number(HYPE.selectedEventId)));
+  url.searchParams.set("promoter", String(p.code || "").trim().toUpperCase());
+  const link = url.toString();
+  try {
+    await navigator.clipboard.writeText(link);
+    hypeNotify(`Link oficial de ${p.name} copiado.`);
+  } catch (_) {
+    window.prompt("Copie o link oficial do promoter:", link);
+  }
 }
 
 async function togglePromoterV16(id) {
@@ -2521,7 +2605,8 @@ function renderV16Dashboard() {
   const sectors={}; paid.forEach(t=>{const k=t.sector||t.lot_name||"Outro"; sectors[k]=(sectors[k]||0)+1;});
   const promoters={}; paid.filter(t=>t.promoter_code).forEach(t=>{promoters[t.promoter_code]=(promoters[t.promoter_code]||0)+1;});
   const breakdown=document.getElementById("v16DashboardBreakdown");
-  if(breakdown) breakdown.innerHTML=`<div><b>Por setor</b><span>${Object.entries(sectors).map(([k,v])=>`${hypeEscape(k)}: ${v}`).join(" • ")||"Sem vendas pagas"}</span></div><div><b>Promoters</b><span>${Object.entries(promoters).map(([k,v])=>`${hypeEscape(k)}: ${v}`).join(" • ")||"Sem vendas por promoter"}</span></div>`;
+  const promoterRanking = Object.entries(promoters).sort((a,b)=>b[1]-a[1]);
+  if(breakdown) breakdown.innerHTML=`<div><b>Por setor</b><span>${Object.entries(sectors).map(([k,v])=>`${hypeEscape(k)}: ${v}`).join(" • ")||"Sem vendas pagas"}</span></div><div><b>Ranking de promoters (pagos)</b><span>${promoterRanking.map(([k,v],i)=>`${i+1}º ${hypeEscape(k)}: ${v}`).join(" • ")||"Sem vendas pagas por promoter"}</span></div>`;
 }
 
 /* ========================= BOOT ========================= */

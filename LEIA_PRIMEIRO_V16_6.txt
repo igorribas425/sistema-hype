@@ -1,0 +1,10 @@
+HYPE V16.6 - PROMOTER COM LINK AUTOMATICO
+
+- No Admin, informe somente o nome do promoter.
+- O sistema gera o codigo automaticamente a partir do nome.
+- Ao cadastrar, o link oficial e gerado e copiado automaticamente.
+- O botao COPIAR LINK continua disponivel.
+- Os links usam o dominio oficial: https://hypeloungeclub.com.br/cliente.html
+- O link leva event + promoter para atribuir a venda ao evento correto.
+- Ranking continua contando apenas ingressos pagos.
+- Nao precisa rodar SQL novo para esta versao.
