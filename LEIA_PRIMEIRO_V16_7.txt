@@ -1,0 +1,18 @@
+HYPE V16.7 - FAVICON COM A LOGO OFICIAL
+
+ALTERAÇÃO DESTA VERSÃO
+- Adicionada a logo HYPE na aba do navegador (favicon).
+- Criados favicon.ico, favicon.png, favicon 32x32, favicon 16x16 e apple-touch-icon.
+- Aplicado em todas as páginas HTML: cliente/index, admin, portaria e evento.
+- Nenhuma alteração foi feita no Supabase, pagamentos, promoters ou regras do sistema.
+
+PARA ATUALIZAR NO GITHUB
+1. Extraia este ZIP.
+2. Envie TODOS os arquivos para o mesmo repositório/pasta do site.
+3. Substitua os arquivos antigos quando o GitHub pedir.
+4. Aguarde o GitHub Pages atualizar.
+5. Se a logo antiga/globo continuar na aba, pressione Ctrl+F5 ou abra uma aba anônima.
+   Favicon costuma ficar salvo no cache do navegador.
+
+VERSÃO BASE
+HYPE_V16_6_PROMOTER_AUTO_LINK_GITHUB.zip
