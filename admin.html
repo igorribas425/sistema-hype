@@ -344,11 +344,11 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
   </section>
 
   <section class="panel-box v16-management admin-only" id="v16ManagementPanel">
-    <div class="v16-management-head"><div><h3>🎯 VENDAS / PROMOTERS / CUPONS</h3><p>As configurações abaixo usam o evento selecionado em EVENTOS / SHOWS.</p></div></div>
+    <div class="v16-management-head"><div><h3>🎯 VENDAS / PROMOTERS / CUPONS</h3><p>Promoters são globais e funcionam em todos os eventos. Cupons continuam ligados ao evento selecionado.</p></div></div>
     <div class="v16-management-grid">
       <div class="v16-manage-card">
         <h4>Promoters</h4>
-        <div class="v16-form-row"><input id="v16PromoterName" placeholder="Nome do promoter"><button class="btn-action" onclick="createPromoterV16()">+ GERAR LINK</button></div><small style="display:block;margin-top:7px;color:var(--muted)">Digite só o nome. O código e o link oficial do promoter são gerados automaticamente.</small>
+        <div class="v16-form-row"><input id="v16PromoterName" placeholder="Nome do promoter"><button class="btn-action" onclick="createPromoterV16()">+ GERAR LINK</button></div><small style="display:block;margin-top:7px;color:var(--muted)">Digite só o nome. O promoter recebe um único link oficial que funciona em todos os eventos atuais e futuros.</small>
         <div id="v16PromoterList" class="v16-manage-list"></div>
       </div>
       <div class="v16-manage-card">
@@ -440,7 +440,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260831-v16-2"></script>
-<script src="app.js?v=20260831-v16-6-auto-link-promoter"></script>
-<script src="promoter-admin-v16-7.js?v=20260901-v16-7-promoter-lista"></script>
+<script src="app.js?v=20260901-v16-8-global"></script>
+<script src="promoter-global-v16-8.js?v=20260901-v16-8-global"></script>
 </body>
 </html>

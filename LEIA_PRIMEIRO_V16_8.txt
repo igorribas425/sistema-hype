@@ -1,20 +1,14 @@
-HYPE V16.8 - EXCLUIR PROMOTER
+HYPE V16.8 - PROMOTER GLOBAL
 
-NOVIDADE
-- A aba Promoters agora tem o botão vermelho "🗑 EXCLUIR".
-- Ao excluir, o promoter some da lista.
-- O link antigo desse promoter deixa de funcionar.
-- As vendas antigas vinculadas ao código dele continuam salvas no histórico.
-- É possível cadastrar novamente um promoter com o mesmo nome/código-base depois.
-- Não precisa executar SQL novo no Supabase.
+O QUE MUDOU
+- Um promoter e cadastrado apenas uma vez.
+- O mesmo link funciona em todos os eventos atuais e futuros.
+- Link novo: https://hypeloungeclub.com.br/cliente.html?promoter=CODIGO
+- Se o cliente trocar de evento, o promoter continua vinculado.
+- Ranking global usa somente ingressos pagos.
+- Vendas antigas continuam no historico.
 
-IMPORTANTE
-Esta versão foi criada em cima da HYPE V16.7 com o favicon/logo da HYPE.
-As demais funções do site foram mantidas.
-
-COMO ATUALIZAR
-1. Extraia este ZIP.
-2. Envie TODOS os arquivos para o mesmo repositório/pasta do site no GitHub.
-3. Substitua os arquivos antigos.
-4. Aguarde o GitHub Pages atualizar.
-5. Se o botão novo não aparecer, use Ctrl+F5 ou abra uma aba anônima.
+INSTALACAO
+1) Rode SUPABASE_V16_8_PROMOTER_GLOBAL.sql no Supabase.
+2) Suba os arquivos da pasta no GitHub e faca Commit changes.
+3) Atualize o site com Ctrl+F5.
