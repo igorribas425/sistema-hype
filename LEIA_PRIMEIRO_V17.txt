@@ -1,0 +1,21 @@
+HYPE V17 - NOVAS FUNÇÕES
+
+1) Rode SUPABASE_V17_CONTINGENCIA_AUDITORIA.sql UMA VEZ no Supabase > SQL Editor.
+2) Suba para a raiz do GitHub: admin.html, cliente.html, portaria.html, app.js, v17-extra.js, v17-extra.css, sw.js, register-sw.js.
+3) Mantenha o seu supabase-config.js atual no GitHub (não coloque service_role/secret).
+4) Antes do evento, entre na Portaria com internet, selecione o evento e toque em "PREPARAR MODO OFFLINE".
+
+FUNÇÕES:
+- Limite de 1 ingresso por CPF quando ativado no Admin.
+- Documento/CPF obrigatório na Portaria; entrada só libera após marcar "Documento conferido".
+- Saída temporária e reentrada somente quando autorizada.
+- Contingência offline: snapshot local dos ingressos pagos + fila de entradas para sincronizar quando a internet voltar.
+- Log de ações no banco (entrada, documento, saída, reentrada, limite CPF, encerramento e mudanças de pagamento feitas pelo painel).
+- Resumo final da noite no Admin.
+- Botão "Salvar ingresso neste celular" para acesso rápido local.
+
+IMPORTANTE SOBRE OFFLINE:
+Em modo totalmente offline, dois celulares diferentes de Portaria não conseguem conversar entre si. Portanto, o mesmo QR poderia ser aceito em dois aparelhos offline ao mesmo tempo. Para evitar isso durante queda de internet, use UM aparelho como validador principal offline. Quando a internet voltar, toque em SINCRONIZAR FILA.
+
+IMPORTANTE SOBRE APPLE/GOOGLE WALLET:
+Esta versão salva o ingresso no próprio celular/site para acesso rápido e offline. Apple Wallet (.pkpass) e Google Wallet oficiais exigem credenciais/certificados próprios do emissor e backend assinado; não é seguro colocar isso no GitHub Pages.
