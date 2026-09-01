@@ -1,0 +1,23 @@
+HYPE V17.2 — ENTRADA AUTOMÁTICA PELO QR + SAÍDA
+
+O que mudou:
+- QR lido pela câmera = entrada registrada automaticamente quando o ingresso está pago, no evento correto e com documento conferido.
+- Se o documento ainda não estiver conferido, o QR fica pendente; ao marcar “Documento conferido”, a entrada é registrada automaticamente, sem botão extra.
+- Quem está dentro aparece como DENTRO ✅.
+- Quem está dentro ganha o botão 🚪 MARCAR SAÍDA.
+- Ao marcar saída, aparece SAIU 🚪 e a reentrada fica bloqueada.
+- A reentrada precisa ser autorizada; depois, ao ler o QR novamente, ela é registrada automaticamente.
+- Entrada, saída e autorização de reentrada também entram na fila do modo offline.
+- O Service Worker foi atualizado para limpar o cache antigo da V17.1.
+
+Supabase:
+- NÃO precisa rodar SQL novo se o SUPABASE_V17_CONTINGENCIA_AUDITORIA.sql já foi executado com sucesso.
+
+GitHub:
+Substitua pelo menos:
+1. portaria.html
+2. v17-extra.js
+3. v17-extra.css
+4. sw.js
+
+Pode subir o ZIP inteiro para manter todos os arquivos sincronizados.

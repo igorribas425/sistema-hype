@@ -48,6 +48,8 @@
       try{
         if(item.type==='entry') await v17rpc('staff_validate_entry_v17',{p_username:HYPE.user,p_password:HYPE.pass,p_code:item.code,p_device:item.device,p_offline_sync:true});
         else if(item.type==='document') await v17rpc('staff_mark_document_v17',{p_username:HYPE.user,p_password:HYPE.pass,p_ticket_id:item.ticket_id,p_checked:item.checked});
+        else if(item.type==='exit') await v17rpc('staff_temporary_exit_v17',{p_username:HYPE.user,p_password:HYPE.pass,p_ticket_id:item.ticket_id});
+        else if(item.type==='reentry_authorize') await v17rpc('staff_authorize_reentry_v17',{p_username:HYPE.user,p_password:HYPE.pass,p_ticket_id:item.ticket_id,p_authorized:true});
       }catch(e){rest.push({...item,error:String(e.message||e)});}
     }
     writeJSON(QUEUE_KEY,rest); hypeV17UpdateOfflineBadge();
@@ -57,20 +59,52 @@
 
   window.hypeV17MarkDocument=async function(id,checked,code){
     if(!checked && !confirm('Desmarcar documento conferido?'))return;
+    const shouldAutoEnter = checked && String(HYPE.v17PendingAutoEntryCode||'')===String(code||'');
     if(!online()){
       const t=offlineFind(code); if(!t)return alert('Ingresso não está no pacote offline.');
-      t.document_checked=checked; offlineSaveTicket(t); enqueue({type:'document',ticket_id:id,checked,at:new Date().toISOString()}); renderPortariaResults([t]); return;
+      t.document_checked=checked; offlineSaveTicket(t); enqueue({type:'document',ticket_id:id,checked,at:new Date().toISOString()}); renderPortariaResults([t]);
+      if(shouldAutoEnter){HYPE.v17PendingAutoEntryCode=''; await validateEntry(t.ticket_code||code,{fromScan:true});}
+      return;
     }
-    try{await v17rpc('staff_mark_document_v17',{p_username:HYPE.user,p_password:HYPE.pass,p_ticket_id:id,p_checked:checked}); const t=await lookupTicketByQr(code,false); if(t)renderPortariaResults([t]);}
+    try{
+      await v17rpc('staff_mark_document_v17',{p_username:HYPE.user,p_password:HYPE.pass,p_ticket_id:id,p_checked:checked});
+      const t=await lookupTicketByQr(code,false,{skipAuto:true});
+      if(t)renderPortariaResults([t]);
+      if(shouldAutoEnter){HYPE.v17PendingAutoEntryCode=''; await validateEntry(t?.ticket_code||code,{fromScan:true});}
+    }
     catch(e){alert(e.message||e)}
   };
 
   window.hypeV17TemporaryExit=async function(id,code){
-    if(!confirm('Marcar saída temporária? A reentrada continuará BLOQUEADA até ser autorizada.'))return;
-    try{await v17rpc('staff_temporary_exit_v17',{p_username:HYPE.user,p_password:HYPE.pass,p_ticket_id:id}); const t=await lookupTicketByQr(code,false); if(t)renderPortariaResults([t]);}catch(e){alert(e.message||e)}
+    if(!confirm('Marcar esta pessoa como SAÍDA? A reentrada ficará bloqueada até ser autorizada.'))return;
+    if(!online()){
+      const t=offlineFind(code); if(!t)return alert('Ingresso não está no pacote offline.');
+      if(t.entry_status!=='Entrada utilizada'||t.temporary_exit)return alert('Esta pessoa não está marcada como dentro.');
+      t.temporary_exit=true; t.reentry_authorized=false; offlineSaveTicket(t);
+      enqueue({type:'exit',ticket_id:id,code:t.ticket_code,at:new Date().toISOString()});
+      renderPortariaResults([t]); hypeNotify('🚪 Saída registrada offline.');
+      return;
+    }
+    try{
+      await v17rpc('staff_temporary_exit_v17',{p_username:HYPE.user,p_password:HYPE.pass,p_ticket_id:id});
+      const t=await lookupTicketByQr(code,false,{skipAuto:true}); if(t)renderPortariaResults([t]);
+      hypeNotify('🚪 SAÍDA REGISTRADA');
+      try{await portariaRefreshDashboard(false)}catch(_){}
+    }catch(e){alert(e.message||e)}
   };
   window.hypeV17AuthorizeReentry=async function(id,code){
-    try{await v17rpc('staff_authorize_reentry_v17',{p_username:HYPE.user,p_password:HYPE.pass,p_ticket_id:id,p_authorized:true}); const t=await lookupTicketByQr(code,false); if(t)renderPortariaResults([t]);hypeNotify('Reentrada autorizada.');}catch(e){alert(e.message||e)}
+    if(!online()){
+      const t=offlineFind(code); if(!t)return alert('Ingresso não está no pacote offline.');
+      if(!t.temporary_exit)return alert('Esta pessoa não está marcada como saída.');
+      t.reentry_authorized=true; offlineSaveTicket(t);
+      enqueue({type:'reentry_authorize',ticket_id:id,code:t.ticket_code,at:new Date().toISOString()});
+      renderPortariaResults([t]); hypeNotify('🔓 Reentrada autorizada offline.');
+      return;
+    }
+    try{
+      await v17rpc('staff_authorize_reentry_v17',{p_username:HYPE.user,p_password:HYPE.pass,p_ticket_id:id,p_authorized:true});
+      const t=await lookupTicketByQr(code,false,{skipAuto:true}); if(t)renderPortariaResults([t]);hypeNotify('Reentrada autorizada.');
+    }catch(e){alert(e.message||e)}
   };
 
   // Sobrescreve a renderização da portaria com CPF/documento/reentrada.
@@ -80,46 +114,94 @@
     c.innerHTML=list.map(item=>{
       const paid=item.payment_status==='Pago', used=item.entry_status==='Entrada utilizada', canceled=item.payment_status==='Cancelado';
       const selected=Number(HYPE.portariaEventId||0),wrong=selected&&Number(item.event_id)!==selected;
-      const cls=wrong||canceled?'cancelado':used&&!item.temporary_exit?'used':paid?'pago':'pendente';
+      const inside=used&&!item.temporary_exit;
+      const cls=wrong||canceled?'cancelado':inside?'used':paid?'pago':'pendente';
       const doc=!!item.document_checked;
-      const text=wrong?'OUTRO EVENTO ⚠️':canceled?'CANCELADO ❌':item.temporary_exit?(item.reentry_authorized?'REENTRADA AUTORIZADA ✅':'FORA • REENTRADA BLOQUEADA ⛔'):used?'JÁ ENTROU ⚠️':paid?'PAGO — AGUARDANDO DOCUMENTO':'BLOQUEADO ❌';
+      const text=wrong?'OUTRO EVENTO ⚠️':canceled?'CANCELADO ❌':item.temporary_exit?(item.reentry_authorized?'FORA 🚪 • REENTRADA AUTORIZADA ✅':'SAIU 🚪 • REENTRADA BLOQUEADA ⛔'):inside?'DENTRO ✅':paid?(doc?'PAGO • PRONTO PARA ENTRAR':'PAGO • CONFIRA DOCUMENTO'):'BLOQUEADO ❌';
       const canEntry=paid&&!canceled&&!wrong&&doc&&(!used||(item.temporary_exit&&item.reentry_authorized));
       const cpf=norm(item.cpf); const cpfFmt=cpf.length===11?cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):(item.cpf||'NÃO INFORMADO');
-      return `<div class="result-card ${cls}"><div class="client-info"><div class="portaria-sector-big">${hypeEscape(String(item.sector||item.lot_name||'INGRESSO').toUpperCase())}</div><h3>${hypeEscape(item.customer_name||'')}</h3><div class="portaria-extra">CPF: <b>${hypeEscape(cpfFmt)}</b> • ${hypeEscape(item.ticket_code||'')}</div><div class="v17-doc-row"><label><input type="checkbox" ${doc?'checked':''} onchange="hypeV17MarkDocument(${Number(item.id)},this.checked,'${hypeEscape(item.ticket_code||'')}')"> Documento conferido</label><span>${doc?'✅ CONFERIDO':'⚠️ OBRIGATÓRIO'}</span></div>${item.temporary_exit?`<div class="portaria-warning">Saída temporária registrada. Reentrada: <b>${item.reentry_authorized?'AUTORIZADA':'NÃO AUTORIZADA'}</b>.</div>`:''}</div><div class="status-area"><div class="status-tag ${cls}">${text}</div>${canEntry?`<button class="btn-entry" onclick="validateEntry('${hypeEscape(item.ticket_code)}')">✅ ${item.temporary_exit?'CONFIRMAR REENTRADA':'CONFIRMAR ENTRADA'}</button>`:''}${used&&!item.temporary_exit?`<button class="btn-entry v17-exit" onclick="hypeV17TemporaryExit(${Number(item.id)},'${hypeEscape(item.ticket_code)}')">↩ SAÍDA TEMPORÁRIA</button>`:''}${item.temporary_exit&&!item.reentry_authorized?`<button class="btn-entry v17-reentry" onclick="hypeV17AuthorizeReentry(${Number(item.id)},'${hypeEscape(item.ticket_code)}')">🔓 AUTORIZAR REENTRADA</button>`:''}</div></div>`;
+      const pendingScan = String(HYPE.v17PendingAutoEntryCode||'')===String(item.ticket_code||'');
+      return `<div class="result-card ${cls}"><div class="client-info"><div class="portaria-sector-big">${hypeEscape(String(item.sector||item.lot_name||'INGRESSO').toUpperCase())}</div><h3>${hypeEscape(item.customer_name||'')}</h3><div class="portaria-extra">CPF: <b>${hypeEscape(cpfFmt)}</b> • ${hypeEscape(item.ticket_code||'')}</div><div class="v17-doc-row"><label><input type="checkbox" ${doc?'checked':''} onchange="hypeV17MarkDocument(${Number(item.id)},this.checked,'${hypeEscape(item.ticket_code||'')}')"> Documento conferido</label><span>${doc?'✅ CONFERIDO':pendingScan?'⚠️ CONFIRA PARA REGISTRAR ENTRADA':'⚠️ OBRIGATÓRIO'}</span></div>${item.temporary_exit?`<div class="portaria-warning">Saída registrada. Reentrada: <b>${item.reentry_authorized?'AUTORIZADA':'NÃO AUTORIZADA'}</b>.</div>`:''}</div><div class="status-area"><div class="status-tag ${cls}">${text}</div>${canEntry&&!inside?`<button class="btn-entry" onclick="validateEntry('${hypeEscape(item.ticket_code)}',{fromScan:false})">✅ REGISTRAR ENTRADA</button>`:''}${inside?`<button class="btn-entry v17-exit" onclick="hypeV17TemporaryExit(${Number(item.id)},'${hypeEscape(item.ticket_code)}')">🚪 MARCAR SAÍDA</button>`:''}${item.temporary_exit&&!item.reentry_authorized?`<button class="btn-entry v17-reentry" onclick="hypeV17AuthorizeReentry(${Number(item.id)},'${hypeEscape(item.ticket_code)}')">🔓 AUTORIZAR REENTRADA</button>`:''}</div></div>`;
     }).join('');
   };
 
-  window.lookupTicketByQr=async function(code,changeInput=true){
+  window.lookupTicketByQr=async function(code,changeInput=true,opts={}){
+    const fromCamera=!!HYPE.portariaLastScanFromCamera && !opts.skipAuto;
+    const processItem=async item=>{
+      if(!item)return null;
+      if(changeInput){const i=document.getElementById('portariaSearch');if(i)i.value=item.customer_name||item.ticket_code;}
+      HYPE.portariaCurrentItem=item;
+      renderPortariaResults([item]);
+
+      if(fromCamera){
+        const selected=Number(HYPE.portariaEventId||0);
+        const wrong=selected&&Number(item.event_id)!==selected;
+        if(wrong){HYPE.portariaLastScanFromCamera=false;portariaDeniedFeedback('INGRESSO DE OUTRO EVENTO');return item;}
+        if(item.payment_status==='Cancelado'||item.payment_status!=='Pago'){HYPE.portariaLastScanFromCamera=false;portariaDeniedFeedback(item.payment_status==='Cancelado'?'INGRESSO CANCELADO':'PAGAMENTO NÃO CONFIRMADO');return item;}
+        if(item.entry_status==='Entrada utilizada'&&!item.temporary_exit){HYPE.portariaLastScanFromCamera=false;portariaDuplicateAlert(item);return item;}
+        if(item.temporary_exit&&!item.reentry_authorized){HYPE.portariaLastScanFromCamera=false;portariaDeniedFeedback('REENTRADA NÃO AUTORIZADA');return item;}
+        if(!item.document_checked){
+          HYPE.v17PendingAutoEntryCode=item.ticket_code||String(code||'').trim();
+          HYPE.portariaLastScanFromCamera=false;
+          portariaDeniedFeedback('CONFIRA O DOCUMENTO/CPF');
+          hypeNotify('QR válido. Marque “Documento conferido” e a entrada será registrada automaticamente.');
+          renderPortariaResults([item]);
+          return item;
+        }
+        await validateEntry(item.ticket_code||code,{fromScan:true});
+        return item;
+      }
+      return item;
+    };
+
     if(!online()){
       const item=offlineFind(code); const c=document.getElementById('resultsContainer');
-      if(!item){if(c)c.innerHTML='<div class="empty-state" style="color:var(--red)">❌ NÃO ENCONTRADO NO PACOTE OFFLINE.</div>';return null;}
-      if(changeInput){const i=document.getElementById('portariaSearch');if(i)i.value=item.customer_name||item.ticket_code;}
-      renderPortariaResults([item]); return item;
+      if(!item){if(c)c.innerHTML='<div class="empty-state" style="color:var(--red)">❌ NÃO ENCONTRADO NO PACOTE OFFLINE.</div>';HYPE.portariaLastScanFromCamera=false;return null;}
+      return await processItem(item);
     }
     try{
       const rows=await v17rpc('staff_lookup_ticket',{p_username:HYPE.user,p_password:HYPE.pass,p_code:String(code||'').trim()});
-      const item=Array.isArray(rows)?rows[0]:rows; if(!item)return null; if(changeInput){const i=document.getElementById('portariaSearch');if(i)i.value=item.customer_name||item.ticket_code;}
-      renderPortariaResults([item]); return item;
-    }catch(e){alert(e.message||e);return null}
+      const item=Array.isArray(rows)?rows[0]:rows;
+      if(!item){HYPE.portariaLastScanFromCamera=false;return null;}
+      return await processItem(item);
+    }catch(e){HYPE.portariaLastScanFromCamera=false;alert(e.message||e);return null}
   };
 
-  window.validateEntry=async function(code){
+  window.validateEntry=async function(code,opts={}){
     const device=`${navigator.userAgent.slice(0,40)} | ${location.hostname}`;
+    const finishQuick=()=>{
+      HYPE.v17PendingAutoEntryCode='';
+      const quick=document.getElementById('portariaQuickMode')?.checked!==false;
+      const wasCamera=!!opts.fromScan||!!HYPE.portariaLastScanFromCamera;
+      HYPE.portariaLastScanFromCamera=false;
+      if(!quick)return;
+      setTimeout(async()=>{
+        const input=document.getElementById('portariaSearch'); if(input){input.value='';input.focus();}
+        const container=document.getElementById('resultsContainer'); if(container)container.innerHTML='<div class="empty-state">✅ Entrada registrada. Pronto para o próximo ingresso.</div>';
+        if(wasCamera){try{await startQrScanner();}catch(_){}}
+      },900);
+    };
+
     if(!online()){
-      const t=offlineFind(code); if(!t)return portariaDeniedFeedback('NÃO ENCONTRADO OFFLINE');
-      if(t.payment_status!=='Pago')return portariaDeniedFeedback('PAGAMENTO NÃO CONFIRMADO');
-      if(!t.document_checked)return portariaDeniedFeedback('CONFIRA O DOCUMENTO/CPF');
-      if(t.entry_status==='Entrada utilizada'&&!t.temporary_exit)return portariaDuplicateAlert(t);
-      if(t.temporary_exit&&!t.reentry_authorized)return portariaDeniedFeedback('REENTRADA NÃO AUTORIZADA');
+      const t=offlineFind(code); if(!t){HYPE.portariaLastScanFromCamera=false;return portariaDeniedFeedback('NÃO ENCONTRADO OFFLINE');}
+      if(t.payment_status!=='Pago'){HYPE.portariaLastScanFromCamera=false;return portariaDeniedFeedback('PAGAMENTO NÃO CONFIRMADO');}
+      if(!t.document_checked){HYPE.v17PendingAutoEntryCode=t.ticket_code||code;HYPE.portariaLastScanFromCamera=false;renderPortariaResults([t]);return portariaDeniedFeedback('CONFIRA O DOCUMENTO/CPF');}
+      if(t.entry_status==='Entrada utilizada'&&!t.temporary_exit){HYPE.portariaLastScanFromCamera=false;return portariaDuplicateAlert(t);}
+      if(t.temporary_exit&&!t.reentry_authorized){HYPE.portariaLastScanFromCamera=false;return portariaDeniedFeedback('REENTRADA NÃO AUTORIZADA');}
       if(t.temporary_exit){t.temporary_exit=false;t.reentry_authorized=false;t.reentry_count=Number(t.reentry_count||0)+1;}else{t.entry_status='Entrada utilizada';t.entry_at=new Date().toISOString();}
-      offlineSaveTicket(t); enqueue({type:'entry',code:t.ticket_code,device,at:new Date().toISOString()}); portariaSuccessFeedback(t); renderPortariaResults([t]); return;
+      offlineSaveTicket(t); enqueue({type:'entry',code:t.ticket_code,device,at:new Date().toISOString()}); portariaSuccessFeedback(t); renderPortariaResults([t]); finishQuick(); return;
     }
     try{
       const rows=await v17rpc('staff_validate_entry_v17',{p_username:HYPE.user,p_password:HYPE.pass,p_code:code,p_device:device,p_offline_sync:false});
       const r=Array.isArray(rows)?rows[0]:rows;
-      if(!r?.ok){return portariaDeniedFeedback(r?.message||'Entrada negada.');}
+      if(!r?.ok){
+        HYPE.portariaLastScanFromCamera=false;
+        if(String(r?.message||'').toUpperCase().includes('JÁ UTILIZADO'))return portariaDuplicateAlert(r);
+        return portariaDeniedFeedback(r?.message||'Entrada negada.');
+      }
       portariaSuccessFeedback(r); renderPortariaResults([r]); try{await portariaRefreshDashboard(false)}catch(_){}
-    }catch(e){portariaDeniedFeedback(e.message||'Erro ao validar entrada.')}
+      finishQuick();
+    }catch(e){HYPE.portariaLastScanFromCamera=false;portariaDeniedFeedback(e.message||'Erro ao validar entrada.')}
   };
 
   // Log adicional de pagamento feito pelo painel atual.

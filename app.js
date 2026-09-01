@@ -378,17 +378,12 @@ function hypeReadPromoterLinkV16() {
 function hypeApplyPromoterLinkV16() {
   const input = document.getElementById("clientPromoter");
   const status = document.getElementById("clientPromoterStatus");
-  const hasCode = Boolean(HYPE.promoterLinkCode);
-  const eventMatches = !HYPE.promoterLinkEventId || Number(HYPE.selectedEventId) === Number(HYPE.promoterLinkEventId);
-  const activeCode = hasCode && eventMatches ? HYPE.promoterLinkCode : "";
+  const activeCode = String(HYPE.promoterLinkCode || "").trim().toUpperCase();
   if (input) input.value = activeCode;
   if (status) {
     if (activeCode) {
-      status.innerHTML = `✅ Compra vinculada ao promoter <b>${hypeEscape(activeCode)}</b> pelo link oficial.`;
+      status.innerHTML = `✅ Compra vinculada ao promoter <b>${hypeEscape(activeCode)}</b>. Este link funciona em todos os eventos.`;
       status.className = "v16-coupon-status ok";
-    } else if (hasCode && !eventMatches) {
-      status.textContent = "ℹ️ Este link de promoter pertence a outro evento. A venda deste evento não será atribuída.";
-      status.className = "v16-coupon-status";
     } else {
       status.textContent = "Compra direta: nenhum promoter vinculado.";
       status.className = "v16-coupon-status";
@@ -578,9 +573,12 @@ async function loadStaffTickets(search = "") {
 async function refreshAdminOrders(showToast = true) {
   try {
     await loadStaffTickets(document.getElementById("searchInput")?.value || "");
+    // V17.1: o botão ATUALIZAR também recarrega promoters/cupons.
+    // Assim a lista nunca depende de vários F5 para aparecer.
+    await loadV16AdminData().catch(err => console.warn("[HYPE][promoters refresh]", err));
     renderClientsTable();
     renderV16Dashboard();
-    if (showToast) hypeNotify("Pedidos atualizados.");
+    if (showToast) hypeNotify("Pedidos e promoters atualizados.");
   } catch (err) {
     const status = document.getElementById("adminOrdersStatus");
     if (status) {
@@ -1519,11 +1517,16 @@ async function initAdmin(fromLogin = false) {
     startAdminTicker();
 
     clearInterval(HYPE.refreshTimer);
+    let promoterRefreshTick = 0;
     HYPE.refreshTimer = setInterval(async () => {
       try {
         await loadStaffTickets(document.getElementById("searchInput")?.value || "");
         renderClientsTable();
         renderV16Dashboard();
+        promoterRefreshTick++;
+        if (promoterRefreshTick % 3 === 0) {
+          await loadV16AdminData().catch(err => console.warn("[HYPE][promoters auto-refresh]", err));
+        }
       } catch (_) {}
     }, 5000);
   } catch (err) {
@@ -2669,23 +2672,97 @@ function hypeV14InitInteractions() {
 
 /* ========================= V16: VENDAS / GESTAO ========================= */
 
+async function hypeRpcRetryV171(name, params, attempts = 3) {
+  let lastError = null;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await sbRpc(name, params);
+    } catch (err) {
+      lastError = err;
+      if (i < attempts - 1) await new Promise(r => setTimeout(r, 300 * (i + 1)));
+    }
+  }
+  throw lastError || new Error(`Falha ao carregar ${name}`);
+}
+
 async function loadV16AdminData() {
-  if (HYPE.role !== "admin" || !HYPE.selectedEventId) { HYPE.promoters = []; HYPE.coupons = []; renderV16Management(); return; }
-  const params = { p_username:HYPE.user, p_password:HYPE.pass, p_event_id:Number(HYPE.selectedEventId) };
-  const [promoters, coupons] = await Promise.all([
-    sbRpc("staff_list_promoters_v16", params),
-    sbRpc("staff_list_coupons_v16", params)
-  ]);
-  HYPE.promoters = Array.isArray(promoters) ? promoters : [];
-  HYPE.coupons = Array.isArray(coupons) ? coupons : [];
+  const pList = document.getElementById("v16PromoterList");
+  const cList = document.getElementById("v16CouponList");
+
+  if (HYPE.role !== "admin") {
+    HYPE.promoters = [];
+    HYPE.coupons = [];
+    renderV16Management();
+    return;
+  }
+
+  // V17.1: promoter é GLOBAL e não depende do evento selecionado.
+  // Mantém a lista anterior visível durante qualquer falha temporária de rede.
+  const previousPromoters = Array.isArray(HYPE.promoters) ? [...HYPE.promoters] : [];
+  const previousCoupons = Array.isArray(HYPE.coupons) ? [...HYPE.coupons] : [];
+  if (pList && !previousPromoters.length) pList.innerHTML = '<div class="info-note">Carregando promoters...</div>';
+  if (cList && !previousCoupons.length) cList.innerHTML = '<div class="info-note">Carregando cupons...</div>';
+
+  let promoterError = null;
+  try {
+    const promoters = await hypeRpcRetryV171("staff_list_promoters_global_v16", {
+      p_username: HYPE.user,
+      p_password: HYPE.pass
+    });
+    HYPE.promoters = Array.isArray(promoters) ? promoters : [];
+    HYPE.promotersGlobal = true;
+  } catch (globalErr) {
+    promoterError = globalErr;
+    console.warn("[HYPE][promoter global]", globalErr);
+
+    // Compatibilidade: se o SQL global não existir, tenta o cadastro antigo por evento.
+    if (HYPE.selectedEventId) {
+      try {
+        const promoters = await hypeRpcRetryV171("staff_list_promoters_v16", {
+          p_username: HYPE.user,
+          p_password: HYPE.pass,
+          p_event_id: Number(HYPE.selectedEventId)
+        }, 2);
+        HYPE.promoters = Array.isArray(promoters) ? promoters : previousPromoters;
+        HYPE.promotersGlobal = false;
+        promoterError = null;
+      } catch (legacyErr) {
+        console.warn("[HYPE][promoter fallback]", legacyErr);
+        HYPE.promoters = previousPromoters;
+      }
+    } else {
+      HYPE.promoters = previousPromoters;
+    }
+  }
+
+  if (HYPE.selectedEventId) {
+    try {
+      const coupons = await hypeRpcRetryV171("staff_list_coupons_v16", {
+        p_username: HYPE.user,
+        p_password: HYPE.pass,
+        p_event_id: Number(HYPE.selectedEventId)
+      }, 2);
+      HYPE.coupons = Array.isArray(coupons) ? coupons : [];
+    } catch (couponErr) {
+      console.warn("[HYPE][coupons]", couponErr);
+      HYPE.coupons = previousCoupons;
+    }
+  } else {
+    HYPE.coupons = [];
+  }
+
   renderV16Management();
+
+  if (promoterError && pList && !HYPE.promoters.length) {
+    pList.innerHTML = `<div class="info-note" style="color:#ff8a9a">Não foi possível carregar os promoters agora. Clique em ↻ ATUALIZAR.<br><small>${hypeEscape(promoterError.message || "Falha temporária")}</small></div>`;
+  }
 }
 
 function renderV16Management() {
   const pList = document.getElementById("v16PromoterList");
   const cList = document.getElementById("v16CouponList");
   if (pList) pList.innerHTML = (HYPE.promoters || []).length ? HYPE.promoters.map(p => `
-    <div class="v16-manage-row"><div><b>${hypeEscape(p.name)}</b><small>Código: ${hypeEscape(p.code)} • ${Number(p.paid_count||0)} pagos • ${hypeFormatMoney(p.revenue||0)}</small><small style="color:#7dd3fc">Ranking considera somente ingressos pagos.</small></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn-action" onclick="copyPromoterLinkV16(${Number(p.id)})">🔗 COPIAR LINK</button><button class="btn-action" onclick="togglePromoterV16(${Number(p.id)})">${p.active ? "DESATIVAR" : "ATIVAR"}</button></div></div>`).join("") : '<div class="info-note">Nenhum promoter cadastrado neste evento.</div>';
+    <div class="v16-manage-row"><div><b>${hypeEscape(p.name)}</b><small>Código: ${hypeEscape(p.code)} • ${Number(p.paid_count||0)} pagos • ${hypeFormatMoney(p.revenue||0)}</small><small style="color:#7dd3fc">Link único para todos os eventos atuais e futuros.</small></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn-action" onclick="copyPromoterLinkV16(${Number(p.id)})">🔗 COPIAR LINK</button><button class="btn-action" onclick="togglePromoterV16(${Number(p.id)})">${p.active ? "DESATIVAR" : "ATIVAR"}</button><button class="btn-action btn-del" onclick="deletePromoterV16(${Number(p.id)})">EXCLUIR</button></div></div>`).join("") : '<div class="info-note">Nenhum promoter cadastrado.</div>';
   if (cList) cList.innerHTML = (HYPE.coupons || []).length ? HYPE.coupons.map(c => `
     <div class="v16-manage-row"><div><b>${hypeEscape(c.code)}</b><small>${c.discount_type === "percent" ? `${Number(c.discount_value)}%` : hypeFormatMoney(c.discount_value)} • usos ${Number(c.uses_count||0)}${Number(c.usage_limit||0)>0 ? `/${Number(c.usage_limit)}` : "/∞"}</small></div><button class="btn-action" onclick="toggleCouponV16(${Number(c.id)})">${c.active ? "DESATIVAR" : "ATIVAR"}</button></div>`).join("") : '<div class="info-note">Nenhum cupom cadastrado neste evento.</div>';
 }
@@ -2711,40 +2788,77 @@ function hypeNextPromoterCodeV16(name) {
 
 async function createPromoterV16() {
   if (HYPE.role !== "admin") return alert("Somente o Admin pode gerenciar promoters.");
-  if (!HYPE.selectedEventId) return alert("Selecione um evento.");
   const name = document.getElementById("v16PromoterName")?.value.trim() || "";
   if (!name) return alert("Informe o nome do promoter.");
   const code = hypeNextPromoterCodeV16(name);
+  const btn = document.querySelector('#v16PromoterName + .btn-action');
+  if (btn) { btn.disabled = true; btn.textContent = "GERANDO..."; }
   try {
-    await sbRpc("staff_upsert_promoter_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:0,p_name:name,p_code:code,p_active:true});
+    await sbRpc("staff_upsert_promoter_global_v16", {
+      p_username:HYPE.user,
+      p_password:HYPE.pass,
+      p_id:0,
+      p_name:name,
+      p_code:code,
+      p_active:true
+    });
     document.getElementById("v16PromoterName").value="";
     await loadV16AdminData();
     const created = (HYPE.promoters || []).find(p => String(p.code || "").toUpperCase() === code);
-    hypeNotify(`Promoter cadastrado. Link oficial gerado automaticamente.`);
+    hypeNotify("Promoter cadastrado. Link único gerado.");
     if (created) await copyPromoterLinkV16(Number(created.id));
-  } catch (err) { alert(err.message); }
+  } catch (err) {
+    alert(err.message || "Erro ao criar promoter.");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "+ GERAR LINK"; }
+  }
 }
-
 
 async function copyPromoterLinkV16(id) {
   const p = (HYPE.promoters || []).find(x => Number(x.id) === Number(id));
   if (!p) return alert("Promoter não encontrado.");
-  if (!HYPE.selectedEventId) return alert("Selecione um evento.");
+  // LINK GLOBAL: sem event=, portanto funciona em qualquer evento escolhido pelo cliente.
   const url = new URL("https://hypeloungeclub.com.br/cliente.html");
-  url.searchParams.set("event", String(Number(HYPE.selectedEventId)));
   url.searchParams.set("promoter", String(p.code || "").trim().toUpperCase());
   const link = url.toString();
   try {
     await navigator.clipboard.writeText(link);
-    hypeNotify(`Link oficial de ${p.name} copiado.`);
+    hypeNotify(`Link global de ${p.name} copiado.`);
   } catch (_) {
     window.prompt("Copie o link oficial do promoter:", link);
   }
 }
 
 async function togglePromoterV16(id) {
-  const p=(HYPE.promoters||[]).find(x=>Number(x.id)===Number(id)); if(!p)return;
-  try { await sbRpc("staff_upsert_promoter_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:Number(p.id),p_name:p.name,p_code:p.code,p_active:!p.active}); await loadV16AdminData(); } catch(err){ alert(err.message); }
+  const p=(HYPE.promoters||[]).find(x=>Number(x.id)===Number(id));
+  if(!p)return;
+  try {
+    if (HYPE.promotersGlobal !== false) {
+      await sbRpc("staff_upsert_promoter_global_v16", {
+        p_username:HYPE.user,p_password:HYPE.pass,p_id:Number(p.id),p_name:p.name,p_code:p.code,p_active:!p.active
+      });
+    } else {
+      await sbRpc("staff_upsert_promoter_v16", {
+        p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:Number(p.id),p_name:p.name,p_code:p.code,p_active:!p.active
+      });
+    }
+    await loadV16AdminData();
+  } catch(err){ alert(err.message); }
+}
+
+async function deletePromoterV16(id) {
+  const p=(HYPE.promoters||[]).find(x=>Number(x.id)===Number(id));
+  if(!p)return;
+  if(!confirm(`Excluir o promoter ${p.name}?\n\nAs vendas antigas continuam no histórico.`))return;
+  try {
+    if (HYPE.promotersGlobal !== false) {
+      await sbRpc("staff_delete_promoter_global_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_id:Number(p.id)});
+    } else {
+      await sbRpc("staff_delete_promoter_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:Number(p.id)});
+    }
+    await loadV16AdminData();
+    hypeNotify("Promoter excluído.");
+  } catch(err){ alert(err.message); }
 }
 
 async function createCouponV16() {
