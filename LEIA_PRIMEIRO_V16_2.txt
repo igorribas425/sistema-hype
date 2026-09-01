@@ -1,0 +1,16 @@
+HYPE V16.2 - COMPLETO CORRIGIDO
+
+CORRECOES:
+- Corrige o erro: column reference "id" is ambiguous.
+- Corrige consultas de Promoters/Cupons que poderiam ter referencia ambigua de active.
+- Corrige uma duplicacao na consulta de pedidos do Dashboard.
+- Mantem a logo PNG transparente e atualiza o cache-buster da logo/app nos HTML.
+- Mantem V16: Dashboard, Promoters, Cupons, Lotes automaticos, precos Feminino/Masculino, Asaas/PIX e permissoes.
+
+SE VOCE JA RODOU O SQL V16.1:
+1. Rode somente SUPABASE_V16_2_CORRECAO_ID_AMBIGUO.sql no Supabase.
+2. No GitHub, substitua: index.html, cliente.html, admin.html, portaria.html, evento.html, app.js, supabase-config.js e logo-hype.png.
+3. Commit changes e depois Ctrl+F5.
+
+SE FOR INSTALACAO NOVA:
+- Rode SUPABASE_V16_2_COMPLETO.sql uma vez e depois envie os arquivos do site ao GitHub.
