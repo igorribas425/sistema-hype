@@ -607,7 +607,16 @@ async function requireLogin(kind) {
           return true;
         }
       }
-    } catch (_) {}
+    } catch (_) {
+      // V17.3: se a internet caiu, a Portaria pode retomar uma autorização
+      // offline previamente preparada e validada neste aparelho.
+      if (kind === "portaria" && typeof window.hypeV17OfflineResumeSession === "function") {
+        try {
+          const ok = await window.hypeV17OfflineResumeSession(HYPE.user, HYPE.pass);
+          if (ok) return true;
+        } catch (_) {}
+      }
+    }
     sessionClear();
   }
   return false;
@@ -676,7 +685,25 @@ async function checkPortariaLogin() {
     applyStaffRoleUI();
     await portariaInitProDashboard();
     document.getElementById("portariaSearch")?.focus();
-  } catch (err) { alert(err.message); }
+  } catch (err) {
+    // V17.3: permite entrar sem internet somente quando este aparelho já foi
+    // preparado online e a senha digitada confere com a autorização local.
+    if (typeof window.hypeV17OfflineLogin === "function") {
+      try {
+        const offline = await window.hypeV17OfflineLogin(username, password);
+        if (offline?.ok) {
+          sessionSave(username, password, offline.role || "portaria");
+          hideLogin();
+          applyStaffRoleUI();
+          if (typeof window.hypeV17InitOfflinePortaria === "function") await window.hypeV17InitOfflinePortaria();
+          document.getElementById("portariaSearch")?.focus();
+          return;
+        }
+        if (offline?.message) return alert(offline.message);
+      } catch (_) {}
+    }
+    alert(err.message || "Não foi possível validar o acesso.");
+  }
 }
 
 function logoutStaff() {
@@ -1903,7 +1930,16 @@ async function initPortaria() {
   }
   hideLogin();
   applyStaffRoleUI();
-  await portariaInitProDashboard();
+  if (navigator.onLine === false && typeof window.hypeV17InitOfflinePortaria === "function") {
+    await window.hypeV17InitOfflinePortaria();
+  } else {
+    try {
+      await portariaInitProDashboard();
+    } catch (err) {
+      if (typeof window.hypeV17InitOfflinePortaria === "function") await window.hypeV17InitOfflinePortaria();
+      else throw err;
+    }
+  }
   document.getElementById("portariaSearch")?.focus();
 }
 

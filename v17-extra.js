@@ -1,48 +1,210 @@
-/* HYPE V17 - contingência, documento, reentrada, logs, resumo e ingresso salvo */
+/* HYPE V17.3 - contingência persistente, documento, reentrada, logs e ingresso salvo */
 (function(){
   const OFFLINE_KEY='hype_v17_portaria_snapshot';
   const QUEUE_KEY='hype_v17_portaria_queue';
+  const OFFLINE_AUTH_KEY='hype_v17_portaria_auth_v173';
   const SAVED_TICKET_KEY='hype_v17_saved_ticket';
+  const OFFLINE_DB='hype_v17_portaria_v173';
+  const OFFLINE_STORE='kv';
+  const OFFLINE_TTL_MS=12*60*60*1000;
+  const CACHE_NAME='hype-v17-3-offline';
   const norm=v=>String(v||'').replace(/\D/g,'');
   const online=()=>navigator.onLine!==false;
-  const readJSON=(k,f)=>{try{return JSON.parse(localStorage.getItem(k)||'')||f}catch(_){return f}};
-  const writeJSON=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 
-  async function v17rpc(name,params){ return sbRpc(name,params); }
+  function localRead(k,f){
+    try{
+      const raw=localStorage.getItem(k);
+      if(!raw)return f;
+      const val=JSON.parse(raw);
+      return val==null?f:val;
+    }catch(_){return f}
+  }
+  function localWrite(k,v){
+    try{localStorage.setItem(k,JSON.stringify(v));return true}catch(_){return false}
+  }
+  function openOfflineDb(){
+    return new Promise((resolve,reject)=>{
+      if(!('indexedDB' in window)) return reject(new Error('IndexedDB indisponível'));
+      const req=indexedDB.open(OFFLINE_DB,1);
+      req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(OFFLINE_STORE))db.createObjectStore(OFFLINE_STORE)};
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=()=>reject(req.error||new Error('Falha ao abrir armazenamento offline'));
+    });
+  }
+  async function idbSet(k,v){
+    const db=await openOfflineDb();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(OFFLINE_STORE,'readwrite');
+      tx.objectStore(OFFLINE_STORE).put(v,k);
+      tx.oncomplete=()=>{db.close();resolve(true)};
+      tx.onerror=()=>{const e=tx.error;db.close();reject(e||new Error('Falha ao salvar offline'))};
+    });
+  }
+  async function idbGet(k){
+    const db=await openOfflineDb();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(OFFLINE_STORE,'readonly');
+      const req=tx.objectStore(OFFLINE_STORE).get(k);
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=()=>reject(req.error||new Error('Falha ao ler offline'));
+      tx.oncomplete=()=>db.close();
+    });
+  }
+  async function durableWrite(k,v){
+    const localOk=localWrite(k,v);
+    let idbOk=false;
+    try{await idbSet(k,v);idbOk=true}catch(_){}
+    if(!localOk&&!idbOk) throw new Error('O navegador bloqueou o armazenamento offline. Saia do modo anônimo/privado e tente novamente.');
+    return true;
+  }
+  async function durableRead(k,f=null){
+    const local=localRead(k,undefined);
+    if(local!==undefined)return local;
+    try{
+      const val=await idbGet(k);
+      if(val!==undefined){localWrite(k,val);return val}
+    }catch(_){}
+    return f;
+  }
+  const readJSON=(k,f)=>localRead(k,f);
+  const writeJSON=(k,v)=>{localWrite(k,v);idbSet(k,v).catch(()=>{});};
+
+  async function digestPassword(username,password){
+    if(!window.crypto?.subtle) throw new Error('Este navegador não permite proteger a autorização offline.');
+    const bytes=new TextEncoder().encode(`HYPE-V17.3|${location.origin}|${String(username).toLowerCase()}|${password}`);
+    const hash=await crypto.subtle.digest('SHA-256',bytes);
+    return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  function authExpired(auth){return !auth?.expires_at||Date.now()>=new Date(auth.expires_at).getTime()}
+
+  async function warmOfflineCache(){
+    try{
+      if('serviceWorker' in navigator){
+        const reg=await navigator.serviceWorker.ready;
+        try{await reg.update()}catch(_){}
+      }
+      if('caches' in window){
+        const cache=await caches.open(CACHE_NAME);
+        const urls=['./portaria.html','./app.js?v=20260901-v17-3','./v17-extra.js?v=20260901-v17-3','./v17-extra.css?v=20260901-v17-3','./register-sw.js?v=20260901-v17-3','./supabase-config.js','./apple-touch-icon.png'];
+        for(const u of urls){
+          try{const r=await fetch(u,{cache:'reload'});if(r.ok)await cache.put(new Request(u),r.clone())}catch(_){}
+        }
+      }
+    }catch(_){}
+  }
+
+  window.hypeV17RestoreOfflineStorage=async function(){
+    for(const k of [OFFLINE_KEY,QUEUE_KEY,OFFLINE_AUTH_KEY]){
+      if(localRead(k,undefined)===undefined){
+        try{const v=await idbGet(k);if(v!==undefined)localWrite(k,v)}catch(_){}
+      }
+    }
+    window.hypeV17UpdateOfflineBadge();
+  };
+
   window.hypeV17DownloadOffline = async function(){
     if(!HYPE.user||!HYPE.pass) return alert('Faça login novamente.');
     const eventId=Number(HYPE.portariaEventId||document.getElementById('portariaEventSelect')?.value||0);
     if(!eventId) return alert('Selecione um evento.');
+    if(!online()) return alert('Conecte à internet para preparar o modo offline.');
+    const btn=[...document.querySelectorAll('button')].find(b=>b.getAttribute('onclick')==='hypeV17DownloadOffline()');
+    const oldText=btn?.textContent;
+    if(btn){btn.disabled=true;btn.textContent='SALVANDO OFFLINE...'}
     try{
       const rows=await v17rpc('staff_offline_snapshot_v17',{p_username:HYPE.user,p_password:HYPE.pass,p_event_id:eventId});
-      writeJSON(OFFLINE_KEY,{event_id:eventId,downloaded_at:new Date().toISOString(),tickets:Array.isArray(rows)?rows:[]});
-      hypeV17UpdateOfflineBadge();
-      hypeNotify(`Offline pronto: ${(rows||[]).length} ingressos pagos salvos neste aparelho.`);
+      const tickets=Array.isArray(rows)?rows:[];
+      const eventName=document.getElementById('portariaEventSelect')?.selectedOptions?.[0]?.textContent?.trim()||HYPE.event?.name||`Evento ${eventId}`;
+      const now=new Date();
+      const snapshot={event_id:eventId,event_name:eventName,downloaded_at:now.toISOString(),tickets};
+      const password_hash=await digestPassword(HYPE.user,HYPE.pass);
+      const auth={username:String(HYPE.user),role:HYPE.role||'portaria',event_id:eventId,password_hash,created_at:now.toISOString(),expires_at:new Date(now.getTime()+OFFLINE_TTL_MS).toISOString()};
+      await durableWrite(OFFLINE_KEY,snapshot);
+      await durableWrite(QUEUE_KEY,readJSON(QUEUE_KEY,[]));
+      await durableWrite(OFFLINE_AUTH_KEY,auth);
+      await warmOfflineCache();
+      const verify=await durableRead(OFFLINE_KEY,null);
+      if(!verify||Number(verify.event_id)!==eventId||!Array.isArray(verify.tickets)||verify.tickets.length!==tickets.length){
+        throw new Error('A conferência do armazenamento offline falhou. Tente novamente fora do modo anônimo/privado.');
+      }
+      window.hypeV17UpdateOfflineBadge();
+      hypeNotify(`✅ Offline salvo: ${tickets.length} ingressos neste aparelho.`);
+      alert(`MODO OFFLINE PRONTO ✅\n\n${tickets.length} ingresso(s) pagos salvos.\nEvento: ${eventName}\nValidade da autorização offline: 12 horas.\n\nAgora você pode testar ativando o modo avião e recarregando a Portaria.`);
     }catch(e){alert(e.message||e)}
+    finally{if(btn){btn.disabled=false;btn.textContent=oldText||'⬇ PREPARAR MODO OFFLINE'}}
+  };
+
+  window.hypeV17TestOffline=async function(){
+    const snap=await durableRead(OFFLINE_KEY,null);
+    const auth=await durableRead(OFFLINE_AUTH_KEY,null);
+    if(!snap?.tickets) return alert('Nenhum pacote offline salvo neste aparelho. Clique em PREPARAR MODO OFFLINE.');
+    const when=snap.downloaded_at?new Date(snap.downloaded_at).toLocaleString('pt-BR'):'sem data';
+    const authText=authExpired(auth)?'EXPIRADA':'VÁLIDA';
+    alert(`OFFLINE SALVO ✅\n\nEvento: ${snap.event_name||snap.event_id}\nIngressos: ${snap.tickets.length}\nSalvo em: ${when}\nAutorização: ${authText}\n\nPara testar de verdade: ative o modo avião e atualize esta página.`);
   };
 
   window.hypeV17UpdateOfflineBadge=function(){
     const el=document.getElementById('v17OfflineStatus'); if(!el)return;
     const snap=readJSON(OFFLINE_KEY,null), q=readJSON(QUEUE_KEY,[]);
-    el.textContent=online()?`ONLINE • ${q.length} pendência(s)`:`OFFLINE • ${snap?.tickets?.length||0} ingressos • ${q.length} pendência(s)`;
+    const when=snap?.downloaded_at?new Date(snap.downloaded_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+    const saved=snap?.tickets?.length||0;
+    el.textContent=online()?`ONLINE • offline salvo: ${saved}${when?` às ${when}`:''} • fila ${q.length}`:`OFFLINE • ${saved} ingressos • fila ${q.length}`;
     el.className='v17-offline-badge '+(online()?'online':'offline');
+  };
+
+  window.hypeV17OfflineResumeSession=async function(username,password){
+    const auth=await durableRead(OFFLINE_AUTH_KEY,null);
+    const snap=await durableRead(OFFLINE_KEY,null);
+    if(!auth||!snap||authExpired(auth))return false;
+    if(String(auth.username||'').toLowerCase()!==String(username||'').toLowerCase())return false;
+    try{return (await digestPassword(username,password))===auth.password_hash}catch(_){return false}
+  };
+
+  window.hypeV17OfflineLogin=async function(username,password){
+    const auth=await durableRead(OFFLINE_AUTH_KEY,null);
+    const snap=await durableRead(OFFLINE_KEY,null);
+    if(!auth||!snap)return {ok:false,message:'Este aparelho ainda não foi preparado para funcionar offline.'};
+    if(authExpired(auth))return {ok:false,message:'A autorização offline expirou. Conecte à internet e prepare o modo offline novamente.'};
+    if(String(auth.username||'').toLowerCase()!==String(username||'').toLowerCase())return {ok:false,message:'Usuário não autorizado neste pacote offline.'};
+    const hash=await digestPassword(username,password);
+    if(hash!==auth.password_hash)return {ok:false,message:'Senha incorreta para o modo offline.'};
+    return {ok:true,role:auth.role||'portaria'};
+  };
+
+  window.hypeV17InitOfflinePortaria=async function(){
+    const snap=await durableRead(OFFLINE_KEY,null);
+    if(!snap?.tickets)throw new Error('Nenhum pacote offline salvo neste aparelho.');
+    HYPE.portariaEventId=Number(snap.event_id||0);
+    HYPE.portariaOffline=true;
+    const sel=document.getElementById('portariaEventSelect');
+    if(sel){sel.innerHTML=`<option value="${Number(snap.event_id)}">${hypeEscape(snap.event_name||`Evento ${snap.event_id}`)} — OFFLINE</option>`;sel.value=String(snap.event_id);sel.disabled=true}
+    const tickets=snap.tickets||[];
+    const inside=tickets.filter(t=>t.entry_status==='Entrada utilizada'&&!t.temporary_exit).length;
+    const entered=tickets.filter(t=>t.entry_status==='Entrada utilizada').length;
+    const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+    set('portariaLiveEventName',`${snap.event_name||'Evento'} • OFFLINE`);
+    set('portariaLiveUpdated',`Pacote salvo em ${snap.downloaded_at?new Date(snap.downloaded_at).toLocaleString('pt-BR'):'data não informada'}`);
+    set('portariaPaidCount',tickets.length);set('portariaEnteredCount',entered);set('portariaRemainingCount',Math.max(0,tickets.length-entered));
+    set('portariaFemaleCount','—');set('portariaMaleCount','—');
+    const sector=document.getElementById('portariaSectorStats');if(sector)sector.innerHTML=`<span>DENTRO AGORA: ${inside}</span><span>MODO OFFLINE ATIVO</span>`;
+    await window.hypeV17RestoreOfflineStorage();
   };
 
   function offlineFind(code){
     const snap=readJSON(OFFLINE_KEY,null); if(!snap)return null;
     const c=String(code||'').trim();
-    return (snap.tickets||[]).find(t=>t.ticket_code===c||t.qr_token===c||('#'+t.ticket_code)===c)||null;
+    const cNorm=c.replace(/^#/,'').toUpperCase();
+    return (snap.tickets||[]).find(t=>String(t.ticket_code||'').toUpperCase()===cNorm||String(t.qr_token||'')===c||('#'+String(t.ticket_code||'').toUpperCase())===c.toUpperCase())||null;
   }
   function offlineSaveTicket(ticket){
     const snap=readJSON(OFFLINE_KEY,null); if(!snap)return;
     const i=(snap.tickets||[]).findIndex(t=>Number(t.id)===Number(ticket.id));
-    if(i>=0)snap.tickets[i]=ticket; writeJSON(OFFLINE_KEY,snap);
+    if(i>=0){snap.tickets[i]=ticket;writeJSON(OFFLINE_KEY,snap)}
   }
   function enqueue(item){const q=readJSON(QUEUE_KEY,[]);q.push(item);writeJSON(QUEUE_KEY,q);hypeV17UpdateOfflineBadge();}
 
   window.hypeV17SyncQueue=async function(show=true){
     if(!online()) return show&&alert('Sem internet. A fila continua salva neste aparelho.');
-    let q=readJSON(QUEUE_KEY,[]); if(!q.length){if(show)hypeNotify('Nada pendente para sincronizar.');return;}
+    let q=await durableRead(QUEUE_KEY,[]); if(!q.length){if(show)hypeNotify('Nada pendente para sincronizar.');return;}
     const rest=[];
     for(const item of q){
       try{
@@ -52,11 +214,12 @@
         else if(item.type==='reentry_authorize') await v17rpc('staff_authorize_reentry_v17',{p_username:HYPE.user,p_password:HYPE.pass,p_ticket_id:item.ticket_id,p_authorized:true});
       }catch(e){rest.push({...item,error:String(e.message||e)});}
     }
-    writeJSON(QUEUE_KEY,rest); hypeV17UpdateOfflineBadge();
+    await durableWrite(QUEUE_KEY,rest); hypeV17UpdateOfflineBadge();
     if(show) hypeNotify(rest.length?`${rest.length} ação(ões) ficaram pendentes.`:'Fila offline sincronizada.');
     try{await portariaRefreshDashboard(false)}catch(_){}
   };
 
+  async function v17rpc(name,params){ return sbRpc(name,params); }
   window.hypeV17MarkDocument=async function(id,checked,code){
     if(!checked && !confirm('Desmarcar documento conferido?'))return;
     const shouldAutoEnter = checked && String(HYPE.v17PendingAutoEntryCode||'')===String(code||'');
@@ -160,11 +323,21 @@
       return await processItem(item);
     }
     try{
-      const rows=await v17rpc('staff_lookup_ticket',{p_username:HYPE.user,p_password:HYPE.pass,p_code:String(code||'').trim()});
+      let rows;
+      try{
+        rows=await v17rpc('staff_lookup_ticket_v17',{p_username:HYPE.user,p_password:HYPE.pass,p_code:String(code||'').trim()});
+      }catch(_){
+        rows=await v17rpc('staff_lookup_ticket',{p_username:HYPE.user,p_password:HYPE.pass,p_code:String(code||'').trim()});
+      }
       const item=Array.isArray(rows)?rows[0]:rows;
       if(!item){HYPE.portariaLastScanFromCamera=false;return null;}
       return await processItem(item);
-    }catch(e){HYPE.portariaLastScanFromCamera=false;alert(e.message||e);return null}
+    }catch(e){
+      // Internet oscilando: se há pacote salvo, cai automaticamente para ele.
+      const item=offlineFind(code);
+      if(item){HYPE.portariaLastScanFromCamera=fromCamera;hypeNotify('⚠️ Internet instável. Usando pacote offline.');return await processItem(item);}
+      HYPE.portariaLastScanFromCamera=false;alert(e.message||e);return null;
+    }
   };
 
   window.validateEntry=async function(code,opts={}){
@@ -201,7 +374,36 @@
       }
       portariaSuccessFeedback(r); renderPortariaResults([r]); try{await portariaRefreshDashboard(false)}catch(_){}
       finishQuick();
-    }catch(e){HYPE.portariaLastScanFromCamera=false;portariaDeniedFeedback(e.message||'Erro ao validar entrada.')}
+    }catch(e){
+      // Se a rede caiu exatamente durante a leitura, registra localmente para não
+      // travar a fila da Portaria e sincroniza quando a internet voltar.
+      const t=offlineFind(code);
+      if(t){
+        if(t.payment_status!=='Pago'){HYPE.portariaLastScanFromCamera=false;return portariaDeniedFeedback('PAGAMENTO NÃO CONFIRMADO');}
+        if(!t.document_checked){HYPE.v17PendingAutoEntryCode=t.ticket_code||code;HYPE.portariaLastScanFromCamera=false;renderPortariaResults([t]);return portariaDeniedFeedback('CONFIRA O DOCUMENTO/CPF');}
+        if(t.entry_status==='Entrada utilizada'&&!t.temporary_exit){HYPE.portariaLastScanFromCamera=false;return portariaDuplicateAlert(t);}
+        if(t.temporary_exit&&!t.reentry_authorized){HYPE.portariaLastScanFromCamera=false;return portariaDeniedFeedback('REENTRADA NÃO AUTORIZADA');}
+        if(t.temporary_exit){t.temporary_exit=false;t.reentry_authorized=false;t.reentry_count=Number(t.reentry_count||0)+1;}else{t.entry_status='Entrada utilizada';t.entry_at=new Date().toISOString();}
+        offlineSaveTicket(t);enqueue({type:'entry',code:t.ticket_code,device,at:new Date().toISOString()});hypeNotify('⚠️ Rede caiu. Entrada salva na fila offline.');portariaSuccessFeedback(t);renderPortariaResults([t]);finishQuick();return;
+      }
+      HYPE.portariaLastScanFromCamera=false;portariaDeniedFeedback(e.message||'Erro ao validar entrada.');
+    }
+  };
+
+  // Busca manual também funciona por nome/CPF/código no pacote offline.
+  const oldSearchClientV173=window.searchClient;
+  window.searchClient=async function(){
+    const q=String(document.getElementById('portariaSearch')?.value||'').trim();
+    const useOffline=()=>{
+      const snap=readJSON(OFFLINE_KEY,null);const container=document.getElementById('resultsContainer');
+      if(!snap?.tickets){if(container)container.innerHTML='<div class="empty-state" style="color:var(--red)">❌ Nenhum pacote offline salvo.</div>';return []}
+      if(!q){if(container)container.innerHTML='<div class="empty-state">Digite nome, CPF ou código.</div>';return []}
+      const needle=q.toLowerCase().replace(/^#/,'');const digits=norm(q);
+      const rows=(snap.tickets||[]).filter(t=>String(t.customer_name||'').toLowerCase().includes(needle)||String(t.ticket_code||'').toLowerCase().includes(needle)||String(t.qr_token||'').toLowerCase()===needle||(digits&&norm(t.cpf).includes(digits)));
+      renderPortariaResults(rows);return rows;
+    };
+    if(!online())return useOffline();
+    try{return await oldSearchClientV173.apply(this,arguments)}catch(_){hypeNotify('⚠️ Busca pelo pacote offline.');return useOffline()}
   };
 
   // Log adicional de pagamento feito pelo painel atual.
@@ -249,13 +451,15 @@
       const open=document.createElement('button');open.className='btn ghost-btn';open.style.marginTop='8px';open.textContent='⚡ ABRIR INGRESSO SALVO';open.onclick=hypeV17OpenSavedTicket;card.appendChild(open);
     }
     if(document.getElementById('portariaSearch')&&!document.getElementById('v17OfflinePanel')){
-      const host=document.querySelector('.search-box')||document.querySelector('.container'); const d=document.createElement('div');d.id='v17OfflinePanel';d.className='v17-offline-panel';d.innerHTML='<div id="v17OfflineStatus" class="v17-offline-badge">ONLINE</div><button class="portaria-btn" onclick="hypeV17DownloadOffline()">⬇ PREPARAR MODO OFFLINE</button><button class="portaria-btn secondary" onclick="hypeV17SyncQueue(true)">⟳ SINCRONIZAR FILA</button>';host?.appendChild(d);hypeV17UpdateOfflineBadge();
+      const host=document.querySelector('.search-box')||document.querySelector('.container'); const d=document.createElement('div');d.id='v17OfflinePanel';d.className='v17-offline-panel';d.innerHTML='<div id="v17OfflineStatus" class="v17-offline-badge">ONLINE</div><button class="portaria-btn" onclick="hypeV17DownloadOffline()">⬇ PREPARAR MODO OFFLINE</button><button class="portaria-btn secondary" onclick="hypeV17TestOffline()">🧪 TESTAR OFFLINE SALVO</button><button class="portaria-btn secondary" onclick="hypeV17SyncQueue(true)">⟳ SINCRONIZAR FILA</button>';host?.appendChild(d);hypeV17RestoreOfflineStorage().catch(()=>{});
     }
     if(document.getElementById('v16DashboardPanel')&&!document.getElementById('v17AdminWrap')){
       const sec=document.createElement('section');sec.id='v17AdminWrap';sec.className='panel-box';sec.innerHTML='<h3>🧾 EVENTO ENCERRADO / AUDITORIA</h3><p style="color:var(--muted);font-size:12px;margin-bottom:12px">Resumo final da noite, limite por CPF e log de ações.</p><div id="v17AdminPanel">Clique em atualizar.</div><button class="btn-action" style="margin-top:12px" onclick="hypeV17LoadAdminPanel()">↻ ATUALIZAR RESUMO E LOG</button>';document.getElementById('v16DashboardPanel').after(sec);
     }
   }
   window.addEventListener('online',()=>{hypeV17UpdateOfflineBadge();hypeV17SyncQueue(false).catch(()=>{})});
-  window.addEventListener('offline',hypeV17UpdateOfflineBadge);
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(inject,700));
+  window.addEventListener('offline',()=>{hypeV17UpdateOfflineBadge();if(typeof window.hypeV17InitOfflinePortaria==='function'&&HYPE.user)window.hypeV17InitOfflinePortaria().catch(()=>{})});
+  // Inicia a recuperação do IndexedDB antes mesmo do DOM ficar pronto.
+  hypeV17RestoreOfflineStorage().catch(()=>{});
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(inject,350));
 })();

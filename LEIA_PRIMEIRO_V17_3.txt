@@ -1,0 +1,48 @@
+HYPE V17.3 - OFFLINE PERSISTENTE + NOVA SENHA PORTARIA
+=====================================================
+
+NOVA SENHA DA PORTARIA: cris1212
+
+1) SUPABASE PRIMEIRO
+Abra SQL Editor > New query.
+Cole e rode: SUPABASE_V17_3_COMPLETO.sql
+O script garante as funções V17/offline, troca a senha do usuario "portaria" e cria a leitura V17 da portaria.
+
+2) GITHUB DEPOIS
+Substitua os arquivos do site pelos arquivos desta pasta.
+Principalmente:
+- app.js
+- portaria.html
+- v17-extra.js
+- v17-extra.css
+- sw.js
+- register-sw.js
+- admin.html
+- cliente.html
+
+3) PREPARAR OFFLINE
+Com internet:
+- Entre na Portaria com usuario: portaria
+- Senha: cris1212
+- Escolha o evento
+- Clique em PREPARAR MODO OFFLINE
+- Aguarde aparecer MODO OFFLINE PRONTO
+- Clique em TESTAR OFFLINE SALVO
+
+Depois teste de verdade:
+- ative modo aviao
+- recarregue portaria.html
+- entre novamente com portaria / cris1212
+- leia/pesquise um ingresso do pacote salvo
+
+V17.3 salva o pacote em dois lugares no navegador:
+- localStorage
+- IndexedDB
+E salva os arquivos essenciais pelo Service Worker.
+
+A autorizacao offline vale por 12 horas e exige a mesma senha usada ao preparar.
+Se a senha for trocada no Supabase, um aparelho que JA estava completamente offline
+nao pode receber a revogacao ate voltar a internet. Ao reconectar, a senha antiga
+nao consegue sincronizar.
+
+As correcoes de promoters da V17.1/V17.2 continuam dentro desta versao.
