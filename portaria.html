@@ -120,6 +120,37 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 .status-area{display:flex;flex-direction:column;gap:10px;align-items:flex-end}.btn-entry{border:0;border-radius:10px;background:var(--green);color:#000;font-weight:950;padding:12px 14px;cursor:pointer}.result-card.used{border-color:rgba(255,180,0,.45);background:linear-gradient(135deg,rgba(255,180,0,.06),var(--panel))}.status-tag.used{background:#ffcc00;color:#000}.result-card.cancelado{border-color:rgba(255,22,61,.45);background:linear-gradient(135deg,rgba(255,22,61,.05),var(--panel))}.status-tag.cancelado{background:var(--red);color:#fff}.portaria-event{margin:5px 0 8px;color:#fff;font-size:12px;font-weight:800}.portaria-extra{margin-top:8px;color:var(--muted);font-size:11px}.portaria-extra.ok{color:var(--green)}
 @media(max-width:600px){.portaria-actions{flex-direction:column}.result-card{align-items:stretch;gap:15px;flex-direction:column}.status-area{align-items:stretch}.btn-entry{width:100%}}
 </style>
+
+<style>
+/* HYPE V16.9 // PORTARIA PRO */
+.portaria-pro-top{display:grid;grid-template-columns:1.4fr .8fr;gap:12px;margin:0 0 16px}
+.portaria-pro-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px}
+.portaria-pro-card label{margin-bottom:7px}
+.portaria-event-select{width:100%;height:44px;background:#060608;border:1px solid var(--line);border-radius:10px;color:#fff;padding:0 12px;outline:none}
+.portaria-event-select:focus{border-color:#ddd}
+.quick-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;height:44px;padding:0 12px;background:#08080a;border:1px solid var(--line);border-radius:10px}
+.quick-toggle span{font-size:11px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.5px}
+.quick-toggle input{width:22px;height:22px;accent-color:var(--green)}
+.portaria-live-header{display:flex;justify-content:space-between;gap:10px;align-items:flex-end;margin:4px 0 10px}
+.portaria-live-header strong{font-size:13px}.portaria-live-header small{color:var(--muted);font-size:10px}
+.portaria-live-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px}
+.live-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 10px;text-align:center}
+.live-card b{display:block;font-size:24px;line-height:1;margin-bottom:6px}.live-card span{font-size:9px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.7px}
+.live-card.green{border-color:rgba(40,209,124,.35)}.live-card.red{border-color:rgba(255,22,61,.35)}
+.portaria-sector-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.portaria-sector-stats span{background:#0b0b0e;border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:10px;color:var(--muted)}
+.portaria-sector-stats b{color:#fff;margin-right:4px}
+.portaria-recent{margin-top:24px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px}
+.portaria-recent-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.portaria-recent-head h3{font-size:14px}.portaria-recent-head button{background:#151519;border:1px solid var(--line);color:#fff;border-radius:8px;padding:7px 10px;font-size:10px;font-weight:900;cursor:pointer}
+.recent-entry{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,.06)}.recent-entry:first-child{border-top:0}.recent-rank{width:28px;height:28px;border-radius:8px;background:#16161a;display:grid;place-items:center;font-size:10px;font-weight:900}.recent-entry strong{display:block;font-size:12px}.recent-entry small{display:block;color:var(--muted);font-size:9px;margin-top:3px}.recent-entry time{font-size:11px;font-weight:900;color:#fff}.empty-state.compact{padding:18px}
+.portaria-sector-big{display:inline-block;margin-bottom:6px;padding:5px 8px;border-radius:7px;background:rgba(255,255,255,.08);border:1px solid var(--line);font-size:10px;font-weight:950;letter-spacing:1.1px}
+.portaria-warning{margin-top:9px;padding:8px 10px;border:1px solid rgba(255,22,61,.35);border-radius:9px;background:rgba(255,22,61,.08);color:#ff8396;font-size:10px;font-weight:800}
+.portaria-flash{position:fixed;inset:0;z-index:20000;display:none;place-items:center;padding:20px;pointer-events:none}.portaria-flash.show{display:grid}.portaria-flash:before{content:"";position:absolute;inset:0;backdrop-filter:blur(7px)}.portaria-flash.ok:before{background:rgba(8,105,60,.88)}.portaria-flash.danger:before{background:rgba(160,0,30,.91)}
+.portaria-flash-inner{position:relative;z-index:2;text-align:center;padding:30px 24px;border-radius:24px;border:2px solid rgba(255,255,255,.7);background:rgba(0,0,0,.28);box-shadow:0 20px 80px rgba(0,0,0,.4);width:min(520px,100%)}.portaria-flash-inner b{display:block;font-size:clamp(30px,8vw,62px);line-height:.95;letter-spacing:1px}.portaria-flash-inner span{display:block;margin-top:12px;font-size:13px;font-weight:800;line-height:1.4}
+@media(max-width:720px){.portaria-pro-top{grid-template-columns:1fr}.portaria-live-grid{grid-template-columns:repeat(3,1fr)}.live-card:nth-child(4),.live-card:nth-child(5){grid-column:span 1}}
+@media(max-width:430px){body{padding-left:12px;padding-right:12px}.portaria-live-grid{grid-template-columns:repeat(2,1fr)}.live-card:first-child{grid-column:span 2}.portaria-live-header{align-items:flex-start;flex-direction:column}}
+</style>
+
 </head>
 <body>
 
@@ -145,6 +176,32 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
     <p class="sub">Controlo rápido de acessos e validação de ingressos</p>
   </header>
 
+  <div class="portaria-pro-top">
+    <div class="portaria-pro-card">
+      <label>Evento da portaria</label>
+      <select id="portariaEventSelect" class="portaria-event-select" onchange="portariaChangeEvent()">
+        <option>Carregando eventos...</option>
+      </select>
+    </div>
+    <div class="portaria-pro-card">
+      <label>Operação</label>
+      <div class="quick-toggle"><span>⚡ Modo fila rápida</span><input type="checkbox" id="portariaQuickMode" checked></div>
+    </div>
+  </div>
+
+  <div class="portaria-live-header">
+    <strong id="portariaLiveEventName">Carregando movimento...</strong>
+    <small id="portariaLiveUpdated">Aguardando atualização</small>
+  </div>
+  <div class="portaria-live-grid">
+    <div class="live-card green"><b id="portariaEnteredCount">0</b><span>Já entraram</span></div>
+    <div class="live-card red"><b id="portariaRemainingCount">0</b><span>Faltam entrar</span></div>
+    <div class="live-card"><b id="portariaPaidCount">0</b><span>Ingressos pagos</span></div>
+    <div class="live-card"><b id="portariaFemaleCount">0</b><span>Feminino dentro</span></div>
+    <div class="live-card"><b id="portariaMaleCount">0</b><span>Masculino dentro</span></div>
+  </div>
+  <div class="portaria-sector-stats" id="portariaSectorStats"><span>Carregando setores...</span></div>
+
   <div class="search-box">
     <label>Pesquisar por nome ou ler o QR Code</label>
     <input type="text" class="search-input" id="portariaSearch" placeholder="Digite o nome ou use LER QR CODE..." oninput="portariaSearchChanged()" onkeydown="portariaSearchEnter(event)" autocomplete="off">
@@ -162,9 +219,15 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
   <div class="results-grid" id="resultsContainer">
     <div class="empty-state">Digite o nome ou toque em 📷 LER QR CODE. Leitor físico também funciona: ao ler, o código vira automaticamente os dados da pessoa. A entrada só acontece depois de CONFIRMAR ENTRADA.</div>
   </div>
+
+  <section class="portaria-recent">
+    <div class="portaria-recent-head"><h3>🕘 ÚLTIMAS ENTRADAS</h3><button onclick="portariaRefreshDashboard(true)">ATUALIZAR</button></div>
+    <div id="portariaRecentEntries"><div class="empty-state compact">Carregando entradas...</div></div>
+  </section>
 </div>
+<div id="portariaFlash" class="portaria-flash"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260831-v16-2"></script>
-<script src="app.js?v=20260831-v16-6-auto-link-promoter"></script>
+<script src="app.js?v=20260901-v16-9-portaria-pro"></script>
 </body>
 </html>

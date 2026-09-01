@@ -1,0 +1,17 @@
+HYPE V16.9 - PORTARIA PRO
+
+NOVO NA PORTARIA
+- Contador ao vivo por evento: pagos, já entraram, faltam, feminino e masculino.
+- Resumo de entradas por setor.
+- Últimas 10 entradas com horário.
+- Alerta grande vermelho + vibração/som para QR já utilizado/bloqueado.
+- Confirmação verde grande ao liberar entrada.
+- Modo fila rápida: limpa a tela e volta para o próximo ingresso; se a câmera foi usada, reabre o leitor.
+- Seleção de evento na portaria para não validar ingresso do evento errado.
+
+INSTALAÇÃO
+1. Rodar SUPABASE_V16_9_PORTARIA_PRO.sql no Supabase > SQL Editor.
+2. Subir app.js e portaria.html no GitHub, substituindo os atuais.
+3. Fazer Commit changes e atualizar a página da portaria.
+
+O SQL não apaga dados.

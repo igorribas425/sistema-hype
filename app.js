@@ -676,6 +676,7 @@ async function checkPortariaLogin() {
     sessionSave(found.username, password, found.role);
     hideLogin();
     applyStaffRoleUI();
+    await portariaInitProDashboard();
     document.getElementById("portariaSearch")?.focus();
   } catch (err) { alert(err.message); }
 }
@@ -1899,6 +1900,7 @@ async function initPortaria() {
   }
   hideLogin();
   applyStaffRoleUI();
+  await portariaInitProDashboard();
   document.getElementById("portariaSearch")?.focus();
 }
 
@@ -1909,7 +1911,9 @@ async function searchClient() {
   if (!query) { container.innerHTML='<div class="empty-state">Digite nome, WhatsApp ou #HYPE.</div>'; return; }
   try {
     const list = await loadStaffTickets(query);
-    renderPortariaResults(list);
+    const eventId = Number(HYPE.portariaEventId || 0);
+    const scoped = eventId ? list.filter(item => Number(item.event_id) === eventId) : list;
+    renderPortariaResults(scoped);
   } catch(err){ container.innerHTML=`<div class="empty-state" style="color:var(--red)">${hypeEscape(err.message)}</div>`; }
 }
 
@@ -1925,19 +1929,21 @@ function portariaEventLabel(item) {
 
 function renderPortariaResults(list) {
   const container = document.getElementById('resultsContainer');
-  if (!list.length) { container.innerHTML='<div class="empty-state" style="color:var(--red)">❌ Nenhum ingresso encontrado.</div>'; return; }
+  if (!list.length) { container.innerHTML='<div class="empty-state" style="color:var(--red)">❌ Nenhum ingresso encontrado neste evento.</div>'; return; }
   container.innerHTML = list.map(item=>{
     const paid = item.payment_status==='Pago';
     const used = item.entry_status==='Entrada utilizada';
     const canceled = item.payment_status==='Cancelado';
-    const cls = canceled ? 'cancelado' : used ? 'used' : paid ? 'pago' : 'pendente';
-    let text = canceled ? 'CANCELADO ❌' : used ? 'JÁ ENTROU ⚠️' : paid ? 'PAGO — CONFIRMAR ✅' : 'BLOQUEADO ❌';
-    const canValidate = paid && !used && !canceled;
+    const selectedEventId = Number(HYPE.portariaEventId || 0);
+    const wrongEvent = selectedEventId && Number(item.event_id) !== selectedEventId;
+    const cls = wrongEvent || canceled ? 'cancelado' : used ? 'used' : paid ? 'pago' : 'pendente';
+    let text = wrongEvent ? 'OUTRO EVENTO ⚠️' : canceled ? 'CANCELADO ❌' : used ? 'JÁ ENTROU ⚠️' : paid ? 'PAGO — CONFIRMAR ✅' : 'BLOQUEADO ❌';
+    const canValidate = paid && !used && !canceled && !wrongEvent;
     const eventLabel = portariaEventLabel(item);
-    return `<div class="result-card ${cls}"><div class="client-info"><h3>${hypeEscape(item.customer_name)}</h3>${eventLabel ? `<div class="portaria-event">${hypeEscape(eventLabel)}</div>` : ''}<div class="client-details"><span class="badge gender">${hypeEscape(item.gender||'N/I')}</span><span>•</span><strong>${hypeEscape(item.lot_name||'')}</strong>${item.sector ? `<span>•</span><span>${hypeEscape(item.sector)}</span>` : ''}</div><div class="portaria-extra">${hypeEscape(item.ticket_code)}${item.entry_at ? ` • Entrada: ${hypeFormatDateTime(item.entry_at)}`:''}</div></div><div class="status-area"><div class="status-tag ${cls}">${text}</div>${canValidate?`<button class="btn-entry" onclick="validateEntry('${hypeEscape(item.ticket_code)}')">✅ CONFIRMAR ENTRADA</button>`:''}</div></div>`;
+    const sector = String(item.sector || item.lot_name || 'INGRESSO').toUpperCase();
+    return `<div class="result-card ${cls}"><div class="client-info"><div class="portaria-sector-big">${hypeEscape(sector)}</div><h3>${hypeEscape(item.customer_name)}</h3>${eventLabel ? `<div class="portaria-event">${hypeEscape(eventLabel)}</div>` : ''}<div class="client-details"><span class="badge gender">${hypeEscape(item.gender||'N/I')}</span><span>•</span><strong>${hypeEscape(item.lot_name||'')}</strong></div><div class="portaria-extra">${hypeEscape(item.ticket_code)}${item.entry_at ? ` • Entrada: ${hypeFormatDateTime(item.entry_at)}`:''}</div>${wrongEvent ? `<div class="portaria-warning">Este ingresso pertence a outro evento. Troque o evento selecionado para validar.</div>` : ''}</div><div class="status-area"><div class="status-tag ${cls}">${text}</div>${canValidate?`<button class="btn-entry" onclick="validateEntry('${hypeEscape(item.ticket_code)}')">✅ CONFIRMAR ENTRADA</button>`:''}</div></div>`;
   }).join('');
 }
-
 function portariaLooksLikeQr(value) {
   const q = String(value || "").trim();
   if (!q) return false;
@@ -1996,7 +2002,15 @@ async function lookupTicketByQr(code, changeInput = true) {
       const input = document.getElementById('portariaSearch');
       if (input) input.value = item.customer_name || item.ticket_code || '';
     }
+    HYPE.portariaCurrentItem = item;
     renderPortariaResults([item]);
+    if (item.entry_status === 'Entrada utilizada') {
+      portariaDuplicateAlert(item);
+    } else if (item.payment_status === 'Cancelado' || item.payment_status !== 'Pago') {
+      portariaDeniedFeedback(item.payment_status === 'Cancelado' ? 'INGRESSO CANCELADO' : 'PAGAMENTO NÃO CONFIRMADO');
+    } else {
+      portariaTone('scan');
+    }
     hypeNotify(`✅ QR lido: ${item.customer_name || 'Ingresso encontrado'}`);
     return item;
   } catch (err) {
@@ -2015,12 +2029,34 @@ async function validateEntry(code) {
     const device = `${navigator.userAgent.slice(0,40)} | ${location.hostname}`;
     const rows = await sbRpc('staff_validate_entry',{p_username:HYPE.user,p_password:HYPE.pass,p_code:code,p_device:device});
     const result = Array.isArray(rows)?rows[0]:rows;
-    if (!result?.ok) { alert(result?.message || 'Entrada negada.'); return; }
-    hypeNotify('✅ ENTRADA LIBERADA');
-    await lookupTicketByQr(code, false);
-  } catch(err){ alert(err.message); }
-}
+    if (!result?.ok) {
+      const msg = result?.message || 'Entrada negada.';
+      if (String(msg).toUpperCase().includes('JÁ UTILIZADO')) portariaDuplicateAlert(result);
+      else portariaDeniedFeedback(msg);
+      return;
+    }
 
+    HYPE.portariaLastEntry = result;
+    portariaSuccessFeedback(result);
+    await portariaRefreshDashboard(false);
+
+    const quick = document.getElementById('portariaQuickMode')?.checked !== false;
+    if (quick) {
+      setTimeout(async () => {
+        const input = document.getElementById('portariaSearch');
+        if (input) { input.value=''; input.focus(); }
+        const container = document.getElementById('resultsContainer');
+        if (container) container.innerHTML='<div class="empty-state">✅ Entrada registrada. Pronto para o próximo ingresso.</div>';
+        if (HYPE.portariaLastScanFromCamera) {
+          HYPE.portariaLastScanFromCamera = false;
+          try { await startQrScanner(); } catch (_) {}
+        }
+      }, 1200);
+    }
+  } catch(err){
+    portariaDeniedFeedback(err.message || 'Erro ao validar entrada.');
+  }
+}
 async function startQrScanner() {
   const area = document.getElementById('scannerArea');
   const video = document.getElementById('qrVideo');
@@ -2040,6 +2076,7 @@ async function startQrScanner() {
         const codes = await detector.detect(video);
         if (codes?.length && codes[0].rawValue) {
           const qrCode = codes[0].rawValue;
+          HYPE.portariaLastScanFromCamera = true;
           stopQrScanner();
           // Primeiro mostra os dados do ingresso. A entrada só é registrada
           // quando a portaria tocar em CONFIRMAR ENTRADA.
@@ -2056,6 +2093,155 @@ function stopQrScanner() {
   if (HYPE.scannerStream) HYPE.scannerStream.getTracks().forEach(t=>t.stop());
   HYPE.scannerStream = null;
   document.getElementById('scannerArea')?.classList.remove('show');
+}
+
+
+/* ========================= PORTARIA PRO V16.9 ========================= */
+function portariaMoneylessEventDate(value) {
+  if (!value) return '';
+  const d = new Date(`${String(value).slice(0,10)}T12:00:00`);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+async function portariaLoadEvents() {
+  const select = document.getElementById('portariaEventSelect');
+  if (!select) return;
+  try {
+    const rows = await (async()=>{ try { return await sbRpc('public_events_v13'); } catch(_) { return await sbRpc('public_events'); } })();
+    const events = Array.isArray(rows) ? rows : [];
+    HYPE.portariaEvents = events;
+    if (!events.length) {
+      select.innerHTML = '<option value="">Nenhum evento ativo</option>';
+      HYPE.portariaEventId = null;
+      return;
+    }
+
+    const today = new Date();
+    const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    let chosen = events.find(e => String(e.event_date || '').slice(0,10) === todayKey);
+    if (!chosen) {
+      const future = events.filter(e => e.event_date && String(e.event_date).slice(0,10) >= todayKey)
+        .sort((a,b)=>String(a.event_date).localeCompare(String(b.event_date)));
+      chosen = future[0] || events[0];
+    }
+    if (HYPE.portariaEventId && events.some(e=>Number(e.id)===Number(HYPE.portariaEventId))) {
+      chosen = events.find(e=>Number(e.id)===Number(HYPE.portariaEventId));
+    }
+    HYPE.portariaEventId = Number(chosen?.id || 0) || null;
+    select.innerHTML = events.map(e => `<option value="${Number(e.id)}">${hypeEscape(e.name || e.artist_name || 'Evento HYPE')} • ${hypeEscape(portariaMoneylessEventDate(e.event_date) || 'sem data')}</option>`).join('');
+    if (HYPE.portariaEventId) select.value = String(HYPE.portariaEventId);
+  } catch(err) {
+    select.innerHTML = '<option value="">Erro ao carregar eventos</option>';
+    console.warn('[HYPE][portariaLoadEvents]', err);
+  }
+}
+
+async function portariaChangeEvent() {
+  const id = Number(document.getElementById('portariaEventSelect')?.value || 0);
+  HYPE.portariaEventId = id || null;
+  const input = document.getElementById('portariaSearch');
+  if (input) input.value='';
+  const container = document.getElementById('resultsContainer');
+  if (container) container.innerHTML='<div class="empty-state">Evento alterado. Leia o próximo QR ou pesquise o cliente.</div>';
+  await portariaRefreshDashboard(true);
+  input?.focus();
+}
+
+async function portariaInitProDashboard() {
+  await portariaLoadEvents();
+  await portariaRefreshDashboard(false);
+  clearInterval(HYPE.portariaDashboardTimer);
+  HYPE.portariaDashboardTimer = setInterval(()=>portariaRefreshDashboard(false).catch(()=>{}), 5000);
+}
+
+async function portariaRefreshDashboard(showToast = false) {
+  if (!HYPE.user || !HYPE.pass) return;
+  const eventId = Number(HYPE.portariaEventId || 0) || null;
+  try {
+    const rows = await sbRpc('staff_portaria_dashboard_v16_9', {
+      p_username:HYPE.user,
+      p_password:HYPE.pass,
+      p_event_id:eventId
+    });
+    const data = Array.isArray(rows) ? rows[0] : rows;
+    if (!data) return;
+    if (!HYPE.portariaEventId && data.event_id) HYPE.portariaEventId = Number(data.event_id);
+
+    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=String(v ?? 0);};
+    set('portariaPaidCount', data.total_paid || 0);
+    set('portariaEnteredCount', data.entered_count || 0);
+    set('portariaRemainingCount', data.remaining_count || 0);
+    set('portariaFemaleCount', data.female_entered || 0);
+    set('portariaMaleCount', data.male_entered || 0);
+    const name = document.getElementById('portariaLiveEventName');
+    if (name) name.textContent = `${data.event_name || 'Evento'}${data.event_date ? ` • ${portariaMoneylessEventDate(data.event_date)}` : ''}`;
+    const stamp = document.getElementById('portariaLiveUpdated');
+    if (stamp) stamp.textContent = `Atualizado ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
+
+    const sectors = Array.isArray(data.sector_stats) ? data.sector_stats : [];
+    const secEl = document.getElementById('portariaSectorStats');
+    if (secEl) secEl.innerHTML = sectors.length ? sectors.map(s=>`<span><b>${hypeEscape(String(s.sector || 'Setor').toUpperCase())}</b> ${Number(s.entered || 0)} / ${Number(s.paid || 0)}</span>`).join('') : '<span>Sem entradas por setor ainda.</span>';
+
+    const recent = Array.isArray(data.recent_entries) ? data.recent_entries : [];
+    const recentEl = document.getElementById('portariaRecentEntries');
+    if (recentEl) recentEl.innerHTML = recent.length ? recent.map((r,i)=>`<div class="recent-entry"><div class="recent-rank">${i+1}</div><div><strong>${hypeEscape(r.customer_name || '')}</strong><small>${hypeEscape(String(r.sector || r.lot_name || 'Ingresso').toUpperCase())} • ${hypeEscape(r.gender || 'N/I')}</small></div><time>${hypeEscape(new Date(r.entry_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}))}</time></div>`).join('') : '<div class="empty-state compact">Nenhuma entrada registrada ainda.</div>';
+    if (showToast) hypeNotify('Portaria atualizada.');
+  } catch(err) {
+    const stamp = document.getElementById('portariaLiveUpdated');
+    if (stamp) stamp.textContent = 'Dashboard aguardando SQL V16.9';
+    if (showToast) alert(err.message || 'Erro ao atualizar a portaria.');
+  }
+}
+
+function portariaTone(kind='ok') {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    HYPE.portariaAudio = HYPE.portariaAudio || new AC();
+    const ctx = HYPE.portariaAudio;
+    if (ctx.state === 'suspended') ctx.resume().catch(()=>{});
+    const now = ctx.currentTime;
+    const tones = kind==='danger' ? [[180,.18],[130,.22]] : kind==='scan' ? [[520,.06]] : [[660,.08],[880,.12]];
+    let offset=0;
+    tones.forEach(([freq,dur])=>{
+      const osc=ctx.createOscillator(); const gain=ctx.createGain();
+      osc.frequency.value=freq; osc.type='sine';
+      gain.gain.setValueAtTime(.0001, now+offset);
+      gain.gain.exponentialRampToValueAtTime(.16, now+offset+.01);
+      gain.gain.exponentialRampToValueAtTime(.0001, now+offset+dur);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now+offset); osc.stop(now+offset+dur+.02); offset+=dur+.04;
+    });
+  } catch(_) {}
+}
+
+function portariaFlash(kind, title, subtitle='') {
+  const overlay = document.getElementById('portariaFlash');
+  if (!overlay) return;
+  overlay.className = `portaria-flash show ${kind}`;
+  overlay.innerHTML = `<div class="portaria-flash-inner"><b>${hypeEscape(title)}</b>${subtitle?`<span>${hypeEscape(subtitle)}</span>`:''}</div>`;
+  clearTimeout(HYPE.portariaFlashTimer);
+  HYPE.portariaFlashTimer = setTimeout(()=>overlay.className='portaria-flash', 1150);
+}
+
+function portariaSuccessFeedback(result) {
+  portariaTone('ok');
+  try { navigator.vibrate?.(100); } catch(_) {}
+  portariaFlash('ok','✅ LIBERADO',`${result?.customer_name || 'Entrada registrada'} • ${String(result?.sector || result?.lot_name || '').toUpperCase()}`);
+  hypeNotify('✅ ENTRADA LIBERADA');
+}
+
+function portariaDeniedFeedback(message='ENTRADA NEGADA') {
+  portariaTone('danger');
+  try { navigator.vibrate?.([180,80,180]); } catch(_) {}
+  portariaFlash('danger','❌ BLOQUEADO',String(message || 'Entrada negada'));
+}
+
+function portariaDuplicateAlert(item) {
+  portariaTone('danger');
+  try { navigator.vibrate?.([220,80,220,80,220]); } catch(_) {}
+  const when = item?.entry_at ? `Primeira entrada: ${hypeFormatDateTime(item.entry_at)}` : 'Este QR já foi utilizado.';
+  portariaFlash('danger','⚠️ QR JÁ UTILIZADO',`${item?.customer_name || ''}${item?.customer_name ? ' • ' : ''}${when}`);
 }
 
 
