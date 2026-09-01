@@ -7,11 +7,6 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>HYPE LOUNGE CLUB // Painel Administrativo</title>
-<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png?v=167">
-<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png?v=167">
-<link rel="shortcut icon" href="./favicon.ico?v=167">
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=167">
-<meta name="theme-color" content="#050505">
 <style>
   :root{--bg:#050505;--panel:#0d0d10;--line:#222228;--red:#ff163d;--green:#28d17c;--text:#f7f7f8;--muted:#96969e}
   *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,sans-serif}
@@ -353,7 +348,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
     <div class="v16-management-grid">
       <div class="v16-manage-card">
         <h4>Promoters</h4>
-        <div class="v16-form-row"><input id="v16PromoterName" placeholder="Nome do promoter"><button class="btn-action" onclick="createPromoterV16()">+ GERAR LINK</button></div><small style="display:block;margin-top:7px;color:var(--muted)">Digite só o nome. O código e o link oficial são gerados automaticamente. Você também pode desativar ou excluir um promoter.</small>
+        <div class="v16-form-row"><input id="v16PromoterName" placeholder="Nome do promoter"><button class="btn-action" onclick="createPromoterV16()">+ GERAR LINK</button></div><small style="display:block;margin-top:7px;color:var(--muted)">Digite só o nome. O código e o link oficial do promoter são gerados automaticamente.</small>
         <div id="v16PromoterList" class="v16-manage-list"></div>
       </div>
       <div class="v16-manage-card">
@@ -445,6 +440,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260831-v16-2"></script>
-<script src="app.js?v=20260831-v16-8-excluir-promoter"></script>
+<script src="app.js?v=20260831-v16-6-auto-link-promoter"></script>
+<script src="promoter-admin-v16-7.js?v=20260901-v16-7-promoter-lista"></script>
 </body>
 </html>
