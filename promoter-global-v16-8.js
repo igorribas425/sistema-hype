@@ -1,6 +1,6 @@
-/* HYPE V16.8 - PROMOTER GLOBAL
+/* HYPE V16.10 - PROMOTER GLOBAL + REVOGAÇÃO DE LINK
    Um único link de promoter funciona em todos os eventos atuais e futuros.
-   Requer SUPABASE_V16_8_PROMOTER_GLOBAL.sql.
+   Requer V16.8 e o patch SUPABASE_V16_10_PROMOTER_LINK_REVOGADO.sql.
 */
 (() => {
   const OFFICIAL_DOMAIN = 'https://hypeloungeclub.com.br';
@@ -63,19 +63,80 @@
     }
   };
 
-  window.hypeApplyPromoterLinkV16 = function() {
+  async function validatePromoterLink(code) {
+    const clean = String(code || '').trim().toUpperCase();
+    if (!clean) return { valid:false, code:'' };
+    const rows = await sbRpc('public_validate_promoter_global_v16', { p_code: clean });
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    return {
+      valid: Boolean(row?.valid),
+      code: String(row?.code || clean).trim().toUpperCase()
+    };
+  }
+
+  function setPromoterLinkState(state, code = '') {
     const input = document.getElementById('clientPromoter');
     const status = document.getElementById('clientPromoterStatus');
+    const clean = String(code || '').trim().toUpperCase();
+
+    HYPE.promoterLinkValidated = state === 'valid';
+    HYPE.promoterLinkInvalid = state === 'invalid';
+
+    if (input) input.value = state === 'valid' ? clean : '';
+
+    if (!status) return;
+    if (state === 'valid') {
+      status.innerHTML = `✅ Compra vinculada ao promoter <b>${esc(clean)}</b>. Este link vale para qualquer evento HYPE.`;
+      status.className = 'v16-coupon-status ok';
+    } else if (state === 'invalid') {
+      status.innerHTML = '❌ Este link de promoter foi <b>excluído ou desativado</b> e não pode mais gerar vendas vinculadas.';
+      status.className = 'v16-coupon-status';
+      status.style.color = '#ff657f';
+    } else if (state === 'checking') {
+      status.textContent = 'Verificando link do promoter...';
+      status.className = 'v16-coupon-status';
+      status.style.color = '';
+    } else if (state === 'error') {
+      status.textContent = '⚠️ Não foi possível validar este link agora. Atualize a página e tente novamente.';
+      status.className = 'v16-coupon-status';
+      status.style.color = '#ffcc66';
+    } else {
+      status.textContent = 'Compra direta: nenhum promoter vinculado.';
+      status.className = 'v16-coupon-status';
+      status.style.color = '';
+    }
+  }
+
+  let promoterValidationSeq = 0;
+
+  window.hypeApplyPromoterLinkV16 = async function() {
     const code = String(HYPE?.promoterLinkCode || '').trim().toUpperCase();
-    if (input) input.value = code;
-    if (status) {
-      if (code) {
-        status.innerHTML = `✅ Compra vinculada ao promoter <b>${esc(code)}</b>. Este link vale para qualquer evento HYPE.`;
-        status.className = 'v16-coupon-status ok';
-      } else {
-        status.textContent = 'Compra direta: nenhum promoter vinculado.';
-        status.className = 'v16-coupon-status';
+
+    if (!code) {
+      setPromoterLinkState('direct');
+      return false;
+    }
+
+    const seq = ++promoterValidationSeq;
+    setPromoterLinkState('checking');
+
+    try {
+      const result = await validatePromoterLink(code);
+      if (seq !== promoterValidationSeq) return false;
+
+      if (result.valid) {
+        HYPE.promoterLinkCode = result.code;
+        setPromoterLinkState('valid', result.code);
+        return true;
       }
+
+      setPromoterLinkState('invalid', code);
+      return false;
+    } catch (err) {
+      if (seq !== promoterValidationSeq) return false;
+      console.warn('[HYPE][promoter-link-validation]', err);
+      setPromoterLinkState('error', code);
+      return false;
     }
   };
 
@@ -210,6 +271,36 @@
       if (typeof hypeNotify === 'function') hypeNotify('Promoter excluído.');
     } catch (err) { alert(err?.message || 'Não foi possível excluir o promoter.'); }
   };
+
+
+  // Antes de gerar o PIX, valida novamente no banco.
+  // Assim, se o Admin excluir/desativar o promoter com a página do cliente já aberta,
+  // o link antigo é bloqueado imediatamente na próxima tentativa de compra.
+  if (typeof window.generatePix === 'function') {
+    const originalGeneratePixV1610 = window.generatePix;
+    window.generatePix = async function(e) {
+      const code = String(HYPE?.promoterLinkCode || '').trim().toUpperCase();
+      if (code) {
+        e?.preventDefault?.();
+        setPromoterLinkState('checking');
+        try {
+          const result = await validatePromoterLink(code);
+          if (!result.valid) {
+            setPromoterLinkState('invalid', code);
+            alert('Este link de promoter foi excluído ou desativado. Ele não pode mais ser usado para gerar vendas.');
+            return false;
+          }
+          HYPE.promoterLinkCode = result.code;
+          setPromoterLinkState('valid', result.code);
+        } catch (err) {
+          setPromoterLinkState('error', code);
+          alert('Não foi possível validar o link do promoter. Atualize a página e tente novamente.');
+          return false;
+        }
+      }
+      return originalGeneratePixV1610.call(this, e);
+    };
+  }
 
   // A lista de promoters deixa de depender do evento selecionado.
   if (typeof window.loadV16AdminData === 'function') {

@@ -193,7 +193,7 @@ body::before{z-index:0 !important;opacity:.78}
 
 /* =========================================================
    HYPE V14 — EXPERIENCE / VISUAL PREMIUM SEM VÍDEOS
-   Bloco visual legado V14: não altera Supabase ou Portaria
+   Apenas front-end: não altera PIX, Asaas, Supabase ou Portaria
    ========================================================= */
 body{overflow-x:hidden}
 .v14-spotlight{
@@ -326,7 +326,6 @@ body{overflow-x:hidden}
 <style id="hype-v16-sales-style">
 .v16-sales-fields small{font-size:9px;color:var(--muted);font-weight:700}.v16-coupon-row{display:grid;grid-template-columns:1fr auto;gap:8px}.v16-mini-btn{border:1px solid rgba(var(--event-rgb,216,216,220),.45);background:rgba(var(--event-rgb,216,216,220),.12);color:#fff;border-radius:10px;padding:0 14px;font-weight:900;cursor:pointer}.v16-coupon-status{font-size:10px;min-height:15px;margin-top:6px;color:var(--muted);font-weight:800}.v16-coupon-status.ok{color:#28d17c}.v16-coupon-status.error{color:#ff7676}@media(max-width:700px){.v16-sales-fields{grid-template-columns:1fr!important}.v16-mini-btn{min-height:46px}}
 </style>
-<link rel="stylesheet" href="v17-extra.css?v=20260901-v17-3">
 </head>
 <body>
 <div class="event-ambient" id="eventAmbient" aria-hidden="true"></div>
@@ -402,7 +401,7 @@ body{overflow-x:hidden}
       <div class="section-head">
         <small>HYPE LOUNGE CLUB</small>
         <h1><span class="brand-name">INGRESSOS</span> <span class="brand-subline">OFICIAIS</span></h1>
-        <p class="sub">Escolha o evento e o ingresso. Gere o PIX pela chave oficial da HYPE, pague e envie o comprovante pelo WhatsApp para confirmação.</p>
+        <p class="sub">Escolha o evento e o ingresso. Gere o PIX pelo Asaas e o sistema libera o ingresso quando o pagamento for confirmado.</p>
       </div>
 
       <div class="info-grid">
@@ -418,14 +417,14 @@ body{overflow-x:hidden}
         </div>
         <div class="info-box">
           <span>3</span>
-          <strong>Envie o comprovante</strong>
-          <p>Depois do PIX, toque no botão do WhatsApp, anexe o comprovante e aguarde a confirmação do Admin.</p>
+          <strong>Liberação automática</strong>
+          <p>Quando o Asaas confirmar o pagamento, o ingresso com QR Code é liberado.</p>
         </div>
       </div>
     </div>
 
     <div class="box">
-      <h4 class="box-kicker">PAGAMENTO PIX DIRETO</h4>
+      <h4 class="box-kicker">PAGAMENTO PIX AUTOMÁTICO</h4>
       <h2 class="box-title">Garanta o seu ingresso antecipado</h2>
 
       <form id="ticketForm" onsubmit="generatePix(event)">
@@ -493,7 +492,7 @@ body{overflow-x:hidden}
 
       <div class="pix-area" id="pixArea">
         <h3 style="font-size:20px">PIX GERADO ✅</h3>
-        <p style="font-size:13px;color:var(--muted);margin-top:7px">Pague pelo QR Code ou use o PIX Copia e Cola. Depois, envie o comprovante pelo WhatsApp para o Admin confirmar.</p>
+        <p style="font-size:13px;color:var(--muted);margin-top:7px">Pague pelo QR Code ou use o PIX Copia e Cola. A liberação acontece quando o Asaas confirmar o pagamento.</p>
         <div class="manual-status-card">
           <div style="font-size:10px;color:var(--muted);font-weight:900;letter-spacing:1px">CÓDIGO DO PEDIDO</div>
           <div class="manual-order-code" id="pixOrderCode"></div>
@@ -502,9 +501,7 @@ body{overflow-x:hidden}
           <div class="manual-status" id="pixPaymentStatus">AGUARDANDO PAGAMENTO</div>
         </div>
         <button class="btn" onclick="copyPixCode()">COPIAR PIX COPIA E COLA</button>
-        <button class="btn whatsapp-btn" onclick="sendPixReceiptWhatsApp()">JÁ PAGUEI — ENVIAR COMPROVANTE NO WHATSAPP</button>
-        <p style="font-size:12px;color:var(--muted);margin-top:9px">No WhatsApp, anexe a foto ou o PDF do comprovante antes de enviar.</p>
-        <button class="btn ghost-btn" onclick="refreshCurrentOrderStatus(true)">VERIFICAR SE O ADMIN JÁ CONFIRMOU</button>
+        <button class="btn ghost-btn" onclick="refreshCurrentOrderStatus(true)">VERIFICAR PAGAMENTO</button>
       </div>
 
       <div class="payment-success" id="paymentSuccessArea">
@@ -562,9 +559,7 @@ body{overflow-x:hidden}
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260831-v16-2"></script>
-<script src="hype-qrcode.js?v=20260902-v17-4"></script>
-<script src="app.js?v=20260902-v17-4"></script>
-<script src="v17-extra.js?v=20260901-v17-3"></script>
-<script src="register-sw.js?v=20260902-v17-4"></script>
+<script src="app.js?v=20260901-v16-8-global"></script>
+<script src="promoter-global-v16-8.js?v=20260902-v16-10-revogado"></script>
 </body>
 </html>

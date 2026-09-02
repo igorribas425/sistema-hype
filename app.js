@@ -378,12 +378,17 @@ function hypeReadPromoterLinkV16() {
 function hypeApplyPromoterLinkV16() {
   const input = document.getElementById("clientPromoter");
   const status = document.getElementById("clientPromoterStatus");
-  const activeCode = String(HYPE.promoterLinkCode || "").trim().toUpperCase();
+  const hasCode = Boolean(HYPE.promoterLinkCode);
+  const eventMatches = !HYPE.promoterLinkEventId || Number(HYPE.selectedEventId) === Number(HYPE.promoterLinkEventId);
+  const activeCode = hasCode && eventMatches ? HYPE.promoterLinkCode : "";
   if (input) input.value = activeCode;
   if (status) {
     if (activeCode) {
-      status.innerHTML = `✅ Compra vinculada ao promoter <b>${hypeEscape(activeCode)}</b>. Este link funciona em todos os eventos.`;
+      status.innerHTML = `✅ Compra vinculada ao promoter <b>${hypeEscape(activeCode)}</b> pelo link oficial.`;
       status.className = "v16-coupon-status ok";
+    } else if (hasCode && !eventMatches) {
+      status.textContent = "ℹ️ Este link de promoter pertence a outro evento. A venda deste evento não será atribuída.";
+      status.className = "v16-coupon-status";
     } else {
       status.textContent = "Compra direta: nenhum promoter vinculado.";
       status.className = "v16-coupon-status";
@@ -573,12 +578,9 @@ async function loadStaffTickets(search = "") {
 async function refreshAdminOrders(showToast = true) {
   try {
     await loadStaffTickets(document.getElementById("searchInput")?.value || "");
-    // V17.1: o botão ATUALIZAR também recarrega promoters/cupons.
-    // Assim a lista nunca depende de vários F5 para aparecer.
-    await loadV16AdminData().catch(err => console.warn("[HYPE][promoters refresh]", err));
     renderClientsTable();
     renderV16Dashboard();
-    if (showToast) hypeNotify("Pedidos e promoters atualizados.");
+    if (showToast) hypeNotify("Pedidos atualizados.");
   } catch (err) {
     const status = document.getElementById("adminOrdersStatus");
     if (status) {
@@ -607,16 +609,7 @@ async function requireLogin(kind) {
           return true;
         }
       }
-    } catch (_) {
-      // V17.3: se a internet caiu, a Portaria pode retomar uma autorização
-      // offline previamente preparada e validada neste aparelho.
-      if (kind === "portaria" && typeof window.hypeV17OfflineResumeSession === "function") {
-        try {
-          const ok = await window.hypeV17OfflineResumeSession(HYPE.user, HYPE.pass);
-          if (ok) return true;
-        } catch (_) {}
-      }
-    }
+    } catch (_) {}
     sessionClear();
   }
   return false;
@@ -685,25 +678,7 @@ async function checkPortariaLogin() {
     applyStaffRoleUI();
     await portariaInitProDashboard();
     document.getElementById("portariaSearch")?.focus();
-  } catch (err) {
-    // V17.3: permite entrar sem internet somente quando este aparelho já foi
-    // preparado online e a senha digitada confere com a autorização local.
-    if (typeof window.hypeV17OfflineLogin === "function") {
-      try {
-        const offline = await window.hypeV17OfflineLogin(username, password);
-        if (offline?.ok) {
-          sessionSave(username, password, offline.role || "portaria");
-          hideLogin();
-          applyStaffRoleUI();
-          if (typeof window.hypeV17InitOfflinePortaria === "function") await window.hypeV17InitOfflinePortaria();
-          document.getElementById("portariaSearch")?.focus();
-          return;
-        }
-        if (offline?.message) return alert(offline.message);
-      } catch (_) {}
-    }
-    alert(err.message || "Não foi possível validar o acesso.");
-  }
+  } catch (err) { alert(err.message); }
 }
 
 function logoutStaff() {
@@ -998,115 +973,29 @@ async function createManualOrder(e) {
   }
 }
 
-// HYPE V17.4 - PIX direto pela chave cadastrada no Admin.
-// Não depende do Asaas. O banco do cliente resolve a chave PIX informada.
-const HYPE_PIX_MERCHANT_NAME = "HYPE LOUNGE CLUB";
-const HYPE_PIX_MERCHANT_CITY = "PASSO FUNDO";
+async function createAsaasPix(ticketId) {
+  const cfg = window.HYPE_SUPABASE_CONFIG;
+  if (!cfg?.url || !cfg?.anonKey) throw new Error("Supabase não configurado.");
 
-function hypePixTlv(id, value) {
-  const v = String(value ?? "");
-  return `${id}${String(v.length).padStart(2, "0")}${v}`;
-}
+  const response = await fetch(`${cfg.url}/functions/v1/asaas-pix`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: cfg.anonKey,
+      Authorization: `Bearer ${cfg.anonKey}`
+    },
+    body: JSON.stringify({ ticket_id: Number(ticketId) })
+  });
 
-function hypePixAscii(value, maxLength) {
-  return String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^A-Za-z0-9 .\-]/g, "")
-    .trim()
-    .toUpperCase()
-    .slice(0, maxLength);
-}
-
-function hypePixValidCpf(digits) {
-  const cpf = String(digits || "").replace(/\D/g, "");
-  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
-  const calc = len => {
-    let sum = 0;
-    for (let i = 0; i < len; i++) sum += Number(cpf[i]) * (len + 1 - i);
-    const rem = (sum * 10) % 11;
-    return rem === 10 ? 0 : rem;
-  };
-  return calc(9) === Number(cpf[9]) && calc(10) === Number(cpf[10]);
-}
-
-function hypeNormalizePixKey(value) {
-  const raw = String(value || "").trim();
-  if (!raw) return "";
-
-  if (raw.includes("@")) return raw.toLowerCase();
-
-  const digits = raw.replace(/\D/g, "");
-  const explicitPhone = raw.startsWith("+") || /[()]/.test(raw);
-  const explicitDocument = /[./]/.test(raw);
-
-  if (explicitPhone && digits.length >= 10) {
-    if (raw.startsWith("+")) return `+${digits}`;
-    if (digits.length === 10 || digits.length === 11) return `+55${digits}`;
-    if (digits.startsWith("55")) return `+${digits}`;
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data?.success === false) {
+    throw new Error(data?.error || "Não foi possível gerar o PIX no Asaas.");
   }
-
-  if (explicitDocument && (digits.length === 11 || digits.length === 14)) return digits;
-  if (digits.length === 14) return digits; // CNPJ sem pontuação
-  if (digits.length === 11 && hypePixValidCpf(digits)) return digits; // CPF sem pontuação
-  if (digits.length === 10 || digits.length === 11) return `+55${digits}`; // telefone sem +55
-  if (digits.length === 12 || digits.length === 13) return `+${digits}`; // telefone com DDI
-
-  // Chave aleatória (UUID/EVP) ou outro formato já cadastrado.
-  return raw.replace(/\s+/g, "");
+  if (!data?.qr_code) throw new Error("O Asaas não retornou o PIX Copia e Cola.");
+  return data;
 }
 
-function hypePixCrc16(payload) {
-  let crc = 0xFFFF;
-  for (let i = 0; i < payload.length; i++) {
-    crc ^= payload.charCodeAt(i) << 8;
-    for (let bit = 0; bit < 8; bit++) {
-      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
-      crc &= 0xFFFF;
-    }
-  }
-  return crc.toString(16).toUpperCase().padStart(4, "0");
-}
-
-function hypeBuildPixPayload({ key, amount, txid, description }) {
-  const pixKey = hypeNormalizePixKey(key);
-  if (!pixKey) throw new Error("A chave PIX ainda não foi configurada no Admin.");
-
-  const total = Number(amount || 0);
-  if (!(total > 0)) throw new Error("Valor do PIX inválido.");
-
-  if (pixKey.length > 77) throw new Error("A chave PIX informada é maior que o permitido.");
-
-  const merchantBase = [
-    hypePixTlv("00", "BR.GOV.BCB.PIX"),
-    hypePixTlv("01", pixKey)
-  ].join("");
-  const pixDescription = description ? hypePixTlv("02", hypePixAscii(description, 72)) : "";
-  // O campo Merchant Account Information aceita no máximo 99 caracteres.
-  const merchantAccount = merchantBase.length + pixDescription.length <= 99
-    ? merchantBase + pixDescription
-    : merchantBase;
-
-  const safeTxid = hypePixAscii(txid || "***", 25).replace(/[^A-Z0-9]/g, "") || "***";
-  const additionalData = hypePixTlv("05", safeTxid);
-
-  const body = [
-    hypePixTlv("00", "01"),
-    hypePixTlv("26", merchantAccount),
-    hypePixTlv("52", "0000"),
-    hypePixTlv("53", "986"),
-    hypePixTlv("54", total.toFixed(2)),
-    hypePixTlv("58", "BR"),
-    hypePixTlv("59", hypePixAscii(HYPE_PIX_MERCHANT_NAME, 25)),
-    hypePixTlv("60", hypePixAscii(HYPE_PIX_MERCHANT_CITY, 15)),
-    hypePixTlv("62", additionalData),
-    "6304"
-  ].join("");
-
-  return body + hypePixCrc16(body);
-}
-
-function renderStaticPixPayment(entry, pixPayload) {
+function renderAsaasPayment(entry, payment) {
   const area = document.getElementById("pixArea");
   const form = document.getElementById("ticketForm");
   const qrImg = document.getElementById("qrImg");
@@ -1115,52 +1004,20 @@ function renderStaticPixPayment(entry, pixPayload) {
   const status = document.getElementById("pixPaymentStatus");
 
   if (code) code.textContent = entry.ticket_code || "";
-  if (status) status.textContent = "AGUARDANDO PAGAMENTO / COMPROVANTE";
-  if (pixText) pixText.textContent = pixPayload;
+  if (status) status.textContent = "AGUARDANDO PAGAMENTO";
+  if (pixText) pixText.textContent = payment.qr_code || "";
 
   if (qrImg) {
-    try {
-      if (!window.HypeQRCode?.toDataUrl) throw new Error("Gerador QR local não carregou.");
-      qrImg.src = window.HypeQRCode.toDataUrl(pixPayload, 280);
-      qrImg.alt = "QR Code PIX";
-    } catch (qrError) {
-      console.warn("[HYPE][PIX QR local]", qrError);
-      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${encodeURIComponent(pixPayload)}`;
-      qrImg.onerror = () => {
-        qrImg.alt = "Não foi possível carregar a imagem do QR Code. Use o PIX Copia e Cola abaixo.";
-      };
+    if (payment.qr_code_base64) {
+      const raw = String(payment.qr_code_base64);
+      qrImg.src = raw.startsWith("data:") ? raw : `data:image/png;base64,${raw}`;
+    } else {
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payment.qr_code)}`;
     }
   }
 
   if (form) form.style.display = "none";
   if (area) area.style.display = "block";
-}
-
-function buildPixReceiptWhatsAppMessage(entry) {
-  const event = HYPE.events.find(e => Number(e.id) === Number(entry.event_id)) || HYPE.event || {};
-  return [
-    "✅ *COMPROVANTE PIX — HYPE LOUNGE CLUB*",
-    "",
-    `🎤 Evento: ${event.name || "HYPE"}`,
-    `👤 Cliente: ${entry.customer_name || ""}`,
-    `🎫 Ingresso: ${entry.lot_name || ""} • ${entry.sector || ""}`,
-    `💰 Valor pago: ${hypeFormatMoney(entry.price)}`,
-    `🔖 Pedido: ${entry.ticket_code || ""}`,
-    "",
-    "Já realizei o pagamento do PIX.",
-    "Vou anexar o comprovante nesta conversa para confirmação."
-  ].filter(Boolean).join("\n");
-}
-
-function sendPixReceiptWhatsApp() {
-  const entry = window.__hypeCurrentManualEntry;
-  if (!entry) return alert("Pedido não encontrado nesta tela.");
-  const message = buildPixReceiptWhatsAppMessage(entry);
-  const url = `https://wa.me/${HYPE_WHATSAPP}?text=${encodeURIComponent(message)}`;
-  window.open(url, "_blank", "noopener,noreferrer");
-  const status = document.getElementById("pixPaymentStatus");
-  if (status) status.textContent = "AGUARDANDO CONFIRMAÇÃO DO ADMIN";
-  hypeNotify("WhatsApp aberto. Anexe a foto ou PDF do comprovante e envie.");
 }
 
 async function createPixOrder(e) {
@@ -1189,12 +1046,8 @@ async function createPixOrder(e) {
   }
 
   try {
-    // O pedido continua sendo gravado no Supabase. O PIX é montado no navegador
-    // usando somente a chave configurada no Admin.
-    if (!String(HYPE.pixKey || "").trim()) {
-      throw new Error("O PIX está temporariamente indisponível. Configure a chave PIX no Admin.");
-    }
-
+    // Usa o RPC manual porque ele já grava o e-mail do cliente no ticket.
+    // O pagamento, porém, é criado no Asaas logo em seguida.
     const rows = await sbRpc("create_manual_order_v16", {
       p_name: name,
       p_phone: phone,
@@ -1213,16 +1066,10 @@ async function createPixOrder(e) {
     HYPE.currentEntryCode = entry.ticket_code;
     window.__hypeCurrentManualEntry = entry;
 
-    const pixPayload = hypeBuildPixPayload({
-      key: HYPE.pixKey,
-      amount: Number(entry.price),
-      txid: String(entry.ticket_code || "HYPE").replace(/[^A-Za-z0-9]/g, ""),
-      description: `Ingresso ${entry.ticket_code || "HYPE"}`
-    });
-
-    window.__hypeCurrentPix = { qr_code: pixPayload, mode: "static-key" };
-    renderStaticPixPayment(entry, pixPayload);
-    hypeNotify(`PIX do pedido ${entry.ticket_code} gerado pela chave cadastrada.`);
+    const payment = await createAsaasPix(entry.id);
+    window.__hypeCurrentPix = payment;
+    renderAsaasPayment(entry, payment);
+    hypeNotify(`PIX do pedido ${entry.ticket_code} gerado.`);
   } catch (err) {
     alert(err.message || "Erro ao gerar PIX.");
   } finally {
@@ -1672,16 +1519,11 @@ async function initAdmin(fromLogin = false) {
     startAdminTicker();
 
     clearInterval(HYPE.refreshTimer);
-    let promoterRefreshTick = 0;
     HYPE.refreshTimer = setInterval(async () => {
       try {
         await loadStaffTickets(document.getElementById("searchInput")?.value || "");
         renderClientsTable();
         renderV16Dashboard();
-        promoterRefreshTick++;
-        if (promoterRefreshTick % 3 === 0) {
-          await loadV16AdminData().catch(err => console.warn("[HYPE][promoters auto-refresh]", err));
-        }
       } catch (_) {}
     }, 5000);
   } catch (err) {
@@ -1827,10 +1669,8 @@ async function clearTicketSchedule(index) {
 async function savePixKey() {
   try {
     const key = document.getElementById("pixKeyInput")?.value.trim() || "";
-    if (!key) return alert("Informe uma chave PIX antes de salvar.");
     await sbRpc("staff_save_pix", {p_username:HYPE.user,p_password:HYPE.pass,p_pix:key});
-    HYPE.pixKey = key;
-    hypeNotify("Chave PIX atualizada. Os próximos QR Codes usarão esta chave.");
+    HYPE.pixKey = key; hypeNotify("Chave PIX atualizada.");
   } catch (err) { alert(err.message); }
 }
 
@@ -2060,16 +1900,7 @@ async function initPortaria() {
   }
   hideLogin();
   applyStaffRoleUI();
-  if (navigator.onLine === false && typeof window.hypeV17InitOfflinePortaria === "function") {
-    await window.hypeV17InitOfflinePortaria();
-  } else {
-    try {
-      await portariaInitProDashboard();
-    } catch (err) {
-      if (typeof window.hypeV17InitOfflinePortaria === "function") await window.hypeV17InitOfflinePortaria();
-      else throw err;
-    }
-  }
+  await portariaInitProDashboard();
   document.getElementById("portariaSearch")?.focus();
 }
 
@@ -2621,7 +2452,7 @@ function hypeV14CurrentShareText() {
 }
 
 const HYPE_V15_CONTACT_PHONE_DISPLAY = "(54) 9695-6070";
-const HYPE_V15_CONTACT_PHONE_WA = "555496776514";
+const HYPE_V15_CONTACT_PHONE_WA = "555496956070";
 const HYPE_V15_MAP_URL = "https://maps.app.goo.gl/NxRfJDYs9iR2uk2v8";
 
 function hypeV14OpenWhatsAppContact() {
@@ -2838,97 +2669,23 @@ function hypeV14InitInteractions() {
 
 /* ========================= V16: VENDAS / GESTAO ========================= */
 
-async function hypeRpcRetryV171(name, params, attempts = 3) {
-  let lastError = null;
-  for (let i = 0; i < attempts; i++) {
-    try {
-      return await sbRpc(name, params);
-    } catch (err) {
-      lastError = err;
-      if (i < attempts - 1) await new Promise(r => setTimeout(r, 300 * (i + 1)));
-    }
-  }
-  throw lastError || new Error(`Falha ao carregar ${name}`);
-}
-
 async function loadV16AdminData() {
-  const pList = document.getElementById("v16PromoterList");
-  const cList = document.getElementById("v16CouponList");
-
-  if (HYPE.role !== "admin") {
-    HYPE.promoters = [];
-    HYPE.coupons = [];
-    renderV16Management();
-    return;
-  }
-
-  // V17.1: promoter é GLOBAL e não depende do evento selecionado.
-  // Mantém a lista anterior visível durante qualquer falha temporária de rede.
-  const previousPromoters = Array.isArray(HYPE.promoters) ? [...HYPE.promoters] : [];
-  const previousCoupons = Array.isArray(HYPE.coupons) ? [...HYPE.coupons] : [];
-  if (pList && !previousPromoters.length) pList.innerHTML = '<div class="info-note">Carregando promoters...</div>';
-  if (cList && !previousCoupons.length) cList.innerHTML = '<div class="info-note">Carregando cupons...</div>';
-
-  let promoterError = null;
-  try {
-    const promoters = await hypeRpcRetryV171("staff_list_promoters_global_v16", {
-      p_username: HYPE.user,
-      p_password: HYPE.pass
-    });
-    HYPE.promoters = Array.isArray(promoters) ? promoters : [];
-    HYPE.promotersGlobal = true;
-  } catch (globalErr) {
-    promoterError = globalErr;
-    console.warn("[HYPE][promoter global]", globalErr);
-
-    // Compatibilidade: se o SQL global não existir, tenta o cadastro antigo por evento.
-    if (HYPE.selectedEventId) {
-      try {
-        const promoters = await hypeRpcRetryV171("staff_list_promoters_v16", {
-          p_username: HYPE.user,
-          p_password: HYPE.pass,
-          p_event_id: Number(HYPE.selectedEventId)
-        }, 2);
-        HYPE.promoters = Array.isArray(promoters) ? promoters : previousPromoters;
-        HYPE.promotersGlobal = false;
-        promoterError = null;
-      } catch (legacyErr) {
-        console.warn("[HYPE][promoter fallback]", legacyErr);
-        HYPE.promoters = previousPromoters;
-      }
-    } else {
-      HYPE.promoters = previousPromoters;
-    }
-  }
-
-  if (HYPE.selectedEventId) {
-    try {
-      const coupons = await hypeRpcRetryV171("staff_list_coupons_v16", {
-        p_username: HYPE.user,
-        p_password: HYPE.pass,
-        p_event_id: Number(HYPE.selectedEventId)
-      }, 2);
-      HYPE.coupons = Array.isArray(coupons) ? coupons : [];
-    } catch (couponErr) {
-      console.warn("[HYPE][coupons]", couponErr);
-      HYPE.coupons = previousCoupons;
-    }
-  } else {
-    HYPE.coupons = [];
-  }
-
+  if (HYPE.role !== "admin" || !HYPE.selectedEventId) { HYPE.promoters = []; HYPE.coupons = []; renderV16Management(); return; }
+  const params = { p_username:HYPE.user, p_password:HYPE.pass, p_event_id:Number(HYPE.selectedEventId) };
+  const [promoters, coupons] = await Promise.all([
+    sbRpc("staff_list_promoters_v16", params),
+    sbRpc("staff_list_coupons_v16", params)
+  ]);
+  HYPE.promoters = Array.isArray(promoters) ? promoters : [];
+  HYPE.coupons = Array.isArray(coupons) ? coupons : [];
   renderV16Management();
-
-  if (promoterError && pList && !HYPE.promoters.length) {
-    pList.innerHTML = `<div class="info-note" style="color:#ff8a9a">Não foi possível carregar os promoters agora. Clique em ↻ ATUALIZAR.<br><small>${hypeEscape(promoterError.message || "Falha temporária")}</small></div>`;
-  }
 }
 
 function renderV16Management() {
   const pList = document.getElementById("v16PromoterList");
   const cList = document.getElementById("v16CouponList");
   if (pList) pList.innerHTML = (HYPE.promoters || []).length ? HYPE.promoters.map(p => `
-    <div class="v16-manage-row"><div><b>${hypeEscape(p.name)}</b><small>Código: ${hypeEscape(p.code)} • ${Number(p.paid_count||0)} pagos • ${hypeFormatMoney(p.revenue||0)}</small><small style="color:#7dd3fc">Link único para todos os eventos atuais e futuros.</small></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn-action" onclick="copyPromoterLinkV16(${Number(p.id)})">🔗 COPIAR LINK</button><button class="btn-action" onclick="togglePromoterV16(${Number(p.id)})">${p.active ? "DESATIVAR" : "ATIVAR"}</button><button class="btn-action btn-del" onclick="deletePromoterV16(${Number(p.id)})">EXCLUIR</button></div></div>`).join("") : '<div class="info-note">Nenhum promoter cadastrado.</div>';
+    <div class="v16-manage-row"><div><b>${hypeEscape(p.name)}</b><small>Código: ${hypeEscape(p.code)} • ${Number(p.paid_count||0)} pagos • ${hypeFormatMoney(p.revenue||0)}</small><small style="color:#7dd3fc">Ranking considera somente ingressos pagos.</small></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn-action" onclick="copyPromoterLinkV16(${Number(p.id)})">🔗 COPIAR LINK</button><button class="btn-action" onclick="togglePromoterV16(${Number(p.id)})">${p.active ? "DESATIVAR" : "ATIVAR"}</button></div></div>`).join("") : '<div class="info-note">Nenhum promoter cadastrado neste evento.</div>';
   if (cList) cList.innerHTML = (HYPE.coupons || []).length ? HYPE.coupons.map(c => `
     <div class="v16-manage-row"><div><b>${hypeEscape(c.code)}</b><small>${c.discount_type === "percent" ? `${Number(c.discount_value)}%` : hypeFormatMoney(c.discount_value)} • usos ${Number(c.uses_count||0)}${Number(c.usage_limit||0)>0 ? `/${Number(c.usage_limit)}` : "/∞"}</small></div><button class="btn-action" onclick="toggleCouponV16(${Number(c.id)})">${c.active ? "DESATIVAR" : "ATIVAR"}</button></div>`).join("") : '<div class="info-note">Nenhum cupom cadastrado neste evento.</div>';
 }
@@ -2954,77 +2711,40 @@ function hypeNextPromoterCodeV16(name) {
 
 async function createPromoterV16() {
   if (HYPE.role !== "admin") return alert("Somente o Admin pode gerenciar promoters.");
+  if (!HYPE.selectedEventId) return alert("Selecione um evento.");
   const name = document.getElementById("v16PromoterName")?.value.trim() || "";
   if (!name) return alert("Informe o nome do promoter.");
   const code = hypeNextPromoterCodeV16(name);
-  const btn = document.querySelector('#v16PromoterName + .btn-action');
-  if (btn) { btn.disabled = true; btn.textContent = "GERANDO..."; }
   try {
-    await sbRpc("staff_upsert_promoter_global_v16", {
-      p_username:HYPE.user,
-      p_password:HYPE.pass,
-      p_id:0,
-      p_name:name,
-      p_code:code,
-      p_active:true
-    });
+    await sbRpc("staff_upsert_promoter_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:0,p_name:name,p_code:code,p_active:true});
     document.getElementById("v16PromoterName").value="";
     await loadV16AdminData();
     const created = (HYPE.promoters || []).find(p => String(p.code || "").toUpperCase() === code);
-    hypeNotify("Promoter cadastrado. Link único gerado.");
+    hypeNotify(`Promoter cadastrado. Link oficial gerado automaticamente.`);
     if (created) await copyPromoterLinkV16(Number(created.id));
-  } catch (err) {
-    alert(err.message || "Erro ao criar promoter.");
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = "+ GERAR LINK"; }
-  }
+  } catch (err) { alert(err.message); }
 }
+
 
 async function copyPromoterLinkV16(id) {
   const p = (HYPE.promoters || []).find(x => Number(x.id) === Number(id));
   if (!p) return alert("Promoter não encontrado.");
-  // LINK GLOBAL: sem event=, portanto funciona em qualquer evento escolhido pelo cliente.
+  if (!HYPE.selectedEventId) return alert("Selecione um evento.");
   const url = new URL("https://hypeloungeclub.com.br/cliente.html");
+  url.searchParams.set("event", String(Number(HYPE.selectedEventId)));
   url.searchParams.set("promoter", String(p.code || "").trim().toUpperCase());
   const link = url.toString();
   try {
     await navigator.clipboard.writeText(link);
-    hypeNotify(`Link global de ${p.name} copiado.`);
+    hypeNotify(`Link oficial de ${p.name} copiado.`);
   } catch (_) {
     window.prompt("Copie o link oficial do promoter:", link);
   }
 }
 
 async function togglePromoterV16(id) {
-  const p=(HYPE.promoters||[]).find(x=>Number(x.id)===Number(id));
-  if(!p)return;
-  try {
-    if (HYPE.promotersGlobal !== false) {
-      await sbRpc("staff_upsert_promoter_global_v16", {
-        p_username:HYPE.user,p_password:HYPE.pass,p_id:Number(p.id),p_name:p.name,p_code:p.code,p_active:!p.active
-      });
-    } else {
-      await sbRpc("staff_upsert_promoter_v16", {
-        p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:Number(p.id),p_name:p.name,p_code:p.code,p_active:!p.active
-      });
-    }
-    await loadV16AdminData();
-  } catch(err){ alert(err.message); }
-}
-
-async function deletePromoterV16(id) {
-  const p=(HYPE.promoters||[]).find(x=>Number(x.id)===Number(id));
-  if(!p)return;
-  if(!confirm(`Excluir o promoter ${p.name}?\n\nAs vendas antigas continuam no histórico.`))return;
-  try {
-    if (HYPE.promotersGlobal !== false) {
-      await sbRpc("staff_delete_promoter_global_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_id:Number(p.id)});
-    } else {
-      await sbRpc("staff_delete_promoter_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:Number(p.id)});
-    }
-    await loadV16AdminData();
-    hypeNotify("Promoter excluído.");
-  } catch(err){ alert(err.message); }
+  const p=(HYPE.promoters||[]).find(x=>Number(x.id)===Number(id)); if(!p)return;
+  try { await sbRpc("staff_upsert_promoter_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:Number(p.id),p_name:p.name,p_code:p.code,p_active:!p.active}); await loadV16AdminData(); } catch(err){ alert(err.message); }
 }
 
 async function createCouponV16() {
