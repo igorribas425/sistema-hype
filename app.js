@@ -2795,6 +2795,64 @@ function renderV16Dashboard() {
   if(breakdown) breakdown.innerHTML=`<div><b>Por setor</b><span>${Object.entries(sectors).map(([k,v])=>`${hypeEscape(k)}: ${v}`).join(" • ")||"Sem vendas pagas"}</span></div><div><b>Ranking de promoters (pagos)</b><span>${promoterRanking.map(([k,v],i)=>`${i+1}º ${hypeEscape(k)}: ${v}`).join(" • ")||"Sem vendas pagas por promoter"}</span></div>`;
 }
 
+/* ========================= AUTO SYNC V16.10 ========================= */
+let hypeAutoSyncLastAt = 0;
+
+function hypeAutoSyncEditing() {
+  const active = document.activeElement;
+  if (!active || !active.closest) return false;
+  return Boolean(active.closest('form, .panel-box, .ticket-admin-card') && ['INPUT','SELECT','TEXTAREA'].includes(active.tagName));
+}
+
+async function hypeAutoSyncNow(force = false) {
+  if (document.hidden) return;
+  if (!force && Date.now() - hypeAutoSyncLastAt < 2500) return;
+  if (hypeAutoSyncEditing()) return;
+  hypeAutoSyncLastAt = Date.now();
+
+  try {
+    // Cliente: busca novamente eventos, lotes, preços e disponibilidade no Supabase.
+    if (document.getElementById('ticketForm')) {
+      await refreshClientCatalogSafely();
+      await refreshCurrentOrderStatus(false).catch(()=>{});
+      return;
+    }
+
+    // Admin: atualiza pedidos e valores sem exigir F5 quando a página volta ao foco.
+    if (document.getElementById('adminPass') && HYPE.user && HYPE.pass) {
+      await loadPublicState();
+      await loadStaffTickets(document.getElementById('searchInput')?.value || '');
+      if (['admin','gerente'].includes(HYPE.role)) {
+        await loadAdminEvents();
+        if (HYPE.selectedEventId) await loadAdminLots(HYPE.selectedEventId).catch(()=>{});
+      }
+      renderAdminEvents();
+      renderConfigTickets();
+      renderClientsTable();
+      await loadV16AdminData().catch(()=>{});
+      renderV16Dashboard();
+      return;
+    }
+
+    // Portaria: atualiza eventos, contadores e últimas entradas ao entrar/voltar para a aba.
+    if (document.getElementById('portariaPass') && HYPE.user && HYPE.pass) {
+      await portariaLoadEvents();
+      await portariaRefreshDashboard(false);
+    }
+  } catch (err) {
+    // Sincronização automática fica silenciosa; a tela continua utilizável.
+    console.warn('[HYPE][auto-sync]', err);
+  }
+}
+
+// Resolve também o cache de navegação do celular (voltar/avançar), que pode
+// restaurar uma tela antiga sem disparar DOMContentLoaded novamente.
+window.addEventListener('pageshow', () => setTimeout(() => hypeAutoSyncNow(true), 120));
+window.addEventListener('focus', () => hypeAutoSyncNow(false));
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) hypeAutoSyncNow(true);
+});
+
 /* ========================= BOOT ========================= */
 
 document.addEventListener('DOMContentLoaded', async () => {

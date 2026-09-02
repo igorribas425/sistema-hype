@@ -1,15 +1,11 @@
-HYPE V16.10 — LINK DE PROMOTER REVOGÁVEL
+HYPE V16.10 — AUTO SYNC
 
-CORREÇÃO
-- O link do promoter não é mais aceito apenas porque existe na URL.
-- O site valida o código no Supabase.
-- Se o Admin EXCLUIR ou DESATIVAR o promoter:
-  * o link antigo aparece como inválido/revogado;
-  * o campo promoter fica vazio;
-  * a compra por aquele link é bloqueada;
-  * nenhuma venda nova pode ser atribuída ao promoter removido.
-- Vendas antigas permanecem no histórico.
+O que muda:
+- Cliente atualiza eventos, lotes, preços e disponibilidade ao abrir/voltar para a página.
+- Admin atualiza pedidos e valores ao abrir/voltar para a página.
+- Portaria atualiza eventos, contadores e últimas entradas ao abrir/voltar para a página.
+- Mantém as atualizações periódicas já existentes.
+- Não exige SQL novo no Supabase.
+- Cache-buster atualizado nos HTML para carregar o app.js novo.
 
-PASSOS
-1. Rode SUPABASE_V16_10_PROMOTER_LINK_REVOGADO.sql no SQL Editor do Supabase.
-2. Suba os arquivos do ZIP no GitHub, substituindo os atuais.
+Suba os arquivos do ZIP no GitHub substituindo os atuais.
