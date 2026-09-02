@@ -53,8 +53,8 @@ function updateServiceFeeInfo(ticketValue) {
     <div class="fee-title">Resumo do pagamento</div>
     <div class="fee-row"><span>Valor do ingresso</span><b>${hypeFormatMoney(base)}</b></div>
     <div class="fee-row fee-service"><span>Taxa de serviço</span><b>${hypeFormatMoney(HYPE_SERVICE_FEE)}</b></div>
-    <div class="fee-row fee-total"><span>Total a pagar no PIX</span><b>${hypeFormatMoney(total)}</b></div>
-    <div class="fee-note">A taxa de serviço é exibida antes da geração do PIX. O total acima é o valor que será cobrado.</div>`;
+    <div class="fee-row fee-total"><span>Total do pedido</span><b>${hypeFormatMoney(total)}</b></div>
+    <div class="fee-note">A taxa de serviço é exibida antes de criar o pedido. O pagamento é finalizado manualmente pelo WhatsApp.</div>`;
 }
 
 function hypeCfg() {
@@ -366,7 +366,9 @@ function hypeReadPromoterLinkV16() {
     const code = String(params.get("promoter") || "").trim().toUpperCase();
     const eventId = Number(params.get("event") || 0) || null;
     HYPE.promoterLinkCode = code;
-    HYPE.promoterLinkEventId = eventId;
+    // V18: promoter é global. Links antigos com ?event= continuam válidos,
+    // mas a venda acompanha o promoter em qualquer evento atual ou futuro.
+    HYPE.promoterLinkEventId = null;
     return { code, eventId };
   } catch (_) {
     HYPE.promoterLinkCode = "";
@@ -379,16 +381,12 @@ function hypeApplyPromoterLinkV16() {
   const input = document.getElementById("clientPromoter");
   const status = document.getElementById("clientPromoterStatus");
   const hasCode = Boolean(HYPE.promoterLinkCode);
-  const eventMatches = !HYPE.promoterLinkEventId || Number(HYPE.selectedEventId) === Number(HYPE.promoterLinkEventId);
-  const activeCode = hasCode && eventMatches ? HYPE.promoterLinkCode : "";
+  const activeCode = hasCode ? HYPE.promoterLinkCode : "";
   if (input) input.value = activeCode;
   if (status) {
     if (activeCode) {
       status.innerHTML = `✅ Compra vinculada ao promoter <b>${hypeEscape(activeCode)}</b> pelo link oficial.`;
       status.className = "v16-coupon-status ok";
-    } else if (hasCode && !eventMatches) {
-      status.textContent = "ℹ️ Este link de promoter pertence a outro evento. A venda deste evento não será atribuída.";
-      status.className = "v16-coupon-status";
     } else {
       status.textContent = "Compra direta: nenhum promoter vinculado.";
       status.className = "v16-coupon-status";
@@ -649,6 +647,9 @@ function applyStaffRoleUI() {
 
   const v16Management = document.getElementById("v16ManagementPanel");
   if (v16Management) v16Management.style.display = isAdmin ? "block" : "none";
+
+  const v18Control = document.getElementById("v18ControlPanel");
+  if (v18Control) v18Control.style.display = isAdmin ? "block" : "none";
 }
 
 async function checkLogin() {
@@ -876,13 +877,15 @@ function buildWhatsAppMessage(entry) {
     `🎫 Ingresso: ${entry.lot_name || ""}`,
     `📍 Setor: ${entry.sector || ""}`,
     `🚻 Gênero: ${entry.gender || "Não informado"}`,
-    `💰 Total no PIX: ${hypeFormatMoney(entry.price)}`,
+    `💰 Total do pedido: ${hypeFormatMoney(entry.price)}`,
     `🧾 Taxa de serviço incluída: ${hypeFormatMoney(HYPE_SERVICE_FEE)}`,
     `🔖 Pedido: ${entry.ticket_code}`,
     `📧 E-mail: ${entry.email || ""}`,
+    entry.promoter_code ? `🎯 Promoter: ${entry.promoter_code}` : "🏠 Venda direta HYPE",
+    entry.coupon_code ? `🏷️ Cupom: ${entry.coupon_code}` : "",
     "",
-    "Quero finalizar o pagamento deste ingresso.",
-    "Após o pagamento, enviarei o comprovante por aqui."
+    "Quero finalizar este pedido manualmente pelo WhatsApp.",
+    "Após o pagamento, enviarei o comprovante por aqui para confirmação do Admin."
   ].filter(Boolean);
 
   return lines.join("\n");
@@ -950,7 +953,7 @@ async function createManualOrder(e) {
       summary.innerHTML = `
         <strong>${hypeEscape(entry.customer_name)}</strong><br>
         ${hypeEscape(entry.lot_name || "")} • ${hypeEscape(entry.sector || "")}<br>
-        Total no PIX: ${hypeFormatMoney(entry.price)}${Number(entry.discount_amount || 0) > 0 ? ` <small style="color:#28d17c">(desconto ${hypeFormatMoney(entry.discount_amount)})</small>` : ""}<br>
+        Total do pedido: ${hypeFormatMoney(entry.price)}${Number(entry.discount_amount || 0) > 0 ? ` <small style="color:#28d17c">(desconto ${hypeFormatMoney(entry.discount_amount)})</small>` : ""}<br>
         ${entry.coupon_code ? `Cupom: <b>${hypeEscape(entry.coupon_code)}</b><br>` : ""}
         ${entry.promoter_code ? `Promoter: <b>${hypeEscape(entry.promoter_code)}</b><br>` : ""}
         <span style="color:#ffcc00">AGUARDANDO CONFIRMAÇÃO DO PAGAMENTO</span>
@@ -1099,7 +1102,9 @@ async function copyPixCode() {
 
 /* Mantém compatibilidade com as páginas atuais */
 async function generatePix(e) {
-  return createPixOrder(e);
+  // V18: todas as compras (link oficial ou link de promoter) seguem o mesmo
+  // fluxo manual: cria pedido pendente, abre o WhatsApp e aguarda o Admin.
+  return createManualOrder(e);
 }
 
 function reopenOrderWhatsApp() {
@@ -1338,6 +1343,7 @@ async function selectAdminEvent(eventId) {
     renderConfigTickets();
     await loadV16AdminData().catch(() => {});
     renderV16Dashboard();
+    if (typeof window.loadRaffleV18 === "function") window.loadRaffleV18().catch?.(() => {});
     document.getElementById("lotsAdminPanel")?.scrollIntoView({behavior:"smooth",block:"start"});
   } catch (err) {
     alert(err.message || "Erro ao carregar os lotes deste evento.");
@@ -1516,6 +1522,7 @@ async function initAdmin(fromLogin = false) {
     renderV16Dashboard();
     const pix = document.getElementById("pixKeyInput");
     if (pix) pix.value = HYPE.pixKey || "";
+    if (typeof window.hypeV18AdminInit === "function") await window.hypeV18AdminInit();
     startAdminTicker();
 
     clearInterval(HYPE.refreshTimer);
@@ -2451,8 +2458,8 @@ function hypeV14CurrentShareText() {
   return `${parts.join("\n")}\n${location.href}`;
 }
 
-const HYPE_V15_CONTACT_PHONE_DISPLAY = "(54) 9695-6070";
-const HYPE_V15_CONTACT_PHONE_WA = "555496956070";
+const HYPE_V15_CONTACT_PHONE_DISPLAY = "(54) 9677-6514";
+const HYPE_V15_CONTACT_PHONE_WA = "555496776514";
 const HYPE_V15_MAP_URL = "https://maps.app.goo.gl/NxRfJDYs9iR2uk2v8";
 
 function hypeV14OpenWhatsAppContact() {

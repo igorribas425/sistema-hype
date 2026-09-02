@@ -1,0 +1,81 @@
+HYPE LOUNGE CLUB // V18
+WHATSAPP MANUAL + PROMOTER GLOBAL + SORTEIOS + PORTARIA SEGURA
+
+IMPORTANTE: siga esta ordem.
+
+1) SUPABASE PRIMEIRO
+- Abra Supabase > SQL Editor > New query.
+- Cole TODO o conteúdo do arquivo SUPABASE_V18_COMPLETO.sql.
+- Clique em Run uma única vez.
+- O V18 é aditivo: não apaga seus eventos, ingressos, pagamentos ou promoters.
+
+2) GITHUB DEPOIS
+- Substitua os arquivos do repositório pelos arquivos deste pacote V18.
+- Mantenha o CNAME para hypeloungeclub.com.br.
+- Aguarde o GitHub Pages atualizar e faça uma atualização forte da página se necessário.
+
+O QUE FOI ALTERADO
+
+A) PAGAMENTO MANUAL PELO WHATSAPP
+- Compra direta no link oficial da HYPE: cria pedido PENDENTE e abre o WhatsApp da HYPE.
+- Compra por link de promoter: faz EXATAMENTE o mesmo fluxo manual.
+- O promoter continua gravado no pedido para ranking/comissão.
+- O ingresso só é liberado depois da confirmação do pagamento no Admin.
+- O fluxo automático do Asaas não é chamado pela tela de compra no V18.
+
+B) PROMOTER GLOBAL
+- Um promoter é criado uma vez.
+- O mesmo link funciona em todos os eventos atuais e futuros.
+- Link padrão: https://hypeloungeclub.com.br/cliente.html?promoter=CODIGO
+- As vendas antigas permanecem no histórico mesmo se o promoter for excluído depois.
+
+C) SORTEIOS
+- No Admin existe o painel SORTEIOS V18.
+- Selecione o evento, informe o prêmio, ative e salve.
+- Somente ingressos com pagamento = PAGO entram automaticamente.
+- O cliente não precisa confirmar nem fazer outro cadastro.
+- O sorteio só acontece quando o Admin clicar em REALIZAR SORTEIO AGORA e confirmar.
+- O painel mostra participantes e último vencedor.
+
+D) PORTARIA SEGURA POR COMPUTADOR
+- Abra portaria.html no computador que ficará na entrada.
+- Não existe login/senha da equipe nessa tela.
+- O computador exibirá um código de autorização de 8 caracteres.
+- No Admin > PORTARIA SEGURA V18, digite esse código e clique AUTORIZAR COMPUTADOR.
+- Depois disso, aquele navegador/computador fica vinculado à Portaria.
+- Quem abrir o link da Portaria em outro aparelho verá outro código e não terá acesso até o Admin autorizar.
+- O Admin pode revogar um computador quando quiser.
+
+E) CELULAR DO PORTEIRO = SOMENTE LEITOR
+- No computador autorizado, clique CONECTAR CELULAR.
+- A Portaria mostra um QR temporário que expira em 3 minutos.
+- O porteiro lê esse QR com o celular.
+- O celular abre leitor.html e vira apenas leitor de QR Code.
+- Não recebe senha, Admin, lista de clientes, vendas nem pagamentos.
+- A sessão do leitor vale por até 12 horas e pode ser encerrada pelo computador/Admin.
+
+F) ENTRADA / DOCUMENTO / SAÍDA TEMPORÁRIA
+- O QR procura o ingresso automaticamente.
+- A Portaria exige documento/CPF conferido antes de liberar a primeira entrada.
+- Ingresso PENDENTE ou CANCELADO não entra.
+- QR já utilizado é bloqueado.
+- Pode registrar SAÍDA TEMPORÁRIA e depois AUTORIZAR REENTRADA.
+
+G) MODO OFFLINE DA PORTARIA
+- Antes de abrir a casa, com internet, escolha o evento e clique PREPARAR OFFLINE.
+- O computador salva um snapshot dos ingressos PAGOS do evento por até 12 horas.
+- Se a internet cair, a câmera/busca do computador continua funcionando com o snapshot.
+- Ações feitas offline ficam em fila e sincronizam quando a internet voltar.
+- O celular pareado precisa de internet para enviar a leitura ao computador; se a internet cair, use a câmera do próprio computador ou a busca manual.
+
+ARQUIVOS NOVOS PRINCIPAIS
+- SUPABASE_V18_COMPLETO.sql
+- v18-admin.js
+- v18-client.js
+- portaria-v18.js
+- leitor.html
+- leitor-v18.js
+- sw.js / register-sw.js atualizados
+
+OBSERVAÇÃO DE SEGURANÇA
+A autorização offline é uma contingência local com validade máxima de 12 horas. Se um computador for revogado enquanto estiver totalmente sem internet, a revogação será percebida quando ele reconectar ou quando a autorização offline expirar.

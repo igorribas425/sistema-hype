@@ -1,16 +1,21 @@
-const CACHE='hype-v17-4-offline';
+const CACHE='hype-v18-offline';
 const CORE=[
   './',
-  './portaria.html',
-  './admin.html',
   './cliente.html',
-  './app.js?v=20260902-v17-4',
-  './hype-qrcode.js?v=20260902-v17-4',
-  './v17-extra.js?v=20260901-v17-3',
-  './v17-extra.css?v=20260901-v17-3',
-  './register-sw.js?v=20260902-v17-4',
-  './supabase-config.js',
-  './apple-touch-icon.png'
+  './index.html',
+  './admin.html',
+  './portaria.html',
+  './leitor.html',
+  './app.js?v=20260902-v18',
+  './promoter-global-v16-8.js?v=20260902-v18-global',
+  './v18-admin.js?v=20260902-v18',
+  './v18-client.js?v=20260902-v18',
+  './portaria-v18.js?v=20260902-v18',
+  './leitor-v18.js?v=20260902-v18',
+  './hype-qrcode.js?v=20260902-v18',
+  './supabase-config.js?v=20260902-v18',
+  './logo-hype.png',
+  './favicon.png'
 ];
 
 self.addEventListener('install',event=>{
@@ -18,10 +23,7 @@ self.addEventListener('install',event=>{
   event.waitUntil((async()=>{
     const cache=await caches.open(CACHE);
     for(const url of CORE){
-      try{
-        const response=await fetch(url,{cache:'reload'});
-        if(response.ok)await cache.put(new Request(url),response.clone());
-      }catch(_){/* um item não pode impedir o restante do pacote */}
+      try{const response=await fetch(url,{cache:'reload'});if(response.ok)await cache.put(new Request(url),response.clone());}catch(_){ }
     }
   })());
 });
@@ -35,52 +37,28 @@ self.addEventListener('activate',event=>{
 });
 
 self.addEventListener('fetch',event=>{
-  const req=event.request;
-  if(req.method!=='GET')return;
+  const req=event.request;if(req.method!=='GET')return;
   const url=new URL(req.url);
-
-  // Navegação: rede primeiro, Portaria salva como contingência.
   if(req.mode==='navigate'){
     event.respondWith((async()=>{
       const cache=await caches.open(CACHE);
-      try{
-        const fresh=await fetch(req);
-        if(fresh.ok)await cache.put(req,fresh.clone());
-        return fresh;
-      }catch(_){
-        return (await cache.match(req)) || (await cache.match('./portaria.html')) || Response.error();
+      try{const fresh=await fetch(req);if(fresh.ok)await cache.put(req,fresh.clone());return fresh;}
+      catch(_){
+        const direct=await cache.match(req);if(direct)return direct;
+        const file=url.pathname.split('/').pop()||'index.html';
+        return (await cache.match(`./${file}`))||(await cache.match('./portaria.html'))||Response.error();
       }
-    })());
-    return;
+    })());return;
   }
-
-  // Arquivos do próprio site: cache primeiro no offline, atualiza quando possível.
   if(url.origin===self.location.origin){
     event.respondWith((async()=>{
-      const cache=await caches.open(CACHE);
-      const cached=await cache.match(req);
-      if(cached){
-        fetch(req).then(r=>{if(r.ok)cache.put(req,r.clone())}).catch(()=>{});
-        return cached;
-      }
-      try{
-        const fresh=await fetch(req);
-        if(fresh.ok)await cache.put(req,fresh.clone());
-        return fresh;
-      }catch(_){return Response.error()}
-    })());
-    return;
+      const cache=await caches.open(CACHE);const cached=await cache.match(req);
+      if(cached){fetch(req).then(r=>{if(r.ok)cache.put(req,r.clone())}).catch(()=>{});return cached;}
+      try{const fresh=await fetch(req);if(fresh.ok)await cache.put(req,fresh.clone());return fresh;}catch(_){return Response.error();}
+    })());return;
   }
-
-  // CDN (Supabase): usa uma cópia cacheada se ela já tiver sido carregada online.
   event.respondWith((async()=>{
-    const cache=await caches.open(CACHE);
-    const cached=await cache.match(req);
-    if(cached)return cached;
-    try{
-      const fresh=await fetch(req);
-      if(fresh.ok)await cache.put(req,fresh.clone());
-      return fresh;
-    }catch(_){return Response.error()}
+    const cache=await caches.open(CACHE);const cached=await cache.match(req);if(cached)return cached;
+    try{const fresh=await fetch(req);if(fresh.ok)await cache.put(req,fresh.clone());return fresh;}catch(_){return Response.error();}
   })());
 });
