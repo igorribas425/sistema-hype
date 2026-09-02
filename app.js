@@ -998,29 +998,115 @@ async function createManualOrder(e) {
   }
 }
 
-async function createAsaasPix(ticketId) {
-  const cfg = window.HYPE_SUPABASE_CONFIG;
-  if (!cfg?.url || !cfg?.anonKey) throw new Error("Supabase não configurado.");
+// HYPE V17.4 - PIX direto pela chave cadastrada no Admin.
+// Não depende do Asaas. O banco do cliente resolve a chave PIX informada.
+const HYPE_PIX_MERCHANT_NAME = "HYPE LOUNGE CLUB";
+const HYPE_PIX_MERCHANT_CITY = "PASSO FUNDO";
 
-  const response = await fetch(`${cfg.url}/functions/v1/asaas-pix`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: cfg.anonKey,
-      Authorization: `Bearer ${cfg.anonKey}`
-    },
-    body: JSON.stringify({ ticket_id: Number(ticketId) })
-  });
-
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || data?.success === false) {
-    throw new Error(data?.error || "Não foi possível gerar o PIX no Asaas.");
-  }
-  if (!data?.qr_code) throw new Error("O Asaas não retornou o PIX Copia e Cola.");
-  return data;
+function hypePixTlv(id, value) {
+  const v = String(value ?? "");
+  return `${id}${String(v.length).padStart(2, "0")}${v}`;
 }
 
-function renderAsaasPayment(entry, payment) {
+function hypePixAscii(value, maxLength) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Za-z0-9 .\-]/g, "")
+    .trim()
+    .toUpperCase()
+    .slice(0, maxLength);
+}
+
+function hypePixValidCpf(digits) {
+  const cpf = String(digits || "").replace(/\D/g, "");
+  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+  const calc = len => {
+    let sum = 0;
+    for (let i = 0; i < len; i++) sum += Number(cpf[i]) * (len + 1 - i);
+    const rem = (sum * 10) % 11;
+    return rem === 10 ? 0 : rem;
+  };
+  return calc(9) === Number(cpf[9]) && calc(10) === Number(cpf[10]);
+}
+
+function hypeNormalizePixKey(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+
+  if (raw.includes("@")) return raw.toLowerCase();
+
+  const digits = raw.replace(/\D/g, "");
+  const explicitPhone = raw.startsWith("+") || /[()]/.test(raw);
+  const explicitDocument = /[./]/.test(raw);
+
+  if (explicitPhone && digits.length >= 10) {
+    if (raw.startsWith("+")) return `+${digits}`;
+    if (digits.length === 10 || digits.length === 11) return `+55${digits}`;
+    if (digits.startsWith("55")) return `+${digits}`;
+  }
+
+  if (explicitDocument && (digits.length === 11 || digits.length === 14)) return digits;
+  if (digits.length === 14) return digits; // CNPJ sem pontuação
+  if (digits.length === 11 && hypePixValidCpf(digits)) return digits; // CPF sem pontuação
+  if (digits.length === 10 || digits.length === 11) return `+55${digits}`; // telefone sem +55
+  if (digits.length === 12 || digits.length === 13) return `+${digits}`; // telefone com DDI
+
+  // Chave aleatória (UUID/EVP) ou outro formato já cadastrado.
+  return raw.replace(/\s+/g, "");
+}
+
+function hypePixCrc16(payload) {
+  let crc = 0xFFFF;
+  for (let i = 0; i < payload.length; i++) {
+    crc ^= payload.charCodeAt(i) << 8;
+    for (let bit = 0; bit < 8; bit++) {
+      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+      crc &= 0xFFFF;
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, "0");
+}
+
+function hypeBuildPixPayload({ key, amount, txid, description }) {
+  const pixKey = hypeNormalizePixKey(key);
+  if (!pixKey) throw new Error("A chave PIX ainda não foi configurada no Admin.");
+
+  const total = Number(amount || 0);
+  if (!(total > 0)) throw new Error("Valor do PIX inválido.");
+
+  if (pixKey.length > 77) throw new Error("A chave PIX informada é maior que o permitido.");
+
+  const merchantBase = [
+    hypePixTlv("00", "BR.GOV.BCB.PIX"),
+    hypePixTlv("01", pixKey)
+  ].join("");
+  const pixDescription = description ? hypePixTlv("02", hypePixAscii(description, 72)) : "";
+  // O campo Merchant Account Information aceita no máximo 99 caracteres.
+  const merchantAccount = merchantBase.length + pixDescription.length <= 99
+    ? merchantBase + pixDescription
+    : merchantBase;
+
+  const safeTxid = hypePixAscii(txid || "***", 25).replace(/[^A-Z0-9]/g, "") || "***";
+  const additionalData = hypePixTlv("05", safeTxid);
+
+  const body = [
+    hypePixTlv("00", "01"),
+    hypePixTlv("26", merchantAccount),
+    hypePixTlv("52", "0000"),
+    hypePixTlv("53", "986"),
+    hypePixTlv("54", total.toFixed(2)),
+    hypePixTlv("58", "BR"),
+    hypePixTlv("59", hypePixAscii(HYPE_PIX_MERCHANT_NAME, 25)),
+    hypePixTlv("60", hypePixAscii(HYPE_PIX_MERCHANT_CITY, 15)),
+    hypePixTlv("62", additionalData),
+    "6304"
+  ].join("");
+
+  return body + hypePixCrc16(body);
+}
+
+function renderStaticPixPayment(entry, pixPayload) {
   const area = document.getElementById("pixArea");
   const form = document.getElementById("ticketForm");
   const qrImg = document.getElementById("qrImg");
@@ -1029,20 +1115,52 @@ function renderAsaasPayment(entry, payment) {
   const status = document.getElementById("pixPaymentStatus");
 
   if (code) code.textContent = entry.ticket_code || "";
-  if (status) status.textContent = "AGUARDANDO PAGAMENTO";
-  if (pixText) pixText.textContent = payment.qr_code || "";
+  if (status) status.textContent = "AGUARDANDO PAGAMENTO / COMPROVANTE";
+  if (pixText) pixText.textContent = pixPayload;
 
   if (qrImg) {
-    if (payment.qr_code_base64) {
-      const raw = String(payment.qr_code_base64);
-      qrImg.src = raw.startsWith("data:") ? raw : `data:image/png;base64,${raw}`;
-    } else {
-      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payment.qr_code)}`;
+    try {
+      if (!window.HypeQRCode?.toDataUrl) throw new Error("Gerador QR local não carregou.");
+      qrImg.src = window.HypeQRCode.toDataUrl(pixPayload, 280);
+      qrImg.alt = "QR Code PIX";
+    } catch (qrError) {
+      console.warn("[HYPE][PIX QR local]", qrError);
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${encodeURIComponent(pixPayload)}`;
+      qrImg.onerror = () => {
+        qrImg.alt = "Não foi possível carregar a imagem do QR Code. Use o PIX Copia e Cola abaixo.";
+      };
     }
   }
 
   if (form) form.style.display = "none";
   if (area) area.style.display = "block";
+}
+
+function buildPixReceiptWhatsAppMessage(entry) {
+  const event = HYPE.events.find(e => Number(e.id) === Number(entry.event_id)) || HYPE.event || {};
+  return [
+    "✅ *COMPROVANTE PIX — HYPE LOUNGE CLUB*",
+    "",
+    `🎤 Evento: ${event.name || "HYPE"}`,
+    `👤 Cliente: ${entry.customer_name || ""}`,
+    `🎫 Ingresso: ${entry.lot_name || ""} • ${entry.sector || ""}`,
+    `💰 Valor pago: ${hypeFormatMoney(entry.price)}`,
+    `🔖 Pedido: ${entry.ticket_code || ""}`,
+    "",
+    "Já realizei o pagamento do PIX.",
+    "Vou anexar o comprovante nesta conversa para confirmação."
+  ].filter(Boolean).join("\n");
+}
+
+function sendPixReceiptWhatsApp() {
+  const entry = window.__hypeCurrentManualEntry;
+  if (!entry) return alert("Pedido não encontrado nesta tela.");
+  const message = buildPixReceiptWhatsAppMessage(entry);
+  const url = `https://wa.me/${HYPE_WHATSAPP}?text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+  const status = document.getElementById("pixPaymentStatus");
+  if (status) status.textContent = "AGUARDANDO CONFIRMAÇÃO DO ADMIN";
+  hypeNotify("WhatsApp aberto. Anexe a foto ou PDF do comprovante e envie.");
 }
 
 async function createPixOrder(e) {
@@ -1071,8 +1189,12 @@ async function createPixOrder(e) {
   }
 
   try {
-    // Usa o RPC manual porque ele já grava o e-mail do cliente no ticket.
-    // O pagamento, porém, é criado no Asaas logo em seguida.
+    // O pedido continua sendo gravado no Supabase. O PIX é montado no navegador
+    // usando somente a chave configurada no Admin.
+    if (!String(HYPE.pixKey || "").trim()) {
+      throw new Error("O PIX está temporariamente indisponível. Configure a chave PIX no Admin.");
+    }
+
     const rows = await sbRpc("create_manual_order_v16", {
       p_name: name,
       p_phone: phone,
@@ -1091,10 +1213,16 @@ async function createPixOrder(e) {
     HYPE.currentEntryCode = entry.ticket_code;
     window.__hypeCurrentManualEntry = entry;
 
-    const payment = await createAsaasPix(entry.id);
-    window.__hypeCurrentPix = payment;
-    renderAsaasPayment(entry, payment);
-    hypeNotify(`PIX do pedido ${entry.ticket_code} gerado.`);
+    const pixPayload = hypeBuildPixPayload({
+      key: HYPE.pixKey,
+      amount: Number(entry.price),
+      txid: String(entry.ticket_code || "HYPE").replace(/[^A-Za-z0-9]/g, ""),
+      description: `Ingresso ${entry.ticket_code || "HYPE"}`
+    });
+
+    window.__hypeCurrentPix = { qr_code: pixPayload, mode: "static-key" };
+    renderStaticPixPayment(entry, pixPayload);
+    hypeNotify(`PIX do pedido ${entry.ticket_code} gerado pela chave cadastrada.`);
   } catch (err) {
     alert(err.message || "Erro ao gerar PIX.");
   } finally {
@@ -1699,8 +1827,10 @@ async function clearTicketSchedule(index) {
 async function savePixKey() {
   try {
     const key = document.getElementById("pixKeyInput")?.value.trim() || "";
+    if (!key) return alert("Informe uma chave PIX antes de salvar.");
     await sbRpc("staff_save_pix", {p_username:HYPE.user,p_password:HYPE.pass,p_pix:key});
-    HYPE.pixKey = key; hypeNotify("Chave PIX atualizada.");
+    HYPE.pixKey = key;
+    hypeNotify("Chave PIX atualizada. Os próximos QR Codes usarão esta chave.");
   } catch (err) { alert(err.message); }
 }
 
@@ -2491,7 +2621,7 @@ function hypeV14CurrentShareText() {
 }
 
 const HYPE_V15_CONTACT_PHONE_DISPLAY = "(54) 9695-6070";
-const HYPE_V15_CONTACT_PHONE_WA = "555496956070";
+const HYPE_V15_CONTACT_PHONE_WA = "555496776514";
 const HYPE_V15_MAP_URL = "https://maps.app.goo.gl/NxRfJDYs9iR2uk2v8";
 
 function hypeV14OpenWhatsAppContact() {

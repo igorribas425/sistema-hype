@@ -1,0 +1,26 @@
+HYPE V17.4 — PIX PELA CHAVE + COMPROVANTE NO WHATSAPP
+
+ALTERAÇÕES
+- Mantém a base V17.3 (portaria/offline/senha/promoter).
+- Remove a dependência do Asaas para gerar o PIX no cliente.
+- Usa a chave PIX salva no Admin para montar o PIX Copia e Cola.
+- Gera QR Code com o valor exato gravado no pedido.
+- O QR do PIX é desenhado localmente no navegador (sem depender do Asaas ou de gerador externo; há fallback de emergência).
+- Adiciona botão: JÁ PAGUEI — ENVIAR COMPROVANTE NO WHATSAPP.
+- O WhatsApp abre com evento, cliente, valor e código do pedido preenchidos.
+- O cliente ainda precisa anexar a foto/PDF do comprovante no WhatsApp.
+- O ingresso continua sendo liberado somente quando o Admin confirma o pagamento.
+
+SUPABASE
+- Se o campo Chave PIX já salva e carrega normalmente, não precisa rodar SQL.
+- Se não salvar/carregar, execute SUPABASE_V17_4_PIX_CHAVE.sql uma vez no SQL Editor.
+
+ADMIN
+1. Abra Admin > Chave PIX.
+2. Cole a chave e clique em Salvar Chave PIX.
+3. Novos pedidos usarão essa chave.
+
+IMPORTANTE
+- Telefone sem +55 é normalizado para +55 automaticamente na geração do BR Code.
+- CPF/CNPJ são enviados apenas com números.
+- A chave aleatória é preservada.

@@ -1,13 +1,14 @@
-const CACHE='hype-v17-3-offline';
+const CACHE='hype-v17-4-offline';
 const CORE=[
   './',
   './portaria.html',
   './admin.html',
   './cliente.html',
-  './app.js?v=20260901-v17-3',
+  './app.js?v=20260902-v17-4',
+  './hype-qrcode.js?v=20260902-v17-4',
   './v17-extra.js?v=20260901-v17-3',
   './v17-extra.css?v=20260901-v17-3',
-  './register-sw.js?v=20260901-v17-3',
+  './register-sw.js?v=20260902-v17-4',
   './supabase-config.js',
   './apple-touch-icon.png'
 ];

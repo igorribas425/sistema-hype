@@ -407,9 +407,10 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 
       <h3 style="margin-top:25px">Chave PIX (Recebimento)</h3>
       <div class="form-group" style="margin-top:10px">
-        <input type="text" id="pixKeyInput" placeholder="Chave PIX (E-mail, CNPJ ou Tel)">
+        <input type="text" id="pixKeyInput" placeholder="Chave PIX: e-mail, CPF/CNPJ, telefone ou aleatória">
       </div>
       <button class="btn" onclick="savePixKey()" style="background:#15151a;border:1px solid var(--line)">Salvar Chave PIX</button>
+      <div class="info-note" style="margin-top:10px">💡 O QR Code e o PIX Copia e Cola são gerados diretamente com esta chave. O pagamento só libera o ingresso depois da confirmação no Admin.</div>
     </div>
 
     <div class="panel-box">
@@ -441,8 +442,8 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260831-v16-2"></script>
-<script src="app.js?v=20260901-v17-3"></script>
+<script src="app.js?v=20260902-v17-4"></script>
 <script src="v17-extra.js?v=20260901-v17-3"></script>
-<script src="register-sw.js?v=20260901-v17-3"></script>
+<script src="register-sw.js?v=20260902-v17-4"></script>
 </body>
 </html>
