@@ -1,7 +1,9 @@
-/* HYPE LOUNGE CLUB // PORTARIA V31 (correção leitor celular -> computador)
+/* HYPE LOUNGE CLUB // PORTARIA V33 (base V32)
    Computador autorizado por dispositivo + celular pareado somente como leitor.
-   V29: celular puxa o nome automaticamente no computador.
+   V29/V31: celular puxa o nome automaticamente no computador.
    V30: QR de outro evento é recusado e informa nome/data do evento correto.
+   V32: evento automático considera horário e mantém a noite válida até 08:00 do dia seguinte.
+   V33: mantém a lógica V32 e integra leitor iPhone/Android + envio do link por e-mail.
 */
 (() => {
   'use strict';
@@ -24,6 +26,9 @@
     scanTimer: null,
     refreshTimer: null,
     syncTimer: null,
+    eventTimer: null,
+    autoEventEnabled: true,
+    autoEventMeta: null,
     cameraStream: null,
     cameraTimer: null,
     pairToken: '',
@@ -210,22 +215,92 @@
       return;
     }
 
-    const savedId = Number(localStorage.getItem(EVENT_KEY) || 0);
-    let chosen = state.events.find(e=>Number(e.id)===savedId);
+    select.innerHTML=state.events.map(e=>`<option value="${Number(e.id)}">${esc(e.name||'Evento HYPE')}${e.event_date?` • ${esc(fmtDate(e.event_date))}`:''}${e.opening_time?` • ${esc(String(e.opening_time).slice(0,5))}`:''}</option>`).join('');
+
+    let chosen = null;
+    if (state.autoEventEnabled) {
+      try {
+        const autoRows = normalizeRows(await rpc('portaria_current_event_v32',{p_device_key:state.deviceKey}));
+        const auto = autoRows[0] || null;
+        state.autoEventMeta = auto;
+        if (auto?.event_id) chosen = state.events.find(e=>Number(e.id)===Number(auto.event_id)) || null;
+      } catch (err) {
+        console.warn('[HYPE V32][evento automático]',err);
+      }
+    }
+
     if (!chosen) {
-      const today = new Date();
-      const key = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+      const savedId = Number(localStorage.getItem(EVENT_KEY) || 0);
+      chosen = state.events.find(e=>Number(e.id)===savedId);
+    }
+    if (!chosen) {
+      const now = new Date();
+      const logical = new Date(now);
+      if (now.getHours() < 8) logical.setDate(logical.getDate()-1);
+      const key = `${logical.getFullYear()}-${String(logical.getMonth()+1).padStart(2,'0')}-${String(logical.getDate()).padStart(2,'0')}`;
       chosen = state.events.find(e=>String(e.event_date||'').slice(0,10)===key) || state.events[0];
     }
     state.eventId=Number(chosen.id);
-    select.innerHTML=state.events.map(e=>`<option value="${Number(e.id)}">${esc(e.name||'Evento HYPE')}${e.event_date?` • ${esc(fmtDate(e.event_date))}`:''}</option>`).join('');
     select.value=String(state.eventId);
     localStorage.setItem(EVENT_KEY,String(state.eventId));
+    setAutoEventBadge();
+  }
+
+  function setAutoEventBadge() {
+    const badge=$('autoEventBadge');
+    if(!badge)return;
+    if(!state.autoEventEnabled){
+      badge.textContent='EVENTO MANUAL';
+      badge.className='pill';
+      return;
+    }
+    const meta=state.autoEventMeta;
+    if(!meta){
+      badge.textContent='AUTO • AGUARDANDO EVENTO';
+      badge.className='pill';
+      return;
+    }
+    const current=String(meta.status||'').toUpperCase().includes('ATUAL');
+    badge.textContent=current?'AUTO • EVENTO ATUAL • ATÉ 08:00':'AUTO • PRÓXIMO EVENTO';
+    badge.className=`pill ${current?'on':''}`.trim();
+  }
+
+  async function syncAutoEventV32(force=false){
+    if(!state.autoEventEnabled || !online() || !state.deviceKey)return;
+    try{
+      const rows=normalizeRows(await rpc('portaria_current_event_v32',{p_device_key:state.deviceKey}));
+      const meta=rows[0]||null;
+      state.autoEventMeta=meta;
+      setAutoEventBadge();
+      if(!meta?.event_id)return;
+      const id=Number(meta.event_id);
+      if(!force && id===Number(state.eventId))return;
+      if(!state.events.some(e=>Number(e.id)===id))await loadEvents();
+      if(!state.events.some(e=>Number(e.id)===id))return;
+      state.eventId=id;
+      localStorage.setItem(EVENT_KEY,String(id));
+      if($('eventSelect'))$('eventSelect').value=String(id);
+      state.items.clear();
+      $('results').innerHTML='<div class="empty">Evento selecionado automaticamente pela data e horário da festa.</div>';
+      try{await window.HypeV20?.eventChanged?.();}catch(_){}
+      await refresh(false);
+    }catch(err){
+      console.warn('[HYPE V32][auto troca]',err);
+    }
+  }
+
+  async function enableAutoEvent(){
+    state.autoEventEnabled=true;
+    await syncAutoEventV32(true);
+    setAutoEventBadge();
   }
 
   async function changeEvent() {
     const id = Number($('eventSelect')?.value || 0);
     if (!id) return;
+    state.autoEventEnabled=false;
+    state.autoEventMeta=null;
+    setAutoEventBadge();
     state.eventId=id;
     localStorage.setItem(EVENT_KEY,String(id));
     state.items.clear();
@@ -243,6 +318,7 @@
     clearInterval(state.scanTimer);
     clearInterval(state.refreshTimer);
     clearInterval(state.syncTimer);
+    clearInterval(state.eventTimer);
 
     // V31: somente a aba VISÍVEL da Portaria pode consumir a fila do celular.
     // Isso evita que uma aba antiga/oculta roube o QR antes da tela usada no evento.
@@ -251,6 +327,9 @@
     },420);
     state.refreshTimer=setInterval(()=>refresh(false).catch(()=>{}),5000);
     state.syncTimer=setInterval(()=>syncQueue().catch(()=>{}),4000);
+    // V32: a cada 30 s confere a janela do evento. Às 08:00 do dia seguinte
+    // o evento anterior deixa de ser o atual e o próximo é escolhido sozinho.
+    state.eventTimer=setInterval(()=>syncAutoEventV32(false).catch(()=>{}),30000);
   }
 
   function showRemoteReaderError(err){
@@ -669,6 +748,6 @@
     await ensureDevice();
   }
 
-  window.HypePortaria={changeEvent,refresh,search,processCode,toggleDocument,validate,temporaryExit,authorizeReentry,openPair,closePair,endReaders,prepareOffline,startCamera,stopCamera};
+  window.HypePortaria={changeEvent,enableAutoEvent,refresh,search,processCode,toggleDocument,validate,temporaryExit,authorizeReentry,openPair,closePair,endReaders,prepareOffline,startCamera,stopCamera};
   document.addEventListener('DOMContentLoaded',init);
 })();

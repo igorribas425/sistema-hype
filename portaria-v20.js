@@ -1,4 +1,4 @@
-/* HYPE LOUNGE CLUB // PORTARIA V31 (base V20)
+/* HYPE LOUNGE CLUB // PORTARIA V33 (base V32/V20)
    - Computador continua usando portaria.html autorizado pelo Admin
    - Celulares recebem LINK EXCLUSIVO e abrem somente a camera/leitor
    - Link de ativacao e de uso unico; depois a sessao fica presa ao celular
@@ -15,6 +15,7 @@
     sb: null,
     linkBusy: false,
     currentReaderLink: '',
+    currentReaderLabel: '',
     readersTimer: null,
     contextTimer: null,
     linkExpiresAt: 0,
@@ -78,7 +79,9 @@
   function openReaderLink() {
     if (!isOnline()) return alert('Conecte à internet para gerar o link do celular leitor.');
     if ($('readerLinkLabel')) $('readerLinkLabel').value = '';
+    if ($('readerLinkEmail')) $('readerLinkEmail').value = '';
     if ($('readerLinkText')) $('readerLinkText').value = '';
+    state.currentReaderLabel = '';
     if ($('readerLinkMeta')) $('readerLinkMeta').textContent = 'Digite um nome opcional e gere o link. O link serve apenas para ativar a câmera deste leitor.';
     state.currentReaderLink = '';
     $('readerLinkModal')?.classList.add('show');
@@ -109,6 +112,7 @@
       url.searchParams.set('reader', token);
       if (result.reader_label) url.searchParams.set('name', result.reader_label);
       state.currentReaderLink = url.toString();
+      state.currentReaderLabel = result.reader_label || label || 'Celular leitor';
       state.linkExpiresAt = new Date(result.link_expires_at).getTime();
       if ($('readerLinkText')) $('readerLinkText').value = state.currentReaderLink;
       if ($('readerLinkMeta')) $('readerLinkMeta').textContent = `Link exclusivo para ${result.reader_label || 'celular leitor'} • ativa uma única vez • expira em 15 minutos se não for aberto • depois o celular trabalha por até 16 horas.`;
@@ -143,6 +147,48 @@
       } catch (_) {}
     }
     await copyReaderLink();
+  }
+
+  async function sendReaderLinkEmail() {
+    if (!isOnline()) return alert('Conecte à internet para enviar o link por e-mail.');
+    const text = state.currentReaderLink || $('readerLinkText')?.value || '';
+    const email = ($('readerLinkEmail')?.value || '').trim().toLowerCase();
+    if (!text) return alert('Gere o link primeiro.');
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return alert('Digite um Gmail/e-mail válido.');
+    const key = deviceKey();
+    if (!key) return alert('Este computador ainda não está autorizado como Portaria.');
+    const cfg = window.HYPE_SUPABASE_CONFIG || {};
+    if (!cfg.url || !cfg.anonKey) return alert('Supabase não configurado.');
+
+    const btn = $('readerEmailSend');
+    const oldText = btn?.textContent || '✉️ ENVIAR LINK POR GMAIL / E-MAIL';
+    if (btn) { btn.disabled = true; btn.textContent = 'ENVIANDO...'; }
+    try {
+      const response = await fetch(`${cfg.url}/functions/v1/send-ticket-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': cfg.anonKey,
+          'Authorization': `Bearer ${cfg.anonKey}`
+        },
+        body: JSON.stringify({
+          action: 'reader_link',
+          device_key: key,
+          email,
+          reader_link: text,
+          reader_label: state.currentReaderLabel || ($('readerLinkLabel')?.value || '').trim() || 'Celular leitor'
+        })
+      });
+      const raw = await response.text();
+      let data = null;
+      try { data = JSON.parse(raw); } catch (_) {}
+      if (!response.ok || data?.ok !== true) throw new Error(data?.error || data?.erro || raw || 'Não foi possível enviar o e-mail.');
+      if ($('readerLinkMeta')) $('readerLinkMeta').textContent = `✅ Link enviado para ${email}. Abra o e-mail somente no celular que será usado como leitor.`;
+    } catch (err) {
+      if ($('readerLinkMeta')) $('readerLinkMeta').textContent = `❌ ${err.message || 'Falha ao enviar por e-mail.'}`;
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = oldText; }
+    }
   }
 
   async function loadReaders() {
@@ -425,7 +471,7 @@
   }
 
   window.HypeV20 = {
-    openReaderLink, closeReaderLink, generateReaderLink, copyReaderLink, shareReaderLink, loadReaders, disconnectReader, endAllReaders,
+    openReaderLink, closeReaderLink, generateReaderLink, copyReaderLink, shareReaderLink, sendReaderLinkEmail, loadReaders, disconnectReader, endAllReaders,
     loadSalesContext, updateDoorPrice, createDoorOrder, copyPix, confirmDoorPayment,
     cancelDoorOrder, resetDoorSale, showDoorTicketInPortaria, eventChanged
   };

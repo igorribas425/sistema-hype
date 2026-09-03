@@ -1,4 +1,4 @@
-/* HYPE V31 // celular somente leitor por LINK EXCLUSIVO
+/* HYPE V33 // celular somente leitor por LINK EXCLUSIVO — Android + iPhone/iOS
    Correção de câmera preta no celular + revogação em tempo real:
    - força o video.play() depois que a câmera abre;
    - limpa srcObject ao fechar/reabrir a câmera;
@@ -229,6 +229,52 @@
     }finally{setTimeout(()=>{state.busy=false;},650);}
   }
 
+  async function makeDecoder(video){
+    // 1) Chrome/Android e navegadores com BarcodeDetector nativo.
+    if ('BarcodeDetector' in window) {
+      try {
+        if (typeof BarcodeDetector.getSupportedFormats === 'function') {
+          const formats = await BarcodeDetector.getSupportedFormats();
+          if (Array.isArray(formats) && !formats.includes('qr_code')) throw new Error('qr_code não suportado');
+        }
+        const detector = new BarcodeDetector({formats:['qr_code']});
+        return {
+          name:'NATIVO',
+          async read(){
+            const found=await detector.detect(video);
+            return found?.[0]?.rawValue || '';
+          }
+        };
+      } catch (_) {}
+    }
+
+    // 2) Fallback para Safari/iPhone/iPad usando jsQR + Canvas.
+    if (typeof window.jsQR === 'function') {
+      const canvas=$('qrCanvas') || document.createElement('canvas');
+      const ctx=canvas.getContext('2d',{willReadFrequently:true});
+      if(!ctx) throw new Error('Não foi possível preparar o leitor compatível com iPhone.');
+      return {
+        name:'IOS',
+        async read(){
+          const vw=video.videoWidth||0, vh=video.videoHeight||0;
+          if(vw<2||vh<2)return '';
+          const maxSide=720;
+          const scale=Math.min(1,maxSide/Math.max(vw,vh));
+          const w=Math.max(2,Math.round(vw*scale));
+          const h=Math.max(2,Math.round(vh*scale));
+          if(canvas.width!==w)canvas.width=w;
+          if(canvas.height!==h)canvas.height=h;
+          ctx.drawImage(video,0,0,w,h);
+          const image=ctx.getImageData(0,0,w,h);
+          const result=window.jsQR(image.data,w,h,{inversionAttempts:'attemptBoth'});
+          return result?.data || '';
+        }
+      };
+    }
+
+    throw new Error('O leitor QR compatível não carregou. Verifique a internet e atualize a página.');
+  }
+
   async function start(fromHeartbeat=false){
     state.wantsCamera=true;
     if(!state.connected)return;
@@ -238,27 +284,32 @@
     }
     if(state.stream)return;
     if(!navigator.mediaDevices?.getUserMedia){setStatus('Este navegador não permite abrir a câmera.','bad');return;}
-    if(!('BarcodeDetector' in window)){setStatus('Este navegador não oferece leitura automática de QR. Abra o link no Chrome atualizado.','bad');return;}
     try{
       stopCameraOnly();
       state.stream=await openCameraStream();
       const video=await attachAndPlay(state.stream);
-      const detector=new BarcodeDetector({formats:['qr_code']});
+      const decoder=await makeDecoder(video);
       state.timer=setInterval(async()=>{
         if(state.busy||video.readyState<2)return;
         try{
-          const found=await detector.detect(video);
-          const raw=found?.[0]?.rawValue;
-          if(raw){const ok=await submit(raw);if(ok){stopCameraOnly();setTimeout(()=>{if(state.connected&&state.wantsCamera)start(true);},850);}}
+          const raw=await decoder.read();
+          if(raw){
+            const ok=await submit(raw);
+            if(ok){
+              stopCameraOnly();
+              setTimeout(()=>{if(state.connected&&state.wantsCamera)start(true);},850);
+            }
+          }
         }catch(_){ }
-      },300);
-      setStatus(`${state.label} • CÂMERA ATIVA — APONTE PARA O QR`,'ok');
+      },decoder.name==='IOS'?180:300);
+      const deviceMode=decoder.name==='IOS'?'LEITOR iPhone/iOS ATIVO':'LEITOR QR ATIVO';
+      setStatus(`${state.label} • ${deviceMode} — APONTE PARA O QR`,'ok');
     }catch(err){
       stopCameraOnly();
       const name=String(err?.name||'');
       let msg=String(err?.message||'Erro desconhecido');
       if(name==='NotAllowedError' || /permission|permiss/i.test(msg)){
-        msg='Permissão da câmera bloqueada. No Chrome, toque no cadeado/ícone ao lado do endereço → Permissões → Câmera → Permitir e abra o leitor novamente.';
+        msg='Permissão da câmera bloqueada. No iPhone/Safari: toque em aA → Ajustes do Site → Câmera → Permitir. No Android/Chrome: toque no cadeado/ícone do endereço → Câmera → Permitir.';
       }else if(name==='NotReadableError' || /could not start|not readable|in use/i.test(msg)){
         msg='A câmera está sendo usada por outro aplicativo. Feche Câmera/WhatsApp/Instagram e tente novamente.';
       }

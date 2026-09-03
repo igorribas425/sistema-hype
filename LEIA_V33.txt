@@ -1,0 +1,45 @@
+HYPE LOUNGE CLUB // V33 CONSOLIDADA
+
+INCLUI TUDO DA V32:
+- evento automático pela data + horário
+- festa continua válida na madrugada até 08:00 do dia seguinte
+- QR de outro evento não libera entrada e informa o evento/data corretos
+- celular leitor envia o QR para o computador da Portaria
+- revogação do leitor continua funcionando
+
+NOVO NA V33:
+- leitor compatível com Android e iPhone/iPad
+  * usa BarcodeDetector quando disponível
+  * Safari/iOS usa fallback jsQR por Canvas
+- opção de enviar o link exclusivo do leitor por Gmail/e-mail
+- o e-mail é enviado pelo mesmo Gmail/Apps Script já usado nos ingressos
+- o Edge Function send-ticket-email continua enviando ingressos e passa a aceitar action=reader_link
+
+ARQUIVOS DO GITHUB:
+- portaria.html
+- portaria-v18.js
+- portaria-v20.js
+- leitor.html
+- leitor-v20.js
+
+SUPABASE SQL:
+- SUPABASE_V33_CONSOLIDADO_V32.sql
+  Se a V32 já foi executada, este SQL pode ser executado novamente sem apagar ingressos/eventos.
+
+APPS SCRIPT:
+- APPS_SCRIPT_V33_Codigo.gs
+  Substitua o Código.gs atual e atualize a implantação existente (Nova versão).
+
+EDGE FUNCTION:
+- SEND_TICKET_EMAIL_V33.ts
+  Substitua o conteúdo da função existente send-ticket-email e faça Deploy.
+  Não altere os Secrets existentes:
+  SUPABASE_URL
+  SUPABASE_SERVICE_ROLE_KEY
+  HYPE_APPS_SCRIPT_URL
+  HYPE_WEBHOOK_SECRET
+
+IMPORTANTE PARA IPHONE:
+- abrir pelo Safari/Chrome em HTTPS
+- permitir Câmera
+- a biblioteca jsQR é carregada pelo jsDelivr; portanto o celular precisa estar online
