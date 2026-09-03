@@ -624,32 +624,31 @@ function showLogin() {
 }
 
 function applyStaffRoleUI() {
-  const isAdmin = HYPE.role === "admin";
+  // V21: quem conseguiu entrar no painel Admin com um perfil autorizado
+  // (admin, gerente ou caixa) pode usar as funções administrativas visíveis.
+  const hasAdminAccess = ["admin","gerente","caixa"].includes(HYPE.role);
+  const isOwnerAdmin = HYPE.role === "admin";
 
-  // Só o ADMIN vê os atalhos que levam a outras áreas restritas.
+  // Os atalhos entre Compra/Admin/Portaria foram removidos do layout.
   const navPortaria = document.getElementById("navPortariaLink");
-  if (navPortaria) navPortaria.style.display = isAdmin ? "inline-flex" : "none";
-
+  if (navPortaria) navPortaria.style.display = "none";
   const navAdmin = document.getElementById("navAdminLink");
-  if (navAdmin) navAdmin.style.display = isAdmin ? "inline-flex" : "none";
-
-  // Na tela da Portaria, a conta PORTARIA vê somente a própria área.
-  // Quando o ADMIN entra na Portaria, aparecem os 3 acessos: Compra + Admin + Portaria.
+  if (navAdmin) navAdmin.style.display = "none";
   const navCompraPortaria = document.getElementById("navCompraPortariaLink");
-  if (navCompraPortaria) navCompraPortaria.style.display = isAdmin ? "inline-flex" : "none";
+  if (navCompraPortaria) navCompraPortaria.style.display = "none";
 
-  // Gestão de equipe e limpeza definitiva ficam exclusivas do ADMIN.
+  // A gestão de funcionários foi retirada da interface na V21.
   const teamPanel = document.getElementById("teamAdminPanel");
-  if (teamPanel) teamPanel.style.display = isAdmin ? "block" : "none";
+  if (teamPanel) teamPanel.style.display = "none";
 
   const purgeBtn = document.getElementById("purgeTicketsBtn");
-  if (purgeBtn) purgeBtn.style.display = isAdmin ? "inline-flex" : "none";
+  if (purgeBtn) purgeBtn.style.display = isOwnerAdmin ? "inline-flex" : "none";
 
   const v16Management = document.getElementById("v16ManagementPanel");
-  if (v16Management) v16Management.style.display = isAdmin ? "block" : "none";
+  if (v16Management) v16Management.style.display = hasAdminAccess ? "block" : "none";
 
   const v18Control = document.getElementById("v18ControlPanel");
-  if (v18Control) v18Control.style.display = isAdmin ? "block" : "none";
+  if (v18Control) v18Control.style.display = hasAdminAccess ? "block" : "none";
 }
 
 async function checkLogin() {
@@ -1512,12 +1511,10 @@ async function initAdmin(fromLogin = false) {
         }
       }
     }
-    await loadUsersIfAllowed();
 
     renderAdminEvents();
     renderConfigTickets();
     renderClientsTable();
-    renderUsers();
     await loadV16AdminData().catch(err => console.warn("[HYPE][V16 admin]", err));
     renderV16Dashboard();
     const pix = document.getElementById("pixKeyInput");

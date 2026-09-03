@@ -119,28 +119,30 @@
     if (!online()) {
       if (offlineAuthAvailable()) {
         const auth = readJSON(AUTH_CACHE_KEY,{});
-        state.device = {active:true,label:auth.label || 'Computador da Portaria (offline)'};
+        state.device = {active:true,label:auth.label || 'Computador fixo da Portaria (offline)'};
         return activateApp(true);
       }
-      setAuthMessage('Sem internet e este computador ainda não possui uma autorização offline válida. Conecte à internet para o Admin autorizar o dispositivo.',true);
+      setAuthMessage('Sem internet. Conecte este computador à internet uma vez para preparar a Portaria. Depois você pode usar o modo offline.',true);
       return;
     }
 
     try {
-      const rows = normalizeRows(await rpc('portaria_device_request_v18', {
+      const list = normalizeRows(await rpc('portaria_device_request_v18', {
         p_device_key: state.deviceKey,
-        p_label: 'Computador da Portaria'
+        p_label: 'Portaria Principal'
       }));
-      const device = rows[0];
-      if (!device) throw new Error('Não foi possível registrar este computador.');
+      const device = list[0];
+      if (!device) throw new Error('Não foi possível preparar este computador.');
       state.device = device;
-      $('deviceRequestCode').textContent = device.request_code || '--------';
       if (device.active) return activateApp(false);
-      setAuthMessage('No <b>Admin → Dispositivos da Portaria</b>, autorize este código. Esta tela libera sozinha depois da aprovação.');
+
+      // Não mostramos mais código. Se este navegador foi desconectado no Admin,
+      // ele fica bloqueado até você reativá-lo na única área de dispositivos.
+      setAuthMessage('🔒 Este computador está desconectado. No Admin, abra <b>Acesso de dispositivos</b> e toque em <b>REATIVAR</b>.',true);
       startAuthorizationPoll();
     } catch (err) {
       const msg = String(err?.message || err);
-      setAuthMessage(`${esc(msg)}<br><br>Se aparecer “function ... does not exist”, execute <b>SUPABASE_V18_COMPLETO.sql</b> no Supabase.`,true);
+      setAuthMessage(`${esc(msg)}<br><br>Se a atualização ainda não foi aplicada, execute <b>SUPABASE_V21_ATUALIZACAO.sql</b> no Supabase.`,true);
     }
   }
 
@@ -149,24 +151,23 @@
     state.statusTimer = setInterval(async () => {
       if (!online()) return;
       try {
-        const rows = normalizeRows(await rpc('portaria_device_status_v18',{p_device_key:state.deviceKey}));
-        const d = rows[0];
+        const list = normalizeRows(await rpc('portaria_device_status_v18',{p_device_key:state.deviceKey}));
+        const d = list[0];
         if (!d) return;
         state.device = d;
-        $('deviceRequestCode').textContent = d.request_code || '--------';
         if (d.active) {
           clearInterval(state.statusTimer);
           activateApp(false);
         }
       } catch (_) {}
-    }, 2500);
+    }, 3000);
   }
 
   async function activateApp(fromOffline) {
     clearInterval(state.statusTimer);
     $('deviceAuth').classList.add('hidden');
     $('portariaApp').classList.remove('hidden');
-    $('deviceLabel').textContent = state.device?.label || 'Computador autorizado';
+    $('deviceLabel').textContent = state.device?.label || 'Computador fixo da Portaria';
     if (!fromOffline) {
       writeJSON(AUTH_CACHE_KEY,{
         approved:true,
@@ -264,7 +265,7 @@
       state.device=null;
       $('portariaApp')?.classList.add('hidden');
       $('deviceAuth')?.classList.remove('hidden');
-      setAuthMessage('Este computador foi desautorizado no Admin. Solicite nova autorização.',true);
+      setAuthMessage('🔒 Este computador foi desconectado no Admin. Reative em Acesso de dispositivos.',true);
     }
   }
 
