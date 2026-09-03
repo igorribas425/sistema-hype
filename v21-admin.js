@@ -1,4 +1,4 @@
-/* HYPE V21 // Admin simplificado: sorteio + acesso de dispositivos
+/* HYPE V22 // Admin simplificado: sorteio + acesso de dispositivos
    - Qualquer perfil que já pode entrar no Admin (admin/gerente/caixa) usa sorteios.
    - Uma única área mostra computador da Portaria + celulares leitores.
    - Sem código manual de autorização no painel.
@@ -27,7 +27,56 @@
   }
 
   function eventRows() {
-    return (Array.isArray(HYPE.adminEvents) && HYPE.adminEvents.length ? HYPE.adminEvents : HYPE.events) || [];
+    const admin = Array.isArray(HYPE.adminEvents) ? HYPE.adminEvents : [];
+    const pub = Array.isArray(HYPE.events) ? HYPE.events : [];
+    const merged = [...admin, ...pub];
+    const seen = new Set();
+    return merged.filter(e => {
+      const id = Number(e?.id || 0);
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }
+
+  async function fetchRaffleEventsV22() {
+    const collected = [];
+    const pushRows = data => {
+      for (const e of rows(data)) {
+        const id = Number(e?.id || 0);
+        if (!id || collected.some(x => Number(x.id) === id)) continue;
+        collected.push(e);
+      }
+    };
+
+    // 1) Primeiro tenta a lista administrativa, que inclui todos os shows cadastrados.
+    try {
+      pushRows(await sbRpc('staff_list_events_v13', {
+        p_username: HYPE.user,
+        p_password: HYPE.pass
+      }));
+    } catch (_) {
+      try {
+        pushRows(await sbRpc('staff_list_events', {
+          p_username: HYPE.user,
+          p_password: HYPE.pass
+        }));
+      } catch (_) {}
+    }
+
+    // 2) Fallback público: garante que o seletor nunca dependa de outro painel do Admin.
+    try { pushRows(await sbRpc('public_events_v13')); } catch (_) {
+      try { pushRows(await sbRpc('public_events')); } catch (_) {}
+    }
+
+    // 3) Último fallback: dados que o app.js já conseguiu carregar.
+    pushRows(eventRows());
+
+    if (collected.length) {
+      HYPE.adminEvents = collected;
+      return collected;
+    }
+    return [];
   }
 
   function eventLabel(e) {
@@ -44,20 +93,40 @@
     if (!select || !adminReady()) return 0;
 
     const before = Number(preferredId || raffleEventId || select.value || HYPE.selectedEventId || 0);
-    if (typeof window.loadAdminEvents === 'function') {
-      try { await window.loadAdminEvents(); } catch (_) {}
+    select.disabled = true;
+    select.innerHTML = '<option value="">Carregando eventos...</option>';
+
+    let list = [];
+    try {
+      list = await fetchRaffleEventsV22();
+    } catch (err) {
+      console.warn('[HYPE V22][raffle events]', err);
+      list = eventRows();
     }
 
-    const list = eventRows();
+    list = (list || []).slice().sort((a,b) => {
+      const da = String(a?.event_date || '9999-12-31');
+      const db = String(b?.event_date || '9999-12-31');
+      return da.localeCompare(db) || Number(a?.id || 0) - Number(b?.id || 0);
+    });
+
     select.innerHTML = list.length
       ? list.map(e => `<option value="${Number(e.id)}">${esc(eventLabel(e))}</option>`).join('')
-      : '<option value="">Nenhum evento cadastrado</option>';
+      : '<option value="">Nenhum evento encontrado</option>';
+    select.disabled = false;
 
     let chosen = before;
     if (!list.some(e => Number(e.id) === chosen)) chosen = Number(HYPE.selectedEventId || list[0]?.id || 0);
     if (!list.some(e => Number(e.id) === chosen)) chosen = Number(list[0]?.id || 0);
     if (chosen) select.value = String(chosen);
     raffleEventId = chosen;
+
+    const label = document.getElementById('v19RaffleSelectedLabel');
+    if (label) {
+      label.textContent = chosen
+        ? (select.selectedOptions?.[0]?.textContent || 'Evento selecionado')
+        : 'Nenhum evento foi encontrado. Use ↻ EVENTOS para tentar novamente.';
+    }
     return chosen;
   }
 
