@@ -1,0 +1,11 @@
+HYPE V27 - GITHUB
+Substitua somente estes arquivos no GitHub:
+- admin.html
+- portaria.html
+- portaria-v18.js
+
+Novidades:
+- pesquisa da Portaria automatica ao digitar (debounce 220ms)
+- celulares desconectados nao aparecem mais como historico no Admin
+
+Nao apague os outros arquivos do repositorio.

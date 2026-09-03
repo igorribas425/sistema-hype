@@ -623,11 +623,11 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
     try{
       const data=await fetchAccessV23();
       const computers=data.filter(x=>String(x.item_type)==='computer');
-      const readers=data.filter(x=>String(x.item_type)==='reader');
+      const readers=data.filter(x=>String(x.item_type)==='reader' && x.active===true);
       let html='<div class="v18-participants-head" style="margin-top:10px">💻 COMPUTADOR DA PORTARIA</div>';
       html+=computers.length?computers.map(d=>`<div class="v18-device ${d.active?'active':'pending'}"><div><strong>${esc(d.label||'Portaria Principal')}</strong><small>${d.active?'ATIVO':'DESCONECTADO'}${d.last_seen?` • último acesso ${esc(fmt(d.last_seen))}`:''}</small></div><div class="v18-device-actions">${d.active?`<button class="btn-action btn-del" onclick="revokeDeviceV21('${esc(d.item_id)}')">DESCONECTAR</button>`:(d.request_code?`<button class="btn-action btn-confirm" onclick="reactivateDeviceV21('${esc(d.request_code)}')">REATIVAR</button>`:'')}</div></div>`).join(''):'<div class="v18-empty">Nenhum computador registrado ainda. Abra portaria.html no computador fixo.</div>';
-      html+='<div class="v18-participants-head" style="margin-top:16px">📱 CELULARES LEITORES</div>';
-      html+=readers.length?readers.map(r=>`<div class="v18-device ${r.active?'active':'pending'}"><div><strong>${esc(r.label||'Celular leitor')}</strong><small>${r.active?'ATIVO':'ENCERRADO'}${r.device_label?` • ${esc(r.device_label)}`:''}${r.connected_at?` • conectado ${esc(fmt(r.connected_at))}`:''}${r.last_seen?` • última leitura ${esc(fmt(r.last_seen))}`:''}</small></div><div class="v18-device-actions">${r.active?`<button class="btn-action btn-del" onclick="revokeReaderV21('${esc(r.item_id)}')">DESCONECTAR</button>`:''}</div></div>`).join(''):'<div class="v18-empty">Nenhum celular foi ativado por link ainda. Gere o link na Portaria e abra-o no celular.</div>';
+      html+='<div class="v18-participants-head" style="margin-top:16px">📱 CELULARES LEITORES ATIVOS</div>';
+      html+=readers.length?readers.map(r=>`<div class="v18-device ${r.active?'active':'pending'}"><div><strong>${esc(r.label||'Celular leitor')}</strong><small>${r.active?'ATIVO':'ENCERRADO'}${r.device_label?` • ${esc(r.device_label)}`:''}${r.connected_at?` • conectado ${esc(fmt(r.connected_at))}`:''}${r.last_seen?` • última leitura ${esc(fmt(r.last_seen))}`:''}</small></div><div class="v18-device-actions">${r.active?`<button class="btn-action btn-del" onclick="revokeReaderV21('${esc(r.item_id)}')">DESCONECTAR</button>`:''}</div></div>`).join(''):'<div class="v18-empty">Nenhum celular leitor ativo. Ao desconectar um celular ele some desta lista e não fica no histórico.</div>';
       box.innerHTML=html;
     }catch(err){console.error('[V23][dispositivos]',err);box.innerHTML=`<div class="v18-empty error">${esc(err.message||'Erro ao carregar dispositivos.')}</div>`;}
   }

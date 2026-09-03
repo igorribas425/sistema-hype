@@ -1,6 +1,6 @@
-/* HYPE LOUNGE CLUB // PORTARIA V26 (base V18)
+/* HYPE LOUNGE CLUB // PORTARIA V27 (base V18)
    Computador autorizado por dispositivo + celular pareado somente como leitor.
-   V26: separação rígida de ingressos por evento + base V25 mantida.
+   V27: busca automática + separação rígida por evento + base V25 mantida.
 */
 (() => {
   'use strict';
@@ -25,6 +25,8 @@
     syncTimer: null,
     cameraStream: null,
     cameraTimer: null,
+    searchTimer: null,
+    searchSeq: 0,
     pairToken: '',
     pairExpiresAt: null,
     lastRemoteScanAt: 0
@@ -329,7 +331,10 @@
 
   async function search() {
     const q=$('searchInput')?.value.trim()||'';
-    if(!q)return;
+    if(!q){
+      $('results').innerHTML='<div class="empty">Digite o nome, CPF, WhatsApp ou código. A busca acontece automaticamente.</div>';
+      return;
+    }
     if(looksLikeCode(q))return processCode(q,false);
     if(!online()){
       const snap=readJSON(SNAPSHOT_KEY,null);
@@ -345,6 +350,33 @@
       renderResults(scoped);
       if(!scoped.length) flash(false,'NÃO ENCONTRADO','Nenhum ingresso com esse nome/código neste evento.');
     }catch(err){flash(false,'ERRO',err.message||'Falha na busca.');}
+  }
+
+  // V27: busca automática enquanto o porteiro digita.
+  // Usa debounce para não consultar o Supabase a cada tecla e mantém
+  // compatibilidade com leitores físicos que digitam o QR muito rápido.
+  function searchInputChanged(){
+    clearTimeout(state.searchTimer);
+    const input=$('searchInput');
+    const q=input?.value.trim()||'';
+    const seq=++state.searchSeq;
+
+    if(!q){
+      $('results').innerHTML='<div class="empty">Digite o nome, CPF, WhatsApp ou código. A busca acontece automaticamente.</div>';
+      return;
+    }
+
+    // Para nomes muito curtos, espera pelo menos 2 caracteres. CPF/telefone
+    // também começam a responder assim que houver 2 dígitos.
+    if(q.length<2 && !looksLikeCode(q)){
+      $('results').innerHTML='<div class="empty">Continue digitando para pesquisar...</div>';
+      return;
+    }
+
+    state.searchTimer=setTimeout(async()=>{
+      if(seq!==state.searchSeq)return;
+      try{await search();}catch(_){ }
+    },220);
   }
 
   function offlineFind(code) {
@@ -568,6 +600,6 @@
     await ensureDevice();
   }
 
-  window.HypePortaria={changeEvent,refresh,search,processCode,toggleDocument,validate,temporaryExit,authorizeReentry,openPair,closePair,endReaders,prepareOffline,startCamera,stopCamera};
+  window.HypePortaria={changeEvent,refresh,search,searchInputChanged,processCode,toggleDocument,validate,temporaryExit,authorizeReentry,openPair,closePair,endReaders,prepareOffline,startCamera,stopCamera};
   document.addEventListener('DOMContentLoaded',init);
 })();
