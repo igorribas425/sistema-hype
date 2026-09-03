@@ -1,4 +1,4 @@
-/* HYPE V28 // celular somente leitor por LINK EXCLUSIVO
+/* HYPE V31 // celular somente leitor por LINK EXCLUSIVO
    Correção de câmera preta no celular + revogação em tempo real:
    - força o video.play() depois que a câmera abre;
    - limpa srcObject ao fechar/reabrir a câmera;
@@ -207,7 +207,16 @@
     try{
       const valid=await statusCheck({silent:true});
       if(valid!==true)return false;
-      await rpc('portaria_reader_submit_v19',{p_reader_secret:state.secret,p_raw_code:String(raw).trim()});
+      let sent=null;
+      try {
+        sent=rows(await rpc('portaria_reader_submit_v31',{p_reader_secret:state.secret,p_raw_code:String(raw).trim()}))[0]||null;
+      } catch(err) {
+        // Compatibilidade durante a atualização do Supabase.
+        if(!/portaria_reader_submit_v31|function|schema cache|does not exist/i.test(String(err?.message||err))) throw err;
+        await rpc('portaria_reader_submit_v19',{p_reader_secret:state.secret,p_raw_code:String(raw).trim()});
+        sent={ok:true,message:'QR enviado'};
+      }
+      if(sent && sent.ok===false) throw new Error(sent.message||'Falha ao enviar QR ao computador.');
       const box=$('lastScan');$('lastCode').textContent=String(raw).slice(0,80);box.classList.add('show');
       setStatus(`${state.label} • QR ENVIADO AO COMPUTADOR ✅`,'ok');
       try{navigator.vibrate?.([70,40,70]);}catch(_){ }

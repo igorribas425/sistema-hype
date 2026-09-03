@@ -1,4 +1,4 @@
-/* HYPE LOUNGE CLUB // PORTARIA V20
+/* HYPE LOUNGE CLUB // PORTARIA V31 (base V20)
    - Computador continua usando portaria.html autorizado pelo Admin
    - Celulares recebem LINK EXCLUSIVO e abrem somente a camera/leitor
    - Link de ativacao e de uso unico; depois a sessao fica presa ao celular

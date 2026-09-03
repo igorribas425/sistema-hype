@@ -1,0 +1,10 @@
+HYPE V31 - CORRECAO LEITOR CELULAR -> COMPUTADOR
+
+1) Rode SUPABASE_V31_CORRECAO_LEITOR_CELULAR_PORTARIA.sql no SQL Editor.
+2) No GitHub substitua os 5 arquivos deste ZIP.
+3) Feche TODAS as abas antigas da Portaria no computador.
+4) Abra somente uma aba de portaria.html e faça Ctrl+F5.
+5) Gere um NOVO link do celular e abra no celular.
+6) Ao ler: celular mostra QR ENVIADO; computador mostra QR RECEBIDO e puxa o nome.
+
+A V31 também impede que uma aba oculta da Portaria consuma o QR antes da aba usada no evento.

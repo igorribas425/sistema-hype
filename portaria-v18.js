@@ -1,4 +1,4 @@
-/* HYPE LOUNGE CLUB // PORTARIA V30 (base V29)
+/* HYPE LOUNGE CLUB // PORTARIA V31 (correção leitor celular -> computador)
    Computador autorizado por dispositivo + celular pareado somente como leitor.
    V29: celular puxa o nome automaticamente no computador.
    V30: QR de outro evento é recusado e informa nome/data do evento correto.
@@ -244,29 +244,45 @@
     clearInterval(state.refreshTimer);
     clearInterval(state.syncTimer);
 
-    // V29: o computador consulta a fila do celular várias vezes por segundo.
-    // Assim que o celular lê, o QR chega aqui, o nome é buscado e o cartão
-    // do cliente aparece automaticamente — sem ENTER e sem clicar em buscar.
-    state.scanTimer=setInterval(()=>pullRemoteScan().catch(()=>{}),320);
+    // V31: somente a aba VISÍVEL da Portaria pode consumir a fila do celular.
+    // Isso evita que uma aba antiga/oculta roube o QR antes da tela usada no evento.
+    state.scanTimer=setInterval(()=>{
+      if(document.visibilityState==='visible') pullRemoteScan().catch(showRemoteReaderError);
+    },420);
     state.refreshTimer=setInterval(()=>refresh(false).catch(()=>{}),5000);
     state.syncTimer=setInterval(()=>syncQueue().catch(()=>{}),4000);
   }
 
+  function showRemoteReaderError(err){
+    const msg=String(err?.message||err||'Falha na comunicação do leitor.');
+    if(/nao autorizado|não autorizado/i.test(msg)) return handleDeviceAuthError(err);
+    const b=$('readerBadge');
+    if(b){b.textContent='ERRO NO LEITOR';b.className='pill off';}
+    // Não abre alerta repetitivo, mas deixa o erro visível na tela.
+    const box=$('results');
+    if(box && !/Nenhum|Pronto para|Evento alterado/i.test(box.textContent||'')) return;
+    if(box) box.innerHTML=`<div class="empty error">Falha ao receber QR do celular: ${esc(msg)}</div>`;
+  }
+
   async function pullRemoteScan() {
-    if (!online() || !state.deviceKey || !state.eventId || state.remotePullBusy) return;
+    if (document.visibilityState!=='visible' || !online() || !state.deviceKey || !state.eventId || state.remotePullBusy) return;
     state.remotePullBusy=true;
     try {
       let data;
       try {
-        // Função V29: mesma fila segura, mas força a versão nova no banco.
-        data=await rpc('portaria_device_pull_scan_v29',{
-          p_device_key:state.deviceKey,
-          p_event_id:Number(state.eventId)
-        });
+        // V31: canal dedicado e simples, ligado apenas ao device_key deste computador.
+        data=await rpc('portaria_device_pull_scan_v31',{p_device_key:state.deviceKey});
       } catch (err) {
-        // Compatibilidade caso o SQL V29 ainda não tenha sido executado.
-        if(!/portaria_device_pull_scan_v29|function|schema cache|does not exist/i.test(String(err?.message||err))) throw err;
-        data=await rpc('portaria_device_pull_scan_v18',{p_device_key:state.deviceKey});
+        if(!/portaria_device_pull_scan_v31|function|schema cache|does not exist/i.test(String(err?.message||err))) throw err;
+        try {
+          data=await rpc('portaria_device_pull_scan_v29',{
+            p_device_key:state.deviceKey,
+            p_event_id:Number(state.eventId)
+          });
+        } catch(err2) {
+          if(!/portaria_device_pull_scan_v29|function|schema cache|does not exist/i.test(String(err2?.message||err2))) throw err2;
+          data=await rpc('portaria_device_pull_scan_v18',{p_device_key:state.deviceKey});
+        }
       }
       const list=normalizeRows(data);
       if (!list.length) return;
@@ -277,8 +293,6 @@
       flash(true,'QR RECEBIDO DO CELULAR','Buscando nome e ingresso automaticamente...');
       await processCode(scan.raw_code,true);
       if(b){b.textContent='LEITOR ATIVO';b.className='pill on';}
-    } catch (err) {
-      handleDeviceAuthError(err);
     } finally {
       state.remotePullBusy=false;
     }
@@ -643,6 +657,15 @@
     setNetworkBadge();
     window.addEventListener('online',async()=>{setNetworkBadge();await syncQueue();if(!$('portariaApp').classList.contains('hidden')){await loadEvents();await refresh(false);}});
     window.addEventListener('offline',setNetworkBadge);
+    document.addEventListener('visibilitychange',()=>{
+      const b=$('readerBadge');
+      if(document.visibilityState==='visible'){
+        if(b && !/ERRO/.test(b.textContent||'')){b.textContent='LEITOR ATIVO';b.className='pill on';}
+        pullRemoteScan().catch(showRemoteReaderError);
+      } else if(b){
+        b.textContent='PAUSADO NESTA ABA';b.className='pill';
+      }
+    });
     await ensureDevice();
   }
 
