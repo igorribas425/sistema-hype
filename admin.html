@@ -465,9 +465,193 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260902-v21"></script>
-<script src="app.js?v=20260902-v21"></script>
-<script src="promoter-global-v16-8.js?v=20260902-v21-global"></script>
-<script src="v21-admin.js?v=20260902-v22"></script>
+<script src="supabase-config.js?v=20260902-v23"></script>
+<script src="app.js?v=20260902-v23"></script>
+<script src="promoter-global-v16-8.js?v=20260902-v23-global"></script>
+<script>
+/* HYPE V23 // correção autônoma do Admin
+   - JavaScript incorporado no próprio admin.html: não depende de v21-admin.js.
+   - Eventos do sorteio usam RPC dedicada V23, com fallback para funções anteriores.
+   - Acesso de dispositivos usa uma única RPC V23, com fallback para as funções anteriores.
+*/
+(() => {
+  'use strict';
+  const esc = v => typeof hypeEscape === 'function' ? hypeEscape(v) : String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const arr = d => Array.isArray(d) ? d : (d ? [d] : []);
+  const fmt = v => { if(!v) return '—'; const d=new Date(v); return Number.isNaN(d.getTime())?'—':d.toLocaleString('pt-BR'); };
+  let raffleEventId=0, accessTimer=null;
+
+  function adminReady(){
+    return Boolean(window.HYPE?.user && HYPE.pass && ['admin','gerente','caixa'].includes(String(HYPE.role||'').toLowerCase()));
+  }
+
+  async function fetchRaffleEventsV23(){
+    // RPC dedicada: traz todos os eventos, inclusive inativos.
+    try {
+      const data=await sbRpc('staff_list_raffle_events_v23',{p_username:HYPE.user,p_password:HYPE.pass});
+      if(arr(data).length) return arr(data);
+    } catch(err){ console.warn('[V23][staff_list_raffle_events_v23]',err); }
+
+    // Fallback para instalações em que o SQL V23 ainda não foi executado.
+    try {
+      const data=await sbRpc('staff_list_events_v13',{p_username:HYPE.user,p_password:HYPE.pass});
+      if(arr(data).length) return arr(data);
+    } catch(err){ console.warn('[V23][staff_list_events_v13]',err); }
+    try {
+      const data=await sbRpc('public_events_v13');
+      if(arr(data).length) return arr(data);
+    } catch(err){ console.warn('[V23][public_events_v13]',err); }
+    const merged=[...(Array.isArray(HYPE.adminEvents)?HYPE.adminEvents:[]),...(Array.isArray(HYPE.events)?HYPE.events:[])];
+    const seen=new Set();
+    return merged.filter(e=>{const id=Number(e?.id||0); if(!id||seen.has(id)) return false; seen.add(id); return true;});
+  }
+
+  function eventLabel(e){
+    let date='';
+    if(e?.event_date){ const d=new Date(`${String(e.event_date).slice(0,10)}T12:00:00`); if(!Number.isNaN(d.getTime())) date=` • ${d.toLocaleDateString('pt-BR')}`; }
+    return `${e?.name || 'Evento HYPE'}${date}${e?.active===false?' • INATIVO':''}`;
+  }
+
+  async function refreshRaffleEventsV19(preferredId=null){
+    const select=document.getElementById('v18RaffleEvent');
+    const label=document.getElementById('v19RaffleSelectedLabel');
+    if(!select) return 0;
+    if(!adminReady()) { if(label) label.textContent='Entre no Admin para carregar os eventos.'; return 0; }
+    const before=Number(preferredId||raffleEventId||select.value||HYPE.selectedEventId||0);
+    select.disabled=true;
+    select.innerHTML='<option value="">Carregando eventos...</option>';
+    try{
+      let list=await fetchRaffleEventsV23();
+      list=arr(list).slice().sort((a,b)=>String(a?.event_date||'9999-12-31').localeCompare(String(b?.event_date||'9999-12-31'))||Number(a?.id||0)-Number(b?.id||0));
+      if(!list.length) throw new Error('Nenhum evento retornado pelo Supabase. Rode o SQL V23 e clique em ↻ EVENTOS.');
+      HYPE.adminEvents=list;
+      select.innerHTML=list.map(e=>`<option value="${Number(e.id)}">${esc(eventLabel(e))}</option>`).join('');
+      let chosen=before;
+      if(!list.some(e=>Number(e.id)===chosen)) chosen=Number(HYPE.selectedEventId||list[0]?.id||0);
+      if(!list.some(e=>Number(e.id)===chosen)) chosen=Number(list[0]?.id||0);
+      if(chosen) select.value=String(chosen);
+      raffleEventId=chosen;
+      if(label) label.textContent=select.selectedOptions?.[0]?.textContent||'Evento selecionado.';
+      return chosen;
+    }catch(err){
+      console.error('[V23][eventos]',err);
+      select.innerHTML='<option value="">Falha ao carregar eventos</option>';
+      if(label) label.textContent=err.message||'Falha ao carregar eventos.';
+      return 0;
+    }finally{ select.disabled=false; }
+  }
+
+  async function onRaffleEventChangeV19(){
+    raffleEventId=Number(document.getElementById('v18RaffleEvent')?.value||0);
+    const list=document.getElementById('v18RaffleParticipants'); if(list){list.dataset.open='0';list.innerHTML='';}
+    const result=document.getElementById('v18RaffleWinner'); if(result){result.classList.remove('show');result.innerHTML='';}
+    await loadRaffleV18(false);
+  }
+
+  async function loadRaffleV18(ensureEvents=true){
+    if(!adminReady()) return;
+    const select=document.getElementById('v18RaffleEvent'); if(!select) return;
+    if(ensureEvents && (!select.options.length || !Number(select.value||0))) await refreshRaffleEventsV19();
+    const id=Number(select.value||raffleEventId||0); if(!id) return;
+    raffleEventId=id;
+    const box=document.getElementById('v18RaffleState');
+    try{
+      const data=arr(await sbRpc('staff_raffle_status_v18',{p_username:HYPE.user,p_password:HYPE.pass,p_event_id:id}))[0];
+      if(!data) throw new Error('Evento não encontrado no sorteio.');
+      const enabled=document.getElementById('v18RaffleEnabled'); if(enabled) enabled.checked=Boolean(data.enabled);
+      const prize=document.getElementById('v18RafflePrize'); if(prize) prize.value=data.prize||'';
+      const count=document.getElementById('v18RaffleCount'); if(count) count.textContent=String(data.participant_count||0);
+      const last=document.getElementById('v18RaffleLastWinner'); if(last) last.innerHTML=data.last_winner_name?`Último vencedor: <b>${esc(data.last_winner_name)}</b> • ${esc(data.last_winner_code||'')} • ${esc(fmt(data.last_draw_at))}`:'Nenhum sorteio realizado neste evento.';
+      if(box){box.textContent=data.enabled?'SORTEIO ATIVO • toda compra PAGA deste evento participa automaticamente':'SORTEIO DESATIVADO';box.className=`v18-state ${data.enabled?'on':''}`;}
+    }catch(err){ if(box){box.textContent=err.message||'Erro ao carregar sorteio.';box.className='v18-state error';} }
+  }
+
+  async function saveRaffleV18(){
+    if(!adminReady()) return alert('Sua sessão do Admin expirou. Entre novamente.');
+    const id=Number(document.getElementById('v18RaffleEvent')?.value||0);
+    const enabled=Boolean(document.getElementById('v18RaffleEnabled')?.checked);
+    const prize=document.getElementById('v18RafflePrize')?.value.trim()||'';
+    if(!id) return alert('Selecione um evento para o sorteio.');
+    if(enabled&&!prize) return alert('Informe o prêmio do sorteio.');
+    try{await sbRpc('staff_save_raffle_v18',{p_username:HYPE.user,p_password:HYPE.pass,p_event_id:id,p_enabled:enabled,p_prize:prize});hypeNotify(enabled?'Sorteio ativado neste evento.':'Sorteio desativado neste evento.');await loadRaffleV18(false);}catch(err){alert(err.message||'Erro ao salvar sorteio.');}
+  }
+
+  async function drawRaffleV18(){
+    if(!adminReady()) return alert('Sua sessão do Admin expirou. Entre novamente.');
+    const select=document.getElementById('v18RaffleEvent'); const id=Number(select?.value||0); if(!id) return alert('Selecione um evento.');
+    const prize=document.getElementById('v18RafflePrize')?.value.trim()||'o prêmio'; const eventName=select?.selectedOptions?.[0]?.textContent||'evento selecionado';
+    if(!confirm(`Confirmar o sorteio?\n\n${eventName}\nPrêmio: ${prize}\n\nSomente ingressos PAGOS participam.`)) return;
+    const btn=document.getElementById('v18DrawBtn'); if(btn){btn.disabled=true;btn.textContent='SORTEANDO...';}
+    try{
+      const winner=arr(await sbRpc('staff_draw_raffle_v18',{p_username:HYPE.user,p_password:HYPE.pass,p_event_id:id}))[0];
+      if(!winner) throw new Error('O sorteio não retornou um vencedor.');
+      const result=document.getElementById('v18RaffleWinner'); if(result){result.classList.add('show');result.innerHTML=`<small>🎉 VENCEDOR DO SORTEIO</small><strong>${esc(winner.customer_name)}</strong><span>${esc(winner.ticket_code)}${winner.promoter_code?` • Promoter ${esc(winner.promoter_code)}`:''}</span><b>🎁 ${esc(winner.prize||prize)}</b><em>${winner.phone?`WhatsApp: ${esc(winner.phone)}`:''}</em>`;}
+      hypeNotify('Sorteio realizado e registrado.'); await loadRaffleV18(false); await loadRaffleParticipantsV18(true);
+    }catch(err){alert(err.message||'Não foi possível realizar o sorteio.');}
+    finally{if(btn){btn.disabled=false;btn.textContent='🎲 REALIZAR SORTEIO AGORA';}}
+  }
+
+  async function loadRaffleParticipantsV18(forceShow=false){
+    if(!adminReady()) return; const id=Number(document.getElementById('v18RaffleEvent')?.value||0); if(!id) return;
+    const list=document.getElementById('v18RaffleParticipants'); if(!list) return;
+    if(!forceShow&&list.dataset.open==='1'){list.dataset.open='0';list.innerHTML='';return;}
+    list.dataset.open='1';list.innerHTML='<div class="v18-empty">Carregando participantes pagos...</div>';
+    try{
+      const data=arr(await sbRpc('staff_raffle_participants_v18',{p_username:HYPE.user,p_password:HYPE.pass,p_event_id:id}));
+      list.innerHTML=data.length?`<div class="v18-participants-head">${data.length} participante(s) PAGO(s) • HYPE + promoter + Portaria • 1 ingresso = 1 chance</div>${data.map((p,i)=>`<div class="v18-participant"><b>${i+1}. ${esc(p.customer_name)}</b><span>${esc(p.ticket_code)}${p.promoter_code?` • promoter ${esc(p.promoter_code)}`:''}</span></div>`).join('')}`:'<div class="v18-empty">Nenhum pagamento confirmado neste evento ainda.</div>';
+    }catch(err){list.innerHTML=`<div class="v18-empty error">${esc(err.message||'Erro ao carregar participantes.')}</div>`;}
+  }
+
+  async function fetchAccessV23(){
+    try{ const data=await sbRpc('staff_list_access_devices_v23',{p_username:HYPE.user,p_password:HYPE.pass}); return arr(data); }
+    catch(err){ console.warn('[V23][staff_list_access_devices_v23]',err); }
+    // fallback: não deixa uma chamada falhar e travar a outra
+    let out=[];
+    try{for(const d of arr(await sbRpc('staff_list_portaria_devices_v18',{p_username:HYPE.user,p_password:HYPE.pass}))){out.push({item_type:'computer',item_id:d.device_id,request_code:d.request_code,label:d.label,device_label:d.label,active:Boolean(d.active)&&!d.revoked_at,connected_at:d.approved_at,last_seen:d.last_seen,expires_at:null});}}catch(err){console.warn('[V23][devices fallback]',err);}
+    try{for(const r of arr(await sbRpc('staff_list_portaria_readers_v20',{p_username:HYPE.user,p_password:HYPE.pass}))){out.push({item_type:'reader',item_id:r.reader_id,request_code:null,label:r.reader_label,device_label:r.device_label,active:Boolean(r.active),connected_at:r.connected_at,last_seen:r.last_scan_at,expires_at:r.expires_at});}}catch(err){console.warn('[V23][readers fallback]',err);}
+    return out;
+  }
+
+  async function loadDevicesV21(){
+    const box=document.getElementById('v21AccessList'); if(!box) return;
+    if(!adminReady()){box.innerHTML='<div class="v18-empty">Entre no Admin para visualizar os dispositivos.</div>';return;}
+    box.innerHTML='<div class="v18-empty">Atualizando dispositivos...</div>';
+    try{
+      const data=await fetchAccessV23();
+      const computers=data.filter(x=>String(x.item_type)==='computer');
+      const readers=data.filter(x=>String(x.item_type)==='reader');
+      let html='<div class="v18-participants-head" style="margin-top:10px">💻 COMPUTADOR DA PORTARIA</div>';
+      html+=computers.length?computers.map(d=>`<div class="v18-device ${d.active?'active':'pending'}"><div><strong>${esc(d.label||'Portaria Principal')}</strong><small>${d.active?'ATIVO':'DESCONECTADO'}${d.last_seen?` • último acesso ${esc(fmt(d.last_seen))}`:''}</small></div><div class="v18-device-actions">${d.active?`<button class="btn-action btn-del" onclick="revokeDeviceV21('${esc(d.item_id)}')">DESCONECTAR</button>`:(d.request_code?`<button class="btn-action btn-confirm" onclick="reactivateDeviceV21('${esc(d.request_code)}')">REATIVAR</button>`:'')}</div></div>`).join(''):'<div class="v18-empty">Nenhum computador registrado ainda. Abra portaria.html no computador fixo.</div>';
+      html+='<div class="v18-participants-head" style="margin-top:16px">📱 CELULARES LEITORES</div>';
+      html+=readers.length?readers.map(r=>`<div class="v18-device ${r.active?'active':'pending'}"><div><strong>${esc(r.label||'Celular leitor')}</strong><small>${r.active?'ATIVO':'ENCERRADO'}${r.device_label?` • ${esc(r.device_label)}`:''}${r.connected_at?` • conectado ${esc(fmt(r.connected_at))}`:''}${r.last_seen?` • última leitura ${esc(fmt(r.last_seen))}`:''}</small></div><div class="v18-device-actions">${r.active?`<button class="btn-action btn-del" onclick="revokeReaderV21('${esc(r.item_id)}')">DESCONECTAR</button>`:''}</div></div>`).join(''):'<div class="v18-empty">Nenhum celular foi ativado por link ainda. Gere o link na Portaria e abra-o no celular.</div>';
+      box.innerHTML=html;
+    }catch(err){console.error('[V23][dispositivos]',err);box.innerHTML=`<div class="v18-empty error">${esc(err.message||'Erro ao carregar dispositivos.')}</div>`;}
+  }
+
+  async function revokeDeviceV21(id){if(!adminReady())return;if(!confirm('Desconectar o computador da Portaria?'))return;try{await sbRpc('staff_revoke_portaria_device_v18',{p_username:HYPE.user,p_password:HYPE.pass,p_device_id:id});hypeNotify('Computador desconectado.');await loadDevicesV21();}catch(err){alert(err.message||'Não foi possível desconectar.');}}
+  async function reactivateDeviceV21(code){if(!adminReady())return;if(!confirm('Reativar este computador da Portaria?'))return;try{await sbRpc('staff_approve_portaria_device_v18',{p_username:HYPE.user,p_password:HYPE.pass,p_request_code:code,p_label:null});hypeNotify('Computador reativado.');await loadDevicesV21();}catch(err){alert(err.message||'Não foi possível reativar.');}}
+  async function revokeReaderV21(id){if(!adminReady())return;if(!confirm('Desconectar este celular leitor?'))return;try{await sbRpc('staff_revoke_portaria_reader_v20',{p_username:HYPE.user,p_password:HYPE.pass,p_reader_id:id});hypeNotify('Celular leitor desconectado.');await loadDevicesV21();}catch(err){alert(err.message||'Não foi possível desconectar o leitor.');}}
+
+  async function hypeV23AdminInit(){
+    if(!adminReady()) return;
+    try{const id=await refreshRaffleEventsV19(raffleEventId||HYPE.selectedEventId);if(id)await loadRaffleV18(false);}catch(err){console.error('[V23][init raffle]',err);}
+    try{await loadDevicesV21();}catch(err){console.error('[V23][init devices]',err);}
+    clearInterval(accessTimer);accessTimer=setInterval(()=>{if(!document.hidden&&adminReady())loadDevicesV21().catch(()=>{});},9000);
+  }
+
+  window.refreshRaffleEventsV19=refreshRaffleEventsV19;
+  window.onRaffleEventChangeV19=onRaffleEventChangeV19;
+  window.loadRaffleV18=loadRaffleV18;
+  window.saveRaffleV18=saveRaffleV18;
+  window.drawRaffleV18=drawRaffleV18;
+  window.loadRaffleParticipantsV18=loadRaffleParticipantsV18;
+  window.loadDevicesV21=loadDevicesV21;
+  window.revokeDeviceV21=revokeDeviceV21;
+  window.reactivateDeviceV21=reactivateDeviceV21;
+  window.revokeReaderV21=revokeReaderV21;
+  window.hypeV18AdminInit=hypeV23AdminInit;
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{if(adminReady())hypeV23AdminInit();},900));
+})();
+</script>
 </body>
 </html>
