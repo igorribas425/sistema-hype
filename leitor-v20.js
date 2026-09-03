@@ -1,5 +1,12 @@
-/* HYPE V25 // celular somente leitor por LINK EXCLUSIVO
-   Correção de revogação em tempo real:
+/* HYPE V28 // celular somente leitor por LINK EXCLUSIVO
+   Correção de câmera preta no celular + revogação em tempo real:
+   - força o video.play() depois que a câmera abre;
+   - limpa srcObject ao fechar/reabrir a câmera;
+   - tenta câmera traseira e faz fallback compatível;
+   - mostra mensagem clara se a permissão da câmera estiver bloqueada.
+
+   Base V25/V26:
+
    - valida a credencial antes de abrir a câmera;
    - consulta o Supabase a cada 2 segundos;
    - ao Admin desconectar o leitor OU o computador da Portaria,
@@ -29,9 +36,69 @@
 
   function stopCameraOnly(){
     clearInterval(state.timer);state.timer=null;
-    if(state.stream)state.stream.getTracks().forEach(t=>t.stop());
+    const video=$('video');
+    try{ video?.pause?.(); }catch(_){ }
+    if(state.stream)state.stream.getTracks().forEach(t=>{ try{t.stop();}catch(_){ } });
     state.stream=null;
+    if(video){
+      try{ video.srcObject=null; }catch(_){ }
+      try{ video.removeAttribute('src'); }catch(_){ }
+      try{ video.load?.(); }catch(_){ }
+    }
     $('cameraBox')?.classList.remove('show');
+  }
+
+  async function openCameraStream(){
+    const preferred={
+      audio:false,
+      video:{
+        facingMode:{ideal:'environment'},
+        width:{ideal:1280},
+        height:{ideal:720}
+      }
+    };
+    try{
+      return await navigator.mediaDevices.getUserMedia(preferred);
+    }catch(firstErr){
+      // Alguns Androids/POCO falham com constraints de câmera traseira.
+      // Faz uma segunda tentativa mais simples antes de desistir.
+      try{
+        return await navigator.mediaDevices.getUserMedia({audio:false,video:true});
+      }catch(_){
+        throw firstErr;
+      }
+    }
+  }
+
+  async function attachAndPlay(stream){
+    const video=$('video');
+    if(!video)throw new Error('Área da câmera não encontrada.');
+    video.muted=true;
+    video.autoplay=true;
+    video.playsInline=true;
+    video.setAttribute('playsinline','');
+    video.srcObject=stream;
+    $('cameraBox')?.classList.add('show');
+
+    if(video.readyState<1){
+      await new Promise((resolve,reject)=>{
+        const done=()=>{cleanup();resolve();};
+        const fail=()=>{cleanup();reject(new Error('A câmera abriu, mas o vídeo não iniciou.'));};
+        const cleanup=()=>{video.removeEventListener('loadedmetadata',done);video.removeEventListener('error',fail);};
+        video.addEventListener('loadedmetadata',done,{once:true});
+        video.addEventListener('error',fail,{once:true});
+        setTimeout(()=>{cleanup();resolve();},1800);
+      });
+    }
+    await video.play();
+
+    // Detecta o caso clássico de tela preta: stream existe, mas nenhum frame chegou.
+    await new Promise(r=>setTimeout(r,180));
+    if(!video.videoWidth || !video.videoHeight){
+      await new Promise(r=>setTimeout(r,650));
+      if(!video.videoWidth || !video.videoHeight)throw new Error('A câmera não entregou imagem. Feche outras aplicações que estejam usando a câmera e tente novamente.');
+    }
+    return video;
   }
 
   function revokeLocal(message='ACESSO ENCERRADO PELO ADMIN'){
@@ -165,8 +232,8 @@
     if(!('BarcodeDetector' in window)){setStatus('Este navegador não oferece leitura automática de QR. Abra o link no Chrome atualizado.','bad');return;}
     try{
       stopCameraOnly();
-      state.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});
-      const video=$('video');video.srcObject=state.stream;$('cameraBox').classList.add('show');
+      state.stream=await openCameraStream();
+      const video=await attachAndPlay(state.stream);
       const detector=new BarcodeDetector({formats:['qr_code']});
       state.timer=setInterval(async()=>{
         if(state.busy||video.readyState<2)return;
@@ -177,7 +244,17 @@
         }catch(_){ }
       },300);
       setStatus(`${state.label} • CÂMERA ATIVA — APONTE PARA O QR`,'ok');
-    }catch(err){setStatus('Não foi possível abrir a câmera: '+err.message,'bad');}
+    }catch(err){
+      stopCameraOnly();
+      const name=String(err?.name||'');
+      let msg=String(err?.message||'Erro desconhecido');
+      if(name==='NotAllowedError' || /permission|permiss/i.test(msg)){
+        msg='Permissão da câmera bloqueada. No Chrome, toque no cadeado/ícone ao lado do endereço → Permissões → Câmera → Permitir e abra o leitor novamente.';
+      }else if(name==='NotReadableError' || /could not start|not readable|in use/i.test(msg)){
+        msg='A câmera está sendo usada por outro aplicativo. Feche Câmera/WhatsApp/Instagram e tente novamente.';
+      }
+      setStatus('Não foi possível abrir a câmera: '+msg,'bad');
+    }
   }
 
   function stop(){state.wantsCamera=false;stopCameraOnly();}

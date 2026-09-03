@@ -18,7 +18,7 @@
     <p>Este celular foi aberto por um link exclusivo e funciona somente como câmera/leitor. Ele não mostra clientes, vendas, pagamentos, Admin ou senhas. Se o Admin desconectar a Portaria ou este leitor, a câmera é encerrada automaticamente.</p><div style="margin-top:10px;font-size:10px;color:#777">DISPOSITIVO REGISTRADO: <b id="readerName" style="color:#fff">Celular leitor</b></div>
     <div id="readerStatus" class="status">Conectando ao computador...</div>
     <button id="startBtn" class="btn" onclick="HypeReader.start()" disabled>📷 ABRIR LEITOR</button>
-    <div id="cameraBox" class="camera"><video id="video" autoplay muted playsinline></video><div class="scanline"></div></div>
+    <div id="cameraBox" class="camera"><video id="video" autoplay muted playsinline webkit-playsinline></video><div class="scanline"></div></div>
     <div id="lastScan" class="last"><b>QR ENVIADO ✅</b><span id="lastCode"></span></div>
     <button class="btn secondary" onclick="HypeReader.stop()">FECHAR CÂMERA</button><button class="btn secondary" onclick="HypeReader.forget()">DESCONECTAR ESTE CELULAR</button>
     <p class="note">A leitura aparece em tempo real no computador autorizado da Portaria. A confirmação da entrada continua sendo feita lá.</p>
@@ -26,6 +26,6 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260902-v20"></script>
-<script src="leitor-v20.js?v=20260902-v26"></script>
+<script src="leitor-v20.js?v=20260902-v28"></script>
 </body>
 </html>

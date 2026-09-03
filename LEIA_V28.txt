@@ -1,0 +1,13 @@
+HYPE V28 - CORRECAO CAMERA PRETA DO LEITOR
+
+Substitua no GitHub somente:
+- leitor.html
+- leitor-v20.js
+
+Nao precisa rodar SQL no Supabase.
+
+Depois de publicar:
+1. Feche a aba antiga do leitor no celular.
+2. Abra novamente o link exclusivo do leitor.
+3. No Chrome, permita a camera quando solicitado.
+4. Se ainda ficar preta, feche apps que estejam usando a camera e recarregue.
