@@ -1,0 +1,17 @@
+HYPE V26 - ATUALIZACAO CONSOLIDADA
+
+Esta pasta já inclui a correção V25 do celular leitor e a correção V26 da Portaria por evento.
+
+Arquivos para substituir no GitHub:
+- admin.html (versão atual do Admin)
+- portaria.html
+- portaria-v18.js
+- portaria-v20.js
+- leitor.html
+- leitor-v20.js
+
+Antes, rode SUPABASE_V26_ATUALIZACAO.sql no SQL Editor do Supabase.
+A parte V25 está incluída no SQL V26 e pode ser executada novamente sem problema.
+
+V26: a busca por nome/CPF/WhatsApp e a leitura de QR ficam presas ao evento selecionado na Portaria.
+Um ingresso de outro evento não aparece nem pode ser validado no evento atual.

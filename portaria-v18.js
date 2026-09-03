@@ -1,6 +1,6 @@
-/* HYPE LOUNGE CLUB // PORTARIA V18
+/* HYPE LOUNGE CLUB // PORTARIA V26 (base V18)
    Computador autorizado por dispositivo + celular pareado somente como leitor.
-   Requer SUPABASE_V18_COMPLETO.sql.
+   V26: separação rígida de ingressos por evento + base V25 mantida.
 */
 (() => {
   'use strict';
@@ -339,13 +339,20 @@
     }
     try{
       const rows=normalizeRows(await rpc('portaria_device_search_v18',{p_device_key:state.deviceKey,p_event_id:state.eventId,p_query:q}));
-      renderResults(rows);
+      // V26: defesa extra no navegador. Mesmo que uma função antiga do banco
+      // devolva registros a mais, a Portaria NUNCA mostra ingresso de outro evento.
+      const scoped=rows.filter(item=>Number(item.event_id)===Number(state.eventId));
+      renderResults(scoped);
+      if(!scoped.length) flash(false,'NÃO ENCONTRADO','Nenhum ingresso com esse nome/código neste evento.');
     }catch(err){flash(false,'ERRO',err.message||'Falha na busca.');}
   }
 
   function offlineFind(code) {
     const snap=readJSON(SNAPSHOT_KEY,null); const q=String(code||'').trim().replace(/^#/,'');
-    return (snap?.tickets||[]).find(t=>String(t.ticket_code||'').toUpperCase()===q.toUpperCase()||String(t.qr_token||'')===q)||null;
+    return (snap?.tickets||[]).find(t=>
+      Number(t.event_id)===Number(state.eventId) &&
+      (String(t.ticket_code||'').toUpperCase()===q.toUpperCase()||String(t.qr_token||'')===q)
+    )||null;
   }
 
   async function processCode(code, fromReader) {
@@ -358,12 +365,36 @@
       return;
     }
     try{
-      const rows=normalizeRows(await rpc('portaria_device_lookup_v18',{p_device_key:state.deviceKey,p_code:String(code||'').trim()}));
-      if(!rows.length){renderResults([]);flash(false,'NEGADO','QR Code não encontrado.');return;}
-      renderResults(rows);
-      const item=rows[0];
-      if(Number(item.event_id)!==Number(state.eventId))flash(false,'OUTRO EVENTO',item.event_name||'Troque o evento selecionado.');
-      else if(item.payment_status!=='Pago')flash(false,'NEGADO',item.payment_status==='Cancelado'?'Ingresso cancelado.':'Pagamento não confirmado.');
+      let rows=[];
+      try {
+        // V26: o próprio Supabase já recebe o evento selecionado e só pode
+        // devolver ingresso pertencente a ele.
+        rows=normalizeRows(await rpc('portaria_device_lookup_event_v26',{
+          p_device_key:state.deviceKey,
+          p_event_id:state.eventId,
+          p_code:String(code||'').trim()
+        }));
+      } catch (err) {
+        // Compatibilidade durante a atualização: se o SQL V26 ainda não foi
+        // executado, usa a consulta antiga e filtra rigorosamente no navegador.
+        if(!/portaria_device_lookup_event_v26|function|schema cache|does not exist/i.test(String(err?.message||err))) throw err;
+        const legacy=normalizeRows(await rpc('portaria_device_lookup_v18',{p_device_key:state.deviceKey,p_code:String(code||'').trim()}));
+        rows=legacy.filter(item=>Number(item.event_id)===Number(state.eventId));
+      }
+      if(!rows.length){
+        renderResults([]);
+        flash(false,'EVENTO DIFERENTE','Este QR não pertence ao evento selecionado na Portaria.');
+        return;
+      }
+      const scoped=rows.filter(item=>Number(item.event_id)===Number(state.eventId));
+      if(!scoped.length){
+        renderResults([]);
+        flash(false,'EVENTO DIFERENTE','Este QR não pertence ao evento selecionado na Portaria.');
+        return;
+      }
+      renderResults(scoped);
+      const item=scoped[0];
+      if(item.payment_status!=='Pago')flash(false,'NEGADO',item.payment_status==='Cancelado'?'Ingresso cancelado.':'Pagamento não confirmado.');
       else if(fromReader) tone();
     }catch(err){flash(false,'ERRO',err.message||'Falha ao ler QR.');}
   }
@@ -371,9 +402,11 @@
   function renderResults(rows) {
     state.items.clear();
     const box=$('results');
-    if(!rows?.length){box.innerHTML='<div class="empty error">Nenhum ingresso encontrado.</div>';return;}
-    rows.forEach(r=>state.items.set(Number(r.ticket_id),r));
-    box.innerHTML=rows.map(renderTicket).join('');
+    // V26: último bloqueio de segurança visual. A tela jamais mistura eventos.
+    const scoped=(Array.isArray(rows)?rows:[]).filter(r=>Number(r.event_id)===Number(state.eventId));
+    if(!scoped.length){box.innerHTML='<div class="empty error">Nenhum ingresso encontrado neste evento.</div>';return;}
+    scoped.forEach(r=>state.items.set(Number(r.ticket_id),r));
+    box.innerHTML=scoped.map(renderTicket).join('');
   }
 
   function renderTicket(item) {

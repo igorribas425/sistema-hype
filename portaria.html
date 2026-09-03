@@ -37,6 +37,7 @@
 
     <div class="controls">
       <select id="eventSelect" class="select" onchange="HypePortaria.changeEvent();HypeV20.eventChanged()"><option>Carregando eventos...</option></select>
+      <small style="display:block;margin-top:7px;color:var(--muted)">A Portaria mostra e valida somente ingressos do evento selecionado.</small>
       <button class="btn" onclick="HypePortaria.prepareOffline()">⬇ PREPARAR OFFLINE</button>
       <button class="btn" onclick="HypePortaria.refresh(true)">↻ ATUALIZAR</button>
     </div>
@@ -109,8 +110,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260902-v21"></script>
 <script src="hype-qrcode.js?v=20260902-v21"></script>
-<script src="portaria-v18.js?v=20260902-v21"></script>
-<script src="portaria-v20.js?v=20260902-v21"></script>
+<script src="portaria-v18.js?v=20260902-v26"></script>
+<script src="portaria-v20.js?v=20260902-v26"></script>
 <script src="register-sw.js?v=20260902-v21"></script>
 </body>
 </html>
