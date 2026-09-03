@@ -1,0 +1,9 @@
+HYPE V30 CONSOLIDADO
+
+Inclui:
+- V28: correção da câmera preta do celular leitor.
+- V29: QR lido no celular puxa o ingresso/nome automaticamente no computador da Portaria.
+- V30: se o QR for de outro evento, a Portaria NÃO libera. Mostra nome e data do evento correto e pede para selecionar o evento certo e ler novamente.
+
+GitHub: substitua os 4 arquivos deste ZIP.
+Supabase: rode SUPABASE_V30_ATUALIZADO_V29_EVENTO_QR.sql em UM New Query.

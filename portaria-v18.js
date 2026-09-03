@@ -1,6 +1,7 @@
-/* HYPE LOUNGE CLUB // PORTARIA V27 (base V18)
+/* HYPE LOUNGE CLUB // PORTARIA V30 (base V29)
    Computador autorizado por dispositivo + celular pareado somente como leitor.
-   V27: busca automática + separação rígida por evento + base V25 mantida.
+   V29: celular puxa o nome automaticamente no computador.
+   V30: QR de outro evento é recusado e informa nome/data do evento correto.
 */
 (() => {
   'use strict';
@@ -25,11 +26,10 @@
     syncTimer: null,
     cameraStream: null,
     cameraTimer: null,
-    searchTimer: null,
-    searchSeq: 0,
     pairToken: '',
     pairExpiresAt: null,
-    lastRemoteScanAt: 0
+    lastRemoteScanAt: 0,
+    remotePullBusy: false
   };
 
   const $ = id => document.getElementById(id);
@@ -243,21 +243,45 @@
     clearInterval(state.scanTimer);
     clearInterval(state.refreshTimer);
     clearInterval(state.syncTimer);
-    state.scanTimer=setInterval(()=>pullRemoteScan().catch(()=>{}),900);
+
+    // V29: o computador consulta a fila do celular várias vezes por segundo.
+    // Assim que o celular lê, o QR chega aqui, o nome é buscado e o cartão
+    // do cliente aparece automaticamente — sem ENTER e sem clicar em buscar.
+    state.scanTimer=setInterval(()=>pullRemoteScan().catch(()=>{}),320);
     state.refreshTimer=setInterval(()=>refresh(false).catch(()=>{}),5000);
     state.syncTimer=setInterval(()=>syncQueue().catch(()=>{}),4000);
   }
 
   async function pullRemoteScan() {
-    if (!online() || !state.deviceKey || !state.eventId) return;
+    if (!online() || !state.deviceKey || !state.eventId || state.remotePullBusy) return;
+    state.remotePullBusy=true;
     try {
-      const rows=normalizeRows(await rpc('portaria_device_pull_scan_v18',{p_device_key:state.deviceKey}));
-      if (!rows.length) return;
-      const scan=rows[0];
+      let data;
+      try {
+        // Função V29: mesma fila segura, mas força a versão nova no banco.
+        data=await rpc('portaria_device_pull_scan_v29',{
+          p_device_key:state.deviceKey,
+          p_event_id:Number(state.eventId)
+        });
+      } catch (err) {
+        // Compatibilidade caso o SQL V29 ainda não tenha sido executado.
+        if(!/portaria_device_pull_scan_v29|function|schema cache|does not exist/i.test(String(err?.message||err))) throw err;
+        data=await rpc('portaria_device_pull_scan_v18',{p_device_key:state.deviceKey});
+      }
+      const list=normalizeRows(data);
+      if (!list.length) return;
+      const scan=list[0];
+      if(!scan?.raw_code) return;
       state.lastRemoteScanAt=Date.now();
-      const b=$('readerBadge'); if(b){b.textContent='LEITOR ATIVO';b.className='pill on';}
+      const b=$('readerBadge'); if(b){b.textContent='QR RECEBIDO';b.className='pill on';}
+      flash(true,'QR RECEBIDO DO CELULAR','Buscando nome e ingresso automaticamente...');
       await processCode(scan.raw_code,true);
-    } catch (err) { handleDeviceAuthError(err); }
+      if(b){b.textContent='LEITOR ATIVO';b.className='pill on';}
+    } catch (err) {
+      handleDeviceAuthError(err);
+    } finally {
+      state.remotePullBusy=false;
+    }
   }
 
   function handleDeviceAuthError(err) {
@@ -331,10 +355,7 @@
 
   async function search() {
     const q=$('searchInput')?.value.trim()||'';
-    if(!q){
-      $('results').innerHTML='<div class="empty">Digite o nome, CPF, WhatsApp ou código. A busca acontece automaticamente.</div>';
-      return;
-    }
+    if(!q)return;
     if(looksLikeCode(q))return processCode(q,false);
     if(!online()){
       const snap=readJSON(SNAPSHOT_KEY,null);
@@ -350,33 +371,6 @@
       renderResults(scoped);
       if(!scoped.length) flash(false,'NÃO ENCONTRADO','Nenhum ingresso com esse nome/código neste evento.');
     }catch(err){flash(false,'ERRO',err.message||'Falha na busca.');}
-  }
-
-  // V27: busca automática enquanto o porteiro digita.
-  // Usa debounce para não consultar o Supabase a cada tecla e mantém
-  // compatibilidade com leitores físicos que digitam o QR muito rápido.
-  function searchInputChanged(){
-    clearTimeout(state.searchTimer);
-    const input=$('searchInput');
-    const q=input?.value.trim()||'';
-    const seq=++state.searchSeq;
-
-    if(!q){
-      $('results').innerHTML='<div class="empty">Digite o nome, CPF, WhatsApp ou código. A busca acontece automaticamente.</div>';
-      return;
-    }
-
-    // Para nomes muito curtos, espera pelo menos 2 caracteres. CPF/telefone
-    // também começam a responder assim que houver 2 dígitos.
-    if(q.length<2 && !looksLikeCode(q)){
-      $('results').innerHTML='<div class="empty">Continue digitando para pesquisar...</div>';
-      return;
-    }
-
-    state.searchTimer=setTimeout(async()=>{
-      if(seq!==state.searchSeq)return;
-      try{await search();}catch(_){ }
-    },220);
   }
 
   function offlineFind(code) {
@@ -414,14 +408,46 @@
         rows=legacy.filter(item=>Number(item.event_id)===Number(state.eventId));
       }
       if(!rows.length){
+        // V30: descobre se o QR existe em OUTRO evento sem liberar entrada.
+        // Assim a Portaria explica exatamente de qual show e data é o ingresso.
+        let actual=null;
+        try {
+          const info=normalizeRows(await rpc('portaria_device_qr_event_v30',{
+            p_device_key:state.deviceKey,
+            p_code:String(code||'').trim()
+          }));
+          actual=info[0]||null;
+        } catch (infoErr) {
+          // Compatibilidade: enquanto o SQL V30 não estiver instalado, usa a
+          // consulta antiga somente para descobrir o evento.
+          if(/portaria_device_qr_event_v30|function|schema cache|does not exist/i.test(String(infoErr?.message||infoErr))){
+            const legacy=normalizeRows(await rpc('portaria_device_lookup_v18',{p_device_key:state.deviceKey,p_code:String(code||'').trim()}));
+            actual=legacy[0]||null;
+          } else throw infoErr;
+        }
+
+        if(actual && Number(actual.event_id)!==Number(state.eventId)){
+          renderWrongEvent(actual);
+          const eventLabel=`${actual.event_name||'Evento HYPE'}${actual.event_date?` • ${fmtDate(actual.event_date)}`:''}`;
+          flash(false,'INGRESSO DE OUTRO EVENTO',`Desculpa, este ingresso é do ${eventLabel}.`);
+          return;
+        }
+
         renderResults([]);
-        flash(false,'EVENTO DIFERENTE','Este QR não pertence ao evento selecionado na Portaria.');
+        flash(false,'QR NÃO ENCONTRADO','Este QR não corresponde a nenhum ingresso cadastrado.');
         return;
       }
       const scoped=rows.filter(item=>Number(item.event_id)===Number(state.eventId));
       if(!scoped.length){
-        renderResults([]);
-        flash(false,'EVENTO DIFERENTE','Este QR não pertence ao evento selecionado na Portaria.');
+        const actual=rows[0]||null;
+        if(actual){
+          renderWrongEvent(actual);
+          const eventLabel=`${actual.event_name||'Evento HYPE'}${actual.event_date?` • ${fmtDate(actual.event_date)}`:''}`;
+          flash(false,'INGRESSO DE OUTRO EVENTO',`Desculpa, este ingresso é do ${eventLabel}.`);
+        } else {
+          renderResults([]);
+          flash(false,'QR NÃO ENCONTRADO','Este QR não corresponde a nenhum ingresso cadastrado.');
+        }
         return;
       }
       renderResults(scoped);
@@ -429,6 +455,26 @@
       if(item.payment_status!=='Pago')flash(false,'NEGADO',item.payment_status==='Cancelado'?'Ingresso cancelado.':'Pagamento não confirmado.');
       else if(fromReader) tone();
     }catch(err){flash(false,'ERRO',err.message||'Falha ao ler QR.');}
+  }
+
+  function selectedEventInfo() {
+    return state.events.find(e=>Number(e.id)===Number(state.eventId)) || {
+      id:state.eventId,
+      name:$('eventSelect')?.selectedOptions?.[0]?.textContent || 'Evento selecionado',
+      event_date:null
+    };
+  }
+
+  function renderWrongEvent(actual) {
+    state.items.clear();
+    const box=$('results');
+    if(!box)return;
+    const selected=selectedEventInfo();
+    const actualName=actual?.event_name || 'Evento HYPE';
+    const actualDate=actual?.event_date ? fmtDate(actual.event_date) : 'data não informada';
+    const selectedName=selected?.name || 'Evento selecionado';
+    const selectedDate=selected?.event_date ? fmtDate(selected.event_date) : '';
+    box.innerHTML=`<article class="ticket bad"><div><span class="sector">⚠️ EVENTO DIFERENTE</span><h2>INGRESSO NÃO LIBERADO</h2><div class="meta" style="font-size:13px;line-height:1.7"><b>Desculpa, este ingresso é do evento ${esc(actualName)}, dia ${esc(actualDate)}.</b><br><br>Na Portaria está selecionado <b>${esc(selectedName)}${selectedDate?` • ${esc(selectedDate)}`:''}</b>.<br>Selecione o evento correto acima e leia o QR novamente. <b>Nenhuma entrada foi registrada.</b></div></div><div class="ticket-actions"><div class="state danger">OUTRO EVENTO</div></div></article>`;
   }
 
   function renderResults(rows) {
@@ -600,6 +646,6 @@
     await ensureDevice();
   }
 
-  window.HypePortaria={changeEvent,refresh,search,searchInputChanged,processCode,toggleDocument,validate,temporaryExit,authorizeReentry,openPair,closePair,endReaders,prepareOffline,startCamera,stopCamera};
+  window.HypePortaria={changeEvent,refresh,search,processCode,toggleDocument,validate,temporaryExit,authorizeReentry,openPair,closePair,endReaders,prepareOffline,startCamera,stopCamera};
   document.addEventListener('DOMContentLoaded',init);
 })();
