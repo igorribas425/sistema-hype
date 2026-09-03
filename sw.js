@@ -1,4 +1,4 @@
-const CACHE='hype-v18-offline';
+const CACHE='hype-v20-offline';
 const CORE=[
   './',
   './cliente.html',
@@ -6,14 +6,16 @@ const CORE=[
   './admin.html',
   './portaria.html',
   './leitor.html',
-  './app.js?v=20260902-v18',
-  './promoter-global-v16-8.js?v=20260902-v18-global',
-  './v18-admin.js?v=20260902-v18',
-  './v18-client.js?v=20260902-v18',
-  './portaria-v18.js?v=20260902-v18',
-  './leitor-v18.js?v=20260902-v18',
-  './hype-qrcode.js?v=20260902-v18',
-  './supabase-config.js?v=20260902-v18',
+  './app.js?v=20260902-v20',
+  './promoter-global-v16-8.js?v=20260902-v20-global',
+  './v19-admin.js?v=20260902-v20',
+  './v20-admin.js?v=20260902-v20',
+  './v18-client.js?v=20260902-v20',
+  './portaria-v18.js?v=20260902-v20',
+  './portaria-v20.js?v=20260902-v20',
+  './leitor-v20.js?v=20260902-v20',
+  './hype-qrcode.js?v=20260902-v20',
+  './supabase-config.js?v=20260902-v20',
   './logo-hype.png',
   './favicon.png'
 ];

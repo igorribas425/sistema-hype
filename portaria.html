@@ -12,6 +12,12 @@
 @media(max-width:800px){.controls{grid-template-columns:1fr 1fr}.controls .select{grid-column:1/-1}.live-grid{grid-template-columns:repeat(3,1fr)}.search-row{grid-template-columns:1fr}.ticket{grid-template-columns:1fr}.ticket-actions{min-width:0}.top{align-items:flex-start;flex-direction:column}.status-row{justify-content:flex-start}}
 @media(max-width:460px){body{padding:11px}.live-grid{grid-template-columns:1fr 1fr}.live:first-child{grid-column:1/-1}.controls{grid-template-columns:1fr}.modal-actions{flex-direction:column}}
 </style>
+
+<style id="hype-v19-portaria-style">
+.v19-readers,.v19-door{background:linear-gradient(180deg,#101014,#09090b);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:16px}.v19-section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.v19-section-head h3{margin:0;font-size:15px}.v19-section-head p{margin:4px 0 0;color:var(--muted);font-size:11px;line-height:1.5}.v19-reader-list{display:grid;gap:8px}.v19-reader{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:13px;background:#08080b}.v19-reader.on{border-color:rgba(40,209,124,.3)}.v19-reader.off{opacity:.55}.v19-reader-main{display:flex;align-items:center;gap:10px;min-width:0}.v19-reader-dot{width:10px;height:10px;border-radius:50%;background:#555;flex:0 0 auto}.v19-reader.on .v19-reader-dot{background:var(--green);box-shadow:0 0 12px rgba(40,209,124,.5)}.v19-reader strong{display:block;font-size:12px}.v19-reader small{display:block;color:var(--muted);font-size:9px;margin-top:3px}.v19-reader-disconnect{min-height:34px!important;padding:0 10px!important;font-size:9px}.v19-reader-empty{padding:13px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-size:11px;text-align:center}.v19-door-form{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:9px}.v19-door-form .full{grid-column:1/-1}.v19-door-form label{display:block;color:var(--muted);font-size:9px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;margin-bottom:5px}.v19-door-form input,.v19-door-form select{width:100%;min-height:44px;background:#070709;border:1px solid var(--line);border-radius:11px;color:#fff;padding:0 11px;outline:none}.v19-door-price{padding:11px 12px;border:1px solid rgba(255,255,255,.12);border-radius:11px;background:#070709;font-size:12px;font-weight:900}.v19-door-hint{margin-top:9px;color:#bfc0c7;font-size:10px;line-height:1.55}.v19-notice{margin-top:10px;padding:10px 12px;border-radius:11px;border:1px solid var(--line);font-size:10px}.v19-notice.ok{color:#a8f3c4;border-color:rgba(40,209,124,.3)}.v19-notice.bad{color:#ff9bab;border-color:rgba(255,22,61,.35)}.v19-door-result{display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:14px}.v19-door-result.show{display:block}.v19-order-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.v19-order-head small,.v19-order-head span{display:block;color:var(--muted);font-size:9px}.v19-order-head strong{display:block;font-size:19px;margin:3px 0}.v19-order-status{padding:8px 10px;border-radius:999px;font-size:9px;font-weight:950;border:1px solid var(--line)}.v19-order-status.pending{color:#ffd95a;border-color:rgba(255,204,0,.3)}.v19-order-status.paid{color:#a8f3c4;border-color:rgba(40,209,124,.35)}.v19-order-grid{display:grid;grid-template-columns:minmax(240px,.8fr) 1.2fr;gap:14px}.v19-qr-block,.v19-order-info,.v19-ticket-qr{border:1px solid var(--line);border-radius:15px;padding:13px;background:#070709}.v19-qr-block h4,.v19-ticket-qr h4{margin:0 0 9px;font-size:10px}.v19-qr-block img,.v19-ticket-qr img{display:block;width:min(250px,100%);margin:0 auto 9px;background:#fff;padding:7px;border-radius:10px}.v19-qr-block textarea{width:100%;height:64px;background:#050506;color:#bbb;border:1px solid var(--line);border-radius:9px;padding:8px;font-size:9px;resize:none}.v19-order-info p{margin:0 0 8px;font-size:11px;line-height:1.5;color:#c2c2c8}.v19-order-info b{color:#fff}.v19-raffle-ok{color:#d9d9ff!important}.v19-paid-note{color:#a8f3c4!important;font-weight:800}.v19-muted{color:var(--muted)!important}.v19-order-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.v19-ticket-qr{text-align:center}.v19-ticket-qr strong{display:block;margin:7px 0;font-family:ui-monospace,monospace}.v19-new-sale{width:100%;margin-top:10px}.pair-code{font:900 24px/1 ui-monospace,monospace;letter-spacing:4px;margin:7px 0;color:#fff}.pair-small{font-size:10px;color:var(--muted)}
+@media(max-width:760px){.v19-section-head{align-items:flex-start;flex-direction:column}.v19-door-form{grid-template-columns:1fr 1fr}.v19-order-grid{grid-template-columns:1fr}.v19-reader{align-items:flex-start}.v19-reader-disconnect{flex:0 0 auto}}
+@media(max-width:480px){.v19-door-form,.v19-order-actions{grid-template-columns:1fr}.v19-reader{flex-direction:column}.v19-reader-disconnect{width:100%}}
+</style>
 </head>
 <body>
 <div class="shell">
@@ -31,11 +37,17 @@
     </div>
 
     <div class="controls">
-      <select id="eventSelect" class="select" onchange="HypePortaria.changeEvent()"><option>Carregando eventos...</option></select>
-      <button class="btn primary" onclick="HypePortaria.openPair()">📱 CONECTAR CELULAR</button>
+      <select id="eventSelect" class="select" onchange="HypePortaria.changeEvent();HypeV20.eventChanged()"><option>Carregando eventos...</option></select>
+      <button class="btn primary" onclick="HypeV20.openReaderLink()">📱 + GERAR LINK DO CELULAR</button>
       <button class="btn" onclick="HypePortaria.prepareOffline()">⬇ PREPARAR OFFLINE</button>
       <button class="btn" onclick="HypePortaria.refresh(true)">↻ ATUALIZAR</button>
     </div>
+
+
+    <section class="v19-readers">
+      <div class="v19-section-head"><div><h3>📱 CELULARES LEITORES</h3><p>O computador continua nesta Portaria. Para o celular, gere um link exclusivo: ao abrir, ele recebe somente a câmera para ler QR Code. Os leitores ativos aparecem aqui em tempo real.</p></div><button class="btn primary" onclick="HypeV20.openReaderLink()">+ GERAR LINK DO CELULAR</button></div>
+      <div id="v19ReaderList" class="v19-reader-list"><div class="v19-reader-empty">Aguardando leitores...</div></div>
+    </section>
 
     <div class="live-grid">
       <div class="live"><b id="enteredCount">0</b><span>Já entraram</span></div>
@@ -53,30 +65,54 @@
         <button class="btn" onclick="HypePortaria.startCamera()">📷 CÂMERA DO PC</button>
       </div>
       <div id="scannerArea" class="scanner"><video id="cameraVideo" autoplay muted playsinline></video><div class="scanline"></div><button class="btn red" style="position:absolute;right:10px;bottom:10px" onclick="HypePortaria.stopCamera()">FECHAR</button></div>
-      <div class="offline-note">O celular pareado funciona somente como leitor. Ele não recebe senha, lista de clientes nem acesso ao Admin.</div>
+      <div class="offline-note">O celular aberto pelo link exclusivo funciona somente como leitor. Ele não recebe senha, lista de clientes, vendas nem acesso ao Admin.</div>
     </section>
 
     <div id="results" class="results"><div class="empty">Leia um QR pelo celular conectado, pela câmera deste computador ou pesquise o cliente.</div></div>
 
     <section class="recent"><h3>🕘 ÚLTIMAS ENTRADAS</h3><div id="recentList"><div class="empty">Nenhuma entrada carregada.</div></div></section>
+
+
+    <section class="v19-door" id="v19DoorSale">
+      <div class="v19-section-head"><div><h3>💠 VENDA NA HORA DO SHOW // PORTARIA</h3><p>Uso somente para quem chegar ao evento sem ingresso. O porteiro cria esta venda, gera o PIX e pode confirmar SOMENTE esta venda criada aqui depois de conferir o recebimento. Compras do site e de promoter continuam sob controle do Admin.</p></div><strong id="v19DoorEventName" style="font-size:11px">Evento selecionado</strong></div>
+      <div class="v19-door-form">
+        <div><label>Nome da pessoa *</label><input id="v19DoorName" placeholder="Nome completo" autocomplete="off"></div>
+        <div><label>WhatsApp</label><input id="v19DoorPhone" placeholder="(54) 99999-9999" inputmode="tel"></div>
+        <div><label>CPF</label><input id="v19DoorCpf" placeholder="CPF" inputmode="numeric"></div>
+        <div><label>E-mail (opcional)</label><input id="v19DoorEmail" type="email" placeholder="cliente@email.com"></div>
+        <div><label>Gênero *</label><select id="v19DoorGender" onchange="HypeV20.updateDoorPrice()"><option value="Feminino">Feminino</option><option value="Masculino">Masculino</option></select></div>
+        <div><label>Ingresso *</label><select id="v19DoorLot" onchange="HypeV20.updateDoorPrice()"><option>Carregando...</option></select></div>
+        <div class="full"><label>Valor do PIX</label><div id="v19DoorPrice" class="v19-door-price">Selecione um ingresso</div></div>
+      </div>
+      <div id="v19DoorRaffleHint" class="v19-door-hint">Carregando sorteio do evento...</div>
+      <button id="v19DoorCreate" class="btn primary" style="width:100%;margin-top:11px" onclick="HypeV20.createDoorOrder()">💠 GERAR PIX — VENDA NA HORA</button>
+      <div id="v19DoorNotice" class="v19-notice ok">Pronto para venda na hora do show. O porteiro só confirma vendas criadas nesta Portaria.</div>
+      <div id="v19DoorResult" class="v19-door-result"></div>
+    </section>
+
   </main>
 </div>
 
-<div id="pairModal" class="modal">
-  <div class="modal-card">
-    <h2>Conectar celular como leitor</h2>
-    <p>Abra a câmera do celular e leia este QR. O QR de conexão expira em 3 minutos. Depois de conectado, o celular fica apenas como leitor por até 12 horas.</p>
-    <img id="pairQr" alt="QR para conectar celular">
-    <div id="pairUrlText" style="font-size:10px;color:#777;word-break:break-all"></div>
-    <div class="modal-actions" style="margin-top:14px"><button class="btn red" onclick="HypePortaria.endReaders()">ENCERRAR LEITORES</button><button class="btn" onclick="HypePortaria.closePair()">FECHAR</button></div>
+<div id="readerLinkModal" class="modal">
+  <div class="modal-card" style="text-align:left">
+    <h2 style="text-align:center">Link exclusivo do celular leitor</h2>
+    <p style="text-align:center">O celular não recebe o link da Portaria, senha ou acesso ao Admin. Ele abre somente <b style="color:#fff">leitor.html</b> e usa a câmera para mandar o QR lido ao computador.</p>
+    <label style="display:block;font-size:10px;color:var(--muted);font-weight:900;margin:14px 0 6px">NOME DO CELULAR (OPCIONAL)</label>
+    <input id="readerLinkLabel" class="input" style="width:100%" placeholder="Ex.: Celular João / Leitor 1">
+    <button id="readerLinkGenerate" class="btn primary" style="width:100%;margin-top:10px" onclick="HypeV20.generateReaderLink()">GERAR LINK EXCLUSIVO</button>
+    <textarea id="readerLinkText" readonly style="width:100%;min-height:105px;margin-top:12px;background:#060608;border:1px solid var(--line);border-radius:12px;color:#fff;padding:11px;resize:none" placeholder="O link aparecerá aqui"></textarea>
+    <div id="readerLinkMeta" style="font-size:10px;color:#8f8f97;line-height:1.55;margin-top:8px">O link é de uso único para ativação e expira se não for aberto.</div>
+    <div class="modal-actions" style="margin-top:14px"><button class="btn primary" onclick="HypeV20.copyReaderLink()">COPIAR LINK</button><button class="btn" onclick="HypeV20.shareReaderLink()">COMPARTILHAR</button></div>
+    <div class="modal-actions" style="margin-top:8px"><button class="btn red" onclick="HypeV20.endAllReaders()">BLOQUEAR TODOS</button><button class="btn" onclick="HypeV20.closeReaderLink()">FECHAR</button></div>
   </div>
 </div>
 <div id="flash" class="flash"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260902-v18"></script>
-<script src="hype-qrcode.js?v=20260902-v18"></script>
-<script src="portaria-v18.js?v=20260902-v18"></script>
-<script src="register-sw.js?v=20260902-v18"></script>
+<script src="supabase-config.js?v=20260902-v20"></script>
+<script src="hype-qrcode.js?v=20260902-v20"></script>
+<script src="portaria-v18.js?v=20260902-v20"></script>
+<script src="portaria-v20.js?v=20260902-v20"></script>
+<script src="register-sw.js?v=20260902-v20"></script>
 </body>
 </html>

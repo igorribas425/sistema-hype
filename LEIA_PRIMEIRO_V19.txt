@@ -1,0 +1,53 @@
+HYPE LOUNGE CLUB // V19
+
+O QUE MUDOU
+
+1) PORTARIA NO COMPUTADOR
+- Continua mostrando nome do cliente, CPF, ingresso e status.
+- Continua com CONFERIR DOCUMENTO, CONFIRMAR ENTRADA, SAIDA TEMPORARIA e REENTRADA.
+- O computador continua precisando ser autorizado uma vez pelo Admin.
+- Nao mostra atalhos para Admin ou Compras.
+
+2) VARIOS CELULARES COMO LEITOR
+- Clique em + ADICIONAR CELULAR na Portaria.
+- O QR de conexao renova automaticamente.
+- Depois que um celular conecta, um novo QR e gerado para o proximo.
+- Varios celulares podem trabalhar ao mesmo tempo no mesmo computador.
+- Na tela do computador aparece a lista dos celulares conectados e a ultima leitura.
+- Cada celular so recebe permissao de LEITOR. Nao recebe senha, lista de clientes ou Admin.
+- Pode desconectar um celular individualmente ou encerrar todos.
+
+3) VENDA NA HORA NA PORTARIA
+- Selecione o evento no topo da Portaria.
+- Na area VENDA NA HORA, informe o nome da pessoa, genero e ingresso.
+- O sistema gera um QR PIX usando a chave PIX cadastrada no Admin para o evento.
+- Depois de conferir no banco que o PIX entrou, clique CONFIRMAR PIX RECEBIDO.
+- O ingresso fica PAGO e o QR do ingresso aparece na Portaria.
+- Clique MOSTRAR NA PORTARIA / CONFIRMAR ENTRADA para seguir a entrada normal.
+
+IMPORTANTE: a confirmacao do PIX da venda na hora e MANUAL. O botao deve ser usado somente depois de conferir o recebimento no banco.
+
+4) SORTEIO
+- No Admin, o seletor de evento do sorteio foi separado/corrigido.
+- Selecione o evento diretamente na caixa SORTEIO DO EVENTO.
+- Toda compra PAGA daquele evento participa: compra direta HYPE, promoter ou venda feita na Portaria.
+- Pedido PENDENTE nao participa.
+- O sorteio nunca acontece sozinho. Somente o Admin consegue clicar REALIZAR SORTEIO AGORA.
+
+INSTALACAO
+
+A) SUPABASE
+- Se voce JA executou SUPABASE_V18_COMPLETO.sql, execute apenas SUPABASE_V19_ATUALIZACAO.sql.
+- Se nao tem certeza, execute SUPABASE_V19_COMPLETO.sql. Ele contem V18 + V19.
+
+B) GITHUB
+- Depois do SQL dar Success, envie os arquivos desta pasta para o repositorio substituindo os antigos.
+- Aguarde o GitHub Pages publicar.
+- No computador da Portaria, abra portaria.html e atualize com Ctrl+F5 na primeira vez.
+
+ARQUIVOS NOVOS V19
+- v19-admin.js
+- portaria-v19-extra.js
+- leitor-v19.js
+- SUPABASE_V19_ATUALIZACAO.sql
+- SUPABASE_V19_COMPLETO.sql

@@ -1,0 +1,19 @@
+HYPE LOUNGE CLUB // V20
+
+ALTERAÇÕES PRINCIPAIS
+1. O computador continua usando portaria.html, autorizado uma vez pelo Admin.
+2. Celular não usa código nem QR de conexão: a Portaria gera um LINK EXCLUSIVO para leitor.html.
+3. O link de ativação é de uso único e expira em 15 minutos se não for aberto. Depois o celular fica autorizado como leitor por até 16 horas.
+4. O celular vê somente a câmera/leitor de QR. Não recebe senha, Admin, clientes ou vendas.
+5. A Portaria vê em tempo real os celulares leitores e pode bloquear cada um. O Admin também pode bloquear leitores.
+6. VENDA NA HORA DO SHOW: o porteiro cadastra o cliente, gera o PIX e confirma apenas a venda criada naquele computador da Portaria.
+7. Compras do site e de promoters NÃO podem ser confirmadas pela Portaria.
+8. Quando a venda na hora fica PAGA, o ingresso já vale e entra automaticamente no sorteio do evento se o sorteio estiver ativo.
+9. O sorteio continua sendo realizado somente pelo Admin.
+
+SUPABASE
+- Se você já executou V18 ou V19, pode executar SUPABASE_V20_ATUALIZACAO.sql. Ele é aditivo e reaplica as funções V19 de forma segura.
+- Para instalação nova, use SUPABASE_V20_COMPLETO.sql.
+
+GITHUB
+Depois do SQL dar Success, envie todos os arquivos desta pasta para o repositório do site.

@@ -15,18 +15,17 @@
   <div class="logo"><img src="logo-hype.png" alt="HYPE Lounge Club"></div>
   <section class="card">
     <h1>LEITOR QR // PORTARIA</h1>
-    <p>Este celular funciona somente como leitor. Ele não mostra clientes, pagamentos, Admin ou senhas.</p>
+    <p>Este celular foi aberto por um link exclusivo e funciona somente como câmera/leitor. Ele não mostra clientes, vendas, pagamentos, Admin ou senhas.</p><div style="margin-top:10px;font-size:10px;color:#777">DISPOSITIVO REGISTRADO: <b id="readerName" style="color:#fff">Celular leitor</b></div>
     <div id="readerStatus" class="status">Conectando ao computador...</div>
     <button id="startBtn" class="btn" onclick="HypeReader.start()" disabled>📷 ABRIR LEITOR</button>
     <div id="cameraBox" class="camera"><video id="video" autoplay muted playsinline></video><div class="scanline"></div></div>
     <div id="lastScan" class="last"><b>QR ENVIADO ✅</b><span id="lastCode"></span></div>
-    <div class="manual"><input id="manualCode" placeholder="Código do ingresso"><button onclick="HypeReader.sendManual()">ENVIAR</button></div>
-    <button class="btn secondary" onclick="HypeReader.stop()">FECHAR CÂMERA</button>
-    <p class="note">A confirmação da entrada continua sendo feita no computador autorizado da Portaria.</p>
+    <button class="btn secondary" onclick="HypeReader.stop()">FECHAR CÂMERA</button><button class="btn secondary" onclick="HypeReader.forget()">DESCONECTAR ESTE CELULAR</button>
+    <p class="note">A leitura aparece em tempo real no computador autorizado da Portaria. A confirmação da entrada continua sendo feita lá.</p>
   </section>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260902-v18"></script>
-<script src="leitor-v18.js?v=20260902-v18"></script>
+<script src="supabase-config.js?v=20260902-v20"></script>
+<script src="leitor-v20.js?v=20260902-v20"></script>
 </body>
 </html>
