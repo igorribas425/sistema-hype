@@ -465,11 +465,11 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260902-v23"></script>
-<script src="app.js?v=20260902-v23"></script>
-<script src="promoter-global-v16-8.js?v=20260902-v23-global"></script>
+<script src="supabase-config.js?v=20260902-v24"></script>
+<script src="app.js?v=20260902-v24"></script>
+<script src="promoter-global-v16-8.js?v=20260902-v24-global"></script>
 <script>
-/* HYPE V23 // correção autônoma do Admin
+/* HYPE V24 // correção da sessão do Admin
    - JavaScript incorporado no próprio admin.html: não depende de v21-admin.js.
    - Eventos do sorteio usam RPC dedicada V23, com fallback para funções anteriores.
    - Acesso de dispositivos usa uma única RPC V23, com fallback para as funções anteriores.
@@ -482,7 +482,11 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
   let raffleEventId=0, accessTimer=null;
 
   function adminReady(){
-    return Boolean(window.HYPE?.user && HYPE.pass && ['admin','gerente','caixa'].includes(String(HYPE.role||'').toLowerCase()));
+    // app.js declara HYPE com `const`, então ele existe no escopo global do script,
+    // mas NÃO como window.HYPE. A V23 checava window.HYPE e por isso sempre
+    // mostrava "Entre no Admin" mesmo com a sessão já autenticada.
+    if (typeof HYPE === 'undefined' || !HYPE) return false;
+    return Boolean(HYPE.user && HYPE.pass && ['admin','gerente','caixa'].includes(String(HYPE.role||'').toLowerCase()));
   }
 
   async function fetchRaffleEventsV23(){
