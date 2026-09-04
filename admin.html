@@ -187,6 +187,9 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 .save-all-sectors{margin-top:14px}
 @media(max-width:600px){.sector-fields{grid-template-columns:1fr}.sector-fields .full{grid-column:auto}}
 
+
+.v25-history-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+@media(max-width:560px){.v24-history-row{align-items:flex-start}.v25-history-actions{justify-content:flex-start}}
 </style>
 <style>
 .stats-extended{grid-template-columns:repeat(7,1fr)}
@@ -402,7 +405,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 
         <div class="v24-manual-box">
           <h4>🏆 HISTÓRICO DOS SORTEIOS DA NOITE</h4>
-          <p>Os vencedores anteriores ficam registrados e não são retirados automaticamente dos próximos sorteios.</p>
+          <p>Os vencedores anteriores ficam registrados. Se um resultado foi só teste, use <b style="color:#fff">RECOLOCAR</b>: o resultado de teste sai do histórico, mas o ingresso PAGO e o pagamento continuam intactos.</p>
           <button class="btn-action" style="width:100%" type="button" onclick="loadRaffleHistoryV24()">↻ ATUALIZAR HISTÓRICO</button>
           <div id="v24RaffleHistory" class="v24-history"><div class="v18-empty">Nenhum sorteio carregado.</div></div>
         </div>
@@ -486,7 +489,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260902-v24"></script>
-<script src="app.js?v=20260902-v24"></script>
+<script src="app.js?v=20260904-v25"></script>
 <script src="promoter-global-v16-8.js?v=20260902-v24-global"></script>
 <script>
 /* HYPE V24 // correção da sessão do Admin
@@ -673,8 +676,23 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
     box.innerHTML='<div class="v18-empty">Carregando histórico...</div>';
     try{
       const data=arr(await sbRpc('staff_raffle_history_v24',{p_username:HYPE.user,p_password:HYPE.pass,p_event_id:id}));
-      box.innerHTML=data.length?data.map((d,i)=>`<div class="v24-history-row"><div><b>${i+1}. ${esc(d.customer_name||'Vencedor')}</b><small>🎁 ${esc(d.prize||'')} • ${esc(fmt(d.drawn_at))}${d.ticket_code?` • ${esc(d.ticket_code)}`:''}</small></div><span class="v24-source ${String(d.source||'ticket')==='manual'?'manual':'ticket'}">${String(d.source||'ticket')==='manual'?'MANUAL':'PAGO'}</span></div>`).join(''):'<div class="v18-empty">Nenhum sorteio realizado neste evento.</div>';
+      box.innerHTML=data.length?data.map((d,i)=>{const paid=String(d.source||'ticket')!=='manual';return `<div class="v24-history-row"><div><b>${i+1}. ${esc(d.customer_name||'Vencedor')}</b><small>🎁 ${esc(d.prize||'')} • ${esc(fmt(d.drawn_at))}${d.ticket_code?` • ${esc(d.ticket_code)}`:''}</small></div><div class="v25-history-actions"><span class="v24-source ${paid?'ticket':'manual'}">${paid?'PAGO':'MANUAL'}</span><button class="btn-action ${paid?'btn-confirm':'btn-del'}" type="button" onclick="removeRaffleHistoryV25(${Number(d.draw_id)},${paid?'true':'false'})">${paid?'↺ RECOLOCAR':'🗑 EXCLUIR TESTE'}</button></div></div>`;}).join(''):'<div class="v18-empty">Nenhum sorteio realizado neste evento.</div>';
     }catch(err){box.innerHTML=`<div class="v18-empty error">${esc(err.message||'Erro ao carregar histórico. Rode o SQL V24 no Supabase.')}</div>`;}
+  }
+
+  // V25: remove somente um resultado de TESTE do histórico do sorteio.
+  // Para ingresso pago, o ingresso/pagamento continuam intactos e a pessoa volta/permanece no pool.
+  async function removeRaffleHistoryV25(drawId,isPaid){
+    if(!adminReady()) return alert('Sua sessão do Admin expirou. Entre novamente.');
+    const msg=isPaid
+      ? 'RECOLOCAR ESTA PESSOA NO SORTEIO?\n\nSerá apagado apenas este RESULTADO DE TESTE do histórico.\nO ingresso e o pagamento PAGO NÃO serão apagados.'
+      : 'EXCLUIR ESTE RESULTADO DE TESTE DO HISTÓRICO?\n\nIsso não apaga outros sorteios.';
+    if(!confirm(msg)) return;
+    try{
+      await sbRpc('staff_delete_raffle_draw_v25',{p_username:HYPE.user,p_password:HYPE.pass,p_draw_id:Number(drawId)});
+      hypeNotify(isPaid?'↺ Pessoa recolocada no sorteio. Ingresso pago preservado.':'🗑 Resultado de teste removido.');
+      await Promise.allSettled([loadRaffleHistoryV24(),loadRaffleV18(false),loadRaffleParticipantsV18(true)]);
+    }catch(err){alert(err.message||'Não foi possível alterar o histórico do sorteio.');}
   }
 
   async function fetchAccessV23(){
@@ -724,6 +742,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
   window.addManualRaffleV24=addManualRaffleV24;
   window.removeManualRaffleV24=removeManualRaffleV24;
   window.loadRaffleHistoryV24=loadRaffleHistoryV24;
+  window.removeRaffleHistoryV25=removeRaffleHistoryV25;
   window.loadDevicesV21=loadDevicesV21;
   window.revokeDeviceV21=revokeDeviceV21;
   window.reactivateDeviceV21=reactivateDeviceV21;

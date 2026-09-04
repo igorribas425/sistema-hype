@@ -1,21 +1,17 @@
-HYPE LOUNGE CLUB // V24 - SORTEIOS MULTIPLOS + PARTICIPANTES MANUAIS
+HYPE V25 - LIMPEZA SELETIVA + SORTEIO
 
-ORDEM PARA INSTALAR
+1) Rode SUPABASE_V25_LIMPEZA_SELETIVA_SORTEIO.sql no SQL Editor do Supabase.
+2) No GitHub, substitua somente:
+   - admin.html
+   - app.js
 
-1. Abra o Supabase > SQL Editor.
-2. Abra o arquivo SUPABASE_V24_SORTEIOS_MANUAIS.sql, copie tudo e execute UMA VEZ.
-3. No GitHub do site, substitua SOMENTE o arquivo admin.html pelo admin.html desta pasta.
-4. Aguarde o GitHub Pages atualizar e recarregue o Admin com Ctrl+F5.
+NOVO NO ADMIN:
+- Cada pessoa da Lista de Clientes & Pagamentos tem o botão "🧪 EXCLUIR TESTE".
+- Se o registro estiver PAGO, o sistema pede uma confirmação extra.
+- O botão apaga SOMENTE a pessoa escolhida; não apaga os demais clientes.
 
-O app.js NAO precisa ser alterado nesta atualizacao.
-
-O QUE MUDA
-- O mesmo ingresso pago continua participando dos proximos sorteios da noite.
-- O Admin pode adicionar nomes manualmente e definir de 1 a 100 chances.
-- Ingressos PAGOS continuam entrando automaticamente com 1 chance cada.
-- Participantes manuais aparecem separados no Admin e podem ser excluidos.
-- Cada sorteio fica salvo no Historico dos Sorteios da Noite.
-- O premio digitado no campo e gravado no sorteio atual.
-
-IMPORTANTE
-Rode o SQL antes de enviar o novo admin.html para o GitHub, para evitar mensagens de funcao V24 inexistente.
+NOVO NO HISTORICO DO SORTEIO:
+- Resultado PAGO: botão "↺ RECOLOCAR".
+  Ele apaga somente aquele resultado de teste do histórico. O ingresso e o pagamento continuam.
+- Resultado MANUAL: botão "🗑 EXCLUIR TESTE".
+- Ingressos com payment_status = Pago continuam no pool de todos os próximos sorteios.

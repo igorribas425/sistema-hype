@@ -1695,7 +1695,7 @@ async function renderClientsTable() {
       : paymentStatus === "Pago" && item.email
         ? `<small style="display:block;color:#ffcc00;margin-top:4px">📧 E-MAIL AINDA NÃO ENVIADO</small>`
         : "";
-    return `<tr><td><strong>${hypeEscape(item.customer_name || "SEM NOME")}</strong><br><span class="badge gender">${hypeEscape(item.gender || "N/I")}</span><small style="color:var(--muted)">${hypeEscape(item.ticket_code || "")} ${entry}</small><small style="display:block;color:var(--muted);line-height:1.55">📱 ${hypeEscape(item.phone || "—")}<br>📧 ${hypeEscape(item.email || "—")}<br>CPF: ${cpf}</small>${emailState}</td><td>${hypeFormatMoney(item.price)}<br><small style="color:var(--muted)">${hypeEscape(item.lot_name || "")}</small><small style="display:block;color:var(--muted)">${hypeEscape(item.sector || "")} • ${hypeEscape(item.payment_method || "Manual")}</small>${item.event_name ? `<small style="display:block;color:var(--muted)">🎤 ${hypeEscape(item.event_name)}</small>` : ""}${item.promoter_code ? `<small style="display:block;color:#7dd3fc">Promoter: ${hypeEscape(item.promoter_code)}</small>` : ""}${item.coupon_code ? `<small style="display:block;color:#86efac">Cupom: ${hypeEscape(item.coupon_code)} • -${hypeFormatMoney(item.discount_amount || 0)}</small>` : ""}</td><td><span class="badge ${status}">${hypeEscape(paymentStatus.toUpperCase())}</span><br><small>${hypeEscape(item.entry_status || "Não utilizado")}</small></td><td><div class="actions-cell">${canPay && paymentStatus !== "Pago" ? `<button class="btn-action btn-confirm" onclick="setPayment(${item.id},'Pago')">✅ CONFIRMAR</button>` : ""}${canPay && paymentStatus === "Pago" && item.email ? `<button class="btn-action" onclick="sendTicketEmail(${item.id},true)">📧 REENVIAR</button>` : ""}${canPay && paymentStatus === "Pago" ? `<button class="btn-action" onclick="setPayment(${item.id},'Pendente')">PENDENTE</button>` : ""}${canPay && paymentStatus !== "Cancelado" ? `<button class="btn-action btn-del" onclick="setPayment(${item.id},'Cancelado')">CANCELAR</button>` : ""}</div></td></tr>`;
+    return `<tr><td><strong>${hypeEscape(item.customer_name || "SEM NOME")}</strong><br><span class="badge gender">${hypeEscape(item.gender || "N/I")}</span><small style="color:var(--muted)">${hypeEscape(item.ticket_code || "")} ${entry}</small><small style="display:block;color:var(--muted);line-height:1.55">📱 ${hypeEscape(item.phone || "—")}<br>📧 ${hypeEscape(item.email || "—")}<br>CPF: ${cpf}</small>${emailState}</td><td>${hypeFormatMoney(item.price)}<br><small style="color:var(--muted)">${hypeEscape(item.lot_name || "")}</small><small style="display:block;color:var(--muted)">${hypeEscape(item.sector || "")} • ${hypeEscape(item.payment_method || "Manual")}</small>${item.event_name ? `<small style="display:block;color:var(--muted)">🎤 ${hypeEscape(item.event_name)}</small>` : ""}${item.promoter_code ? `<small style="display:block;color:#7dd3fc">Promoter: ${hypeEscape(item.promoter_code)}</small>` : ""}${item.coupon_code ? `<small style="display:block;color:#86efac">Cupom: ${hypeEscape(item.coupon_code)} • -${hypeFormatMoney(item.discount_amount || 0)}</small>` : ""}</td><td><span class="badge ${status}">${hypeEscape(paymentStatus.toUpperCase())}</span><br><small>${hypeEscape(item.entry_status || "Não utilizado")}</small></td><td><div class="actions-cell">${canPay && paymentStatus !== "Pago" ? `<button class="btn-action btn-confirm" onclick="setPayment(${item.id},'Pago')">✅ CONFIRMAR</button>` : ""}${canPay && paymentStatus === "Pago" && item.email ? `<button class="btn-action" onclick="sendTicketEmail(${item.id},true)">📧 REENVIAR</button>` : ""}${canPay && paymentStatus === "Pago" ? `<button class="btn-action" onclick="setPayment(${item.id},'Pendente')">PENDENTE</button>` : ""}${canPay && paymentStatus !== "Cancelado" ? `<button class="btn-action btn-del" onclick="setPayment(${item.id},'Cancelado')">CANCELAR</button>` : ""}${HYPE.role === "admin" ? `<button class="btn-action btn-del" style="border-color:#ff4d67;background:rgba(255,22,61,.18)" onclick="purgeSingleTicketV25(${item.id})">🧪 EXCLUIR TESTE</button>` : ""}</div></td></tr>`;
   }).join('');
 
   const total = HYPE.tickets.length;
@@ -1781,6 +1781,43 @@ async function setPayment(id, status) {
 
 async function toggleStatus(id) { const item = HYPE.tickets.find(x=>Number(x.id)===Number(id)); if(item) await setPayment(id,item.payment_status==='Pago'?'Pendente':'Pago'); }
 async function deleteClient(id) { await setPayment(id,'Cancelado'); }
+
+// V25: apaga somente um ingresso/teste escolhido no histórico do Admin.
+// Não encosta nos demais clientes. Se o ingresso estiver PAGO, pede uma confirmação extra.
+async function purgeSingleTicketV25(id) {
+  if (HYPE.role !== "admin") return alert("Somente o Admin pode excluir um teste definitivamente.");
+  const item = (HYPE.tickets || []).find(x => Number(x.id) === Number(id));
+  if (!item) return alert("Ingresso não encontrado na lista atual.");
+
+  const name = item.customer_name || item.ticket_code || `#${id}`;
+  const first = confirm(
+    `EXCLUIR SOMENTE ESTE REGISTRO?\n\n${name}\n${item.ticket_code || ""}\n\n` +
+    `Use este botão somente para testes. Os outros ingressos NÃO serão apagados.`
+  );
+  if (!first) return;
+
+  if (String(item.payment_status || "") === "Pago") {
+    const paidOk = confirm(
+      `ATENÇÃO: ${name} está marcado como PAGO.\n\n` +
+      `Só continue se este pagamento foi um TESTE.\n` +
+      `Se for cliente real, toque em CANCELAR nesta janela.`
+    );
+    if (!paidOk) return;
+  }
+
+  try {
+    await sbRpc("staff_purge_ticket_v25", {
+      p_username: HYPE.user,
+      p_password: HYPE.pass,
+      p_ticket_id: Number(id)
+    });
+    await loadStaffTickets(document.getElementById("searchInput")?.value || "");
+    renderClientsTable();
+    hypeNotify(`🗑 Teste de ${name} excluído. Os demais ingressos foram preservados.`);
+  } catch (err) {
+    alert(err?.message || "Não foi possível excluir este registro.");
+  }
+}
 
 async function clearAll() {
   if (HYPE.role !== "admin") {
