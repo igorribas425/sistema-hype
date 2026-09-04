@@ -1,17 +1,24 @@
-HYPE V25 - LIMPEZA SELETIVA + SORTEIO
+HYPE LOUNGE CLUB // V26 - PIX QR PELA CHAVE DO ADMIN
 
-1) Rode SUPABASE_V25_LIMPEZA_SELETIVA_SORTEIO.sql no SQL Editor do Supabase.
-2) No GitHub, substitua somente:
-   - admin.html
-   - app.js
+ALTERADOS:
+- app.js
+- cliente.html
 
-NOVO NO ADMIN:
-- Cada pessoa da Lista de Clientes & Pagamentos tem o botão "🧪 EXCLUIR TESTE".
-- Se o registro estiver PAGO, o sistema pede uma confirmação extra.
-- O botão apaga SOMENTE a pessoa escolhida; não apaga os demais clientes.
+NÃO PRECISA RODAR SQL NOVO.
+A versão já usa public_pix_key e staff_save_pix existentes.
 
-NOVO NO HISTORICO DO SORTEIO:
-- Resultado PAGO: botão "↺ RECOLOCAR".
-  Ele apaga somente aquele resultado de teste do histórico. O ingresso e o pagamento continuam.
-- Resultado MANUAL: botão "🗑 EXCLUIR TESTE".
-- Ingressos com payment_status = Pago continuam no pool de todos os próximos sorteios.
+FLUXO NOVO:
+1. Admin salva a chave PIX no painel.
+2. Cliente escolhe ingresso e cria o pedido.
+3. O site gera QR Code PIX + Copia e Cola com o valor do pedido.
+4. Cliente paga.
+5. Cliente toca em ENVIAR COMPROVANTE NO WHATSAPP e anexa o comprovante.
+6. Admin confere e confirma o pagamento.
+7. O ingresso é liberado normalmente.
+
+WHATSAPP CONFIGURADO NO APP.JS:
+555496776514
+
+PARA ATUALIZAR NO GITHUB:
+Substitua somente app.js e cliente.html pelos arquivos desta pasta.
+Não apague os outros arquivos do site.

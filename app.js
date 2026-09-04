@@ -866,25 +866,15 @@ function currentSelectedLot() {
 function buildWhatsAppMessage(entry) {
   const event = HYPE.events.find(e => Number(e.id) === Number(entry.event_id)) || HYPE.event || {};
   const lines = [
-    "🎟️ *PEDIDO DE INGRESSO — HYPE LOUNGE CLUB*",
+    "🧾 *COMPROVANTE PIX — HYPE LOUNGE CLUB*",
     "",
+    `🔖 Pedido: ${entry.ticket_code || ""}`,
+    `👤 Nome: ${entry.customer_name || ""}`,
     `🎤 Evento: ${event.name || "HYPE"}`,
-    event.artist_name ? `🎧 Artista: ${event.artist_name}` : "",
-    event.event_date ? `📅 Data: ${new Date(`${event.event_date}T12:00:00`).toLocaleDateString("pt-BR")}` : "",
-    "",
-    `👤 Nome: ${entry.customer_name}`,
     `🎫 Ingresso: ${entry.lot_name || ""}`,
-    `📍 Setor: ${entry.sector || ""}`,
-    `🚻 Gênero: ${entry.gender || "Não informado"}`,
-    `💰 Total do pedido: ${hypeFormatMoney(entry.price)}`,
-    `🧾 Taxa de serviço incluída: ${hypeFormatMoney(HYPE_SERVICE_FEE)}`,
-    `🔖 Pedido: ${entry.ticket_code}`,
-    `📧 E-mail: ${entry.email || ""}`,
-    entry.promoter_code ? `🎯 Promoter: ${entry.promoter_code}` : "🏠 Venda direta HYPE",
-    entry.coupon_code ? `🏷️ Cupom: ${entry.coupon_code}` : "",
+    `💰 Valor pago: ${hypeFormatMoney(entry.price)}`,
     "",
-    "Quero finalizar este pedido manualmente pelo WhatsApp.",
-    "Após o pagamento, enviarei o comprovante por aqui para confirmação do Admin."
+    "📎 Vou anexar o comprovante do PIX nesta conversa para confirmação do Admin."
   ].filter(Boolean);
 
   return lines.join("\n");
@@ -896,6 +886,109 @@ function openOrderWhatsApp(entry) {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
+// HYPE V26 - PIX estático gerado no navegador usando a chave salva no Admin.
+// O pagamento permanece manual: cliente paga, envia o comprovante e o Admin confirma.
+function hypePixField(id, value) {
+  const data = String(value ?? "");
+  return `${id}${String(data.length).padStart(2, "0")}${data}`;
+}
+
+function hypePixCleanText(value, maxLength) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Za-z0-9 .\-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase()
+    .slice(0, maxLength);
+}
+
+function hypePixCrc16(payload) {
+  let crc = 0xFFFF;
+  for (let i = 0; i < payload.length; i++) {
+    crc ^= payload.charCodeAt(i) << 8;
+    for (let bit = 0; bit < 8; bit++) {
+      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+      crc &= 0xFFFF;
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, "0");
+}
+
+function buildPixPayloadFromAdmin(entry) {
+  const key = String(HYPE.pixKey || "").trim();
+  if (!key) throw new Error("A chave PIX ainda não foi cadastrada no Admin.");
+
+  const amount = Number(entry?.price || 0);
+  if (!(amount > 0)) throw new Error("Valor do pedido inválido para gerar o PIX.");
+
+  const event = HYPE.events.find(e => Number(e.id) === Number(entry?.event_id)) || HYPE.event || {};
+  const merchantName = hypePixCleanText("HYPE LOUNGE CLUB", 25) || "HYPE";
+  const merchantCity = hypePixCleanText(event.city || event.venue_city || "PASSO FUNDO", 15) || "PASSO FUNDO";
+  const description = hypePixCleanText(`HYPE ${entry?.ticket_code || "INGRESSO"}`, 25);
+
+  const gui = hypePixField("00", "br.gov.bcb.pix");
+  const keyField = hypePixField("01", key);
+  let merchantAccount = gui + keyField;
+  const descField = description ? hypePixField("02", description) : "";
+  if ((merchantAccount + descField).length <= 99) merchantAccount += descField;
+
+  let payload = "";
+  payload += hypePixField("00", "01");
+  payload += hypePixField("26", merchantAccount);
+  payload += hypePixField("52", "0000");
+  payload += hypePixField("53", "986");
+  payload += hypePixField("54", amount.toFixed(2));
+  payload += hypePixField("58", "BR");
+  payload += hypePixField("59", merchantName);
+  payload += hypePixField("60", merchantCity);
+  payload += hypePixField("62", hypePixField("05", "***"));
+  payload += "6304";
+  return payload + hypePixCrc16(payload);
+}
+
+async function renderAdminPixPayment(entry) {
+  const area = document.getElementById("pixArea");
+  const form = document.getElementById("ticketForm");
+  const manualArea = document.getElementById("manualArea");
+  const qrImg = document.getElementById("qrImg");
+  const pixText = document.getElementById("pixKeyText");
+  const code = document.getElementById("pixOrderCode");
+  const status = document.getElementById("pixPaymentStatus");
+  const total = document.getElementById("pixTotalValue");
+
+  const payload = buildPixPayloadFromAdmin(entry);
+  window.__hypeCurrentPixCode = payload;
+
+  if (code) code.textContent = entry.ticket_code || "";
+  if (total) total.textContent = hypeFormatMoney(entry.price);
+  if (status) status.textContent = "AGUARDANDO COMPROVANTE / CONFIRMAÇÃO";
+  if (pixText) pixText.textContent = payload;
+
+  if (qrImg) {
+    qrImg.removeAttribute("src");
+    if (window.QRCode?.toDataURL) {
+      try {
+        qrImg.src = await window.QRCode.toDataURL(payload, { width: 260, margin: 2, errorCorrectionLevel: "M" });
+      } catch (_) {}
+    }
+    if (!qrImg.src) {
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${encodeURIComponent(payload)}`;
+    }
+  }
+
+  if (form) form.style.display = "none";
+  if (manualArea) manualArea.style.display = "none";
+  if (area) area.style.display = "block";
+}
+
+function sendReceiptWhatsApp() {
+  const entry = window.__hypeCurrentManualEntry;
+  if (!entry) return alert("Pedido não encontrado nesta tela.");
+  openOrderWhatsApp(entry);
+}
+
 async function createManualOrder(e) {
   e.preventDefault();
 
@@ -904,6 +997,13 @@ async function createManualOrder(e) {
 
   const state = hypeStatus(lot);
   if (!state.canBuy) return alert(`Este lote está ${state.label.toLowerCase()}.`);
+
+  if (!String(HYPE.pixKey || "").trim()) {
+    await loadPublicState().catch(() => {});
+    if (!String(HYPE.pixKey || "").trim()) {
+      return alert("PIX indisponível no momento. A HYPE precisa cadastrar a chave PIX no Admin.");
+    }
+  }
 
   const name = document.getElementById("clientName")?.value.trim() || "";
   const phone = document.getElementById("clientPhone")?.value.trim() || "";
@@ -916,7 +1016,7 @@ async function createManualOrder(e) {
   if (!validEmail(email)) return alert("Informe um e-mail válido.");
 
   const submit = document.querySelector('#ticketForm button[type="submit"]');
-  const oldText = submit?.textContent || "FINALIZAR PELO WHATSAPP";
+  const oldText = submit?.textContent || "GERAR QR CODE PIX";
   if (submit) {
     submit.disabled = true;
     submit.textContent = "CRIANDO PEDIDO...";
@@ -940,28 +1040,9 @@ async function createManualOrder(e) {
     HYPE.currentEntryId = entry.id;
     HYPE.currentEntryCode = entry.ticket_code;
 
-    const form = document.getElementById("ticketForm");
-    const area = document.getElementById("manualArea");
-    if (form) form.style.display = "none";
-    if (area) area.style.display = "block";
-
-    const code = document.getElementById("manualOrderCode");
-    const summary = document.getElementById("manualOrderSummary");
-    if (code) code.textContent = entry.ticket_code || "";
-    if (summary) {
-      summary.innerHTML = `
-        <strong>${hypeEscape(entry.customer_name)}</strong><br>
-        ${hypeEscape(entry.lot_name || "")} • ${hypeEscape(entry.sector || "")}<br>
-        Total do pedido: ${hypeFormatMoney(entry.price)}${Number(entry.discount_amount || 0) > 0 ? ` <small style="color:#28d17c">(desconto ${hypeFormatMoney(entry.discount_amount)})</small>` : ""}<br>
-        ${entry.coupon_code ? `Cupom: <b>${hypeEscape(entry.coupon_code)}</b><br>` : ""}
-        ${entry.promoter_code ? `Promoter: <b>${hypeEscape(entry.promoter_code)}</b><br>` : ""}
-        <span style="color:#ffcc00">AGUARDANDO CONFIRMAÇÃO DO PAGAMENTO</span>
-      `;
-    }
-
     window.__hypeCurrentManualEntry = entry;
-    hypeNotify(`Pedido ${entry.ticket_code} criado.`);
-    openOrderWhatsApp(entry);
+    await renderAdminPixPayment(entry);
+    hypeNotify(`Pedido ${entry.ticket_code} criado. PIX pronto para pagamento.`);
   } catch (err) {
     await loadPublicState().catch(() => {});
     renderEventCarousel();
@@ -1101,8 +1182,7 @@ async function copyPixCode() {
 
 /* Mantém compatibilidade com as páginas atuais */
 async function generatePix(e) {
-  // V18: todas as compras (link oficial ou link de promoter) seguem o mesmo
-  // fluxo manual: cria pedido pendente, abre o WhatsApp e aguarda o Admin.
+  // V26: cria o pedido pendente e gera o PIX com a chave cadastrada no Admin.
   return createManualOrder(e);
 }
 

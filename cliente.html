@@ -401,7 +401,7 @@ body{overflow-x:hidden}
       <div class="section-head">
         <small>HYPE LOUNGE CLUB</small>
         <h1><span class="brand-name">INGRESSOS</span> <span class="brand-subline">OFICIAIS</span></h1>
-        <p class="sub">Escolha o evento e o ingresso. O pedido abre no WhatsApp da HYPE e o ingresso é liberado depois que o Admin confirmar o pagamento.</p>
+        <p class="sub">Escolha o evento e o ingresso. Gere o PIX na hora com a chave cadastrada pela HYPE, pague e envie somente o comprovante pelo WhatsApp. O ingresso é liberado depois que o Admin confirmar.</p>
       </div>
 
       <div class="info-grid">
@@ -412,19 +412,19 @@ body{overflow-x:hidden}
         </div>
         <div class="info-box">
           <span>2</span>
-          <strong>Finalize no WhatsApp</strong>
-          <p>O pedido cai direto no WhatsApp da HYPE para pagamento e envio do comprovante.</p>
+          <strong>Pague pelo PIX</strong>
+          <p>O QR Code e o PIX Copia e Cola são gerados automaticamente com o valor do seu pedido.</p>
         </div>
         <div class="info-box">
           <span>3</span>
-          <strong>Confirmação do Admin</strong>
-          <p>Depois da conferência manual, o ingresso com QR Code é liberado e enviado ao e-mail.</p>
+          <strong>Envie o comprovante</strong>
+          <p>Depois do PIX, envie o comprovante no WhatsApp. O Admin confere e libera o ingresso.</p>
         </div>
       </div>
     </div>
 
     <div class="box">
-      <h4 class="box-kicker">PAGAMENTO MANUAL PELO WHATSAPP</h4>
+      <h4 class="box-kicker">PAGAMENTO PIX</h4>
       <h2 class="box-title">Garanta o seu ingresso antecipado</h2>
 
       <form id="ticketForm" onsubmit="createManualOrder(event)">
@@ -487,21 +487,25 @@ body{overflow-x:hidden}
           <div id="serviceFeeInfo" class="service-fee-card"></div>
         </div>
 
-        <button type="submit" class="btn">CRIAR PEDIDO E ABRIR WHATSAPP</button>
+        <button type="submit" class="btn">GERAR QR CODE PIX</button>
       </form>
 
       <div class="pix-area" id="pixArea">
-        <h3 style="font-size:20px">PIX GERADO ✅</h3>
-        <p style="font-size:13px;color:var(--muted);margin-top:7px">Pague pelo QR Code ou use o PIX Copia e Cola. A liberação acontece quando o Asaas confirmar o pagamento.</p>
+        <h3 style="font-size:20px">PIX PRONTO ✅</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:7px">Pague pelo QR Code ou pelo PIX Copia e Cola abaixo. Depois, envie o comprovante no WhatsApp da HYPE.</p>
         <div class="manual-status-card">
           <div style="font-size:10px;color:var(--muted);font-weight:900;letter-spacing:1px">CÓDIGO DO PEDIDO</div>
           <div class="manual-order-code" id="pixOrderCode"></div>
+          <div style="margin:10px 0 2px;font-size:12px;color:var(--muted)">VALOR DO PIX</div>
+          <div id="pixTotalValue" style="font-size:24px;font-weight:1000;color:var(--green);margin-bottom:8px"></div>
           <div class="qrcode"><img id="qrImg" src="" alt="QR Code PIX"></div>
+          <div style="font-size:10px;color:var(--muted);font-weight:900;letter-spacing:1px;margin-top:6px">PIX COPIA E COLA</div>
           <div class="pix-key" id="pixKeyText"></div>
-          <div class="manual-status" id="pixPaymentStatus">AGUARDANDO PAGAMENTO</div>
+          <div class="manual-status" id="pixPaymentStatus">AGUARDANDO COMPROVANTE / CONFIRMAÇÃO</div>
         </div>
         <button class="btn" onclick="copyPixCode()">COPIAR PIX COPIA E COLA</button>
-        <button class="btn ghost-btn" onclick="refreshCurrentOrderStatus(true)">VERIFICAR PAGAMENTO</button>
+        <button class="btn whatsapp-btn" onclick="sendReceiptWhatsApp()">ENVIAR COMPROVANTE NO WHATSAPP</button>
+        <button class="btn ghost-btn" onclick="refreshCurrentOrderStatus(true)">VERIFICAR SE O ADMIN CONFIRMOU</button>
       </div>
 
       <div class="payment-success" id="paymentSuccessArea">
@@ -559,7 +563,8 @@ body{overflow-x:hidden}
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260902-v20"></script>
-<script src="app.js?v=20260902-v20"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<script src="app.js?v=20260904-v26-pix"></script>
 <script src="promoter-global-v16-8.js?v=20260902-v20-global"></script>
 <script src="v18-client.js?v=20260902-v20"></script>
 </body>
