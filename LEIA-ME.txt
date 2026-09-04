@@ -1,24 +1,15 @@
-HYPE LOUNGE CLUB // V26 - PIX QR PELA CHAVE DO ADMIN
+HYPE PIX ASAAS V27
 
-ALTERADOS:
-- app.js
+Substitua no GitHub estes 3 arquivos:
 - cliente.html
+- app.js
+- admin.html
 
-NÃO PRECISA RODAR SQL NOVO.
-A versão já usa public_pix_key e staff_save_pix existentes.
+Mudancas:
+- cliente.html chama createPixOrder(event) em vez do PIX manual.
+- PIX e QR Code passam a vir da Edge Function asaas-pix.
+- confirmacao do pagamento fica para o webhook asaas-webhook.
+- removido o botao de comprovante no WhatsApp da tela PIX.
+- area de chave PIX manual no Admin foi substituida por aviso de PIX Asaas.
 
-FLUXO NOVO:
-1. Admin salva a chave PIX no painel.
-2. Cliente escolhe ingresso e cria o pedido.
-3. O site gera QR Code PIX + Copia e Cola com o valor do pedido.
-4. Cliente paga.
-5. Cliente toca em ENVIAR COMPROVANTE NO WHATSAPP e anexa o comprovante.
-6. Admin confere e confirma o pagamento.
-7. O ingresso é liberado normalmente.
-
-WHATSAPP CONFIGURADO NO APP.JS:
-555496776514
-
-PARA ATUALIZAR NO GITHUB:
-Substitua somente app.js e cliente.html pelos arquivos desta pasta.
-Não apague os outros arquivos do site.
+A Edge Function asaas-pix e o secret ASAAS_API_KEY precisam estar ativos no Supabase.

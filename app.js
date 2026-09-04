@@ -1081,13 +1081,16 @@ async function createAsaasPix(ticketId) {
 function renderAsaasPayment(entry, payment) {
   const area = document.getElementById("pixArea");
   const form = document.getElementById("ticketForm");
+  const manualArea = document.getElementById("manualArea");
   const qrImg = document.getElementById("qrImg");
   const pixText = document.getElementById("pixKeyText");
   const code = document.getElementById("pixOrderCode");
   const status = document.getElementById("pixPaymentStatus");
+  const total = document.getElementById("pixTotalValue");
 
   if (code) code.textContent = entry.ticket_code || "";
-  if (status) status.textContent = "AGUARDANDO PAGAMENTO";
+  if (total) total.textContent = hypeFormatMoney(entry.price);
+  if (status) status.textContent = "AGUARDANDO PAGAMENTO NO ASAAS";
   if (pixText) pixText.textContent = payment.qr_code || "";
 
   if (qrImg) {
@@ -1100,6 +1103,7 @@ function renderAsaasPayment(entry, payment) {
   }
 
   if (form) form.style.display = "none";
+  if (manualArea) manualArea.style.display = "none";
   if (area) area.style.display = "block";
 }
 
@@ -1182,8 +1186,8 @@ async function copyPixCode() {
 
 /* Mantém compatibilidade com as páginas atuais */
 async function generatePix(e) {
-  // V26: cria o pedido pendente e gera o PIX com a chave cadastrada no Admin.
-  return createManualOrder(e);
+  // V27: cria o pedido e gera a cobrança PIX diretamente no Asaas.
+  return createPixOrder(e);
 }
 
 function reopenOrderWhatsApp() {
