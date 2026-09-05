@@ -1,71 +1,14 @@
-HYPE GITHUB PIX AUTO V11
-========================
+HYPE V36 — CORREÇÃO LINK DO LEITOR NO iPHONE
 
-O que mudou nesta versão
-------------------------
-1. PIX continua sendo gerado pelo Asaas.
-2. Quando o banco recebe "Pago", a página do cliente mostra:
-   PAGAMENTO CONFIRMADO -> ACESSAR MEU INGRESSO.
-3. O ingresso oficial continua no próprio site, com QR Code para a Portaria.
-4. O Gmail é enviado automaticamente pelo webhook do Asaas, sem depender
-   do botão "Confirmar" do Admin.
-5. A tela informa se o e-mail já foi enviado ou se ainda está processando.
-6. As correções da V10 de Portaria e limpeza foram mantidas.
+1) Supabase > SQL Editor:
+   execute SUPABASE_V36_LINK_IPHONE_REUTILIZAVEL.sql
 
-ARQUIVOS DO GITHUB
-------------------
-Suba para a raiz do repositório:
-- index.html
-- cliente.html
-- admin.html
-- evento.html
-- portaria.html
-- app.js
-- supabase-config.js
-- logo-hype.png
+2) GitHub:
+   substitua leitor-v20.js e leitor.html pelos arquivos deste pacote.
 
-NÃO é necessário subir para o GitHub:
-- SUPABASE_V11_EMAIL_AUTOMATICO.sql
-- ASAAS_WEBHOOK_EMAIL_AUTOMATICO_V11.ts
-- pasta BACKEND_SUPABASE_V11
+3) Depois abra no iPhone o MESMO link recebido no Gmail.
+   Ele poderá ser reaberto durante a validade sem precisar gerar vários links.
 
-SUPABASE - SQL (uma vez)
-------------------------
-Abra Supabase > SQL Editor > New query.
-Cole SUPABASE_V11_EMAIL_AUTOMATICO.sql e clique Run UMA VEZ.
-Este SQL não apaga ingressos/eventos/lotes.
-
-SUPABASE - EDGE FUNCTION ASAAS
-------------------------------
-Abra a Edge Function que recebe o webhook do Asaas (asaas-webhook).
-Substitua o código pelo arquivo:
-ASAAS_WEBHOOK_EMAIL_AUTOMATICO_V11.ts
-
-A função precisa estar com Verify JWT DESATIVADO, porque o Asaas chama
-o webhook diretamente e não envia JWT do Supabase.
-
-Secrets necessários no Supabase:
-- HYPE_APPS_SCRIPT_URL
-- HYPE_WEBHOOK_SECRET
-- SUPABASE_URL
-- SUPABASE_SERVICE_ROLE_KEY
-
-Opcional, para validar o webhook:
-- ASAAS_WEBHOOK_TOKEN
-
-IMPORTANTE
-----------
-Não coloque SERVICE_ROLE, token do Asaas ou HYPE_WEBHOOK_SECRET no GitHub.
-
-Fluxo final esperado
---------------------
-Cliente gera PIX
--> paga
--> Asaas confirma
--> webhook muda ticket para Pago
--> webhook chama Gmail/Apps Script
--> site mostra PAGAMENTO CONFIRMADO
--> botão ACESSAR MEU INGRESSO
--> QR Code do ingresso
--> e-mail enviado automaticamente
--> Portaria lê QR, mostra os dados e pede confirmação de entrada.
+Segurança:
+- o Admin continua podendo desconectar o celular;
+- link revogado/bloqueado não é reativado por esta atualização.
