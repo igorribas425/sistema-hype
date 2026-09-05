@@ -1,0 +1,6 @@
+HYPE V42.2
+- Corrige Lista do Admin que não salvava/carregava após login.
+- Mantém Lista somente no Admin.
+- Portaria não adiciona nomes.
+- Campo de nomes agora salva rascunho local para não perder se der erro.
+- Não mexe no PIX, ingressos, sorteio, chat ou vendas.
