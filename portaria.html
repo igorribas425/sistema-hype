@@ -89,18 +89,14 @@ html,body{max-width:100%;overflow-x:hidden}
       <div class="v19-section-head">
         <div>
           <h3>📋 LISTA SIMPLES</h3>
-          <p>Sem ingresso e sem QR Code. Adicione o nome, procure na lista e confirme a entrada manualmente.</p>
+          <p>A lista é cadastrada somente no Admin. Aqui a Portaria apenas busca o nome e confirma a entrada manualmente.</p>
         </div>
-      </div>
-      <div class="search-row">
-        <input id="v406ListName" class="input" placeholder="Nome para colocar na lista" autocomplete="off">
-        <button class="btn primary" onclick="HypeListaSimples.add()">+ COLOCAR NA LISTA</button>
       </div>
       <div class="search-row" style="margin-top:8px">
         <input id="v406ListSearch" class="input" placeholder="Buscar nome da lista" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();HypeListaSimples.search()}">
         <button class="btn" onclick="HypeListaSimples.search()">🔎 BUSCAR LISTA</button>
       </div>
-      <div id="v406ListResult" class="results"><div class="empty">Lista separada dos ingressos pagos. Use só para nomes autorizados.</div></div>
+      <div id="v406ListResult" class="results"><div class="empty">Lista separada dos ingressos pagos. A Portaria não adiciona nomes, só confirma entrada.</div></div>
     </section>
 
     <div id="results" class="results"><div class="empty">Leia um QR pelo celular conectado, pela câmera deste computador ou pesquise o cliente.</div></div>
@@ -154,6 +150,6 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="register-sw.js?v=20260902-v21"></script>
   <script src="hype-v38-chat.js?v=20260905-v40-2"></script>
   <script src="hype-v38-reset.js?v=20260905-v38-1"></script>
-  <script src="hype-v406-lista-simples.js?v=20260905-v40-6"></script>
+  <script src="hype-v406-lista-simples.js?v=20260905-v40-8"></script>
 </body>
 </html>

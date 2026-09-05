@@ -272,6 +272,18 @@ html,body{max-width:100%;overflow-x:hidden}
 }
 </style>
   <link rel="stylesheet" href="hype-v38-responsive.css?v=20260905-v40-7">
+
+<style>
+  #v408SimpleListAdmin .v408-list-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+  #v408SimpleListAdmin textarea,#v408SimpleListAdmin select{width:100%;box-sizing:border-box}
+  #v408SimpleListAdmin .v408-list-actions{display:flex;gap:10px;flex-wrap:wrap}
+  #v408SimpleListAdmin .v408-list-actions .btn,#v408SimpleListAdmin .v408-list-actions .btn-action{flex:1;min-width:180px}
+  .v408-admin-list-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid rgba(255,255,255,.12);border-radius:14px;margin-top:8px;background:rgba(255,255,255,.04)}
+  .v408-admin-list-row b{display:block;color:#fff}.v408-admin-list-row span{font-size:12px;color:var(--muted)}
+  .v408-pill{font-size:11px;font-weight:900;border-radius:999px;padding:6px 9px;background:rgba(255,255,255,.08);white-space:nowrap}.v408-pill.ok{color:#86efac}.v408-pill.bad{color:#fca5a5}
+  @media (min-width:900px){#v408SimpleListAdmin .v408-list-grid{grid-template-columns:280px 1fr}#v408SimpleListAdmin .form-group.full{grid-column:1/-1}}
+  @media (max-width:640px){.v408-admin-list-row{align-items:flex-start;flex-direction:column}.v408-pill{white-space:normal}}
+</style>
 </head>
 <body>
 
@@ -535,14 +547,33 @@ html,body{max-width:100%;overflow-x:hidden}
     </div>
   </section>
 
-  <section class="panel-box admin-only" id="v406SimpleListInfo">
+  <section class="panel-box admin-only" id="v408SimpleListAdmin">
     <div class="v16-management-head">
       <div>
-        <h3>📋 LISTA SIMPLES DA PORTARIA</h3>
-        <p>Agora a lista não gera ingresso, não gera QR e não entra como compra. Ela fica separada: a Portaria adiciona o nome, busca e confirma a entrada manualmente.</p>
+        <h3>📋 LISTA SIMPLES</h3>
+        <p>A lista agora é cadastrada somente pelo Admin. Não gera ingresso, não gera QR e não vira compra. A Portaria só busca o nome e confirma a entrada.</p>
       </div>
     </div>
-    <div class="v18-empty">Para adicionar alguém na lista, abra a Portaria e use o painel <b>Lista simples</b>. As compras normais do site continuam pelo PIX Asaas e QR Code.</div>
+
+    <div class="v408-list-grid">
+      <div class="form-group">
+        <label>Evento da lista</label>
+        <select id="v408ListEvent"></select>
+      </div>
+      <div class="form-group full">
+        <label>Nome para colocar na lista</label>
+        <textarea id="v408ListNames" rows="4" placeholder="Digite um nome por linha
+Ex.: Maria Silva
+Ana Paula
+Bruna Santos"></textarea>
+        <small style="color:var(--muted)">Pode colar vários nomes, um em cada linha.</small>
+      </div>
+      <div class="form-group full v408-list-actions">
+        <button class="btn" type="button" onclick="HypeListaAdmin.add()">+ ADICIONAR NA LISTA</button>
+        <button class="btn-action" type="button" onclick="HypeListaAdmin.load()">↻ ATUALIZAR LISTA</button>
+      </div>
+    </div>
+    <div id="v408ListAdminResult" class="v18-empty">Escolha o evento e adicione os nomes pelo Admin.</div>
   </section>
 
   <div class="grid-admin">
@@ -813,5 +844,6 @@ html,body{max-width:100%;overflow-x:hidden}
   <script src="hype-v38-reset.js?v=20260905-v38-1"></script>
 
 <script src="hype-v39-admin-simple.js?v=20260905-v39-1"></script>
+  <script src="hype-v408-lista-admin.js?v=20260905-v40-8"></script>
 </body>
 </html>

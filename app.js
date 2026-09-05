@@ -837,48 +837,6 @@ function clientIsEditingForm() {
   );
 }
 
-// V40.8: quando um FREE por horário vence, força somente a recarga dos lotes
-// do evento atual. Assim o preço normal volta mesmo se o cliente estiver
-// preenchendo nome/CPF/e-mail e sem reconstruir o formulário inteiro.
-const hypeHandledFreeCutoffsV408 = new Set();
-let hypeFreeCutoffRefreshBusyV408 = false;
-
-async function hypeRefreshExpiredFreeCutoffV408() {
-  if (hypeFreeCutoffRefreshBusyV408 || !HYPE.selectedEventId) return;
-
-  const now = Date.now();
-  const expiredKeys = [];
-  for (const lot of (HYPE.lots || [])) {
-    for (const key of ["female_free_until", "male_free_until"]) {
-      const value = lot?.[key];
-      if (!value) continue;
-      const at = new Date(value).getTime();
-      if (!Number.isFinite(at) || now < at) continue;
-      const cutoffKey = `${HYPE.selectedEventId}:${lot.id}:${key}:${value}`;
-      if (!hypeHandledFreeCutoffsV408.has(cutoffKey)) expiredKeys.push(cutoffKey);
-    }
-  }
-
-  if (!expiredKeys.length) return;
-  expiredKeys.forEach(k => hypeHandledFreeCutoffsV408.add(k));
-  hypeFreeCutoffRefreshBusyV408 = true;
-
-  try {
-    const selectedLot = document.getElementById("ticketType")?.value || "";
-    HYPE.lots = await hypeLoadPublicLotsV38(HYPE.selectedEventId);
-    renderClientTickets(selectedLot);
-    updateClientTicketState();
-    hypeV14RenderLots();
-    clientCatalogLastRefresh = Date.now();
-    hypeNotify("⏰ Horário do FREE encerrado. Valor normal atualizado automaticamente.");
-  } catch (_) {
-    // Se a rede falhar exatamente na virada, libera nova tentativa no próximo segundo.
-    expiredKeys.forEach(k => hypeHandledFreeCutoffsV408.delete(k));
-  } finally {
-    hypeFreeCutoffRefreshBusyV408 = false;
-  }
-}
-
 async function refreshClientCatalogSafely() {
   if (clientIsEditingForm()) return;
 
@@ -927,7 +885,6 @@ async function initClient() {
         // Atualiza contagem/status sem reconstruir os campos enquanto o cliente digita.
         updateClientTicketState();
         hypeV14Tick();
-        await hypeRefreshExpiredFreeCutoffV408();
         await refreshCurrentOrderStatus(false);
 
         // V37: perto da virada de lote atualiza em ~8s; fora disso em ~30s.

@@ -1,12 +1,8 @@
-HYPE V40.8 — VIRADA AUTOMÁTICA DO FREE
+HYPE V40.8
 
-Correção:
-- Se Masculino ou Feminino estiver FREE até um horário, a tela de venda troca automaticamente para o valor normal assim que o horário vence.
-- Funciona mesmo se o cliente estiver preenchendo nome, CPF, e-mail ou telefone.
-- Na virada, recarrega somente os lotes/preços do evento atual; não apaga os campos digitados.
-- O valor final continua validado no Supabase ao criar a compra.
+- Lista simples agora é cadastrada somente pelo Admin.
+- Portaria apenas busca nome e confirma entrada.
+- Remove botão/campo de adicionar lista da Portaria.
+- Sorteio segue um vencedor por clique e não repete vencedor do mesmo evento após V40.7.
 
-IMPORTANTE:
-- Esta V40.8 é correção de front-end sobre a V40.7.
-- O SQL SUPABASE_V40_7_FREE_HOMEM_SORTEIO_UNICO.sql precisa já ter sido executado no Supabase para existir male_free_until.
-- Para esta V40.8 não há SQL novo: basta substituir os arquivos do GitHub pelos deste ZIP.
+Antes do GitHub, rode o SQL SUPABASE_V40_8_LISTA_SOMENTE_ADMIN.sql no Supabase.

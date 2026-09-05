@@ -1,5 +1,5 @@
-/* HYPE V40.6 — Lista simples na Portaria
-   Sem ingresso, sem QR, sem PIX. Apenas nome liberado e confirmação manual de entrada.
+/* HYPE V40.8 — Lista simples na Portaria
+   A Portaria não adiciona nomes. Ela só busca nomes cadastrados no Admin e confirma entrada.
 */
 (() => {
   'use strict';
@@ -40,26 +40,8 @@
     return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   }
 
-  async function add(){
-    const name=($('v406ListName')?.value || '').trim().replace(/\s+/g,' ');
-    if(!name || name.length<2) return alert('Digite o nome da pessoa.');
-    if(!deviceKey()) return alert('Portaria não autorizada neste computador.');
-    if(!eventId()) return alert('Selecione o evento da Portaria.');
-    const btn=document.querySelector('#v406ListaSimplesPanel button.primary');
-    const old=btn?.textContent;
-    if(btn){btn.disabled=true;btn.textContent='SALVANDO...';}
-    try{
-      await rpc('portaria_guest_simple_add_v406',{p_device_key:deviceKey(),p_event_id:eventId(),p_name:name});
-      if($('v406ListName')) $('v406ListName').value='';
-      if($('v406ListSearch')) $('v406ListSearch').value=name;
-      flash(true,'NOME NA LISTA',name);
-      await search();
-    }catch(err){
-      out(`<div class="empty error">${esc(err.message || 'Erro ao adicionar na lista.')}</div>`);
-      flash(false,'ERRO',err.message || 'Erro ao adicionar na lista.');
-    }finally{
-      if(btn){btn.disabled=false;btn.textContent=old || '+ COLOCAR NA LISTA';}
-    }
+  function add(){
+    alert('Agora a lista é cadastrada somente no Admin. A Portaria só busca e confirma entrada.');
   }
 
   async function search(){
