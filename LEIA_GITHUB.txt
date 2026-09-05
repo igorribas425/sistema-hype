@@ -1,0 +1,20 @@
+HYPE V37 - ARQUIVOS PARA O GITHUB
+
+Substitua estes arquivos na RAIZ do repositorio do site.
+Nao coloque os SQL aqui.
+Nao mexa nas Edge Functions nesta etapa.
+
+Arquivos:
+- admin.html
+- admin-v34.css
+- admin-v34.js
+- admin-v36-refund.css
+- admin-v36-refund.js
+- app.js
+- cliente.html
+- leitor.html
+- leitor-v20.js
+- pesquisa.html
+- portaria.html
+- portaria-v18.js
+- portaria-v20.js

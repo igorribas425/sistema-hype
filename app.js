@@ -105,6 +105,90 @@ function hypeFormatDateTime(value) {
   return d.toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
 }
 
+/* ========================= V37 • VIRADA + MOBILE =========================
+   - A área pública deixa de destacar eventos encerrados depois das 08:00
+     do dia seguinte, usando o fuso oficial de São Paulo.
+   - Nenhum evento/ingresso é apagado: histórico continua no Supabase/Admin.
+   - A virada de lote continua sendo definida pelo Supabase via auto_locked.
+*/
+function hypeIsClientPageV37() {
+  return Boolean(document.getElementById("ticketForm"));
+}
+
+function hypeSaoPauloNowPartsV37(value = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+  }).formatToParts(value).reduce((out, item) => {
+    if (item.type !== "literal") out[item.type] = item.value;
+    return out;
+  }, {});
+  return {
+    date: `${parts.year}-${parts.month}-${parts.day}`,
+    minutes: Number(parts.hour || 0) * 60 + Number(parts.minute || 0)
+  };
+}
+
+function hypeAddDaysToDateKeyV37(value, days = 1) {
+  const key = String(value || "").slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return "";
+  const d = new Date(`${key}T12:00:00Z`);
+  if (Number.isNaN(d.getTime())) return "";
+  d.setUTCDate(d.getUTCDate() + Number(days || 0));
+  return d.toISOString().slice(0, 10);
+}
+
+function hypeEventStillPublicV37(event) {
+  const eventDate = String(event?.event_date || "").slice(0, 10);
+  if (!eventDate) return true;
+  const cutoffDate = hypeAddDaysToDateKeyV37(eventDate, 1);
+  if (!cutoffDate) return true;
+  const now = hypeSaoPauloNowPartsV37();
+  if (now.date < cutoffDate) return true;
+  if (now.date > cutoffDate) return false;
+  return now.minutes < 8 * 60;
+}
+
+function hypeClientVisibleEventsV37() {
+  const events = Array.isArray(HYPE.events) ? HYPE.events : [];
+  if (!hypeIsClientPageV37()) return events;
+  return events.filter(hypeEventStillPublicV37);
+}
+
+function hypeChooseClientEventV37(events, promoterLink = {}) {
+  const visible = Array.isArray(events) ? events.filter(hypeEventStillPublicV37) : [];
+  if (!visible.length) return null;
+
+  if (promoterLink?.eventId) {
+    const linked = visible.find(e => Number(e.id) === Number(promoterLink.eventId));
+    if (linked) return linked;
+  }
+
+  const current = visible.find(e => Number(e.id) === Number(HYPE.selectedEventId));
+  if (current) return current;
+
+  const nowKey = hypeSaoPauloNowPartsV37().date;
+  const dated = visible.filter(e => /^\d{4}-\d{2}-\d{2}$/.test(String(e.event_date || "").slice(0,10)));
+  const currentNight = dated
+    .filter(e => String(e.event_date).slice(0,10) <= nowKey)
+    .sort((a,b) => String(b.event_date).localeCompare(String(a.event_date)))[0];
+  if (currentNight) return currentNight;
+
+  return dated.sort((a,b) => String(a.event_date).localeCompare(String(b.event_date)))[0] || visible[0];
+}
+
+function hypeClientRefreshEveryV37() {
+  if (document.hidden) return 60000;
+  const lots = Array.isArray(HYPE.lots) ? HYPE.lots : [];
+  const closeToTurn = lots.some(lot => {
+    const state = hypeStatus(lot);
+    const available = lot.quantity_total > 0 ? Number(lot.quantity_available || 0) : null;
+    return state.code === "auto_locked" || (state.code === "active" && available !== null && available <= 20);
+  });
+  return closeToTurn ? 8000 : 30000;
+}
+
 function hypeStatus(ticket, now = new Date()) {
   const nowMs = now.getTime();
   const startMs = ticket.starts_at ? new Date(ticket.starts_at).getTime() : null;
@@ -413,7 +497,10 @@ async function loadPublicState() {
   HYPE.pixKey = typeof pix === "string" ? pix : "";
 
   const promoterLink = hypeReadPromoterLinkV16();
-  if (promoterLink.eventId && HYPE.events.some(e => Number(e.id) === Number(promoterLink.eventId))) {
+  if (hypeIsClientPageV37()) {
+    const chosen = hypeChooseClientEventV37(HYPE.events, promoterLink);
+    HYPE.selectedEventId = chosen?.id ? Number(chosen.id) : null;
+  } else if (promoterLink.eventId && HYPE.events.some(e => Number(e.id) === Number(promoterLink.eventId))) {
     HYPE.selectedEventId = Number(promoterLink.eventId);
   } else if (!HYPE.selectedEventId || !HYPE.events.some(e => Number(e.id) === Number(HYPE.selectedEventId))) {
     HYPE.selectedEventId = HYPE.events[0]?.id || null;
@@ -449,7 +536,7 @@ function renderEventCarousel() {
   const dots = document.getElementById("eventDots");
   if (!target) return;
 
-  const events = HYPE.events || [];
+  const events = hypeIsClientPageV37() ? hypeClientVisibleEventsV37() : (HYPE.events || []);
   if (!events.length) {
     target.innerHTML = `<div class="event-empty">Nenhum evento disponível no momento.</div>`;
     if (dots) dots.innerHTML = "";
@@ -709,7 +796,9 @@ function clientIsEditingForm() {
 async function refreshClientCatalogSafely() {
   if (clientIsEditingForm()) return;
 
-  const selectedLot = document.getElementById("ticketType")?.value;
+  const selectedLot = document.getElementById("ticketType")?.value || "";
+  const previousEventId = Number(HYPE.selectedEventId || 0);
+  const previousLot = (HYPE.lots || []).find(l => String(l.id) === String(selectedLot));
   const currentScroll = window.scrollY;
 
   await loadPublicState();
@@ -718,6 +807,17 @@ async function refreshClientCatalogSafely() {
   hypeApplyPromoterLinkV16();
   updateClientTicketState();
   hypeV14Render();
+
+  const newLotId = document.getElementById("ticketType")?.value || "";
+  const newLot = (HYPE.lots || []).find(l => String(l.id) === String(newLotId));
+  const eventChanged = previousEventId && Number(HYPE.selectedEventId || 0) !== previousEventId;
+  const lotChanged = !eventChanged && selectedLot && newLotId && String(selectedLot) !== String(newLotId);
+
+  if (eventChanged) {
+    hypeNotify(`🎫 Evento atualizado: ${HYPE.event?.name || "próximo evento HYPE"}`);
+  } else if (lotChanged && previousLot && newLot) {
+    hypeNotify(`🔥 Lote virou: agora ${newLot.name || newLot.sector || "próximo lote"}`);
+  }
 
   clientCatalogLastRefresh = Date.now();
 
@@ -743,8 +843,9 @@ async function initClient() {
         hypeV14Tick();
         await refreshCurrentOrderStatus(false);
 
-        // Atualiza eventos/lotes no máximo a cada 30s e nunca durante a digitação.
-        if (Date.now() - clientCatalogLastRefresh >= 30000) {
+        // V37: perto da virada de lote atualiza em ~8s; fora disso em ~30s.
+        // Em aba oculta reduz trabalho/bateria. Nunca reconstrói os campos durante a digitação.
+        if (Date.now() - clientCatalogLastRefresh >= hypeClientRefreshEveryV37()) {
           await refreshClientCatalogSafely();
         }
       } catch (_) {
@@ -772,7 +873,8 @@ function renderClientTickets(keepId = null) {
     const state = hypeStatus(t);
     const unavailable = !state.canBuy;
     const suffix = state.code === "upcoming" ? " — EM BREVE" : state.code === "auto_locked" ? " — AGUARDANDO LOTE ANTERIOR" : state.code === "expired" ? " — ENCERRADO" : state.code === "soldout" ? " — ESGOTADO" : state.code === "invalid" ? " — CONFIGURAÇÃO INVÁLIDA" : "";
-    const stock = t.quantity_total > 0 ? ` • ${Math.max(0, Number(t.quantity_available || 0))} restantes` : "";
+    const remaining = t.quantity_total > 0 ? Math.max(0, Number(t.quantity_available || 0)) : null;
+    const stock = remaining !== null && remaining > 0 && remaining <= 20 ? " • ÚLTIMOS INGRESSOS" : "";
     const price = getLotGenderPrice(t, gender);
     return `<option value="${t.id}" data-price-female="${Number(t.price_female ?? t.price ?? 0)}" data-price-male="${Number(t.price_male ?? t.price ?? 0)}" ${unavailable ? "disabled" : ""}>${hypeEscape(t.sector || t.name)} • ${hypeEscape(t.name)} - ${hypePriceLabel(price)}${stock}${suffix}</option>`;
   }).join("");
@@ -2685,10 +2787,10 @@ function hypeV14RenderLots() {
     const total = Number(lot.quantity_total || 0);
     const hot = available !== null && available > 0 && (available <= 20 || (total > 0 && available / total <= .20));
     const stockText = available === null
-      ? "Disponibilidade livre"
+      ? "Venda disponível"
       : hot
-        ? `🔥 ÚLTIMOS ${available} INGRESSOS`
-        : `${available} disponível${available === 1 ? "" : "is"}`;
+        ? "🔥 ÚLTIMOS INGRESSOS"
+        : state.canBuy ? "Disponível agora" : state.label;
     const active = String(lot.id) === String(selectedId);
     const disabled = !state.canBuy;
     const femalePrice = getLotGenderPrice(lot, "Feminino");

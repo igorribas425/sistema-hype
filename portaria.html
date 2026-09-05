@@ -18,6 +18,17 @@
 @media(max-width:760px){.v19-section-head{align-items:flex-start;flex-direction:column}.v19-door-form{grid-template-columns:1fr 1fr}.v19-order-grid{grid-template-columns:1fr}.v19-reader{align-items:flex-start}.v19-reader-disconnect{flex:0 0 auto}}
 @media(max-width:480px){.v19-door-form,.v19-order-actions{grid-template-columns:1fr}.v19-reader{flex-direction:column}.v19-reader-disconnect{width:100%}}
 </style>
+
+<style id="hype-v37-portaria-mobile">
+html,body{max-width:100%;overflow-x:hidden}
+@media(max-width:760px){
+  body{padding:10px max(8px,env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}
+  .select,.input,.v19-door-form input,.v19-door-form select{font-size:16px!important}
+  .btn{min-height:48px}
+  .live{padding:12px 8px}.live b{font-size:24px}
+}
+@media(max-width:390px){.live-grid{gap:7px}.status-row{gap:6px}.pill{font-size:9px;padding:7px 8px}}
+</style>
 </head>
 <body>
 <div class="shell">
@@ -114,8 +125,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260902-v21"></script>
 <script src="hype-qrcode.js?v=20260902-v21"></script>
-<script src="portaria-v18.js?v=20260904-v35-feedback"></script>
-<script src="portaria-v20.js?v=20260904-v35-asaas"></script>
+<script src="portaria-v18.js?v=20260905-v37-evento"></script>
+<script src="portaria-v20.js?v=20260905-v37-lotes"></script>
 <script src="register-sw.js?v=20260902-v21"></script>
 </body>
 </html>

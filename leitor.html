@@ -9,6 +9,12 @@
 <style>
 :root{--bg:#050505;--panel:#0d0d10;--line:#25252a;--text:#f7f7f8;--muted:#9898a0;--green:#28d17c;--red:#ff163d}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,sans-serif;min-height:100vh;padding:16px;display:flex;justify-content:center}.app{width:min(520px,100%)}.logo{display:flex;justify-content:center;margin:8px 0 16px}.logo img{width:min(230px,65vw)}.card{background:linear-gradient(180deg,#111115,#09090b);border:1px solid var(--line);border-radius:24px;padding:20px;text-align:center}.card h1{font-size:22px;margin:0 0 7px}.card p{color:var(--muted);font-size:12px;line-height:1.55;margin:0}.status{margin:15px 0;padding:11px;border:1px solid var(--line);border-radius:12px;font-size:11px;font-weight:900}.status.ok{color:#a6f0c0;border-color:rgba(40,209,124,.35)}.status.bad{color:#ff9bac;border-color:rgba(255,22,61,.35)}.camera{display:none;margin-top:14px;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:#000;position:relative}.camera.show{display:block}.camera video{width:100%;display:block;min-height:420px;object-fit:cover}.scanline{position:absolute;left:12%;right:12%;top:50%;height:2px;background:#fff;box-shadow:0 0 18px #fff}.btn{width:100%;min-height:50px;border:1px solid var(--line);border-radius:13px;background:linear-gradient(135deg,#f7f7f7,#bdbdc2);color:#060606;font-weight:950;font-size:14px;margin-top:12px}.btn.secondary{background:#15151a;color:#fff}.last{margin-top:12px;padding:14px;border:1px solid rgba(40,209,124,.25);background:rgba(40,209,124,.06);border-radius:15px;display:none}.last.show{display:block}.last b{display:block;font-size:18px}.last span{display:block;color:#bcefd0;font-size:11px;margin-top:5px}.note{margin-top:16px;font-size:10px!important;color:#777!important}.manual{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:12px}.manual input{min-height:46px;background:#060608;border:1px solid var(--line);border-radius:12px;padding:0 12px;color:#fff;outline:none}.manual button{min-height:46px;border-radius:12px;border:1px solid var(--line);background:#15151a;color:#fff;font-weight:900;padding:0 12px}@media(max-width:420px){body{padding:10px}.camera video{min-height:58vh}}
 </style>
+
+<style id="hype-v37-reader-mobile">
+body{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right));padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+.manual input{font-size:16px}
+@media(max-width:420px){.card{padding:16px 13px;border-radius:20px}.camera video{min-height:54vh}.btn{min-height:52px}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -27,6 +33,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260902-v20"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-<script src="leitor-v20.js?v=20260905-v36-ios-link"></script>
+<script src="leitor-v20.js?v=20260905-v37-ios"></script>
 </body>
 </html>

@@ -13,3 +13,6 @@
 .v36-refund-row strong{display:block;font-size:12px}.v36-refund-row small{display:block;color:var(--muted);font-size:10px;margin-top:3px;line-height:1.35}.v36-refund-value{font-weight:900;color:#fff}.v36-refund-status{font-size:9px;font-weight:950;padding:5px 7px;border-radius:999px;border:1px solid var(--line);text-align:center}.v36-refund-status.eligible{color:#ffd28a;border-color:rgba(255,184,76,.35);background:rgba(255,184,76,.08)}.v36-refund-status.done{color:var(--green);border-color:rgba(40,209,124,.35);background:rgba(40,209,124,.08)}.v36-refund-status.wait{color:#7dd3fc;border-color:rgba(125,211,252,.35);background:rgba(125,211,252,.08)}
 .v36-refund-empty{padding:18px;text-align:center;color:var(--muted);font-size:11px}
 @media(max-width:760px){.v36-refund-head{flex-direction:column}.v36-refund-stats{grid-template-columns:1fr 1fr}.v36-refund-row{grid-template-columns:1fr auto}.v36-refund-row .v36-provider,.v36-refund-row .v36-refund-status{grid-column:1/-1}.v36-refund-actions{width:100%}.v36-refund-actions .btn-action{flex:1}}
+
+/* V37 mobile */
+@media(max-width:650px){.v36-refund-head{flex-direction:column}.v36-refund-actions{width:100%}.v36-refund-actions .btn-action{flex:1}.v36-refund-stats{grid-template-columns:1fr 1fr!important}.v36-refund-row{grid-template-columns:1fr!important;gap:8px}.v36-refund-row .btn-action{width:100%}}

@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -326,6 +326,32 @@ body{overflow-x:hidden}
 <style id="hype-v16-sales-style">
 .v16-sales-fields small{font-size:9px;color:var(--muted);font-weight:700}.v16-coupon-row{display:grid;grid-template-columns:1fr auto;gap:8px}.v16-mini-btn{border:1px solid rgba(var(--event-rgb,216,216,220),.45);background:rgba(var(--event-rgb,216,216,220),.12);color:#fff;border-radius:10px;padding:0 14px;font-weight:900;cursor:pointer}.v16-coupon-status{font-size:10px;min-height:15px;margin-top:6px;color:var(--muted);font-weight:800}.v16-coupon-status.ok{color:#28d17c}.v16-coupon-status.error{color:#ff7676}@media(max-width:700px){.v16-sales-fields{grid-template-columns:1fr!important}.v16-mini-btn{min-height:46px}}
 </style>
+
+<style id="hype-v37-mobile">
+/* V37: acabamento mobile sem remover informações do ingresso */
+html,body{max-width:100%;overflow-x:hidden}
+@media(max-width:720px){
+  body{padding-left:max(10px,env(safe-area-inset-left))!important;padding-right:max(10px,env(safe-area-inset-right))!important;padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
+  .top-nav{justify-content:flex-start;overflow-x:auto;white-space:nowrap;padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right));scrollbar-width:none}
+  .top-nav::-webkit-scrollbar{display:none}
+  .event-carousel{padding-right:0;gap:10px;scroll-padding-left:0}
+  .event-card{flex-basis:100%;border-radius:22px}
+  .event-card-image{min-height:235px}
+  .event-card-body{padding:18px 16px}
+  .event-card-body h2{font-size:clamp(28px,10vw,42px)}
+  .purchase-copy,.box{padding:20px 16px}
+  input,select,textarea{font-size:16px!important}
+  button,.btn,.event-select-btn{min-height:48px}
+  .v14-sticky-buy{bottom:calc(8px + env(safe-area-inset-bottom));left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right))}
+}
+@media(max-width:390px){
+  .v15-gender-prices{grid-template-columns:1fr}
+  .v14-actions{grid-template-columns:1fr}
+  .v14-action.primary{grid-column:auto}
+  .v14-countdown{grid-template-columns:repeat(2,1fr)}
+  .v14-sticky-buy button{min-width:112px}
+}
+</style>
 </head>
 <body>
 <div class="event-ambient" id="eventAmbient" aria-hidden="true"></div>
@@ -564,7 +590,7 @@ body{overflow-x:hidden}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260902-v20"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
-<script src="app.js?v=20260904-v36-free-refund"></script>
+<script src="app.js?v=20260905-v37-mobile-lotes"></script>
 <script src="promoter-global-v16-8.js?v=20260902-v20-global"></script>
 <script src="v18-client.js?v=20260902-v20"></script>
 </body>

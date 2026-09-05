@@ -1,4 +1,4 @@
-/* HYPE V36 // celular somente leitor por LINK EXCLUSIVO REUTILIZÁVEL — Android + iPhone/iOS
+/* HYPE V33 // celular somente leitor por LINK EXCLUSIVO — Android + iPhone/iOS
    Correção de câmera preta no celular + revogação em tempo real:
    - força o video.play() depois que a câmera abre;
    - limpa srcObject ao fechar/reabrir a câmera;
@@ -171,15 +171,7 @@
         state.label=result.reader_label||state.label;
         localStorage.setItem(LABEL_KEY,state.label);
         localStorage.setItem(READER_KEY,state.secret);
-        // V36 iPhone/iOS: mantém o token do link na URL.
-        // Assim, se o Gmail/Safari perder o localStorage ou a página recarregar,
-        // o MESMO link consegue autorizar o leitor novamente.
-        try {
-          const keepUrl = new URL(location.href);
-          keepUrl.searchParams.set('reader', token);
-          if (state.label) keepUrl.searchParams.set('name', state.label);
-          history.replaceState({},'', keepUrl.pathname + keepUrl.search);
-        } catch (_) {}
+        history.replaceState({},'',location.pathname);
         const valid=await statusCheck();
         if(valid!==true)return;
         startHeartbeat();
