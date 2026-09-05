@@ -1142,14 +1142,13 @@ async function createManualOrder(e) {
   }
 
   const name = document.getElementById("clientName")?.value.trim() || "";
-  const phone = document.getElementById("clientPhone")?.value.trim() || "";
-  const email = document.getElementById("clientEmail")?.value.trim() || "";
+  const phone = "";
+  const email = "";
   const cpf = document.getElementById("clientCpf")?.value.trim() || "";
   const gender = document.getElementById("clientGender")?.value || "";
 
   if (!name) return alert("Informe seu nome completo.");
-  if (normalizePhone(phone).length < 10) return alert("Informe um WhatsApp válido.");
-  if (!validEmail(email)) return alert("Informe um e-mail válido.");
+  if (String(cpf).replace(/\D/g, "").length !== 11) return alert("Informe um CPF com 11 números.");
 
   const submit = document.querySelector('#ticketForm button[type="submit"]');
   const oldText = submit?.textContent || "GERAR QR CODE PIX";
@@ -1273,14 +1272,13 @@ async function createPixOrder(e) {
   if (!state.canBuy) return alert(`Este lote está ${state.label.toLowerCase()}.`);
 
   const name = document.getElementById("clientName")?.value.trim() || "";
-  const phone = document.getElementById("clientPhone")?.value.trim() || "";
-  const email = document.getElementById("clientEmail")?.value.trim() || "";
+  const phone = "";
+  const email = "";
   const cpf = document.getElementById("clientCpf")?.value.trim() || "";
   const gender = document.getElementById("clientGender")?.value || "";
 
   if (!name) return alert("Informe seu nome completo.");
-  if (normalizePhone(phone).length < 10) return alert("Informe um WhatsApp válido.");
-  if (!validEmail(email)) return alert("Informe um e-mail válido.");
+  if (String(cpf).replace(/\D/g, "").length !== 11) return alert("Informe um CPF com 11 números.");
 
   const submit = document.querySelector('#ticketForm button[type="submit"]');
   const oldText = submit?.textContent || "GERAR PIX";
@@ -1434,11 +1432,7 @@ function fillTicketCard(entry) {
   set("tTicketId", entry.ticket_code || `#${entry.id}`);
 
   const emailNotice = document.getElementById("ticketEmailNotice");
-  if (emailNotice) {
-    emailNotice.textContent = entry.email_sent
-      ? "📧 Cópia enviada automaticamente para o e-mail informado na compra."
-      : "📧 O envio do ingresso por e-mail está sendo processado automaticamente.";
-  }
+  if (emailNotice) { emailNotice.textContent = "🎟️ Seu ingresso fica disponível diretamente neste site."; }
 
   const qr = document.getElementById("ticketQrImg");
   if (qr) qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(entry.qr_token || entry.ticket_code)}`;

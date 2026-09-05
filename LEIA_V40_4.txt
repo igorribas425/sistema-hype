@@ -1,0 +1,12 @@
+HYPE V40.4
+
+1) Rode SUPABASE_V40_4_CLIENTE_SIMPLES_SEM_DOCUMENTO.sql no Supabase SQL Editor.
+2) No GitHub, substitua apenas cliente.html e app.js.
+
+Mudancas:
+- Cliente compra com Nome + CPF + Genero + Ingresso/Lote.
+- Telefone e e-mail nao sao obrigatorios nem aparecem no formulario.
+- PIX Asaas continua automatico.
+- Depois de pago, ingresso abre no proprio site.
+- Portaria nao exige conferencia de documento/CPF.
+- QR pago e correto registra entrada automaticamente pela funcao de validacao.

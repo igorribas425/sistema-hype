@@ -352,7 +352,7 @@ html,body{max-width:100%;overflow-x:hidden}
   .v14-sticky-buy button{min-width:112px}
 }
 </style>
-  <link rel="stylesheet" href="hype-v38-responsive.css?v=20260905-v38-1">
+  <link rel="stylesheet" href="hype-v38-responsive.css?v=20260905-v40-1">
 </head>
 <body>
 <div class="event-ambient" id="eventAmbient" aria-hidden="true"></div>
@@ -452,28 +452,17 @@ html,body{max-width:100%;overflow-x:hidden}
 
     <div class="box">
       <h4 class="box-kicker">PAGAMENTO PIX</h4>
-      <h2 class="box-title">Garanta o seu ingresso antecipado</h2>
+      <h2 class="box-title">Compre seu ingresso em poucos passos</h2>
 
       <form id="ticketForm" onsubmit="createPixOrder(event)">
         <div class="group">
           <label>Nome Completo</label>
           <input type="text" id="clientName" placeholder="O seu nome no documento" required autocomplete="off">
         </div>
-
-        <div class="group">
-          <label>Telefone / WhatsApp</label>
-          <input type="tel" id="clientPhone" placeholder="(54) 99999-9999" autocomplete="tel">
-        </div>
-
-        <div class="group">
-          <label>E-mail para receber o ingresso</label>
-          <input type="email" id="clientEmail" placeholder="seunome@gmail.com" required autocomplete="email">
-        </div>
-
-        <div class="group two-col">
+<div class="group two-col">
           <div>
             <label>CPF</label>
-            <input type="text" id="clientCpf" placeholder="Somente para identificação" inputmode="numeric" autocomplete="off">
+            <input type="text" id="clientCpf" placeholder="Digite seu CPF" inputmode="numeric" autocomplete="off" required maxlength="14">
           </div>
           <div>
             <label>Género</label>
@@ -539,7 +528,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <div class="success-icon">✅</div>
         <h3>PAGAMENTO CONFIRMADO</h3>
         <p>Seu ingresso HYPE está liberado.</p>
-        <small id="paymentSuccessEmail">📧 O ingresso também será enviado automaticamente para o e-mail informado na compra.</small>
+        <small id="paymentSuccessEmail">🎟️ Pagamento confirmado. Acesse seu ingresso abaixo.</small>
         <button class="btn" onclick="openPaidTicket()">ACESSAR MEU INGRESSO</button>
       </div>
 
@@ -560,17 +549,15 @@ html,body{max-width:100%;overflow-x:hidden}
         <h2>🎟️ INGRESSO OFICIAL</h2>
         <div class="ticket-info">
           <p><span>Titular:</span> <strong id="tClientName" style="color:#fff"></strong></p>
-          <p><span>WhatsApp:</span> <strong id="tClientPhone" style="color:#fff"></strong></p>
-          <p><span>E-mail:</span> <strong id="tClientEmail" style="color:#fff"></strong></p>
-          <p><span>Género:</span> <strong id="tClientGender" style="color:#fff"></strong></p>
+<p><span>Género:</span> <strong id="tClientGender" style="color:#fff"></strong></p>
           <p><span>Setor:</span> <strong id="tTicketName" style="color:#fff"></strong></p>
           <p><span>Valor:</span> <strong id="tTicketPrice" style="color:var(--green)"></strong></p>
           <p><span>Estado:</span> <strong id="tTicketStatus" style="color:#ffcc00">Pendente de Confirmação ADM</strong></p>
           <p><span>Código ID:</span> <strong id="tTicketId" style="color:#aaa"></strong></p>
         </div>
         <div class="ticket-qr"><img id="ticketQrImg" src="" alt="QR Code do ingresso"></div>
-        <div class="ticket-email-notice" id="ticketEmailNotice">📧 O ingresso também será enviado automaticamente para o e-mail informado na compra.</div>
-        <p style="font-size:11px;color:var(--muted);line-height:1.4;margin-top:10px">Apresente o QR Code, seu ID ou seu nome na portaria com documento.</p>
+        <div class="ticket-email-notice" id="ticketEmailNotice">🎟️ Seu ingresso fica disponível diretamente neste site.</div>
+        <p style="font-size:11px;color:var(--muted);line-height:1.4;margin-top:10px">Apresente o QR Code na portaria.</p>
         <button class="btn ghost-btn" onclick="location.reload()">Comprar Outro</button>
       </div>
     </div>
