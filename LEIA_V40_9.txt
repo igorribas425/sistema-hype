@@ -1,0 +1,5 @@
+HYPE V40.9
+- Remove a aba/painel Lista Simples da Portaria.
+- Lista continua cadastrada e gerenciada somente no Admin.
+- Portaria fica focada em QR Code, busca de ingresso e venda rápida.
+- Não precisa rodar Supabase.
