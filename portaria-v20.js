@@ -317,16 +317,39 @@
     if ($('v19DoorPrice')) $('v19DoorPrice').textContent = row ? (base <= 0 && gender === 'Feminino' ? '♀ FEMININO FREE — sem PIX e sem taxa' : `${money(base)} + taxa R$ 1,98 = ${money(total)}`) : 'Selecione um ingresso';
   }
 
+  function cpfDigits(value) { return String(value || '').replace(/\D/g,'').slice(0,11); }
+
+  function validCpf(value) {
+    const cpf = cpfDigits(value);
+    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+    let sum = 0;
+    for (let i=0;i<9;i++) sum += Number(cpf[i]) * (10-i);
+    let d1 = (sum * 10) % 11; if (d1 === 10) d1 = 0;
+    if (d1 !== Number(cpf[9])) return false;
+    sum = 0;
+    for (let i=0;i<10;i++) sum += Number(cpf[i]) * (11-i);
+    let d2 = (sum * 10) % 11; if (d2 === 10) d2 = 0;
+    return d2 === Number(cpf[10]);
+  }
+
+  function maskedCpf(value) {
+    const d = cpfDigits(value);
+    return d.length === 11 ? `***.***.***-${d.slice(-2)}` : 'CPF não informado';
+  }
+
   async function createDoorOrder() {
     if (!isOnline()) return notify('Venda na hora precisa de internet para gerar o PIX do Asaas.', false);
     const eventId = currentEventId();
     const lotId = Number($('v19DoorLot')?.value || 0);
-    const name = $('v19DoorName')?.value.trim() || '';
-    const email = $('v19DoorEmail')?.value.trim() || '';
+    const cpf = cpfDigits($('v19DoorCpf')?.value || '');
+    const gender = $('v19DoorGender')?.value || 'Feminino';
     if (!eventId) return notify('Selecione o evento na parte de cima.', false);
     if (!lotId) return notify('Selecione o ingresso.', false);
-    if (!name) return notify('Digite o nome da pessoa.', false);
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return notify('Digite um e-mail válido ou deixe o campo vazio.', false);
+    if (!validCpf(cpf)) return notify('Digite um CPF válido com 11 números.', false);
+
+    // A venda de balcão não exige nome/Gmail/WhatsApp. O sistema cria um nome
+    // operacional só para manter o ingresso e a cobrança organizados.
+    const name = `Cliente Portaria • CPF final ${cpf.slice(-4)}`;
 
     const btn = $('v19DoorCreate');
     if (btn) { btn.disabled=true; btn.textContent='PROCESSANDO VENDA...'; }
@@ -336,10 +359,10 @@
         p_event_id:eventId,
         p_lot_id:lotId,
         p_name:name,
-        p_phone:$('v19DoorPhone')?.value.trim() || null,
-        p_cpf:$('v19DoorCpf')?.value.trim() || null,
-        p_email:email || null,
-        p_gender:$('v19DoorGender')?.value || 'Feminino'
+        p_phone:null,
+        p_cpf:cpf,
+        p_email:null,
+        p_gender:gender
       }))[0];
       if (!result?.ticket_id) throw new Error('A venda não foi criada.');
 
@@ -371,7 +394,7 @@
     } catch (err) {
       notify(err.message || 'Erro ao gerar PIX no Asaas.', false);
     } finally {
-      if (btn) { btn.disabled=false; btn.textContent='💠 GERAR PIX / LIBERAR FREE — VENDA NA HORA'; }
+      if (btn) { btn.disabled=false; btn.textContent='💠 GERAR PIX / LIBERAR FREE'; }
     }
   }
 
@@ -386,7 +409,7 @@
 
     box.innerHTML = `
       <div class="v19-order-head">
-        <div><small>VENDA NA HORA • ${Number(order.price||0)<=0?'FEMININO FREE':'PIX ASAAS'}</small><strong>${esc(order.customer_name||'Cliente')}</strong><span>${esc(order.ticket_code||'')}</span></div>
+        <div><small>VENDA NA HORA • ${Number(order.price||0)<=0?'FEMININO FREE':'PIX ASAAS'}</small><strong>${esc(maskedCpf(order.cpf||''))}</strong><span>${esc(order.ticket_code||'')}</span></div>
         <div class="v19-order-status ${isPaid?'paid':'pending'}">${isPaid?'PAGO':'AGUARDANDO ASAAS'}</div>
       </div>
       <div class="v19-order-grid">
@@ -396,14 +419,14 @@
           <p><b>Ingresso:</b> ${esc(order.lot_name||'')} • ${esc(order.sector||'')}</p>
           <p><b>Valor:</b> ${Number(order.price||0)<=0?'FREE':money(order.price)}</p>
           <p><b>Gênero:</b> ${esc(order.gender||'')}</p>
-          ${order.raffle_enabled ? `<p class="v19-raffle-ok">🎁 Quando o Asaas confirmar como PAGO, este nome entra automaticamente no sorteio: <b>${esc(order.raffle_prize||'prêmio do evento')}</b>.</p>` : '<p class="v19-muted">Sorteio do evento desativado.</p>'}
+          ${order.raffle_enabled ? `<p class="v19-raffle-ok">🎁 Quando o Asaas confirmar como PAGO, este ingresso entra automaticamente no sorteio: <b>${esc(order.raffle_prize||'prêmio do evento')}</b>.</p>` : '<p class="v19-muted">Sorteio do evento desativado.</p>'}
           ${isPaid
             ? (Number(order.price||0)<=0 ? '<p class="v19-paid-note">✅ Feminino FREE. Ingresso liberado sem PIX.</p>' : '<p class="v19-paid-note">✅ Asaas confirmou o pagamento. O ingresso já está liberado.</p>')
             : '<p class="v19-muted">⏳ Não precisa confirmar manualmente. Esta tela verifica o pagamento e o webhook do Asaas libera o ingresso automaticamente.</p>'}
         </div>
       </div>
       ${isPaid
-        ? `<div class="v19-ticket-qr"><h4>2. QR DO INGRESSO</h4><img id="v19TicketQr" alt="QR do ingresso"><strong>${esc(order.ticket_code||'')}</strong><button class="btn green" onclick="HypeV20.showDoorTicketInPortaria()">MOSTRAR NA PORTARIA / CONFIRMAR ENTRADA</button></div>`
+        ? `<div class="v19-ticket-qr"><h4>2. QR DO INGRESSO</h4><img id="v19TicketQr" alt="QR do ingresso"><strong>${esc(order.ticket_code||'')}</strong><button class="btn green" onclick="HypeV20.showDoorTicketInPortaria()">✅ CONFIRMAR ENTRADA AGORA</button></div>`
         : `<div class="v19-order-actions"><button class="btn green" onclick="HypeV20.confirmDoorPayment()">↻ VERIFICAR PAGAMENTO NO ASAAS</button><button class="btn red" onclick="HypeV20.cancelDoorOrder()">CANCELAR PEDIDO</button></div>`}
       <button class="btn v19-new-sale" onclick="HypeV20.resetDoorSale()">+ NOVA VENDA NA HORA</button>`;
 
@@ -496,15 +519,15 @@
     state.currentOrder = null;
     $('v19DoorResult')?.classList.remove('show');
     if ($('v19DoorResult')) $('v19DoorResult').innerHTML='';
-    ['v19DoorName','v19DoorPhone','v19DoorCpf','v19DoorEmail'].forEach(id=>{if($(id))$(id).value='';});
+    ['v19DoorCpf'].forEach(id=>{if($(id))$(id).value='';});
     notify('Pronto para uma nova venda na hora.', true);
-    $('v19DoorName')?.focus();
+    $('v19DoorCpf')?.focus();
   }
 
   function showDoorTicketInPortaria() {
     const order = state.currentOrder;
     if (!order?.ticket_code) return;
-    window.HypePortaria?.processCode?.(order.ticket_code,false);
+    window.HypePortaria?.processCode?.(order.ticket_code,true);
     $('results')?.scrollIntoView({behavior:'smooth',block:'center'});
   }
 

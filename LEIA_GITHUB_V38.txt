@@ -1,0 +1,20 @@
+HYPE V38 — ARQUIVOS DO GITHUB
+
+Substitua/adicione TODOS os arquivos desta pasta na raiz do repositório.
+
+Principais novos:
+- hype-v38-responsive.css
+- hype-v38-chat.js
+- hype-v38-reset.js
+
+Também foram atualizados:
+- admin.html
+- app.js
+- admin-v36-refund.js
+- cliente.html
+- portaria.html
+- leitor.html
+- pesquisa.html
+
+Antes do teste completo, rode o SQL V38 no Supabase.
+Para estorno geral, atualize também a Edge Function asaas-refund.

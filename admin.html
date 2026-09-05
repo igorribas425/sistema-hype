@@ -252,7 +252,7 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 </style>
 
   <link rel="stylesheet" href="admin-v34.css?v=20260905-v37-mobile">
-  <link rel="stylesheet" href="admin-v36-refund.css?v=20260905-v37-mobile">
+  <link rel="stylesheet" href="admin-v36-refund.css?v=20260905-v38-geral">
 
 <style id="hype-v37-admin-mobile">
 html,body{max-width:100%;overflow-x:hidden}
@@ -271,6 +271,7 @@ html,body{max-width:100%;overflow-x:hidden}
   .stat-card{padding:12px 8px}
 }
 </style>
+  <link rel="stylesheet" href="hype-v38-responsive.css?v=20260905-v38-1">
 </head>
 <body>
 
@@ -396,23 +397,43 @@ html,body{max-width:100%;overflow-x:hidden}
   <section class="panel-box v36-refund-panel admin-only" id="v36RefundPanel">
     <div class="v36-refund-head">
       <div>
-        <h3>💸 ESTORNO FEMININO → FREE</h3>
-        <p>Use quando o ingresso feminino passou a ser FREE depois de algumas clientes já terem pago pelo PIX do Asaas. O sistema solicita a devolução no Asaas e mantém o QR Code do ingresso válido.</p>
+        <h3>💸 ESTORNOS ASAAS</h3>
+        <p>Estorne qualquer ingresso pago pelo PIX do Asaas. Você escolhe se o ingresso será cancelado ou se continuará válido como cortesia/FREE.</p>
       </div>
       <div class="v36-refund-actions">
         <button class="btn-action" type="button" onclick="HypeV36Refund.load(true)">↻ ATUALIZAR</button>
-        <button id="v36RefundAllBtn" class="btn-action danger" type="button" onclick="HypeV36Refund.refundAll()">💸 ESTORNAR FEMININOS E MANTER FREE</button>
+        <button id="v36RefundAllBtn" class="btn-action danger" type="button" onclick="HypeV36Refund.refundAll()">💸 ESTORNAR SELECIONADOS</button>
       </div>
     </div>
+
+    <div class="v36-refund-filterbar">
+      <div>
+        <label>FILTRAR QUEM SERÁ ESTORNADO</label>
+        <select id="v36RefundGender" onchange="HypeV36Refund.render()">
+          <option value="all">Todos</option>
+          <option value="Feminino">Feminino</option>
+          <option value="Masculino">Masculino</option>
+        </select>
+      </div>
+      <div>
+        <label>O QUE FAZER COM O INGRESSO</label>
+        <select id="v36RefundMode">
+          <option value="cancel">Estornar + CANCELAR ingresso</option>
+          <option value="keep_valid">Estornar + MANTER válido como cortesia</option>
+        </select>
+      </div>
+    </div>
+
     <div class="v36-refund-stats">
       <div class="v36-refund-stat warn"><span>Podem estornar</span><b id="v36RefundEligible">0</b></div>
       <div class="v36-refund-stat warn"><span>Total a devolver</span><b id="v36RefundValue">R$ 0,00</b></div>
-      <div class="v36-refund-stat ok"><span>Já convertidos em FREE</span><b id="v36RefundDone">0</b></div>
+      <div class="v36-refund-stat ok"><span>Já estornados</span><b id="v36RefundDone">0</b></div>
       <div class="v36-refund-stat ok"><span>Total devolvido/solicitado</span><b id="v36RefundDoneValue">R$ 0,00</b></div>
     </div>
-    <div class="v36-refund-note"><b>Segurança:</b> somente o Admin pode executar. Antes do estorno em lote aparece a quantidade e o valor total para confirmação. O ingresso não é cancelado: continua PAGO/valido, mas passa a ser <b>Feminino FREE</b>.</div>
+
+    <div class="v36-refund-note"><b>Segurança:</b> somente o Admin pode executar. Antes de qualquer estorno aparece cliente, quantidade e valor total para confirmação. O PIX é devolvido pelo Asaas. Se escolher “manter válido”, o QR continua funcionando como cortesia; se escolher “cancelar”, o QR deixa de liberar entrada.</div>
     <div id="v36RefundProgress" class="v36-refund-progress"></div>
-    <div id="v36RefundList" class="v36-refund-list"><div class="v36-refund-empty">Carregando ingressos femininos...</div></div>
+    <div id="v36RefundList" class="v36-refund-list"><div class="v36-refund-empty">Carregando ingressos pagos pelo Asaas...</div></div>
   </section>
 
   <div class="admin-toolbar panel-box">
@@ -514,6 +535,30 @@ html,body{max-width:100%;overflow-x:hidden}
     </div>
   </section>
 
+  <section class="panel-box admin-only v40-guest-panel" id="v40GuestPanel">
+    <div class="v16-management-head"><div><h3>➕ ADICIONAR PESSOA / CORTESIA</h3><p>Cria um ingresso válido direto pelo Admin. Ele aparece na lista de ingressos, funciona no QR da Portaria e, se o sorteio do evento estiver ativo, participa automaticamente.</p></div></div>
+    <div class="v40-guest-grid">
+      <div class="form-group"><label>Evento *</label><select id="v40GuestEvent" onchange="HypeV40Guests.loadLots()"><option value="">Carregando...</option></select></div>
+      <div class="form-group"><label>Ingresso / lote *</label><select id="v40GuestLot"><option value="">Selecione o evento</option></select></div>
+      <div class="form-group"><label>Nome da pessoa *</label><input id="v40GuestName" placeholder="Nome completo"></div>
+      <div class="form-group"><label>Gênero *</label><select id="v40GuestGender"><option value="Feminino">Feminino</option><option value="Masculino">Masculino</option></select></div>
+      <div class="form-group"><label>CPF <small style="color:var(--muted)">opcional</small></label><input id="v40GuestCpf" inputmode="numeric" placeholder="Somente se quiser registrar"></div>
+      <div class="form-group v40-guest-action"><label>&nbsp;</label><button id="v40GuestAdd" class="btn" type="button" onclick="HypeV40Guests.add()">+ ADICIONAR INGRESSO</button></div>
+    </div>
+    <div class="v40-guest-bulk">
+      <label>Lista de nomes <small style="color:var(--muted)">um por linha</small></label>
+      <textarea id="v40GuestList" placeholder="Exemplo:
+Maria Silva
+Ana Paula
+João Pedro"></textarea>
+      <div class="v40-guest-bulk-actions">
+        <button id="v40GuestAddList" class="btn-action" type="button" onclick="HypeV40Guests.addList()">+ ADICIONAR LISTA</button>
+        <small>Todos entram como cortesia/PAGO, ganham QR válido e entram no sorteio do evento.</small>
+      </div>
+    </div>
+    <div id="v40GuestResult" class="v40-guest-result">A cortesia fica como <b>PAGO / CORTESIA ADMIN</b>, valor R$ 0,00, gera QR válido e participa do sorteio automaticamente.</div>
+  </section>
+
   <div class="grid-admin">
     <div class="panel-box admin-only">
       <h3>Gerenciar Categorias, Preços & Horários</h3>
@@ -540,6 +585,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <div class="new-lot-time-grid">
           <div class="form-group"><label>Início da venda</label><input id="newLotStart" type="datetime-local"></div>
           <div class="form-group"><label>Expiração</label><input id="newLotEnd" type="datetime-local"></div>
+          <div class="form-group"><label>♀ Feminino FREE até <small style="color:var(--green)">opcional</small></label><input id="newLotFemaleFreeUntil" type="datetime-local"><small style="display:block;color:var(--muted);font-size:9px;margin-top:5px">Até esse horário o feminino fica FREE. Depois volta ao preço feminino cadastrado.</small></div>
         </div>
         <button class="btn" onclick="createAdminLot()">+ CRIAR CATEGORIA NESTE EVENTO</button>
       </div>
@@ -583,7 +629,7 @@ html,body{max-width:100%;overflow-x:hidden}
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260902-v24"></script>
-<script src="app.js?v=20260905-v37-mobile-lotes"></script>
+<script src="app.js?v=20260905-v38-completo"></script>
 <script src="promoter-global-v16-8.js?v=20260902-v24-global"></script>
 <script>
 /* HYPE V24 // correção da sessão do Admin
@@ -775,6 +821,11 @@ html,body{max-width:100%;overflow-x:hidden}
 })();
 </script>
   <script src="admin-v34.js?v=20260905-v37"></script>
-  <script src="admin-v36-refund.js?v=20260905-v37"></script>
+  <script src="admin-v36-refund.js?v=20260905-v38-geral"></script>
+  <script src="hype-v38-chat.js?v=20260905-v40-1"></script>
+  <script src="hype-v38-reset.js?v=20260905-v38-1"></script>
+
+<script src="hype-v39-admin-simple.js?v=20260905-v39-1"></script>
+<script src="hype-v40-guests.js?v=20260905-v40-1"></script>
 </body>
 </html>

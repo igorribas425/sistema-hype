@@ -1,0 +1,1 @@
+Substitua os arquivos na raiz do GitHub. Nao envie o SQL para o GitHub. Chat, responsivo e venda simples da Portaria estao incluidos.

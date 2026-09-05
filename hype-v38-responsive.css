@@ -1,0 +1,234 @@
+/* HYPE V38 — RESPONSIVO GLOBAL / MOBILE SAFE */
+*,*::before,*::after{box-sizing:border-box}
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+body{margin:0}
+img,video,canvas,svg,iframe{max-width:100%;height:auto}
+input,select,textarea,button{max-width:100%;min-width:0}
+pre,code,.mono{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
+
+/* Evita que qualquer painel estoure a largura da tela */
+main,section,article,header,footer,nav,.container,.wrap,.page,.panel,.panel-box,.box,.card,
+[class*="panel"],[class*="card"],[class*="grid"],[class*="row"],[class*="list"],[class*="wrap"]{
+  min-width:0;
+  max-width:100%;
+}
+
+/* Tabelas continuam acessíveis sem cortar conteúdo */
+table{max-width:100%}
+.table-wrap,.table-responsive,[class*="table-wrap"],[class*="tableWrap"]{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* Textos longos, e-mail, CPF, código, nome de evento etc. */
+p,span,small,strong,b,label,td,th,a{overflow-wrap:anywhere;word-break:normal}
+
+/* Botões nunca saem da tela */
+button,.btn,.btn-action,.v16-mini-btn{white-space:normal;overflow-wrap:anywhere}
+
+/* Admin: lista e cartões */
+.v36-refund-row{grid-template-columns:minmax(0,2fr) minmax(90px,.75fr) minmax(120px,1fr) minmax(120px,1fr)!important}
+.v36-refund-row>*{min-width:0}
+.v36-refund-value{white-space:nowrap}
+
+/* Chat V38 */
+.hype-chat-v38-fab{position:fixed;right:16px;bottom:max(18px,env(safe-area-inset-bottom));z-index:99990;border:1px solid rgba(255,255,255,.18);background:#111318;color:#fff;border-radius:999px;padding:13px 16px;font:700 14px/1 system-ui;box-shadow:0 12px 34px rgba(0,0,0,.38);cursor:pointer}
+.hype-chat-v38-fab.has-new::after{content:"";position:absolute;right:4px;top:3px;width:10px;height:10px;border-radius:50%;background:#ff355d;box-shadow:0 0 0 3px #111318}
+.hype-chat-v38{position:fixed;right:14px;bottom:76px;width:min(390px,calc(100vw - 28px));height:min(560px,calc(100dvh - 110px));z-index:99991;background:#0d0f13;border:1px solid rgba(255,255,255,.16);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.55);display:none;overflow:hidden;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.hype-chat-v38.open{display:flex;flex-direction:column}
+.hype-chat-v38-head{display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:1px solid rgba(255,255,255,.1);background:#12151a}
+.hype-chat-v38-head strong{flex:1;min-width:0}.hype-chat-v38-head small{display:block;color:#9299a5;font-weight:500;margin-top:2px}
+.hype-chat-v38-close{border:0;background:transparent;color:#fff;font-size:23px;padding:4px 8px;cursor:pointer}
+.hype-chat-v38-messages{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:9px;-webkit-overflow-scrolling:touch}
+.hype-chat-v38-empty{text-align:center;color:#8f96a3;padding:28px 12px}
+.hype-chat-v38-msg{max-width:86%;padding:9px 11px;border-radius:14px;background:#1b2027;border:1px solid rgba(255,255,255,.07)}
+.hype-chat-v38-msg.mine{align-self:flex-end;background:#153522;border-color:rgba(72,220,126,.2)}
+.hype-chat-v38-msg.other{align-self:flex-start}
+.hype-chat-v38-msg b{display:block;font-size:11px;color:#b6bdc7;margin-bottom:4px}.hype-chat-v38-msg p{margin:0;font-size:14px;line-height:1.35;white-space:pre-wrap}.hype-chat-v38-msg time{display:block;margin-top:5px;font-size:10px;color:#7f8792}
+.hype-chat-v38-compose{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:10px;border-top:1px solid rgba(255,255,255,.1);background:#12151a}
+.hype-chat-v38-compose textarea{width:100%;min-height:42px;max-height:100px;resize:none;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#0a0c10;color:#fff;padding:10px 11px;font:500 14px/1.3 system-ui}
+.hype-chat-v38-send{border:0;border-radius:12px;padding:0 14px;background:#fff;color:#090a0d;font-weight:800;cursor:pointer}
+
+@media (max-width:760px){
+  body{font-size:15px}
+  main,.container,.wrap,.page{padding-left:12px!important;padding-right:12px!important}
+
+  /* Navegação superior visível inteira */
+  nav,.top-nav,.nav-actions,.tabs,.admin-tabs{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .top-nav,.nav-actions{gap:7px!important}
+  .top-nav a,.top-nav button,.nav-actions a,.nav-actions button{min-width:0!important;padding-left:10px!important;padding-right:10px!important;font-size:12px!important}
+
+  /* Formulários sempre cabem em 1 coluna */
+  .two-col,.three-col,.form-grid,.grid-2,.grid-3,.v16-sales-fields,
+  [class*="two-col"],[class*="three-col"]{grid-template-columns:1fr!important}
+  input,select,textarea{width:100%!important;min-height:48px}
+
+  /* Cards de estatísticas em duas colunas, depois uma em telas pequenas */
+  .stats-grid,.dashboard-grid,.metrics-grid,.v36-refund-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+
+  /* Blocos de ação */
+  .actions,.btn-row,.button-row,.v36-refund-actions{display:grid!important;grid-template-columns:1fr!important;gap:8px!important}
+  .actions button,.btn-row button,.button-row button,.v36-refund-actions button{width:100%!important}
+
+  /* Lotes / categorias */
+  .v14-lot-grid,.lots-grid,.lot-grid{grid-template-columns:1fr!important}
+  .v14-lot-card,.lot-card{width:100%!important;min-width:0!important}
+  .v15-gender-prices{grid-template-columns:1fr 1fr!important;gap:8px!important}
+
+  /* Admin: estorno e listas deixam de cortar na direita */
+  .v36-refund-row{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;padding:12px!important}
+  .v36-refund-row>div,.v36-refund-row button{width:100%!important;max-width:100%!important;text-align:left}
+  .v36-refund-row button{text-align:center}
+  .v36-refund-value{white-space:normal!important;font-size:18px}
+
+  /* Listas de ingressos: força quebra das colunas sem esconder ações */
+  .order-row,.ticket-row,.admin-order,.ticket-item,[class*="order-row"],[class*="ticket-row"]{
+    min-width:0!important;max-width:100%!important;overflow:visible!important;
+  }
+  .order-row>*,.ticket-row>*,.admin-order>*,.ticket-item>*{min-width:0!important;max-width:100%!important}
+
+  /* Portaria */
+  .portaria-grid,.door-grid,.reader-grid,.sales-grid{grid-template-columns:1fr!important}
+  .portaria-actions,.reader-actions{display:grid!important;grid-template-columns:1fr!important;gap:8px!important}
+  .portaria-actions button,.reader-actions button{width:100%!important}
+
+  /* Chat ocupa quase a tela toda */
+  .hype-chat-v38{left:8px;right:8px;bottom:70px;width:auto;height:min(620px,calc(100dvh - 90px));border-radius:18px}
+  .hype-chat-v38-fab{right:10px;bottom:max(10px,env(safe-area-inset-bottom));padding:12px 14px}
+}
+
+@media (max-width:430px){
+  .stats-grid,.dashboard-grid,.metrics-grid,.v36-refund-stats{grid-template-columns:1fr 1fr!important}
+  .stats-grid>* ,.dashboard-grid>* ,.metrics-grid>* ,.v36-refund-stats>*{min-width:0!important;padding:12px!important}
+  h1{font-size:clamp(26px,9vw,40px)!important;line-height:1.05!important}
+  h2{font-size:clamp(20px,7vw,30px)!important}
+}
+
+@media (max-width:340px){
+  .stats-grid,.dashboard-grid,.metrics-grid,.v36-refund-stats{grid-template-columns:1fr!important}
+}
+
+
+/* ========================= V38.1 — MOBILE SEM CORTES ========================= */
+.hype-chat-v38-unread{
+  display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;margin-left:6px;
+  border-radius:999px;background:#ff355d;color:#fff;font:900 10px/1 system-ui;
+}
+.hype-chat-v38-quick{
+  display:flex;gap:6px;overflow-x:auto;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.08);
+  background:#0f1217;-webkit-overflow-scrolling:touch
+}
+.hype-chat-v38-quick button{
+  flex:0 0 auto;border:1px solid rgba(255,255,255,.12);background:#161a20;color:#e8ebef;border-radius:999px;
+  padding:7px 10px;font:700 11px/1 system-ui;white-space:nowrap;cursor:pointer
+}
+.hype-chat-v38-quick button:active{transform:scale(.98)}
+
+/* Botão de zerar contador */
+.hype-v38-reset-card{position:relative!important}
+.hype-v38-reset-btn{
+  position:absolute;right:7px;top:7px;z-index:3;width:26px!important;height:26px!important;min-height:0!important;
+  padding:0!important;border-radius:999px!important;border:1px solid rgba(255,255,255,.13)!important;
+  background:#11141a!important;color:#b8bec8!important;font-size:13px!important;line-height:24px!important;
+  display:grid!important;place-items:center!important;cursor:pointer!important
+}
+.hype-v38-reset-btn:hover{color:#fff!important;border-color:rgba(255,255,255,.3)!important}
+.hype-v38-reset-history-btn{
+  width:auto!important;min-height:34px!important;padding:7px 11px!important;border:1px solid rgba(255,255,255,.14)!important;
+  border-radius:9px!important;background:#101218!important;color:#c9ced6!important;font:800 10px/1.1 system-ui!important
+}
+.hype-v38-reset-modal{
+  position:fixed;inset:0;z-index:99995;background:rgba(0,0,0,.72);display:none;place-items:center;padding:14px
+}
+.hype-v38-reset-modal.open{display:grid}
+.hype-v38-reset-modal-card{
+  width:min(560px,100%);max-height:min(680px,86dvh);overflow:auto;background:#0d0f13;color:#fff;
+  border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:16px;box-shadow:0 20px 70px rgba(0,0,0,.55)
+}
+.hype-v38-reset-modal-card h3{margin:0 0 5px!important}
+.hype-v38-reset-modal-card p{color:#989fab;font-size:11px;line-height:1.5;margin:0 0 12px}
+.hype-v38-reset-history{display:grid;gap:7px}
+.hype-v38-reset-history>div{border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:9px;background:#080a0d}
+.hype-v38-reset-history b,.hype-v38-reset-history small{display:block}.hype-v38-reset-history small{color:#8d949f;margin-top:3px}
+.hype-v38-reset-modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.hype-v38-reset-modal-actions button{min-height:42px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#151820;color:#fff;font-weight:800}
+.hype-v38-reset-modal-actions .danger{border-color:rgba(255,53,93,.35);color:#ff8ba3}
+
+/* FREE até horário */
+.v38-free-until-note{
+  display:block;margin-top:6px;padding:7px 9px;border-radius:9px;border:1px solid rgba(40,209,124,.24);
+  background:rgba(40,209,124,.06);color:#9ff0be;font-size:10px;font-weight:800;line-height:1.35
+}
+
+/* Estorno geral */
+.v36-refund-filterbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.v36-refund-filterbar label{font-size:9px!important}
+.v36-refund-filterbar select{width:100%!important}
+.v36-refund-row .v36-refund-actions-inline{display:flex;gap:6px;flex-wrap:wrap}
+.v36-refund-row .v36-refund-actions-inline .btn-action{flex:1;min-width:115px}
+
+/* Tabela Admin vira cards no celular: sem corte horizontal */
+@media (max-width:760px){
+  body{padding:12px!important;padding-top:72px!important}
+  .container{width:100%!important;max-width:100%!important;margin:0!important}
+  .panel-box{padding:14px!important;border-radius:14px!important}
+  .grid-admin{display:block!important}
+  .grid-admin>.panel-box{margin-bottom:14px!important}
+
+  .ticket-admin-grid,.ticket-admin-grid-wide,.new-lot-grid,.new-lot-time-grid,
+  .admin-event-editor-grid,.quick-lot-grid,.gender-price-grid,.ticket-admin-grid-gender{
+    display:grid!important;grid-template-columns:1fr!important;gap:9px!important
+  }
+  .ticket-admin-actions{display:grid!important;grid-template-columns:1fr!important}
+  .ticket-admin-preview{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important}
+  .ticket-admin-preview span{min-width:0!important;padding:7px 8px;border:1px solid rgba(255,255,255,.07);border-radius:8px}
+  .new-lot-box .btn,.ticket-admin-actions .btn-action{width:100%!important;min-height:44px!important}
+
+  /* Admin client table */
+  #adminTableBody, #adminTableBody tr, #adminTableBody td{display:block!important;width:100%!important;max-width:100%!important}
+  #adminTableBody tr{border:1px solid rgba(255,255,255,.09)!important;border-radius:14px!important;margin:0 0 10px!important;padding:11px!important;background:#090b0f!important}
+  #adminTableBody td{border:0!important;padding:6px 0!important;white-space:normal!important;overflow-wrap:anywhere!important}
+  #adminTableBody td:nth-child(2){font-size:17px!important;font-weight:800}
+  #adminTableBody .actions-cell{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;width:100%!important}
+  #adminTableBody .actions-cell .btn-action{width:100%!important;min-height:40px!important;white-space:normal!important}
+  table:has(#adminTableBody) thead{display:none!important}
+  table:has(#adminTableBody){display:block!important;width:100%!important}
+  table:has(#adminTableBody) tbody{display:block!important}
+  div:has(>table > tbody#adminTableBody){overflow-x:visible!important}
+
+  .v16-dashboard-grid,.v34-live-grid,.v34-survey-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .v16-dashboard-grid>div,.v34-live-card,.v34-survey-stat{min-width:0!important}
+  .v16-manage-row,.v18-device,.v18-participant{align-items:stretch!important;flex-direction:column!important}
+  .v16-manage-row>div:last-child,.v18-device-actions{width:100%!important}
+  .v16-manage-row button,.v18-device-actions button{width:100%!important}
+
+  .v36-refund-filterbar{grid-template-columns:1fr!important}
+  .v36-refund-row .v36-refund-actions-inline{display:grid!important;grid-template-columns:1fr!important}
+  .v36-refund-row .v36-refund-actions-inline .btn-action{width:100%!important}
+
+  .hype-chat-v38-compose{grid-template-columns:1fr!important}
+  .hype-chat-v38-send{min-height:42px!important;width:100%!important}
+}
+
+@media (max-width:430px){
+  .ticket-admin-preview{grid-template-columns:1fr!important}
+  .v16-dashboard-grid,.v34-live-grid,.v34-survey-stats{grid-template-columns:1fr 1fr!important}
+  .v34-survey-columns{grid-template-columns:1fr!important}
+  .hype-chat-v38{left:6px!important;right:6px!important;bottom:64px!important;height:calc(100dvh - 76px)!important;border-radius:14px!important}
+  .hype-chat-v38-fab{max-width:calc(100vw - 20px)!important}
+}
+
+@media (max-width:350px){
+  .v16-dashboard-grid,.v34-live-grid,.v34-survey-stats{grid-template-columns:1fr!important}
+  .hype-v38-reset-modal-actions{grid-template-columns:1fr}
+}
+
+
+/* V40 — adicionar convidado/cortesia */
+.v40-guest-panel{overflow:hidden}
+.v40-guest-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.v40-guest-grid .form-group{min-width:0}
+.v40-guest-grid input,.v40-guest-grid select{width:100%;max-width:100%}
+.v40-guest-action .btn{width:100%;min-height:44px}
+.v40-guest-bulk{margin-top:12px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:#08080b;padding:12px}.v40-guest-bulk label{display:block;color:var(--muted);font-size:10px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;margin-bottom:7px}.v40-guest-bulk textarea{width:100%;max-width:100%;min-height:120px;resize:vertical;background:#050506;border:1px solid rgba(255,255,255,.12);border-radius:11px;color:#fff;padding:11px;font-size:13px;line-height:1.45;box-sizing:border-box}.v40-guest-bulk-actions{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-top:9px}.v40-guest-bulk-actions small{color:var(--muted);font-size:10px;line-height:1.4}.v40-guest-result{margin-top:10px;padding:11px 12px;border:1px solid rgba(255,255,255,.12);border-radius:11px;color:#bfc0c7;font-size:11px;line-height:1.5;background:#08080b}
+.v40-guest-result.ok{border-color:rgba(40,209,124,.35);color:#a8f3c4}
+.v40-guest-result.bad{border-color:rgba(255,22,61,.35);color:#ff9bab}
+@media(max-width:860px){.v40-guest-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:580px){.v40-guest-grid{grid-template-columns:1fr}.v40-guest-panel{padding:14px!important}.v40-guest-bulk-actions{align-items:stretch;flex-direction:column}.v40-guest-bulk-actions .btn-action{width:100%}}

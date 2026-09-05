@@ -518,7 +518,8 @@
       const item=offlineFind(code);
       if(!item){renderResults([]);flash(false,'NEGADO','QR não está no pacote offline deste evento.');return;}
       renderResults([item]);
-      if(item.payment_status!=='Pago')flash(false,'NEGADO','Pagamento não confirmado.');
+      if(item.payment_status!=='Pago'){flash(false,'NEGADO','Pagamento não confirmado.');return;}
+      if(fromReader) await validate(Number(item.ticket_id));
       return;
     }
     try{
@@ -583,8 +584,17 @@
       }
       renderResults(scoped);
       const item=scoped[0];
-      if(item.payment_status!=='Pago')flash(false,'NEGADO',item.payment_status==='Cancelado'?'Ingresso cancelado.':'Pagamento não confirmado.');
-      else if(fromReader) tone();
+      if(item.payment_status!=='Pago'){
+        flash(false,'NEGADO',item.payment_status==='Cancelado'?'Ingresso cancelado.':'Pagamento não confirmado.');
+        return;
+      }
+      if(fromReader){
+        // V39: QR válido e pago confirma a entrada automaticamente.
+        // Busca manual continua apenas consultando, sem registrar entrada sozinha.
+        await validate(Number(item.ticket_id));
+      } else {
+        tone();
+      }
     }catch(err){flash(false,'ERRO',err.message||'Falha ao ler QR.');}
   }
 
@@ -636,7 +646,6 @@
     const id=Number(item.ticket_id);
     let actions='';
     if(paid&&!wrong){
-      actions+=`<button class="btn ${item.document_checked?'green':''}" onclick="HypePortaria.toggleDocument(${id})">${item.document_checked?'✅ DOCUMENTO CONFERIDO':'🪪 CONFERIR DOCUMENTO'}</button>`;
       if(!entered&&!temp) actions+=`<button class="btn green" onclick="HypePortaria.validate(${id})">✅ CONFIRMAR ENTRADA</button>`;
       if(entered&&!temp) actions+=`<button class="btn" onclick="HypePortaria.temporaryExit(${id})">↗ SAÍDA TEMPORÁRIA</button>`;
       if(temp&&!auth) actions+=`<button class="btn" onclick="HypePortaria.authorizeReentry(${id})">↩ AUTORIZAR REENTRADA</button>`;
@@ -671,7 +680,6 @@
   async function validate(id) {
     const item=getItem(id); if(!item)return;
     if(!online()){
-      if(!item.document_checked)return flash(false,'NEGADO','Confira o documento/CPF antes de liberar.');
       if(item.entry_status==='Entrada utilizada'&&!item.temporary_exit)return flash(false,'JÁ UTILIZADO',item.customer_name||'');
       if(item.temporary_exit&&!item.reentry_authorized)return flash(false,'NEGADO','Reentrada ainda não autorizada.');
       if(item.temporary_exit&&item.reentry_authorized){item.temporary_exit=false;item.reentry_authorized=false;item.reentry_count=Number(item.reentry_count||0)+1;}
@@ -758,7 +766,7 @@
       state.cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});
       const video=$('cameraVideo');video.srcObject=state.cameraStream;$('scannerArea').classList.add('show');
       const detector=new BarcodeDetector({formats:['qr_code']});clearInterval(state.cameraTimer);
-      state.cameraTimer=setInterval(async()=>{if(video.readyState<2)return;try{const codes=await detector.detect(video);if(codes?.[0]?.rawValue){const raw=codes[0].rawValue;stopCamera();await processCode(raw,false);}}catch(_){}},450);
+      state.cameraTimer=setInterval(async()=>{if(video.readyState<2)return;try{const codes=await detector.detect(video);if(codes?.[0]?.rawValue){const raw=codes[0].rawValue;stopCamera();await processCode(raw,true);}}catch(_){}},450);
     }catch(err){alert('Não foi possível abrir a câmera: '+err.message);}
   }
   function stopCamera(){clearInterval(state.cameraTimer);state.cameraTimer=null;if(state.cameraStream)state.cameraStream.getTracks().forEach(t=>t.stop());state.cameraStream=null;$('scannerArea')?.classList.remove('show');}

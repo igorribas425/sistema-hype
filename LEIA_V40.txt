@@ -1,0 +1,17 @@
+HYPE V40
+
+Inclui:
+- Chat Admin <-> Portaria preservado e com respostas rapidas atualizadas.
+- Venda na hora da Portaria: CPF + genero + ingresso. Nome, Gmail e WhatsApp nao sao exigidos.
+- PIX continua sendo Asaas e confirmacao automatica.
+- QR pago confirma entrada automaticamente (funcao V39 preservada).
+- Admin: Adicionar Pessoa / Cortesia cria ingresso real, QR valido e entra no sorteio se ele estiver ativo.
+- Admin: Lista de nomes: cole varios nomes, um por linha, para criar varias cortesias/ingressos de uma vez.
+- Sorteio existente continua usando ingressos com payment_status = Pago.
+- Layout responsivo preservado.
+
+ORDEM:
+1) Rode SUPABASE_V40_PORTARIA_CPF_CONVIDADOS_SORTEIO.sql no Supabase.
+2) Depois envie os arquivos do ZIP GITHUB V40 para a raiz do repositorio.
+
+Nao mexa nas Edge Functions nesta etapa.
