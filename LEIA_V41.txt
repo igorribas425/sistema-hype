@@ -1,0 +1,9 @@
+HYPE V41 - CHAT UNICO SEM SENHA DO ADMIN
+
+1) Rode primeiro o SQL: SUPABASE_V41_CHAT_UNICO_SEM_SENHA.sql
+2) Depois suba no GitHub: admin.html, portaria.html e hype-v38-chat.js
+
+O chat agora é uma conversa unica da HYPE, sem separar por evento.
+Ele funciona no Admin mesmo antes de digitar senha.
+
+Notificacao: som funciona depois de clicar/tocar na pagina. Notificacao do navegador depende de permissao e internet. Celular desligado de verdade nao recebe notificacao.

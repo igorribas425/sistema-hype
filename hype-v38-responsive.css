@@ -306,3 +306,9 @@ th,td{min-width:0;overflow-wrap:anywhere}
 @media (max-width:390px){
   .stats,.stats-extended,.v16-dashboard-grid,.v34-live-grid,.v34-survey-stats{grid-template-columns:1fr!important}
 }
+
+
+.hype-chat-v41-head-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.hype-chat-v41-clear{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;border-radius:10px;min-width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px}
+.hype-chat-v41-clear:active{transform:scale(.97)}
+.hype-chat-v41-clear:disabled{opacity:.45;cursor:wait}

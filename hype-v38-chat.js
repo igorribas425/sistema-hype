@@ -1,8 +1,8 @@
-/* HYPE V38 — Chat interno Admin <-> Portaria
-   - Separado por evento
-   - Histórico no Supabase
-   - Atualização quase em tempo real
-   - Respostas rápidas para operação da noite
+/* HYPE V41.1 — Chat único Admin <-> Portaria
+   - Uma conversa única da HYPE, sem separar por evento
+   - Funciona no Admin mesmo antes de digitar senha
+   - Atualiza sozinho sem recarregar a página
+   - Som + notificação do navegador quando permitido
 */
 (() => {
   'use strict';
@@ -24,27 +24,40 @@
   let busy = false;
   let timer = null;
   let lastId = 0;
-  let currentEvent = 0;
   let unread = 0;
+  let firstLoadDone = false;
+  let lastClearStamp = '';
 
   const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
   }[c]));
   const arr = v => Array.isArray(v) ? v : (v ? [v] : []);
 
+  function adminCreds() {
+    if (role !== 'admin') return null;
+    let h = null;
+    try { if (typeof HYPE !== 'undefined') h = HYPE; } catch (_) {}
+    try { if (!h && window.HYPE) h = window.HYPE; } catch (_) {}
+    const user = String(h?.user || '').trim();
+    const pass = String(h?.pass || '').trim();
+    const r = String(h?.role || '').toLowerCase();
+    if (!user || !pass || r !== 'admin') return null;
+    return {p_username:user, p_password:pass};
+  }
+
   const quickAdmin = [
     '✅ Liberado',
     '💳 Pagamento confirmado',
     '⚠️ Verificar cliente',
-    '🎟️ Gerar cortesia',
+    '🚪 Como está a fila?',
     '🛡️ Chamar segurança'
   ];
   const quickPortaria = [
     '🚪 Cliente aguardando',
     '🔎 Problema no QR',
     '💳 Cliente diz que pagou',
-    '🎟️ Preciso liberar cortesia',
-    '🛡️ Preciso do Admin'
+    '⚠️ Preciso do Admin',
+    '🛡️ Chamar segurança'
   ];
 
   function client() {
@@ -67,59 +80,8 @@
     return data;
   }
 
-  function eventId() {
-    if (role === 'portaria') {
-      return Number(localStorage.getItem('hype_portaria_event_v18') || 0) || 0;
-    }
-    try {
-      const h = window.HYPE || {};
-      const id = Number(h.selectedEventId || 0);
-      if (id) return id;
-    } catch (_) {}
-    const v34 = Number(document.getElementById('v34EventSelect')?.value || 0);
-    if (v34) return v34;
-    const v16 = Number(document.getElementById('v16DashboardEvent')?.value || 0);
-    return v16 || 0;
-  }
-
-  function eventLabel(eid) {
-    if (!eid) return 'Selecione um evento';
-    try {
-      const all = window.HYPE?.adminEvents || window.HYPE?.events || [];
-      const found = all.find(e => Number(e.id) === Number(eid));
-      if (found?.name) return String(found.name);
-    } catch (_) {}
-    if (role === 'portaria') {
-      const sel = document.getElementById('eventSelect');
-      if (Number(sel?.value || 0) === Number(eid) && sel?.selectedOptions?.[0]?.textContent) {
-        return sel.selectedOptions[0].textContent.trim();
-      }
-    }
-    return `Evento #${eid}`;
-  }
-
-  function adminSession() {
-    // O app principal guarda o login em sessionStorage.
-    // Top-level const HYPE não fica disponível em window.HYPE, então o chat
-    // lê a mesma sessão diretamente para não pedir login novamente.
-    try {
-      const data = JSON.parse(sessionStorage.getItem('hype_staff') || 'null');
-      if (data?.user && data?.pass) return data;
-    } catch (_) {}
-    const h = window.HYPE || {};
-    return { user:h.user || '', pass:h.pass || '', role:h.role || '' };
-  }
-
-  function authParams() {
-    if (role === 'portaria') {
-      return { p_device_key: localStorage.getItem('hype_portaria_device_key_v18') || '' };
-    }
-    const s = adminSession();
-    return { p_username: s.user || '', p_password: s.pass || '' };
-  }
-
   // Som curto de notificação. Navegadores exigem uma interação do usuário
-  // antes de permitir áudio; por isso liberamos o AudioContext no primeiro toque/clique.
+  // antes de permitir áudio; por isso liberamos no primeiro toque/clique.
   let audioCtx = null;
   let audioUnlocked = false;
   function unlockAudio() {
@@ -131,7 +93,7 @@
       audioUnlocked = true;
     } catch (_) {}
   }
-  ['pointerdown','keydown','touchstart'].forEach(evt =>
+  ['pointerdown','keydown','touchstart','click'].forEach(evt =>
     window.addEventListener(evt, unlockAudio, {once:true, passive:true})
   );
 
@@ -141,8 +103,8 @@
       const now = audioCtx.currentTime;
       const gain = audioCtx.createGain();
       gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.16, now + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.34);
+      gain.gain.exponentialRampToValueAtTime(0.18, now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
       gain.connect(audioCtx.destination);
       [740, 980].forEach((freq, i) => {
         const osc = audioCtx.createOscillator();
@@ -150,8 +112,33 @@
         osc.frequency.setValueAtTime(freq, now + i*0.12);
         osc.connect(gain);
         osc.start(now + i*0.12);
-        osc.stop(now + i*0.12 + 0.16);
+        osc.stop(now + i*0.12 + 0.18);
       });
+    } catch (_) {}
+  }
+
+  function askNotificationPermission() {
+    try {
+      if (!('Notification' in window)) return;
+      if (Notification.permission === 'default') Notification.requestPermission().catch(() => {});
+    } catch (_) {}
+  }
+
+  function browserNotify(text) {
+    try {
+      if (!('Notification' in window)) return;
+      if (Notification.permission !== 'granted') return;
+      if (!document.hidden && open) return;
+      const n = new Notification('Chat HYPE', {
+        body: text || 'Nova mensagem recebida',
+        tag: 'hype-chat-v41',
+        silent: false
+      });
+      n.onclick = () => {
+        try { window.focus(); setOpen(true); } catch (_) {}
+        try { n.close(); } catch (_) {}
+      };
+      setTimeout(() => { try { n.close(); } catch (_) {} }, 6000);
     } catch (_) {}
   }
 
@@ -171,16 +158,19 @@
     const quick = role === 'admin' ? quickAdmin : quickPortaria;
     document.body.insertAdjacentHTML('beforeend', `
       <button id="hypeChatV38Fab" class="hype-chat-v38-fab" type="button">
-        💬 ${role === 'admin' ? 'Chat Portaria' : 'Falar com Admin'}
+        💬 ${role === 'admin' ? 'Chat HYPE' : 'Falar com Admin'}
         <span id="hypeChatV38Unread" class="hype-chat-v38-unread" hidden>0</span>
       </button>
       <aside id="hypeChatV38" class="hype-chat-v38" aria-label="Chat interno HYPE">
         <div class="hype-chat-v38-head">
           <div style="min-width:0;flex:1">
-            <strong>💬 ${role === 'admin' ? 'Admin ↔ Portaria' : 'Portaria ↔ Admin'}</strong>
-            <small id="hypeChatV38Event">Selecione um evento</small>
+            <strong>💬 Chat único HYPE</strong>
+            <small id="hypeChatV38Event">Admin ↔ Portaria • conversa geral</small>
           </div>
-          <button class="hype-chat-v38-close" id="hypeChatV38Close" type="button" aria-label="Fechar chat">×</button>
+          <div class="hype-chat-v41-head-actions">
+            ${role === 'admin' ? '<button class="hype-chat-v41-clear" id="hypeChatV41Clear" type="button" title="Apagar toda a conversa">🗑️</button>' : ''}
+            <button class="hype-chat-v38-close" id="hypeChatV38Close" type="button" aria-label="Fechar chat">×</button>
+          </div>
         </div>
 
         <div class="hype-chat-v38-quick" id="hypeChatV38Quick">
@@ -188,7 +178,7 @@
         </div>
 
         <div class="hype-chat-v38-messages" id="hypeChatV38Messages">
-          <div class="hype-chat-v38-empty">Abra um evento para conversar.</div>
+          <div class="hype-chat-v38-empty">Carregando conversa da equipe...</div>
         </div>
 
         <div class="hype-chat-v38-compose">
@@ -197,8 +187,10 @@
         </div>
       </aside>`);
 
-    document.getElementById('hypeChatV38Fab').onclick = toggle;
+    document.getElementById('hypeChatV38Fab').onclick = () => { askNotificationPermission(); toggle(); };
     document.getElementById('hypeChatV38Close').onclick = () => setOpen(false);
+    const clearBtn = document.getElementById('hypeChatV41Clear');
+    if (clearBtn) clearBtn.onclick = clearChat;
     document.getElementById('hypeChatV38Send').onclick = send;
     document.getElementById('hypeChatV38Input').addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -221,6 +213,7 @@
     document.getElementById('hypeChatV38')?.classList.toggle('open', open);
     if (open) {
       setUnread(0);
+      askNotificationPermission();
       load(true).catch(() => {});
       setTimeout(() => document.getElementById('hypeChatV38Input')?.focus(), 80);
     }
@@ -235,7 +228,7 @@
     if (!box) return;
     if (reset) box.innerHTML = '';
     if (!rows.length && reset) {
-      box.innerHTML = '<div class="hype-chat-v38-empty">Ainda não há mensagens neste evento.</div>';
+      box.innerHTML = '<div class="hype-chat-v38-empty">Ainda não há mensagens na conversa da equipe.</div>';
       return;
     }
     if (rows.length && box.querySelector('.hype-chat-v38-empty')) box.innerHTML = '';
@@ -258,44 +251,61 @@
     if (rows.length) box.scrollTop = box.scrollHeight;
   }
 
-  async function load(force = false) {
-    if (busy) return;
-    const eid = eventId();
-    const label = document.getElementById('hypeChatV38Event');
-    if (label) label.textContent = eventLabel(eid);
+  function resetConversationView() {
+    lastId = 0;
+    setUnread(0);
+    render([], true);
+  }
 
-    if (!eid) {
-      if (open) render([], true);
+  async function checkClearState() {
+    const row = arr(await rpc('hype_chat_state_v41', {}))[0];
+    const stamp = String(row?.last_cleared_at || '');
+    if (lastClearStamp && stamp && stamp !== lastClearStamp) {
+      resetConversationView();
+    }
+    if (stamp) lastClearStamp = stamp;
+  }
+
+  async function clearChat() {
+    const creds = adminCreds();
+    if (!creds) {
+      alert('Para apagar a conversa, entre no Admin com seu usuário principal. O chat continua funcionando sem senha, mas apagar fica protegido.');
       return;
     }
+    if (!confirm('Apagar TODAS as mensagens do chat HYPE? Isso apaga mensagens do Admin e da Portaria.')) return;
 
-    if (eid !== currentEvent) {
-      currentEvent = eid;
-      lastId = 0;
-      force = true;
-      setUnread(0);
+    const btn = document.getElementById('hypeChatV41Clear');
+    if (btn) btn.disabled = true;
+    try {
+      const res = arr(await rpc('hype_chat_clear_v41', creds))[0];
+      lastClearStamp = String(res?.cleared_at || new Date().toISOString());
+      resetConversationView();
+      alert('Conversa apagada.');
+    } catch (err) {
+      alert(err.message || 'Não foi possível apagar a conversa.');
+    } finally {
+      if (btn) btn.disabled = false;
     }
+  }
 
-    const auth = authParams();
-    if (role === 'portaria' && !auth.p_device_key) return;
-    if (role === 'admin' && (!auth.p_username || !auth.p_password)) return;
-
+  async function load(force = false) {
+    if (busy) return;
     busy = true;
     const before = lastId;
     try {
-      const name = role === 'admin' ? 'staff_chat_list_v38' : 'portaria_chat_list_v38';
-      const params = {...auth, p_event_id:eid, p_after_id: force ? 0 : lastId};
-      const rows = arr(await rpc(name, params));
+      try { await checkClearState(); } catch (_) {}
+      const rows = arr(await rpc('hype_chat_list_v41', {p_after_id: force ? 0 : lastId}));
       const others = rows.filter(r =>
         String(r.sender_role || '') !== role &&
         Number(r.message_id || 0) > before
-      ).length;
+      );
       render(rows, force);
-      if (others) {
-        // Toca somente para mensagem recebida do outro lado, nunca para a própria.
+      if (firstLoadDone && others.length) {
         notifySound();
-        if (!open) setUnread(unread + others);
+        browserNotify(others[others.length - 1]?.message_text || 'Nova mensagem recebida');
+        if (!open) setUnread(unread + others.length);
       }
+      firstLoadDone = true;
     } catch (err) {
       if (open) {
         const box = document.getElementById('hypeChatV38Messages');
@@ -311,19 +321,15 @@
     const text = String(input?.value || '').trim();
     if (!text) return;
 
-    const eid = eventId();
-    if (!eid) return alert('Selecione um evento primeiro.');
-
-    const auth = authParams();
-    if (role === 'portaria' && !auth.p_device_key) return alert('Computador da Portaria ainda não autorizado.');
-    if (role === 'admin' && (!auth.p_username || !auth.p_password)) return alert('Entre novamente no Admin.');
-
     const btn = document.getElementById('hypeChatV38Send');
     if (btn) btn.disabled = true;
 
     try {
-      const name = role === 'admin' ? 'staff_chat_send_v38' : 'portaria_chat_send_v38';
-      await rpc(name, {...auth, p_event_id:eid, p_message:text});
+      await rpc('hype_chat_send_v41', {
+        p_sender_role: role,
+        p_sender_name: role === 'admin' ? 'Admin' : 'Portaria',
+        p_message: text
+      });
       input.value = '';
       await load(false);
     } catch (err) {
@@ -336,9 +342,9 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     mount();
-    setTimeout(() => load(true).catch(() => {}), 1000);
+    setTimeout(() => load(true).catch(() => {}), 700);
     timer = setInterval(() => {
-      if (!document.hidden) load(false).catch(() => {});
-    }, 1800);
+      load(false).catch(() => {});
+    }, 1500);
   });
 })();
