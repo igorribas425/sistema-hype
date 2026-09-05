@@ -491,7 +491,7 @@ function hypeMergeFreeRulesV38(lots, rules) {
   const map = new Map((Array.isArray(rules) ? rules : []).map(r => [Number(r.lot_id), r]));
   return (Array.isArray(lots) ? lots : []).map(l => {
     const r = map.get(Number(l.id));
-    return r ? {...l, female_free_until:r.female_free_until || null} : {...l, female_free_until:null};
+    return r ? {...l, female_free_until:r.female_free_until || null, male_free_until:r.male_free_until || null} : {...l, female_free_until:null, male_free_until:null};
   });
 }
 
@@ -514,6 +514,22 @@ function hypeFemaleFreeUntilActiveV38(lot) {
 function hypeFemaleFreeUntilLabelV38(lot) {
   if (!hypeFemaleFreeUntilActiveV38(lot)) return "";
   const d = new Date(lot.female_free_until);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+}
+
+function hypeGenderFreeUntilActiveV407(lot, gender) {
+  const key = String(gender || "").trim().toLowerCase().startsWith("m") ? "male_free_until" : "female_free_until";
+  const value = lot?.[key];
+  if (!value) return false;
+  const at = new Date(value).getTime();
+  return Number.isFinite(at) && Date.now() < at;
+}
+
+function hypeGenderFreeUntilLabelV407(lot, gender) {
+  const key = String(gender || "").trim().toLowerCase().startsWith("m") ? "male_free_until" : "female_free_until";
+  if (!hypeGenderFreeUntilActiveV407(lot, gender)) return "";
+  const d = new Date(lot?.[key]);
   if (Number.isNaN(d.getTime())) return "";
   return d.toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
 }
@@ -887,8 +903,8 @@ async function initClient() {
 
 function getLotGenderPrice(lot, gender = null) {
   const selectedGender = String(gender || document.getElementById("clientGender")?.value || "Feminino").toLowerCase();
-  const female = Number(lot?.price_female ?? lot?.price ?? 0);
-  const male = Number(lot?.price_male ?? lot?.price ?? female);
+  const female = hypeGenderFreeUntilActiveV407(lot, "Feminino") ? 0 : Number(lot?.price_female ?? lot?.price ?? 0);
+  const male = hypeGenderFreeUntilActiveV407(lot, "Masculino") ? 0 : Number(lot?.price_male ?? lot?.price ?? female);
   return selectedGender === "masculino" ? male : female;
 }
 
@@ -1142,13 +1158,14 @@ async function createManualOrder(e) {
   }
 
   const name = document.getElementById("clientName")?.value.trim() || "";
-  const phone = "";
-  const email = "";
+  const phone = document.getElementById("clientPhone")?.value.trim() || "";
+  const email = document.getElementById("clientEmail")?.value.trim() || "";
   const cpf = document.getElementById("clientCpf")?.value.trim() || "";
   const gender = document.getElementById("clientGender")?.value || "";
 
   if (!name) return alert("Informe seu nome completo.");
-  if (String(cpf).replace(/\D/g, "").length !== 11) return alert("Informe um CPF com 11 números.");
+  if (normalizePhone(phone).length < 10) return alert("Informe um WhatsApp válido.");
+  if (!validEmail(email)) return alert("Informe um e-mail válido.");
 
   const submit = document.querySelector('#ticketForm button[type="submit"]');
   const oldText = submit?.textContent || "GERAR QR CODE PIX";
@@ -1272,13 +1289,14 @@ async function createPixOrder(e) {
   if (!state.canBuy) return alert(`Este lote está ${state.label.toLowerCase()}.`);
 
   const name = document.getElementById("clientName")?.value.trim() || "";
-  const phone = "";
-  const email = "";
+  const phone = document.getElementById("clientPhone")?.value.trim() || "";
+  const email = document.getElementById("clientEmail")?.value.trim() || "";
   const cpf = document.getElementById("clientCpf")?.value.trim() || "";
   const gender = document.getElementById("clientGender")?.value || "";
 
   if (!name) return alert("Informe seu nome completo.");
-  if (String(cpf).replace(/\D/g, "").length !== 11) return alert("Informe um CPF com 11 números.");
+  if (normalizePhone(phone).length < 10) return alert("Informe um WhatsApp válido.");
+  if (!validEmail(email)) return alert("Informe um e-mail válido.");
 
   const submit = document.querySelector('#ticketForm button[type="submit"]');
   const oldText = submit?.textContent || "GERAR PIX";
@@ -1432,7 +1450,11 @@ function fillTicketCard(entry) {
   set("tTicketId", entry.ticket_code || `#${entry.id}`);
 
   const emailNotice = document.getElementById("ticketEmailNotice");
-  if (emailNotice) { emailNotice.textContent = "🎟️ Seu ingresso fica disponível diretamente neste site."; }
+  if (emailNotice) {
+    emailNotice.textContent = entry.email_sent
+      ? "📧 Cópia enviada automaticamente para o e-mail informado na compra."
+      : "📧 O envio do ingresso por e-mail está sendo processado automaticamente.";
+  }
 
   const qr = document.getElementById("ticketQrImg");
   if (qr) qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(entry.qr_token || entry.ticket_code)}`;
@@ -1820,15 +1842,16 @@ function renderConfigTickets() {
         <div class="form-group"><label>Nome do lote</label><input id="tName_${i}" value="${hypeEscape(t.name)}"></div>
         <div class="form-group"><label>Categoria / Setor</label><input id="tSector_${i}" value="${hypeEscape(t.sector || "")}" placeholder="Pista / VIP / Camarote"></div>
         <div class="form-group"><label>Preço Feminino <small style="color:var(--green)">0 = FREE</small></label><div style="display:grid;grid-template-columns:1fr auto;gap:6px"><input id="tPriceFemale_${i}" type="number" step="0.01" min="0" value="${Number(t.price_female ?? t.price ?? 0).toFixed(2)}"><button type="button" class="btn-action" onclick="document.getElementById('tPriceFemale_${i}').value='0'">♀ FREE</button></div></div>
-        <div class="form-group"><label>Preço Masculino</label><input id="tPriceMale_${i}" type="number" step="0.01" min="0" value="${Number(t.price_male ?? t.price ?? 0).toFixed(2)}"></div>
+        <div class="form-group"><label>Preço Masculino <small style="color:var(--green)">0 = FREE</small></label><div style="display:grid;grid-template-columns:1fr auto;gap:6px"><input id="tPriceMale_${i}" type="number" step="0.01" min="0" value="${Number(t.price_male ?? t.price ?? 0).toFixed(2)}"><button type="button" class="btn-action" onclick="document.getElementById('tPriceMale_${i}').value='0'">♂ FREE</button></div></div>
         <div class="form-group"><label>Quantidade</label><input id="tQty_${i}" type="number" min="0" value="${Number(t.quantity_total || 0)}"></div>
         <div class="form-group"><label>Início</label><input id="tStart_${i}" type="datetime-local" value="${toDateTimeLocal(t.starts_at)}"></div>
         <div class="form-group"><label>Expiração</label><input id="tEnd_${i}" type="datetime-local" value="${toDateTimeLocal(t.ends_at)}"></div>
         <div class="form-group"><label>♀ Feminino FREE até <small style="color:var(--green)">opcional</small></label><input id="tFemaleFreeUntil_${i}" type="datetime-local" value="${toDateTimeLocal(t.female_free_until)}"><small style="display:block;color:var(--muted);font-size:9px;margin-top:5px">Até esse horário o feminino fica FREE. Depois volta ao preço feminino acima.</small></div>
+        <div class="form-group"><label>♂ Masculino FREE até <small style="color:var(--green)">opcional</small></label><input id="tMaleFreeUntil_${i}" type="datetime-local" value="${toDateTimeLocal(t.male_free_until)}"><small style="display:block;color:var(--muted);font-size:9px;margin-top:5px">Até esse horário o masculino fica FREE. Depois volta ao preço masculino acima.</small></div>
         <div class="form-group"><label>Status</label><select id="tActive_${i}"><option value="true" ${t.active !== false ? "selected" : ""}>ATIVO</option><option value="false" ${t.active === false ? "selected" : ""}>INATIVO</option></select></div>
         <div class="form-group"><label>Lote automático</label><select id="tAuto_${i}"><option value="false" ${!t.auto_sequence ? "selected" : ""}>NÃO</option><option value="true" ${t.auto_sequence ? "selected" : ""}>SIM</option></select></div>
       </div>
-      <div class="ticket-admin-preview"><span>Feminino: <b>${hypeFemaleFreeUntilActiveV38(t) ? "FREE AGORA" : hypePriceLabel(t.price_female ?? t.price)}</b>${hypeFemaleFreeUntilActiveV38(t) ? `<small class="v38-free-until-note">FREE até ${hypeEscape(hypeFemaleFreeUntilLabelV38(t))}</small>` : ""}</span><span>Masculino: <b>${hypePriceLabel(t.price_male ?? t.price)}</b></span><span>Vendidos: <b>${Number(t.quantity_sold || 0)}</b></span><span>Disponíveis: <b>${t.quantity_total ? Math.max(0, Number(t.quantity_available || 0)) : "∞"}</b></span><span>Auto: <b>${t.auto_sequence ? (t.auto_locked ? "AGUARDANDO" : "LIBERADO") : "NÃO"}</b></span><span data-admin-countdown="${i}">${t.active === false ? "Categoria oculta no site" : hypeEscape(hypeCountdownText(t))}</span></div>
+      <div class="ticket-admin-preview"><span>Feminino: <b>${hypeGenderFreeUntilActiveV407(t, "Feminino") ? "FREE AGORA" : hypePriceLabel(t.price_female ?? t.price)}</b>${hypeGenderFreeUntilActiveV407(t, "Feminino") ? `<small class="v38-free-until-note">FREE até ${hypeEscape(hypeGenderFreeUntilLabelV407(t, "Feminino"))}</small>` : ""}</span><span>Masculino: <b>${hypeGenderFreeUntilActiveV407(t, "Masculino") ? "FREE AGORA" : hypePriceLabel(t.price_male ?? t.price)}</b>${hypeGenderFreeUntilActiveV407(t, "Masculino") ? `<small class="v38-free-until-note">FREE até ${hypeEscape(hypeGenderFreeUntilLabelV407(t, "Masculino"))}</small>` : ""}</span><span>Vendidos: <b>${Number(t.quantity_sold || 0)}</b></span><span>Disponíveis: <b>${t.quantity_total ? Math.max(0, Number(t.quantity_available || 0)) : "∞"}</b></span><span>Auto: <b>${t.auto_sequence ? (t.auto_locked ? "AGUARDANDO" : "LIBERADO") : "NÃO"}</b></span><span data-admin-countdown="${i}">${t.active === false ? "Categoria oculta no site" : hypeEscape(hypeCountdownText(t))}</span></div>
       <div class="ticket-admin-actions"><button class="btn-action" onclick="updateTicket(${i})">SALVAR CATEGORIA</button><button class="btn-action" onclick="clearTicketSchedule(${i})">REMOVER HORÁRIOS</button></div>
     </div>`).join("");
 }
@@ -1853,6 +1876,7 @@ async function createAdminLot() {
   const startAt = fromDateTimeLocal(document.getElementById("newLotStart")?.value || "");
   const endAt = fromDateTimeLocal(document.getElementById("newLotEnd")?.value || "");
   const femaleFreeUntil = fromDateTimeLocal(document.getElementById("newLotFemaleFreeUntil")?.value || "");
+  const maleFreeUntil = fromDateTimeLocal(document.getElementById("newLotMaleFreeUntil")?.value || "");
   const active = (document.getElementById("newLotActive")?.value || "true") === "true";
   const autoSequence = (document.getElementById("newLotAutoSequence")?.value || "false") === "true";
   if (!sector) return alert("Informe a categoria/setor.");
@@ -1881,10 +1905,11 @@ async function createAdminLot() {
         p_username:HYPE.user,
         p_password:HYPE.pass,
         p_lot_id:Number(savedRow.id),
-        p_female_free_until:femaleFreeUntil
+        p_female_free_until:femaleFreeUntil,
+        p_male_free_until:maleFreeUntil
       });
     }
-    ["newLotName","newLotSector","newLotPriceFemale","newLotPriceMale","newLotQty","newLotStart","newLotEnd","newLotFemaleFreeUntil"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+    ["newLotName","newLotSector","newLotPriceFemale","newLotPriceMale","newLotQty","newLotStart","newLotEnd","newLotFemaleFreeUntil","newLotMaleFreeUntil"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
     const a = document.getElementById("newLotActive"); if (a) a.value = "true";
     const au = document.getElementById("newLotAutoSequence"); if (au) au.value = "false";
     await loadAdminLots(HYPE.selectedEventId);
@@ -1907,6 +1932,7 @@ async function updateTicket(index) {
     const startAt = fromDateTimeLocal(document.getElementById(`tStart_${index}`).value);
     const endAt = fromDateTimeLocal(document.getElementById(`tEnd_${index}`).value);
     const femaleFreeUntil = fromDateTimeLocal(document.getElementById(`tFemaleFreeUntil_${index}`)?.value || "");
+    const maleFreeUntil = fromDateTimeLocal(document.getElementById(`tMaleFreeUntil_${index}`)?.value || "");
     const active = document.getElementById(`tActive_${index}`).value === "true";
     const autoSequence = document.getElementById(`tAuto_${index}`)?.value === "true";
     await sbRpc("staff_upsert_lot_v16", {
@@ -1917,7 +1943,8 @@ async function updateTicket(index) {
       p_username:HYPE.user,
       p_password:HYPE.pass,
       p_lot_id:Number(t.id),
-      p_female_free_until:femaleFreeUntil
+      p_female_free_until:femaleFreeUntil,
+      p_male_free_until:maleFreeUntil
     });
     await loadAdminLots(HYPE.selectedEventId);
     renderConfigTickets();
@@ -1937,7 +1964,8 @@ async function clearTicketSchedule(index) {
       p_username:HYPE.user,
       p_password:HYPE.pass,
       p_lot_id:Number(t.id),
-      p_female_free_until:null
+      p_female_free_until:null,
+      p_male_free_until:null
     }).catch(()=>{});
     await loadAdminLots(HYPE.selectedEventId);
     renderConfigTickets();
@@ -2870,7 +2898,7 @@ function hypeV14RenderLots() {
           </div>
         </div>
         <div class="v14-lot-stock ${hot ? "hot" : ""}">${hypeEscape(stockText)}</div>
-        <div style="margin-top:8px;font-size:10px;color:var(--muted)">${femalePrice <= 0 ? `♀ Feminino FREE${hypeFemaleFreeUntilActiveV38(lot) ? ` até ${hypeEscape(hypeFemaleFreeUntilLabelV38(lot))}` : ""} • sem PIX e sem taxa` : `+ taxa de serviço ${hypeFormatMoney(HYPE_SERVICE_FEE)} no PIX`}</div>
+        <div style="margin-top:8px;font-size:10px;color:var(--muted)">${(femalePrice <= 0 || malePrice <= 0) ? `${femalePrice <= 0 ? `♀ Feminino FREE${hypeGenderFreeUntilActiveV407(lot,"Feminino") ? ` até ${hypeEscape(hypeGenderFreeUntilLabelV407(lot,"Feminino"))}` : ""}` : ""}${femalePrice <= 0 && malePrice <= 0 ? " • " : ""}${malePrice <= 0 ? `♂ Masculino FREE${hypeGenderFreeUntilActiveV407(lot,"Masculino") ? ` até ${hypeEscape(hypeGenderFreeUntilLabelV407(lot,"Masculino"))}` : ""}` : ""} • sem PIX e sem taxa` : `+ taxa de serviço ${hypeFormatMoney(HYPE_SERVICE_FEE)} no PIX`}</div>
       </button>`;
   }).join("");
 

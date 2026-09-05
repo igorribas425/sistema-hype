@@ -271,7 +271,7 @@ html,body{max-width:100%;overflow-x:hidden}
   .stat-card{padding:12px 8px}
 }
 </style>
-  <link rel="stylesheet" href="hype-v38-responsive.css?v=20260905-v40-1">
+  <link rel="stylesheet" href="hype-v38-responsive.css?v=20260905-v40-7">
 </head>
 <body>
 
@@ -535,28 +535,14 @@ html,body{max-width:100%;overflow-x:hidden}
     </div>
   </section>
 
-  <section class="panel-box admin-only v40-guest-panel" id="v40GuestPanel">
-    <div class="v16-management-head"><div><h3>➕ ADICIONAR PESSOA / CORTESIA</h3><p>Cria um ingresso válido direto pelo Admin. Ele aparece na lista de ingressos, funciona no QR da Portaria e, se o sorteio do evento estiver ativo, participa automaticamente.</p></div></div>
-    <div class="v40-guest-grid">
-      <div class="form-group"><label>Evento *</label><select id="v40GuestEvent" onchange="HypeV40Guests.loadLots()"><option value="">Carregando...</option></select></div>
-      <div class="form-group"><label>Ingresso / lote *</label><select id="v40GuestLot"><option value="">Selecione o evento</option></select></div>
-      <div class="form-group"><label>Nome da pessoa *</label><input id="v40GuestName" placeholder="Nome completo"></div>
-      <div class="form-group"><label>Gênero *</label><select id="v40GuestGender"><option value="Feminino">Feminino</option><option value="Masculino">Masculino</option></select></div>
-      <div class="form-group"><label>CPF <small style="color:var(--muted)">opcional</small></label><input id="v40GuestCpf" inputmode="numeric" placeholder="Somente se quiser registrar"></div>
-      <div class="form-group v40-guest-action"><label>&nbsp;</label><button id="v40GuestAdd" class="btn" type="button" onclick="HypeV40Guests.add()">+ ADICIONAR INGRESSO</button></div>
-    </div>
-    <div class="v40-guest-bulk">
-      <label>Lista de nomes <small style="color:var(--muted)">um por linha</small></label>
-      <textarea id="v40GuestList" placeholder="Exemplo:
-Maria Silva
-Ana Paula
-João Pedro"></textarea>
-      <div class="v40-guest-bulk-actions">
-        <button id="v40GuestAddList" class="btn-action" type="button" onclick="HypeV40Guests.addList()">+ ADICIONAR LISTA</button>
-        <small>Todos entram como cortesia/PAGO, ganham QR válido e entram no sorteio do evento.</small>
+  <section class="panel-box admin-only" id="v406SimpleListInfo">
+    <div class="v16-management-head">
+      <div>
+        <h3>📋 LISTA SIMPLES DA PORTARIA</h3>
+        <p>Agora a lista não gera ingresso, não gera QR e não entra como compra. Ela fica separada: a Portaria adiciona o nome, busca e confirma a entrada manualmente.</p>
       </div>
     </div>
-    <div id="v40GuestResult" class="v40-guest-result">A cortesia fica como <b>PAGO / CORTESIA ADMIN</b>, valor R$ 0,00, gera QR válido e participa do sorteio automaticamente.</div>
+    <div class="v18-empty">Para adicionar alguém na lista, abra a Portaria e use o painel <b>Lista simples</b>. As compras normais do site continuam pelo PIX Asaas e QR Code.</div>
   </section>
 
   <div class="grid-admin">
@@ -577,7 +563,7 @@ João Pedro"></textarea>
           <div class="form-group"><label>Nome do lote</label><input id="newLotName" placeholder="Ex.: 1º Lote"></div>
           <div class="form-group"><label>Categoria / Setor</label><input id="newLotSector" placeholder="Pista / VIP / Camarote"></div>
           <div class="form-group"><label>Preço Feminino <small style="color:var(--green)">0 = FREE</small></label><div style="display:grid;grid-template-columns:1fr auto;gap:6px"><input id="newLotPriceFemale" type="number" step="0.01" min="0" placeholder="30,00"><button class="btn-action" type="button" onclick="document.getElementById('newLotPriceFemale').value='0'">♀ FREE</button></div></div>
-          <div class="form-group"><label>Preço Masculino</label><input id="newLotPriceMale" type="number" step="0.01" min="0" placeholder="40,00"></div>
+          <div class="form-group"><label>Preço Masculino <small style="color:var(--green)">0 = FREE</small></label><div style="display:grid;grid-template-columns:1fr auto;gap:6px"><input id="newLotPriceMale" type="number" step="0.01" min="0" placeholder="40,00"><button class="btn-action" type="button" onclick="document.getElementById('newLotPriceMale').value='0'">♂ FREE</button></div></div>
           <div class="form-group"><label>Quantidade</label><input id="newLotQty" type="number" min="0" placeholder="100"></div>
           <div class="form-group"><label>Status</label><select id="newLotActive"><option value="true" selected>ATIVO</option><option value="false">INATIVO</option></select></div>
           <div class="form-group"><label>Lote automático</label><select id="newLotAutoSequence"><option value="false" selected>NÃO</option><option value="true">SIM — LIBERA APÓS O ANTERIOR</option></select></div>
@@ -586,6 +572,7 @@ João Pedro"></textarea>
           <div class="form-group"><label>Início da venda</label><input id="newLotStart" type="datetime-local"></div>
           <div class="form-group"><label>Expiração</label><input id="newLotEnd" type="datetime-local"></div>
           <div class="form-group"><label>♀ Feminino FREE até <small style="color:var(--green)">opcional</small></label><input id="newLotFemaleFreeUntil" type="datetime-local"><small style="display:block;color:var(--muted);font-size:9px;margin-top:5px">Até esse horário o feminino fica FREE. Depois volta ao preço feminino cadastrado.</small></div>
+          <div class="form-group"><label>♂ Masculino FREE até <small style="color:var(--green)">opcional</small></label><input id="newLotMaleFreeUntil" type="datetime-local"><small style="display:block;color:var(--muted);font-size:9px;margin-top:5px">Até esse horário o masculino fica FREE. Depois volta ao preço masculino cadastrado.</small></div>
         </div>
         <button class="btn" onclick="createAdminLot()">+ CRIAR CATEGORIA NESTE EVENTO</button>
       </div>
@@ -629,7 +616,7 @@ João Pedro"></textarea>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260902-v24"></script>
-<script src="app.js?v=20260905-v38-completo"></script>
+<script src="app.js?v=20260905-v40-7"></script>
 <script src="promoter-global-v16-8.js?v=20260902-v24-global"></script>
 <script>
 /* HYPE V24 // correção da sessão do Admin
@@ -729,7 +716,7 @@ João Pedro"></textarea>
       const prize=document.getElementById('v18RafflePrize'); if(prize) prize.value=data.prize||'';
       const count=document.getElementById('v18RaffleCount'); if(count) count.textContent=String(data.participant_count||0);
       const last=document.getElementById('v18RaffleLastWinner'); if(last) last.innerHTML=data.last_winner_name?`Último vencedor: <b>${esc(data.last_winner_name)}</b> • ${esc(data.last_winner_code||'')} • ${esc(fmt(data.last_draw_at))}`:'Nenhum sorteio realizado neste evento.';
-      if(box){box.textContent=data.enabled?'SORTEIO ATIVO • toda compra PAGA deste evento participa automaticamente':'SORTEIO DESATIVADO';box.className=`v18-state ${data.enabled?'on':''}`;}
+      if(box){box.textContent=data.enabled?'SORTEIO ATIVO • compra PAGA participa automaticamente • quem já ganhou não volta no sorteio':'SORTEIO DESATIVADO';box.className=`v18-state ${data.enabled?'on':''}`;}
     }catch(err){ if(box){box.textContent=err.message||'Erro ao carregar sorteio.';box.className='v18-state error';} }
   }
 
@@ -747,7 +734,7 @@ João Pedro"></textarea>
     if(!adminReady()) return alert('Sua sessão do Admin expirou. Entre novamente.');
     const select=document.getElementById('v18RaffleEvent'); const id=Number(select?.value||0); if(!id) return alert('Selecione um evento.');
     const prize=document.getElementById('v18RafflePrize')?.value.trim()||'o prêmio'; const eventName=select?.selectedOptions?.[0]?.textContent||'evento selecionado';
-    if(!confirm(`Confirmar o sorteio?\n\n${eventName}\nPrêmio: ${prize}\n\nSomente ingressos PAGOS participam.`)) return;
+    if(!confirm(`Confirmar o sorteio?\n\n${eventName}\nPrêmio: ${prize}\n\nSomente ingressos PAGOS participam. Quem já ganhou neste evento não participa de novo.`)) return;
     const btn=document.getElementById('v18DrawBtn'); if(btn){btn.disabled=true;btn.textContent='SORTEANDO...';}
     try{
       const winner=arr(await sbRpc('staff_draw_raffle_v18',{p_username:HYPE.user,p_password:HYPE.pass,p_event_id:id}))[0];
@@ -765,7 +752,7 @@ João Pedro"></textarea>
     list.dataset.open='1';list.innerHTML='<div class="v18-empty">Carregando participantes pagos...</div>';
     try{
       const data=arr(await sbRpc('staff_raffle_participants_v18',{p_username:HYPE.user,p_password:HYPE.pass,p_event_id:id}));
-      list.innerHTML=data.length?`<div class="v18-participants-head">${data.length} participante(s) PAGO(s) • HYPE + promoter + Portaria • 1 ingresso = 1 chance</div>${data.map((p,i)=>`<div class="v18-participant"><b>${i+1}. ${esc(p.customer_name)}</b><span>${esc(p.ticket_code)}${p.promoter_code?` • promoter ${esc(p.promoter_code)}`:''}</span></div>`).join('')}`:'<div class="v18-empty">Nenhum pagamento confirmado neste evento ainda.</div>';
+      list.innerHTML=data.length?`<div class="v18-participants-head">${data.length} participante(s) elegível(is) • quem já ganhou não aparece de novo</div>${data.map((p,i)=>`<div class="v18-participant"><b>${i+1}. ${esc(p.customer_name)}</b><span>${esc(p.ticket_code)}${p.promoter_code?` • promoter ${esc(p.promoter_code)}`:''}</span></div>`).join('')}`:'<div class="v18-empty">Nenhum pagamento confirmado neste evento ainda.</div>';
     }catch(err){list.innerHTML=`<div class="v18-empty error">${esc(err.message||'Erro ao carregar participantes.')}</div>`;}
   }
 
@@ -826,6 +813,5 @@ João Pedro"></textarea>
   <script src="hype-v38-reset.js?v=20260905-v38-1"></script>
 
 <script src="hype-v39-admin-simple.js?v=20260905-v39-1"></script>
-<script src="hype-v40-guests.js?v=20260905-v40-1"></script>
 </body>
 </html>

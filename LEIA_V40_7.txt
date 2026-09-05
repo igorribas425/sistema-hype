@@ -1,0 +1,12 @@
+HYPE V40.7
+
+Correções:
+- FREE por horário para Feminino e Masculino.
+- Admin agora tem campo Feminino FREE até e Masculino FREE até.
+- Compra continua automática no PIX Asaas.
+- Lista simples da Portaria continua separada, sem QR/ingresso.
+- Sorteio não repete vencedor no mesmo evento: depois que a pessoa ganha, sai dos próximos sorteios.
+
+Passo certo:
+1) Rode o SQL SUPABASE_V40_7_FREE_HOMEM_SORTEIO_UNICO.sql no Supabase.
+2) Depois envie os arquivos do ZIP GitHub para o repositório.

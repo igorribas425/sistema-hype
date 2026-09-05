@@ -1,0 +1,15 @@
+HYPE V40.6 — COMPRA NORMAL + PORTARIA MELHOR + LISTA SIMPLES
+
+O que esta versao faz:
+1. Volta a compra do cliente ao fluxo normal automatico:
+   Cliente compra -> PIX Asaas -> pagamento confirmado -> ingresso/QR liberado automaticamente.
+2. Nao cria liberacao manual do Admin depois do Pix.
+3. Remove a venda rapida da Portaria da tela.
+4. Remove o painel antigo de cortesia que gerava ingresso pela lista.
+5. Mantem a Portaria conferindo ingresso pago pelo QR, evento certo, cancelado, usado e reentrada.
+6. Tira a trava obrigatoria de documento para entrada.
+7. Cria lista simples separada na Portaria: nome -> buscar -> confirmar entrada.
+8. Lista simples nao gera ingresso, nao gera QR, nao vira compra e nao entra no sorteio automatico.
+
+Passo 1: rode SUPABASE_V40_6_PORTARIA_LISTA_SIMPLES.sql no Supabase.
+Passo 2: envie os arquivos do ZIP para o GitHub substituindo os antigos.
