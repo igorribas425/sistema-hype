@@ -1,0 +1,91 @@
+HYPE LOUNGE CLUB — V36
+FEMININO FREE + ESTORNO ASAAS + FEEDBACK V35 + PIX ASAAS PORTARIA
+
+O QUE FOI ACRESCENTADO
+
+1) FEMININO FREE
+- No Admin, preço Feminino = 0 significa FREE.
+- Há botão “♀ FREE” para colocar 0 rapidamente.
+- No site aparece FREE em vez de R$ 0,00.
+- Feminino FREE não gera PIX e não cobra taxa de R$ 1,98.
+- O ingresso já nasce liberado/PAGO para funcionar na Portaria.
+- A venda na hora da Portaria também entende FREE e não chama o Asaas.
+
+2) ESTORNO FEMININO PELO ASAAS
+- Novo painel no Admin: “ESTORNO FEMININO → FREE”.
+- Mostra quantos ingressos podem ser estornados e o valor total a devolver.
+- Permite estornar um ingresso por vez ou todos os femininos elegíveis.
+- Antes do lote aparece confirmação com quantidade e valor total.
+- O sistema localiza o pagamento Asaas pelo externalReference do ticket.
+- Solicita o estorno no Asaas.
+- O ingresso NÃO é cancelado: continua válido e vira “Feminino FREE (estorno Asaas)”.
+- O status do estorno fica registrado no ticket e no audit log.
+- O webhook também acompanha eventos de estorno e atualiza o status quando o Asaas confirmar.
+
+3) SEGURANÇA
+- Somente usuário com perfil ADMIN pode pedir estorno.
+- ASAAS_API_KEY continua somente nos Secrets do Supabase.
+- A chave nunca vai para o GitHub/navegador.
+- Repetir o botão não cria um segundo estorno do mesmo ticket: o fluxo é idempotente.
+
+4) V35 PRESERVADA
+- Feedback automático pós-evento.
+- Ranking no Admin.
+- Gmail e preparação para WhatsApp automático.
+- PIX Asaas na Portaria.
+
+ORDEM PARA INSTALAR
+
+A) SUPABASE SQL EDITOR
+Se a V35 já foi instalada, execute SOMENTE:
+02_SUPABASE/SUPABASE_V36_FEMININO_FREE_ESTORNO.sql
+
+B) EDGE FUNCTIONS
+Crie/atualize estas funções:
+- asaas-refund -> 04_EDGE_FUNCTION/asaas-refund/index.ts
+- asaas-webhook -> 04_EDGE_FUNCTION/asaas-webhook/index.ts
+A função asaas-webhook continua com Verify JWT DESATIVADO porque recebe chamadas do Asaas.
+A asaas-refund valida usuário/senha do Admin dentro da própria função.
+
+Secrets usados:
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+ASAAS_API_KEY
+
+C) GITHUB
+Envie/substitua:
+- app.js
+- cliente.html
+- admin.html
+- admin-v36-refund.js
+- admin-v36-refund.css
+- portaria.html
+- portaria-v20.js
+
+Também mantenha os arquivos V35 já instalados:
+- admin-v34.js
+- admin-v34.css
+- pesquisa.html
+- portaria-v18.js
+- leitor.html
+- leitor-v20.js
+
+D) COMO USAR FEMININO FREE
+No Admin > categorias/lotes:
+- clique “♀ FREE” ou coloque 0 no Preço Feminino;
+- salve a categoria.
+Novas compras femininas ficam FREE automaticamente.
+Masculino continua cobrando normalmente pelo Asaas.
+
+E) COMO ESTORNAR QUEM JÁ PAGOU
+No Admin, selecione o evento correto e abra:
+“ESTORNO FEMININO → FREE”
+
+Você pode:
+- clicar “ESTORNAR ESTE” em uma cliente; ou
+- clicar “ESTORNAR FEMININOS E MANTER FREE” para o lote elegível.
+
+Atenção: o botão realmente solicita devolução de dinheiro no Asaas.
+Use apenas depois de conferir evento, quantidade e valor.
+
+FIM

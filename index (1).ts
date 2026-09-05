@@ -89,6 +89,79 @@ Deno.serve(async (req) => {
     const payment = body?.payment || {};
     const paymentStatus = String(payment?.status || "").trim().toUpperCase();
 
+    const supabase = createClient(supabaseUrl, serviceRole, {
+      auth: { persistSession: false },
+    });
+
+    const externalReference = String(
+      payment?.externalReference ?? body?.externalReference ?? "",
+    ).trim();
+
+    // V36: acompanha o estorno solicitado pelo painel Feminino FREE.
+    // O ingresso continua PAGO/valido; aqui apenas atualizamos o andamento da devolucao.
+    const refundEvents = new Set([
+      "PAYMENT_REFUNDED",
+      "PAYMENT_REFUND_IN_PROGRESS",
+      "PAYMENT_PARTIALLY_REFUNDED",
+    ]);
+    const refundStatuses = new Set([
+      "REFUNDED",
+      "REFUND_REQUESTED",
+      "REFUND_IN_PROGRESS",
+      "PARTIALLY_REFUNDED",
+    ]);
+
+    if (refundEvents.has(eventName) || refundStatuses.has(paymentStatus)) {
+      let refundTicket: any = null;
+      if (/^\d+$/.test(externalReference)) {
+        const found = await supabase.from("tickets")
+          .select("id,ticket_code,gender,price,payment_status,payment_method,refund_status,refund_amount,free_after_refund")
+          .eq("id", Number(externalReference)).maybeSingle();
+        if (found.error) throw new Error(found.error.message);
+        refundTicket = found.data;
+      } else if (externalReference) {
+        const found = await supabase.from("tickets")
+          .select("id,ticket_code,gender,price,payment_status,payment_method,refund_status,refund_amount,free_after_refund")
+          .ilike("ticket_code", externalReference).maybeSingle();
+        if (found.error) throw new Error(found.error.message);
+        refundTicket = found.data;
+      }
+
+      if (!refundTicket) {
+        return json({ ok:true, ignored:true, event:eventName, reason:"Estorno sem ingresso correspondente." });
+      }
+
+      const status = paymentStatus || (eventName === "PAYMENT_REFUNDED" ? "REFUNDED" : "REFUND_IN_PROGRESS");
+      const updateData: any = {
+        refund_status: status,
+        refund_asaas_payment_id: payment?.id || null,
+      };
+      if (status === "REFUNDED") updateData.refunded_at = new Date().toISOString();
+      if (Number(refundTicket.refund_amount || 0) <= 0 && Number(payment?.value || 0) > 0) {
+        updateData.refund_amount = Number(payment.value);
+      }
+
+      // Somente o fluxo V36 previamente autorizado pelo Admin converte o ingresso em FREE.
+      if (refundTicket.free_after_refund === true) {
+        updateData.price = 0;
+        updateData.payment_status = "Pago";
+        updateData.payment_method = "Feminino FREE (estorno Asaas)";
+      }
+
+      const updated = await supabase.from("tickets").update(updateData).eq("id", refundTicket.id);
+      if (updated.error) throw new Error(updated.error.message);
+
+      try {
+        await supabase.from("audit_logs").insert({
+          action: "ASAAS_ESTORNO_STATUS_V36",
+          ticket_id: refundTicket.id,
+          metadata: { asaas_event:eventName, asaas_status:status, asaas_payment_id:payment?.id || null },
+        });
+      } catch (_) {}
+
+      return json({ ok:true, refund:true, ticket_id:refundTicket.id, refund_status:status });
+    }
+
     // Eventos que não representam pagamento confirmado são ignorados com 200.
     if (!isPaidEvent(eventName, paymentStatus)) {
       return json({
@@ -98,14 +171,6 @@ Deno.serve(async (req) => {
         payment_status: paymentStatus || null,
       });
     }
-
-    const supabase = createClient(supabaseUrl, serviceRole, {
-      auth: { persistSession: false },
-    });
-
-    const externalReference = String(
-      payment?.externalReference ?? body?.externalReference ?? "",
-    ).trim();
 
     const description = String(payment?.description || "");
     const codeFromDescription =

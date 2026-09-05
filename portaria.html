@@ -37,7 +37,7 @@
 
     <div class="controls">
       <select id="eventSelect" class="select" onchange="HypePortaria.changeEvent();HypeV20.eventChanged()"><option>Carregando eventos...</option></select>
-      <small style="display:block;margin-top:7px;color:var(--muted)">A Portaria escolhe o evento automaticamente pela data e horário. Uma festa continua sendo o evento atual até 08:00 do dia seguinte. QR de outro evento não libera entrada.</small>
+      <small style="display:block;margin-top:7px;color:var(--muted)">A Portaria escolhe o evento automaticamente pela data e horário. A festa continua como evento atual até 08:00 do dia seguinte. Quando virar para o próximo evento, o feedback pós-evento é disparado automaticamente para quem realmente entrou.</small>
       <div class="auto-event-row"><span id="autoEventBadge" class="pill on">AUTO • CARREGANDO EVENTO</span><button class="btn mini" onclick="HypePortaria.enableAutoEvent()">↻ VOLTAR AO AUTOMÁTICO</button></div>
       <button class="btn" onclick="HypePortaria.prepareOffline()">⬇ PREPARAR OFFLINE</button>
       <button class="btn" onclick="HypePortaria.refresh(true)">↻ ATUALIZAR</button>
@@ -74,19 +74,19 @@
 
 
     <section class="v19-door" id="v19DoorSale">
-      <div class="v19-section-head"><div><h3>💠 VENDA NA HORA DO SHOW // PORTARIA</h3><p>Uso somente para quem chegar ao evento sem ingresso. O porteiro cria esta venda, gera o PIX e pode confirmar SOMENTE esta venda criada aqui depois de conferir o recebimento. Compras do site e de promoter continuam sob controle do Admin.</p></div><strong id="v19DoorEventName" style="font-size:11px">Evento selecionado</strong></div>
+      <div class="v19-section-head"><div><h3>💠 VENDA NA HORA DO SHOW // PORTARIA</h3><p>Uso para quem chegar ao evento sem ingresso. A Portaria cria a venda e gera o mesmo PIX do Asaas usado no site. Quando o Asaas confirmar o pagamento, o ingresso é liberado automaticamente — sem confirmação manual do porteiro.</p></div><strong id="v19DoorEventName" style="font-size:11px">Evento selecionado</strong></div>
       <div class="v19-door-form">
         <div><label>Nome da pessoa *</label><input id="v19DoorName" placeholder="Nome completo" autocomplete="off"></div>
         <div><label>WhatsApp</label><input id="v19DoorPhone" placeholder="(54) 99999-9999" inputmode="tel"></div>
         <div><label>CPF</label><input id="v19DoorCpf" placeholder="CPF" inputmode="numeric"></div>
-        <div><label>E-mail (opcional)</label><input id="v19DoorEmail" type="email" placeholder="cliente@email.com"></div>
+        <div><label>E-mail (recomendado)</label><input id="v19DoorEmail" type="email" placeholder="cliente@email.com"></div>
         <div><label>Gênero *</label><select id="v19DoorGender" onchange="HypeV20.updateDoorPrice()"><option value="Feminino">Feminino</option><option value="Masculino">Masculino</option></select></div>
         <div><label>Ingresso *</label><select id="v19DoorLot" onchange="HypeV20.updateDoorPrice()"><option>Carregando...</option></select></div>
         <div class="full"><label>Valor do PIX</label><div id="v19DoorPrice" class="v19-door-price">Selecione um ingresso</div></div>
       </div>
       <div id="v19DoorRaffleHint" class="v19-door-hint">Carregando sorteio do evento...</div>
-      <button id="v19DoorCreate" class="btn primary" style="width:100%;margin-top:11px" onclick="HypeV20.createDoorOrder()">💠 GERAR PIX — VENDA NA HORA</button>
-      <div id="v19DoorNotice" class="v19-notice ok">Pronto para venda na hora do show. O porteiro só confirma vendas criadas nesta Portaria.</div>
+      <button id="v19DoorCreate" class="btn primary" style="width:100%;margin-top:11px" onclick="HypeV20.createDoorOrder()">💠 GERAR PIX / LIBERAR FREE — VENDA NA HORA</button>
+      <div id="v19DoorNotice" class="v19-notice ok">Pronto para venda na hora. O PIX é gerado pelo Asaas e a confirmação do pagamento é automática.</div>
       <div id="v19DoorResult" class="v19-door-result"></div>
     </section>
 
@@ -114,8 +114,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260902-v21"></script>
 <script src="hype-qrcode.js?v=20260902-v21"></script>
-<script src="portaria-v18.js?v=20260903-v33"></script>
-<script src="portaria-v20.js?v=20260903-v33"></script>
+<script src="portaria-v18.js?v=20260904-v35-feedback"></script>
+<script src="portaria-v20.js?v=20260904-v35-asaas"></script>
 <script src="register-sw.js?v=20260902-v21"></script>
 </body>
 </html>

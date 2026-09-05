@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#050505">
+  <title>Pesquisa do Evento | HYPE Lounge Club</title>
+  <style>
+    :root{--bg:#040405;--card:#0c0c10;--line:#292930;--text:#f8f8fa;--muted:#9d9da7;--ok:#35d884;--danger:#ff516f;--gold:#f2d46b}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#24242e 0,#0b0b0f 32%,#040405 72%);color:var(--text);font-family:Inter,Arial,Helvetica,sans-serif;min-height:100vh;padding:20px 12px 34px}.wrap{max-width:680px;margin:0 auto}.brand{text-align:center;padding:24px 0 18px}.brand:before{content:"H";display:grid;place-items:center;width:58px;height:58px;margin:0 auto 14px;border-radius:18px;background:linear-gradient(145deg,#fff,#9696a1);color:#070708;font-weight:1000;font-size:32px;box-shadow:0 16px 50px rgba(255,255,255,.08)}.brand small{display:block;letter-spacing:4px;color:#c5c5ce;font-weight:900;font-size:10px}.brand h1{margin:8px 0 0;font-size:clamp(27px,7vw,38px);letter-spacing:-1px}.brand p{margin:9px auto 0;max-width:520px;color:var(--muted);font-size:12px;line-height:1.6}.card{position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(16,16,21,.98),rgba(8,8,11,.98));border:1px solid var(--line);border-radius:28px;padding:26px;box-shadow:0 30px 90px rgba(0,0,0,.55)}.card:before{content:"";position:absolute;inset:0 0 auto;height:3px;background:linear-gradient(90deg,transparent,#fff,transparent);opacity:.75}.event{border:1px solid #2b2b33;background:linear-gradient(135deg,#141419,#0e0e12);border-radius:18px;padding:18px;margin-bottom:22px}.event small{display:block;color:#7f7f89;font-size:9px;font-weight:900;letter-spacing:2px;margin-bottom:7px}.event b{display:block;font-size:20px}.event span{display:block;color:var(--muted);font-size:12px;margin-top:7px}.question{margin-top:24px}.question label{display:block;font-weight:900;font-size:13px;margin-bottom:11px}.question .hint{font-size:10px;color:var(--muted);margin-top:-5px;margin-bottom:10px}.stars{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.star{height:60px;border:1px solid var(--line);background:#121217;color:#686872;border-radius:15px;font-size:27px;cursor:pointer;transition:.18s}.star:hover{transform:translateY(-2px);border-color:#5d5d67}.star.on{background:linear-gradient(145deg,#fff,#cacad2);color:#060607;border-color:#fff;box-shadow:0 8px 24px rgba(255,255,255,.09)}.rating-label{min-height:20px;text-align:center;margin-top:8px;color:var(--gold);font-size:11px;font-weight:900;letter-spacing:.5px}.return-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.choice{height:50px;border:1px solid var(--line);background:#121217;color:#ddd;border-radius:13px;font-weight:900;cursor:pointer}.choice.on{background:#ecedf0;color:#050505;border-color:#fff}textarea{width:100%;min-height:140px;resize:vertical;background:#09090c;border:1px solid var(--line);color:#fff;border-radius:15px;padding:14px;font:inherit;outline:none;line-height:1.55}textarea:focus{border-color:#5e5e68}.send{width:100%;height:58px;margin-top:24px;border:0;border-radius:15px;background:linear-gradient(135deg,#fff,#bfc0c8);color:#050505;font-weight:1000;font-size:14px;cursor:pointer;letter-spacing:.4px}.send:disabled{opacity:.55;cursor:wait}.status{padding:22px;border:1px dashed var(--line);border-radius:16px;color:var(--muted);font-size:12px;line-height:1.7;text-align:center}.status.ok{color:#a8f3c4;border-color:rgba(53,216,132,.35);background:rgba(53,216,132,.06)}.status.error{color:#ff9caf;border-color:rgba(255,81,111,.35)}.hidden{display:none!important}.note{margin-top:16px;color:#777782;font-size:10px;line-height:1.65;text-align:center}.privacy{display:flex;justify-content:center;gap:7px;align-items:center;margin-top:12px;color:#777782;font-size:9px}.privacy span{width:6px;height:6px;border-radius:50%;background:var(--ok)}@media(max-width:520px){.card{padding:18px;border-radius:22px}.brand h1{font-size:27px}.star{height:52px;font-size:23px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand"><small>HYPE LOUNGE CLUB</small><h1>SUA NOITE. SUA OPINIÃO.</h1><p>Conte como foi sua experiência. Seu feedback aparece no painel da HYPE e ajuda a melhorar os próximos eventos.</p></div>
+    <main class="card">
+      <div id="loading" class="status">Carregando sua pesquisa...</div>
+      <div id="invalid" class="status error hidden">Este link de pesquisa não é válido.</div>
+      <div id="done" class="status ok hidden"><b>Obrigado pela sua opinião! 🔥</b><br>Ela já foi registrada e vai ajudar a HYPE nos próximos eventos.</div>
+      <form id="surveyForm" class="hidden">
+        <div class="event"><small>FEEDBACK OFICIAL DO EVENTO</small><b id="eventName">Evento HYPE</b><span id="eventMeta"></span></div>
+        <div class="question">
+          <label>Qual nota você dá para a experiência?</label><div class="hint">1 = péssimo • 2 = ruim • 3 = regular • 4 = bom • 5 = incrível</div>
+          <div class="stars" id="stars">
+            <button type="button" class="star" data-rating="1">★</button>
+            <button type="button" class="star" data-rating="2">★</button>
+            <button type="button" class="star" data-rating="3">★</button>
+            <button type="button" class="star" data-rating="4">★</button>
+            <button type="button" class="star" data-rating="5">★</button>
+          </div>
+          <div id="ratingLabel" class="rating-label"></div>
+        </div>
+        <div class="question">
+          <label>Você voltaria em outro evento da HYPE?</label>
+          <div class="return-row"><button type="button" class="choice" id="returnYes">SIM 🔥</button><button type="button" class="choice" id="returnNo">NÃO</button></div>
+        </div>
+        <div class="question"><label>O que você mais gostou ou o que podemos melhorar?</label><textarea id="comment" maxlength="1200" placeholder="Escreva aqui... (opcional)"></textarea></div>
+        <button class="send" id="sendBtn" type="submit">ENVIAR AVALIAÇÃO</button>
+        <div class="note">Uma resposta por ingresso. Este link é individual e é liberado somente para quem realmente entrou no evento.</div><div class="privacy"><span></span> HYPE Lounge Club • feedback pós-evento</div>
+      </form>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js?v=20260903-v34"></script>
+  <script>
+    (()=>{
+      const token=new URLSearchParams(location.search).get('token')||'';
+      const cfg=window.HYPE_SUPABASE_CONFIG||{};
+      let rating=0,wouldReturn=null,sb=null;
+      const $=id=>document.getElementById(id);
+      const show=id=>$(id)?.classList.remove('hidden');
+      const hide=id=>$(id)?.classList.add('hidden');
+      const rpc=async(name,params)=>{const {data,error}=await sb.rpc(name,params);if(error)throw new Error(error.message||'Erro');return data;};
+      const fmtDate=v=>{if(!v)return'';const d=new Date(`${String(v).slice(0,10)}T12:00:00`);return Number.isNaN(d.getTime())?'':d.toLocaleDateString('pt-BR');};
+      function renderStars(){document.querySelectorAll('.star').forEach(b=>b.classList.toggle('on',Number(b.dataset.rating)<=rating));const labels={1:'⛔ PÉSSIMO',2:'🙁 RUIM',3:'😐 REGULAR',4:'🙂 BOM',5:'🔥 INCRÍVEL'};const el=$('ratingLabel');if(el)el.textContent=labels[rating]||'';}
+      function renderReturn(){ $('returnYes').classList.toggle('on',wouldReturn===true);$('returnNo').classList.toggle('on',wouldReturn===false); }
+      async function boot(){
+        try{
+          if(!token||!cfg.url||!cfg.anonKey||!window.supabase?.createClient)throw new Error('Link inválido');
+          sb=window.supabase.createClient(cfg.url,cfg.anonKey,{auth:{persistSession:false}});
+          const raw=await rpc('public_survey_open_v34',{p_token:token});
+          const data=Array.isArray(raw)?raw[0]:raw;
+          hide('loading');
+          if(!data){show('invalid');return;}
+          if(data.already_responded){show('done');return;}
+          $('eventName').textContent=data.event_name||'Evento HYPE';
+          $('eventMeta').textContent=[fmtDate(data.event_date),data.venue||''].filter(Boolean).join(' • ');
+          show('surveyForm');
+        }catch(err){hide('loading');show('invalid');$('invalid').textContent=err.message||'Este link de pesquisa não é válido.';}
+      }
+      document.querySelectorAll('.star').forEach(b=>b.addEventListener('click',()=>{rating=Number(b.dataset.rating);renderStars();}));
+      $('returnYes').addEventListener('click',()=>{wouldReturn=true;renderReturn();});
+      $('returnNo').addEventListener('click',()=>{wouldReturn=false;renderReturn();});
+      $('surveyForm').addEventListener('submit',async(e)=>{
+        e.preventDefault();
+        if(!rating)return alert('Escolha uma nota de 1 a 5.');
+        const btn=$('sendBtn');btn.disabled=true;btn.textContent='ENVIANDO...';
+        try{
+          await rpc('public_survey_submit_v34',{p_token:token,p_rating:rating,p_would_return:wouldReturn,p_comment:$('comment').value||''});
+          hide('surveyForm');show('done');
+        }catch(err){alert(err.message||'Não foi possível enviar a avaliação.');btn.disabled=false;btn.textContent='ENVIAR AVALIAÇÃO';}
+      });
+      boot();
+    })();
+  </script>
+</body>
+</html>

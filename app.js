@@ -40,7 +40,13 @@ const HYPE = {
 const HYPE_SERVICE_FEE = 1.98;
 
 function hypeTotalWithServiceFee(ticketValue) {
-  return Math.round((Number(ticketValue || 0) + HYPE_SERVICE_FEE) * 100) / 100;
+  const base = Number(ticketValue || 0);
+  if (!(base > 0)) return 0;
+  return Math.round((base + HYPE_SERVICE_FEE) * 100) / 100;
+}
+
+function hypePriceLabel(value) {
+  return Number(value || 0) <= 0 ? "FREE" : hypeFormatMoney(value);
 }
 
 function updateServiceFeeInfo(ticketValue) {
@@ -54,7 +60,7 @@ function updateServiceFeeInfo(ticketValue) {
     <div class="fee-row"><span>Valor do ingresso</span><b>${hypeFormatMoney(base)}</b></div>
     <div class="fee-row fee-service"><span>Taxa de serviço</span><b>${hypeFormatMoney(HYPE_SERVICE_FEE)}</b></div>
     <div class="fee-row fee-total"><span>Total do pedido</span><b>${hypeFormatMoney(total)}</b></div>
-    <div class="fee-note">A taxa de serviço é exibida antes de criar o pedido. O pagamento é finalizado manualmente pelo WhatsApp.</div>`;
+    <div class="fee-note">A taxa de serviço é exibida antes de criar o pedido. Feminino FREE não gera PIX nem taxa.</div>`;
 }
 
 function hypeCfg() {
@@ -768,7 +774,7 @@ function renderClientTickets(keepId = null) {
     const suffix = state.code === "upcoming" ? " — EM BREVE" : state.code === "auto_locked" ? " — AGUARDANDO LOTE ANTERIOR" : state.code === "expired" ? " — ENCERRADO" : state.code === "soldout" ? " — ESGOTADO" : state.code === "invalid" ? " — CONFIGURAÇÃO INVÁLIDA" : "";
     const stock = t.quantity_total > 0 ? ` • ${Math.max(0, Number(t.quantity_available || 0))} restantes` : "";
     const price = getLotGenderPrice(t, gender);
-    return `<option value="${t.id}" data-price-female="${Number(t.price_female ?? t.price ?? 0)}" data-price-male="${Number(t.price_male ?? t.price ?? 0)}" ${unavailable ? "disabled" : ""}>${hypeEscape(t.sector || t.name)} • ${hypeEscape(t.name)} - ${hypeFormatMoney(price)}${stock}${suffix}</option>`;
+    return `<option value="${t.id}" data-price-female="${Number(t.price_female ?? t.price ?? 0)}" data-price-male="${Number(t.price_male ?? t.price ?? 0)}" ${unavailable ? "disabled" : ""}>${hypeEscape(t.sector || t.name)} • ${hypeEscape(t.name)} - ${hypePriceLabel(price)}${stock}${suffix}</option>`;
   }).join("");
   const available = lots.filter(t => hypeStatus(t).canBuy);
   if (keepId && available.some(t => String(t.id) === String(keepId))) select.value = keepId;
@@ -792,7 +798,7 @@ async function updatePrice() {
   }
 
   const basePrice = getLotGenderPrice(lot);
-  if (display) display.value = hypeFormatMoney(hypeTotalWithServiceFee(basePrice));
+  if (display) display.value = basePrice <= 0 ? "FREE" : hypeFormatMoney(hypeTotalWithServiceFee(basePrice));
   updateServiceFeeInfo(basePrice);
   const coupon = (document.getElementById("clientCoupon")?.value || "").trim().toUpperCase();
   if (status) { status.textContent = ""; status.className = "v16-coupon-status"; }
@@ -807,7 +813,7 @@ async function updatePrice() {
       const quote = Array.isArray(rows) ? rows[0] : rows;
       HYPE.currentQuote = quote || null;
       if (quote?.ok) {
-        if (display) display.value = hypeFormatMoney(hypeTotalWithServiceFee(quote.final_price));
+        if (display) display.value = Number(quote.final_price || 0) <= 0 ? "FREE" : hypeFormatMoney(hypeTotalWithServiceFee(quote.final_price));
         updateServiceFeeInfo(quote.final_price);
         if (status) { status.textContent = `✅ ${quote.message} • desconto ${hypeFormatMoney(quote.discount_amount)}`; status.className = "v16-coupon-status ok"; }
       } else if (status) {
@@ -844,7 +850,7 @@ function updateClientTicketState() {
   if (info) {
     const cls = state.code === "active" ? "active" : state.code === "upcoming" ? "upcoming" : "expired";
     info.className = `ticket-schedule ${cls}`;
-    info.innerHTML = `<div><b>🕒 ${hypeEscape(state.label)}</b></div><div>${hypeEscape(hypeCountdownText(ticket))}</div><small>Categoria: ${hypeEscape(ticket.sector || "Pista")} • Feminino: ${hypeFormatMoney(ticket.price_female ?? ticket.price)} • Masculino: ${hypeFormatMoney(ticket.price_male ?? ticket.price)}<br>Vendidos: ${Number(ticket.quantity_sold || 0)}${ticket.quantity_total ? ` / ${Number(ticket.quantity_total)}` : ""} • Início: ${ticket.starts_at ? hypeFormatDateTime(ticket.starts_at) : "imediato"} • Fim: ${ticket.ends_at ? hypeFormatDateTime(ticket.ends_at) : "sem limite"}</small>`;
+    info.innerHTML = `<div><b>🕒 ${hypeEscape(state.label)}</b></div><div>${hypeEscape(hypeCountdownText(ticket))}</div><small>Categoria: ${hypeEscape(ticket.sector || "Pista")} • Feminino: ${hypePriceLabel(ticket.price_female ?? ticket.price)} • Masculino: ${hypePriceLabel(ticket.price_male ?? ticket.price)}<br>Vendidos: ${Number(ticket.quantity_sold || 0)}${ticket.quantity_total ? ` / ${Number(ticket.quantity_total)}` : ""} • Início: ${ticket.starts_at ? hypeFormatDateTime(ticket.starts_at) : "imediato"} • Fim: ${ticket.ends_at ? hypeFormatDateTime(ticket.ends_at) : "sem limite"}</small>`;
   }
 }
 
@@ -1107,6 +1113,27 @@ function renderAsaasPayment(entry, payment) {
   if (area) area.style.display = "block";
 }
 
+function renderFreeFemaleEntry(entry) {
+  window.__hypeTicketOpened = false;
+  fillTicketCard(entry);
+  const form = document.getElementById("ticketForm");
+  const pixArea = document.getElementById("pixArea");
+  const manualArea = document.getElementById("manualArea");
+  const successArea = document.getElementById("paymentSuccessArea");
+  const card = document.getElementById("ticketCard");
+  if (form) form.style.display = "none";
+  if (pixArea) pixArea.style.display = "none";
+  if (manualArea) manualArea.style.display = "none";
+  if (card) card.style.display = "none";
+  if (successArea) successArea.style.display = "block";
+  const title = successArea?.querySelector("h3");
+  const text = successArea?.querySelector("p");
+  if (title) title.textContent = "INGRESSO FEMININO FREE ✅";
+  if (text) text.textContent = "Nenhum PIX foi gerado. Seu ingresso já está liberado.";
+  const email = document.getElementById("paymentSuccessEmail");
+  if (email) email.textContent = "🎟️ Clique em ACESSAR MEU INGRESSO para abrir o QR Code.";
+}
+
 async function createPixOrder(e) {
   e.preventDefault();
 
@@ -1152,6 +1179,12 @@ async function createPixOrder(e) {
     HYPE.currentEntryId = entry.id;
     HYPE.currentEntryCode = entry.ticket_code;
     window.__hypeCurrentManualEntry = entry;
+
+    if (entry.payment_status === "Pago" && Number(entry.price || 0) <= 0 && String(entry.gender || gender).toLowerCase().startsWith("f")) {
+      renderFreeFemaleEntry(entry);
+      hypeNotify(`Ingresso feminino FREE ${entry.ticket_code} liberado.`);
+      return;
+    }
 
     const payment = await createAsaasPix(entry.id);
     window.__hypeCurrentPix = payment;
@@ -1266,7 +1299,7 @@ function fillTicketCard(entry) {
   set("tClientEmail", customerEmail || "E-mail informado na compra");
   set("tClientGender", entry.gender || localOrder.gender || "Não especificado");
   set("tTicketName", entry.lot_name || localOrder.lot_name || "");
-  set("tTicketPrice", hypeFormatMoney(entry.price));
+  set("tTicketPrice", Number(entry.price || 0) <= 0 ? "FREE" : hypeFormatMoney(entry.price));
   set("tTicketStatus", entry.payment_status === "Pago" ? "CONFIRMADO (PAGO ✅)" : entry.payment_status === "Cancelado" ? "CANCELADO ❌" : "Pendente de Confirmação ADM");
   set("tTicketId", entry.ticket_code || `#${entry.id}`);
 
@@ -1652,7 +1685,7 @@ function renderConfigTickets() {
       <div class="ticket-admin-grid ticket-admin-grid-wide">
         <div class="form-group"><label>Nome do lote</label><input id="tName_${i}" value="${hypeEscape(t.name)}"></div>
         <div class="form-group"><label>Categoria / Setor</label><input id="tSector_${i}" value="${hypeEscape(t.sector || "")}" placeholder="Pista / VIP / Camarote"></div>
-        <div class="form-group"><label>Preço Feminino</label><input id="tPriceFemale_${i}" type="number" step="0.01" min="0" value="${Number(t.price_female ?? t.price ?? 0).toFixed(2)}"></div>
+        <div class="form-group"><label>Preço Feminino <small style="color:var(--green)">0 = FREE</small></label><div style="display:grid;grid-template-columns:1fr auto;gap:6px"><input id="tPriceFemale_${i}" type="number" step="0.01" min="0" value="${Number(t.price_female ?? t.price ?? 0).toFixed(2)}"><button type="button" class="btn-action" onclick="document.getElementById('tPriceFemale_${i}').value='0'">♀ FREE</button></div></div>
         <div class="form-group"><label>Preço Masculino</label><input id="tPriceMale_${i}" type="number" step="0.01" min="0" value="${Number(t.price_male ?? t.price ?? 0).toFixed(2)}"></div>
         <div class="form-group"><label>Quantidade</label><input id="tQty_${i}" type="number" min="0" value="${Number(t.quantity_total || 0)}"></div>
         <div class="form-group"><label>Início</label><input id="tStart_${i}" type="datetime-local" value="${toDateTimeLocal(t.starts_at)}"></div>
@@ -1660,7 +1693,7 @@ function renderConfigTickets() {
         <div class="form-group"><label>Status</label><select id="tActive_${i}"><option value="true" ${t.active !== false ? "selected" : ""}>ATIVO</option><option value="false" ${t.active === false ? "selected" : ""}>INATIVO</option></select></div>
         <div class="form-group"><label>Lote automático</label><select id="tAuto_${i}"><option value="false" ${!t.auto_sequence ? "selected" : ""}>NÃO</option><option value="true" ${t.auto_sequence ? "selected" : ""}>SIM</option></select></div>
       </div>
-      <div class="ticket-admin-preview"><span>Feminino: <b>${hypeFormatMoney(t.price_female ?? t.price)}</b></span><span>Masculino: <b>${hypeFormatMoney(t.price_male ?? t.price)}</b></span><span>Vendidos: <b>${Number(t.quantity_sold || 0)}</b></span><span>Disponíveis: <b>${t.quantity_total ? Math.max(0, Number(t.quantity_available || 0)) : "∞"}</b></span><span>Auto: <b>${t.auto_sequence ? (t.auto_locked ? "AGUARDANDO" : "LIBERADO") : "NÃO"}</b></span><span data-admin-countdown="${i}">${t.active === false ? "Categoria oculta no site" : hypeEscape(hypeCountdownText(t))}</span></div>
+      <div class="ticket-admin-preview"><span>Feminino: <b>${hypePriceLabel(t.price_female ?? t.price)}</b></span><span>Masculino: <b>${hypePriceLabel(t.price_male ?? t.price)}</b></span><span>Vendidos: <b>${Number(t.quantity_sold || 0)}</b></span><span>Disponíveis: <b>${t.quantity_total ? Math.max(0, Number(t.quantity_available || 0)) : "∞"}</b></span><span>Auto: <b>${t.auto_sequence ? (t.auto_locked ? "AGUARDANDO" : "LIBERADO") : "NÃO"}</b></span><span data-admin-countdown="${i}">${t.active === false ? "Categoria oculta no site" : hypeEscape(hypeCountdownText(t))}</span></div>
       <div class="ticket-admin-actions"><button class="btn-action" onclick="updateTicket(${i})">SALVAR CATEGORIA</button><button class="btn-action" onclick="clearTicketSchedule(${i})">REMOVER HORÁRIOS</button></div>
     </div>`).join("");
 }
@@ -2672,14 +2705,14 @@ function hypeV14RenderLots() {
         <strong>${hypeEscape(lot.name || lot.sector || "Ingresso HYPE")}</strong>
         <div class="v15-gender-prices">
           <div class="v15-gender-price ${femaleSelected ? "selected" : ""}">
-            <span>♀ FEMININO</span><b>${hypeFormatMoney(femalePrice)}</b>
+            <span>♀ FEMININO</span><b>${hypePriceLabel(femalePrice)}</b>
           </div>
           <div class="v15-gender-price ${maleSelected ? "selected" : ""}">
-            <span>♂ MASCULINO</span><b>${hypeFormatMoney(malePrice)}</b>
+            <span>♂ MASCULINO</span><b>${hypePriceLabel(malePrice)}</b>
           </div>
         </div>
         <div class="v14-lot-stock ${hot ? "hot" : ""}">${hypeEscape(stockText)}</div>
-        <div style="margin-top:8px;font-size:10px;color:var(--muted)">+ taxa de serviço ${hypeFormatMoney(HYPE_SERVICE_FEE)} no PIX</div>
+        <div style="margin-top:8px;font-size:10px;color:var(--muted)">${femalePrice <= 0 ? "♀ Feminino FREE • sem PIX e sem taxa" : `+ taxa de serviço ${hypeFormatMoney(HYPE_SERVICE_FEE)} no PIX`}</div>
       </button>`;
   }).join("");
 
@@ -2687,7 +2720,7 @@ function hypeV14RenderLots() {
   if (current) {
     hypeV14SetText(
       "v14StickyText",
-      `${current.sector || current.name} • F ${hypeFormatMoney(getLotGenderPrice(current, "Feminino"))} • M ${hypeFormatMoney(getLotGenderPrice(current, "Masculino"))}`
+      `${current.sector || current.name} • F ${hypePriceLabel(getLotGenderPrice(current, "Feminino"))} • M ${hypePriceLabel(getLotGenderPrice(current, "Masculino"))}`
     );
   } else {
     hypeV14SetText("v14StickyText", "Escolha seu ingresso");

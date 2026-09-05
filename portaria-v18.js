@@ -189,9 +189,40 @@
     $('searchInput')?.focus();
   }
 
+  async function triggerFeedbackAutoV35(eventId = null) {
+    if (!online() || !state.deviceKey) return;
+    try {
+      const cfg = window.HYPE_SUPABASE_CONFIG || {};
+      if (!cfg.url || !cfg.anonKey) return;
+      const response = await fetch(`${cfg.url}/functions/v1/send-ticket-email`, {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'apikey':cfg.anonKey,
+          'Authorization':`Bearer ${cfg.anonKey}`
+        },
+        body:JSON.stringify({
+          action:'survey_auto',
+          device_key:state.deviceKey,
+          event_id:eventId ? Number(eventId) : null,
+          base_url:new URL('.',location.href).toString()
+        })
+      });
+      const data = await response.json().catch(()=>({}));
+      if (!response.ok || data?.ok === false) {
+        console.warn('[HYPE V35][feedback auto]',data?.error || response.status);
+        return;
+      }
+      if (!data?.skipped) console.info('[HYPE V35][feedback auto]',data);
+    } catch (err) {
+      console.warn('[HYPE V35][feedback auto]',err);
+    }
+  }
+
   async function loadEvents() {
     const select = $('eventSelect');
     if (!select) return;
+    const previousStoredId = Number(localStorage.getItem(EVENT_KEY) || 0);
 
     if (!online()) {
       const snap = readJSON(SNAPSHOT_KEY,null);
@@ -244,6 +275,10 @@
     select.value=String(state.eventId);
     localStorage.setItem(EVENT_KEY,String(state.eventId));
     setAutoEventBadge();
+    if (state.autoEventEnabled) {
+      const endedEventId = previousStoredId && previousStoredId !== Number(state.eventId) ? previousStoredId : null;
+      setTimeout(()=>triggerFeedbackAutoV35(endedEventId),350);
+    }
   }
 
   function setAutoEventBadge() {
@@ -277,12 +312,15 @@
       if(!force && id===Number(state.eventId))return;
       if(!state.events.some(e=>Number(e.id)===id))await loadEvents();
       if(!state.events.some(e=>Number(e.id)===id))return;
+      const previousEventId = Number(state.eventId || 0);
       state.eventId=id;
       localStorage.setItem(EVENT_KEY,String(id));
       if($('eventSelect'))$('eventSelect').value=String(id);
       state.items.clear();
       $('results').innerHTML='<div class="empty">Evento selecionado automaticamente pela data e horário da festa.</div>';
       try{await window.HypeV20?.eventChanged?.();}catch(_){}
+      if (previousEventId && previousEventId !== id) triggerFeedbackAutoV35(previousEventId);
+      else triggerFeedbackAutoV35(null);
       await refresh(false);
     }catch(err){
       console.warn('[HYPE V32][auto troca]',err);

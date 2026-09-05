@@ -23,7 +23,8 @@
     salesRows: [],
     currentOrder: null,
     lastEventId: 0,
-    activeReaderCount: 0
+    activeReaderCount: 0,
+    paymentTimer: null
   };
 
   const $ = id => document.getElementById(id);
@@ -239,45 +240,28 @@
   }
 
   // ------------------------------------------------------------------
-  // PIX BR CODE
+  // PIX ASAAS — mesma cobrança automática usada no site
   // ------------------------------------------------------------------
-  function normalizePixText(value, max) {
-    return String(value || '')
-      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-      .replace(/[^A-Za-z0-9 .\-]/g,' ')
-      .replace(/\s+/g,' ').trim().toUpperCase().slice(0,max);
-  }
-  function tlv(id, value) {
-    const s = String(value ?? '');
-    return id + String(s.length).padStart(2,'0') + s;
-  }
-  function crc16(payload) {
-    let crc = 0xFFFF;
-    for (let i=0;i<payload.length;i++) {
-      crc ^= payload.charCodeAt(i) << 8;
-      for (let j=0;j<8;j++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
+  async function createAsaasPix(ticketId) {
+    const cfg = window.HYPE_SUPABASE_CONFIG || {};
+    if (!cfg.url || !cfg.anonKey) throw new Error('Supabase não configurado.');
+
+    const response = await fetch(`${cfg.url}/functions/v1/asaas-pix`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': cfg.anonKey,
+        'Authorization': `Bearer ${cfg.anonKey}`
+      },
+      body: JSON.stringify({ticket_id:Number(ticketId)})
+    });
+
+    const data = await response.json().catch(()=>({}));
+    if (!response.ok || data?.success === false) {
+      throw new Error(data?.error || 'Não foi possível gerar o PIX no Asaas.');
     }
-    return crc.toString(16).toUpperCase().padStart(4,'0');
-  }
-  function pixPayload(key, amount, txid) {
-    const cleanKey = String(key || '').trim();
-    if (!cleanKey) throw new Error('Chave PIX não cadastrada neste evento.');
-    const account = tlv('00','BR.GOV.BCB.PIX') + tlv('01',cleanKey);
-    const merchant = normalizePixText('HYPE LOUNGE CLUB',25) || 'HYPE';
-    const city = normalizePixText('PASSO FUNDO',15) || 'PASSO FUNDO';
-    const safeTxid = normalizePixText(txid || 'HYPE',25).replace(/ /g,'') || 'HYPE';
-    let payload = '';
-    payload += tlv('00','01');
-    payload += tlv('26',account);
-    payload += tlv('52','0000');
-    payload += tlv('53','986');
-    payload += tlv('54',Number(amount||0).toFixed(2));
-    payload += tlv('58','BR');
-    payload += tlv('59',merchant);
-    payload += tlv('60',city);
-    payload += tlv('62',tlv('05',safeTxid));
-    payload += '6304';
-    return payload + crc16(payload);
+    if (!data?.qr_code) throw new Error('O Asaas não retornou o PIX Copia e Cola.');
+    return data;
   }
 
   // ------------------------------------------------------------------
@@ -330,20 +314,22 @@
     const gender = $('v19DoorGender')?.value || 'Feminino';
     const base = Number(gender === 'Masculino' ? row?.price_male : row?.price_female) || 0;
     const total = base > 0 ? base + 1.98 : 0;
-    if ($('v19DoorPrice')) $('v19DoorPrice').textContent = row ? `${money(base)} + taxa R$ 1,98 = ${money(total)}` : 'Selecione um ingresso';
+    if ($('v19DoorPrice')) $('v19DoorPrice').textContent = row ? (base <= 0 && gender === 'Feminino' ? '♀ FEMININO FREE — sem PIX e sem taxa' : `${money(base)} + taxa R$ 1,98 = ${money(total)}`) : 'Selecione um ingresso';
   }
 
   async function createDoorOrder() {
-    if (!isOnline()) return notify('Venda na hora precisa de internet para gerar e registrar o PIX.', false);
+    if (!isOnline()) return notify('Venda na hora precisa de internet para gerar o PIX do Asaas.', false);
     const eventId = currentEventId();
     const lotId = Number($('v19DoorLot')?.value || 0);
     const name = $('v19DoorName')?.value.trim() || '';
+    const email = $('v19DoorEmail')?.value.trim() || '';
     if (!eventId) return notify('Selecione o evento na parte de cima.', false);
     if (!lotId) return notify('Selecione o ingresso.', false);
     if (!name) return notify('Digite o nome da pessoa.', false);
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return notify('Digite um e-mail válido ou deixe o campo vazio.', false);
 
     const btn = $('v19DoorCreate');
-    if (btn) { btn.disabled=true; btn.textContent='GERANDO PIX...'; }
+    if (btn) { btn.disabled=true; btn.textContent='PROCESSANDO VENDA...'; }
     try {
       const result = rows(await rpc('portaria_device_create_door_order_v19',{
         p_device_key:deviceKey(),
@@ -352,71 +338,144 @@
         p_name:name,
         p_phone:$('v19DoorPhone')?.value.trim() || null,
         p_cpf:$('v19DoorCpf')?.value.trim() || null,
-        p_email:$('v19DoorEmail')?.value.trim() || null,
+        p_email:email || null,
         p_gender:$('v19DoorGender')?.value || 'Feminino'
       }))[0];
       if (!result?.ticket_id) throw new Error('A venda não foi criada.');
-      state.currentOrder = result;
-      renderDoorOrder(result, false);
-      notify(`Pedido ${result.ticket_code} criado. Aguarde o cliente pagar o PIX.`, true);
+
+      if (result.payment_status === 'Pago' && Number(result.price || 0) <= 0 && String(result.gender || '').toLowerCase().startsWith('f')) {
+        const order = { ...result, payment_status:'Pago', asaas_pix:'', asaas_qr_base64:null, asaas_payment_id:null };
+        state.currentOrder = order;
+        renderDoorOrder(order, true);
+        notify(`♀ ${result.ticket_code} liberado como FEMININO FREE. Nenhum PIX foi gerado.`, true);
+        await loadSalesContext();
+        if (window.HypePortaria?.refresh) window.HypePortaria.refresh(false).catch?.(()=>{});
+        return;
+      }
+
+      const payment = await createAsaasPix(result.ticket_id);
+      const order = {
+        ...result,
+        payment_status:'Pendente',
+        asaas_payment_id:payment.payment_id || null,
+        asaas_pix:payment.qr_code || '',
+        asaas_qr_base64:payment.qr_code_base64 || null,
+        asaas_expiration:payment.expiration_date || null
+      };
+
+      state.currentOrder = order;
+      renderDoorOrder(order, false);
+      startDoorPaymentWatch();
+      notify(`PIX Asaas do pedido ${result.ticket_code} gerado. A confirmação é automática.`, true);
       await loadSalesContext();
-    } catch (err) { notify(err.message || 'Erro ao criar venda na hora.', false); }
-    finally { if (btn) { btn.disabled=false; btn.textContent='💠 GERAR PIX — VENDA NA HORA'; } }
+    } catch (err) {
+      notify(err.message || 'Erro ao gerar PIX no Asaas.', false);
+    } finally {
+      if (btn) { btn.disabled=false; btn.textContent='💠 GERAR PIX / LIBERAR FREE — VENDA NA HORA'; }
+    }
   }
 
   function renderDoorOrder(order, paid) {
     const box = $('v19DoorResult');
     if (!box) return;
     box.classList.add('show');
+
     const isPaid = paid || order.payment_status === 'Pago';
-    let pix = '';
-    try { pix = pixPayload(order.pix_key || state.salesRows[0]?.pix_key, order.price, `HYPE${order.ticket_id}`); }
-    catch (err) { if (!isPaid) notify(err.message, false); }
+    const pix = String(order.asaas_pix || '');
+    const qrBase64 = order.asaas_qr_base64 ? String(order.asaas_qr_base64) : '';
 
     box.innerHTML = `
       <div class="v19-order-head">
-        <div><small>VENDA NA HORA DO SHOW • PORTARIA</small><strong>${esc(order.customer_name||'Cliente')}</strong><span>${esc(order.ticket_code||'')}</span></div>
-        <div class="v19-order-status ${isPaid?'paid':'pending'}">${isPaid?'PAGO':'AGUARDANDO PIX'}</div>
+        <div><small>VENDA NA HORA • ${Number(order.price||0)<=0?'FEMININO FREE':'PIX ASAAS'}</small><strong>${esc(order.customer_name||'Cliente')}</strong><span>${esc(order.ticket_code||'')}</span></div>
+        <div class="v19-order-status ${isPaid?'paid':'pending'}">${isPaid?'PAGO':'AGUARDANDO ASAAS'}</div>
       </div>
       <div class="v19-order-grid">
-        ${!isPaid ? `<div class="v19-qr-block"><h4>1. CLIENTE PAGA ESTE PIX</h4>${pix?`<img id="v19PixQr" alt="QR PIX"><textarea id="v19PixPayload" readonly>${esc(pix)}</textarea><button class="btn" onclick="HypeV20.copyPix()">COPIAR PIX COPIA E COLA</button>`:'<div class="v19-reader-empty">Chave PIX não cadastrada.</div>'}</div>` : ''}
+        ${!isPaid ? `<div class="v19-qr-block"><h4>1. CLIENTE PAGA O PIX DO ASAAS</h4>${pix?`<img id="v19PixQr" alt="QR PIX Asaas"><textarea id="v19PixPayload" readonly>${esc(pix)}</textarea><button class="btn" onclick="HypeV20.copyPix()">COPIAR PIX COPIA E COLA</button>`:'<div class="v19-reader-empty">PIX do Asaas ainda não foi carregado.</div>'}</div>` : ''}
         <div class="v19-order-info">
           <p><b>Evento:</b> ${esc(order.event_name||$('v19DoorEventName')?.textContent||'')}</p>
           <p><b>Ingresso:</b> ${esc(order.lot_name||'')} • ${esc(order.sector||'')}</p>
-          <p><b>Valor:</b> ${money(order.price)}</p>
+          <p><b>Valor:</b> ${Number(order.price||0)<=0?'FREE':money(order.price)}</p>
           <p><b>Gênero:</b> ${esc(order.gender||'')}</p>
-          ${order.raffle_enabled ? `<p class="v19-raffle-ok">🎁 Após ficar PAGO, este nome participa automaticamente do sorteio: <b>${esc(order.raffle_prize||'prêmio do evento')}</b>.</p>` : '<p class="v19-muted">Sorteio do evento desativado.</p>'}
-          ${isPaid ? '<p class="v19-paid-note">✅ Pagamento confirmado. O ingresso já está válido na Portaria.</p>' : '<p class="v19-muted">O porteiro deve conferir o recebimento antes de confirmar. Esta tela só confirma vendas criadas aqui na Portaria.</p>'}
+          ${order.raffle_enabled ? `<p class="v19-raffle-ok">🎁 Quando o Asaas confirmar como PAGO, este nome entra automaticamente no sorteio: <b>${esc(order.raffle_prize||'prêmio do evento')}</b>.</p>` : '<p class="v19-muted">Sorteio do evento desativado.</p>'}
+          ${isPaid
+            ? (Number(order.price||0)<=0 ? '<p class="v19-paid-note">✅ Feminino FREE. Ingresso liberado sem PIX.</p>' : '<p class="v19-paid-note">✅ Asaas confirmou o pagamento. O ingresso já está liberado.</p>')
+            : '<p class="v19-muted">⏳ Não precisa confirmar manualmente. Esta tela verifica o pagamento e o webhook do Asaas libera o ingresso automaticamente.</p>'}
         </div>
       </div>
-      ${isPaid ? `<div class="v19-ticket-qr"><h4>2. QR DO INGRESSO</h4><img id="v19TicketQr" alt="QR do ingresso"><strong>${esc(order.ticket_code||'')}</strong><button class="btn green" onclick="HypeV20.showDoorTicketInPortaria()">MOSTRAR NA PORTARIA / CONFIRMAR ENTRADA</button></div>` : `<div class="v19-order-actions"><button class="btn green" onclick="HypeV20.confirmDoorPayment()">✅ CONFIRMAR PIX DESTA VENDA</button><button class="btn red" onclick="HypeV20.cancelDoorOrder()">CANCELAR PEDIDO</button></div>`}
+      ${isPaid
+        ? `<div class="v19-ticket-qr"><h4>2. QR DO INGRESSO</h4><img id="v19TicketQr" alt="QR do ingresso"><strong>${esc(order.ticket_code||'')}</strong><button class="btn green" onclick="HypeV20.showDoorTicketInPortaria()">MOSTRAR NA PORTARIA / CONFIRMAR ENTRADA</button></div>`
+        : `<div class="v19-order-actions"><button class="btn green" onclick="HypeV20.confirmDoorPayment()">↻ VERIFICAR PAGAMENTO NO ASAAS</button><button class="btn red" onclick="HypeV20.cancelDoorOrder()">CANCELAR PEDIDO</button></div>`}
       <button class="btn v19-new-sale" onclick="HypeV20.resetDoorSale()">+ NOVA VENDA NA HORA</button>`;
 
-    if (!isPaid && pix && $('v19PixQr')) $('v19PixQr').src = window.HypeQRCode.toDataUrl(pix, 300);
+    if (!isPaid && pix && $('v19PixQr')) {
+      if (qrBase64) {
+        $('v19PixQr').src = qrBase64.startsWith('data:') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
+      } else {
+        $('v19PixQr').src = window.HypeQRCode.toDataUrl(pix, 300);
+      }
+    }
     if (isPaid && $('v19TicketQr')) $('v19TicketQr').src = window.HypeQRCode.toDataUrl(order.qr_token || order.ticket_code, 300);
   }
 
   async function copyPix() {
     const text = $('v19PixPayload')?.value || '';
     if (!text) return;
-    try { await navigator.clipboard.writeText(text); notify('PIX Copia e Cola copiado.', true); }
-    catch (_) { $('v19PixPayload')?.select(); document.execCommand?.('copy'); notify('PIX Copia e Cola copiado.', true); }
+    try { await navigator.clipboard.writeText(text); notify('PIX Copia e Cola do Asaas copiado.', true); }
+    catch (_) { $('v19PixPayload')?.select(); document.execCommand?.('copy'); notify('PIX Copia e Cola do Asaas copiado.', true); }
   }
 
-  async function confirmDoorPayment() {
+  async function refreshDoorPayment(showMessage = false) {
     const order = state.currentOrder;
-    if (!order?.ticket_id) return;
-    if (!confirm(`Você conferiu no banco que o PIX de ${money(order.price)} foi recebido?\n\nSó confirme depois que o dinheiro aparecer.`)) return;
+    if (!order?.ticket_code) return false;
     try {
-      const result = rows(await rpc('portaria_device_confirm_door_payment_v19',{
-        p_device_key:deviceKey(),
-        p_ticket_id:Number(order.ticket_id)
-      }))[0];
-      state.currentOrder = {...order,...result,payment_status:'Pago'};
-      renderDoorOrder(state.currentOrder, true);
-      notify('PIX confirmado. Ingresso liberado e participante incluído no sorteio se ele estiver ativo.', true);
-      if (window.HypePortaria?.refresh) window.HypePortaria.refresh(false).catch?.(()=>{});
-    } catch (err) { notify(err.message || 'Falha ao confirmar o pagamento.', false); }
+      const found = rows(await rpc('public_get_ticket',{p_code:order.ticket_code}))[0];
+      if (!found) return false;
+
+      state.currentOrder = {
+        ...order,
+        ...found,
+        asaas_pix:order.asaas_pix,
+        asaas_qr_base64:order.asaas_qr_base64,
+        asaas_payment_id:order.asaas_payment_id
+      };
+
+      if (found.payment_status === 'Pago') {
+        clearInterval(state.paymentTimer);
+        state.paymentTimer = null;
+        renderDoorOrder(state.currentOrder, true);
+        notify('✅ Pagamento confirmado automaticamente pelo Asaas. Ingresso liberado.', true);
+        if (window.HypePortaria?.refresh) window.HypePortaria.refresh(false).catch?.(()=>{});
+        loadSalesContext().catch(()=>{});
+        return true;
+      }
+
+      if (found.payment_status === 'Cancelado') {
+        clearInterval(state.paymentTimer);
+        state.paymentTimer = null;
+        notify('Pedido cancelado.', false);
+        return false;
+      }
+
+      if (showMessage) notify('O Asaas ainda não confirmou este PIX.', false);
+      return false;
+    } catch (err) {
+      if (showMessage) notify(err.message || 'Não foi possível verificar o pagamento.', false);
+      return false;
+    }
+  }
+
+  function startDoorPaymentWatch() {
+    clearInterval(state.paymentTimer);
+    state.paymentTimer = setInterval(() => {
+      if (!state.currentOrder?.ticket_id || document.hidden) return;
+      refreshDoorPayment(false).catch(()=>{});
+    }, 2500);
+    refreshDoorPayment(false).catch(()=>{});
+  }
+
+  // Mantém compatibilidade com telas antigas: agora este botão só CONSULTA o status.
+  async function confirmDoorPayment() {
+    return refreshDoorPayment(true);
   }
 
   async function cancelDoorOrder() {
@@ -432,6 +491,8 @@
   }
 
   function resetDoorSale() {
+    clearInterval(state.paymentTimer);
+    state.paymentTimer = null;
     state.currentOrder = null;
     $('v19DoorResult')?.classList.remove('show');
     if ($('v19DoorResult')) $('v19DoorResult').innerHTML='';
@@ -448,6 +509,8 @@
   }
 
   async function eventChanged() {
+    clearInterval(state.paymentTimer);
+    state.paymentTimer = null;
     state.currentOrder = null;
     $('v19DoorResult')?.classList.remove('show');
     await loadSalesContext();
@@ -472,7 +535,7 @@
 
   window.HypeV20 = {
     openReaderLink, closeReaderLink, generateReaderLink, copyReaderLink, shareReaderLink, sendReaderLinkEmail, loadReaders, disconnectReader, endAllReaders,
-    loadSalesContext, updateDoorPrice, createDoorOrder, copyPix, confirmDoorPayment,
+    loadSalesContext, updateDoorPrice, createDoorOrder, copyPix, refreshDoorPayment, confirmDoorPayment,
     cancelDoorOrder, resetDoorSale, showDoorTicketInPortaria, eventChanged
   };
 

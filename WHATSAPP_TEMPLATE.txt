@@ -1,0 +1,36 @@
+HYPE V35 — MODELO PARA WHATSAPP BUSINESS API
+
+Para o envio 100% automático no WhatsApp após o evento, crie/aprove um template no Meta WhatsApp Business com 3 variáveis no corpo.
+
+Nome sugerido do template:
+hype_feedback_pos_evento
+
+Idioma:
+Português (Brasil) / pt_BR
+
+Texto sugerido:
+
+⭐ HYPE LOUNGE CLUB
+
+Oi {{1}}! Como foi sua noite no {{2}}? 🔥
+
+Sua opinião ajuda a HYPE a deixar os próximos eventos ainda melhores. Leva menos de 1 minuto.
+
+👉 {{3}}
+
+Obrigado por fazer parte da HYPE.
+
+Variáveis enviadas pelo sistema:
+{{1}} = primeiro/nome do cliente
+{{2}} = nome do evento
+{{3}} = link individual da pesquisa
+
+Depois de aprovado, configure estes secrets na Edge Function send-ticket-email:
+WHATSAPP_ACCESS_TOKEN
+WHATSAPP_PHONE_NUMBER_ID
+WHATSAPP_FEEDBACK_TEMPLATE = hype_feedback_pos_evento
+WHATSAPP_TEMPLATE_LANG = pt_BR
+WHATSAPP_GRAPH_VERSION = v22.0   (opcional; pode ajustar conforme sua conta Meta)
+
+IMPORTANTE:
+Sem esses dados do WhatsApp Business/Meta, o Gmail automático funciona normalmente, mas o WhatsApp automático fica aguardando configuração. Não coloque token do WhatsApp dentro do HTML ou JavaScript público.
