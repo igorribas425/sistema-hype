@@ -1,0 +1,10 @@
+HYPE V40.2 — correção do Chat + som de notificação
+
+- Corrige o aviso indevido “Entre novamente no Admin” no chat.
+- Chat Admin <-> Portaria usa a sessão já autenticada do Admin.
+- Toca um aviso curto quando chega mensagem do outro lado.
+- O som é liberado após o primeiro clique/toque no site, exigência normal dos navegadores.
+- Mantém badge visual de não lidas.
+
+GitHub: substitua admin.html, portaria.html e hype-v38-chat.js.
+Não precisa rodar SQL nem mexer no Supabase para esta correção.

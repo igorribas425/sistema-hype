@@ -98,12 +98,61 @@
     return `Evento #${eid}`;
   }
 
+  function adminSession() {
+    // O app principal guarda o login em sessionStorage.
+    // Top-level const HYPE não fica disponível em window.HYPE, então o chat
+    // lê a mesma sessão diretamente para não pedir login novamente.
+    try {
+      const data = JSON.parse(sessionStorage.getItem('hype_staff') || 'null');
+      if (data?.user && data?.pass) return data;
+    } catch (_) {}
+    const h = window.HYPE || {};
+    return { user:h.user || '', pass:h.pass || '', role:h.role || '' };
+  }
+
   function authParams() {
     if (role === 'portaria') {
       return { p_device_key: localStorage.getItem('hype_portaria_device_key_v18') || '' };
     }
-    const h = window.HYPE || {};
-    return { p_username: h.user || '', p_password: h.pass || '' };
+    const s = adminSession();
+    return { p_username: s.user || '', p_password: s.pass || '' };
+  }
+
+  // Som curto de notificação. Navegadores exigem uma interação do usuário
+  // antes de permitir áudio; por isso liberamos o AudioContext no primeiro toque/clique.
+  let audioCtx = null;
+  let audioUnlocked = false;
+  function unlockAudio() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!audioCtx) audioCtx = new AC();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      audioUnlocked = true;
+    } catch (_) {}
+  }
+  ['pointerdown','keydown','touchstart'].forEach(evt =>
+    window.addEventListener(evt, unlockAudio, {once:true, passive:true})
+  );
+
+  function notifySound() {
+    if (!audioUnlocked || !audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.16, now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.34);
+      gain.connect(audioCtx.destination);
+      [740, 980].forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + i*0.12);
+        osc.connect(gain);
+        osc.start(now + i*0.12);
+        osc.stop(now + i*0.12 + 0.16);
+      });
+    } catch (_) {}
   }
 
   function setUnread(n) {
@@ -242,7 +291,11 @@
         Number(r.message_id || 0) > before
       ).length;
       render(rows, force);
-      if (others && !open) setUnread(unread + others);
+      if (others) {
+        // Toca somente para mensagem recebida do outro lado, nunca para a própria.
+        notifySound();
+        if (!open) setUnread(unread + others);
+      }
     } catch (err) {
       if (open) {
         const box = document.getElementById('hypeChatV38Messages');
