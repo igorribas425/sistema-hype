@@ -1,0 +1,13 @@
+HYPE V42 — Chat com Push Real
+
+Arquivos principais para subir no GitHub:
+- admin.html
+- portaria.html
+- hype-v38-chat.js
+- hype-push-config.js
+- service-worker.js
+- manifest.webmanifest
+- hype-v38-responsive.css
+
+Antes do push real funcionar com Chrome fechado, rode o SQL V42 e publique a Edge Function hype-chat-push no Supabase.
+Sem a Edge Function, o chat continua funcionando pelo modo antigo, mas a notificação com Chrome fechado não chega.

@@ -1,0 +1,13 @@
+HYPE V42.1 — Correção chat celular/computador
+
+Correções:
+- Envio do chat agora tenta passar sempre pela Edge Function hype-chat-push.
+- Isso permite computador avisar o celular mesmo se o computador não ativou notificações.
+- Botão 🔊 Ativar som no chat para liberar áudio no celular.
+- Vibração quando chega mensagem em celular compatível.
+- Service Worker atualizado para v=421 para evitar cache antigo.
+
+Importante:
+- Celular desligado não recebe.
+- Para receber com Chrome fechado no Android, no celular que recebe tem que abrir o site uma vez e apertar 🔔.
+- Se a Edge Function hype-chat-push não estiver implantada, o chat funciona, mas não chega push real com Chrome fechado.

@@ -1,0 +1,15 @@
+{
+  "name": "HYPE Lounge Club",
+  "short_name": "HYPE",
+  "start_url": "./admin.html?v=42",
+  "display": "standalone",
+  "background_color": "#09090d",
+  "theme_color": "#0b0d12",
+  "icons": [
+    {
+      "src": "./apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
