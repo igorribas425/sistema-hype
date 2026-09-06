@@ -1,12 +1,13 @@
-/* HYPE V42.3 — Lista simples somente pelo Admin
-   Salva nomes no Supabase, permite excluir pelo Admin e faz a lista entrar no sorteio.
+/* HYPE V42.4 — Lista simples somente pelo Admin
+   Salva nomes no Supabase, avisa quando o nome já existe, permite excluir pelo Admin
+   e faz a lista entrar no sorteio sem repetir vencedor.
 */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
   const arr = (d) => Array.isArray(d) ? d : (d ? [d] : []);
-  const BASE_DRAFT_KEY = 'hype_lista_admin_nomes_pendentes_v423';
+  const BASE_DRAFT_KEY = 'hype_lista_admin_nomes_pendentes_v424';
   let booted = false;
   let bootTimer = null;
 
@@ -25,8 +26,25 @@
     return await sbRpc(name,params);
   }
 
+  function nameKey(v){
+    return String(v||'')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase().replace(/[^a-z0-9]+/g,'')
+      .trim();
+  }
+
   function namesFromText(raw){
-    return [...new Set(String(raw||'').split(/\n+/).map(x=>x.trim().replace(/\s+/g,' ')).filter(x=>x.length>=2))];
+    const seen=new Map();
+    const repeated=[];
+    for(const line of String(raw||'').split(/\n+/)){
+      const name=line.trim().replace(/\s+/g,' ');
+      if(name.length<2) continue;
+      const key=nameKey(name);
+      if(!key) continue;
+      if(seen.has(key)) repeated.push(name);
+      else seen.set(key,name);
+    }
+    return {names:[...seen.values()], repeated};
   }
 
   function saveDraft(){
@@ -73,21 +91,33 @@
     const ta=$('v408ListNames');
     const raw=(ta?.value || '').trim();
     if(!raw) return alert('Digite pelo menos um nome.');
-    const names=namesFromText(raw);
+    const parsed=namesFromText(raw);
+    const names=parsed.names;
+    const repeatedInField=parsed.repeated;
     if(!names.length) return alert('Digite nomes válidos.');
     saveDraft();
 
     const btn=document.querySelector('#v408SimpleListAdmin .btn');
     const old=btn?.textContent;
-    if(btn){ btn.disabled=true; btn.textContent='SALVANDO...'; }
-    out('<div class="v18-empty">Salvando nomes no sistema...</div>');
-    let ok=0, fail=[];
+    if(btn){ btn.disabled=true; btn.textContent='VERIFICANDO...'; }
+    out('<div class="v18-empty">Verificando se já existe nome repetido...</div>');
+
+    let ok=0;
+    const duplicated=[...repeatedInField.map(name=>({name,message:'repetido no campo digitado'}))];
+    const fail=[];
+
     for(const name of names){
       try{
-        await rpc('staff_guest_simple_add_v408',auth({p_event_id:eventId,p_name:name}));
-        ok++;
+        const res=arr(await rpc('staff_guest_simple_add_v408',auth({p_event_id:eventId,p_name:name})))[0] || {};
+        if(res.already_exists){
+          duplicated.push({name:res.name || name,message:res.message || 'já estava na lista'});
+        }else{
+          ok++;
+        }
       }catch(err){
-        fail.push({name,message:err.message || 'erro'});
+        const msg=err.message || 'erro';
+        if(/ja existe|já existe|repet/i.test(msg)) duplicated.push({name,message:msg});
+        else fail.push({name,message:msg});
       }
     }
 
@@ -102,9 +132,17 @@
 
     await load();
     try{ if(typeof loadRaffleV18==='function') await loadRaffleV18(false); }catch(e){}
-    const failText=fail.length?`<br><br>⚠️ Não salvou estes nomes, deixei eles no campo para tentar de novo:<br>${fail.map(f=>`${esc(f.name)} — ${esc(f.message)}`).join('<br>')}`:'';
-    const msg=`✅ ${ok} nome(s) salvo(s) na lista pelo Admin. Esses nomes já entram no sorteio deste evento.` + failText;
+    try{ if(typeof loadRaffleParticipantsV18==='function') await loadRaffleParticipantsV18(true); }catch(e){}
+
+    let msg=`✅ ${ok} nome(s) novo(s) salvo(s) na lista.`;
+    if(duplicated.length){
+      msg+=`<br><br>⚠️ ${duplicated.length} nome(s) repetido(s) não foram salvos de novo:<br>${duplicated.map(f=>`${esc(f.name)} — ${esc(f.message)}`).join('<br>')}`;
+    }
+    if(fail.length){
+      msg+=`<br><br>❌ Não salvou estes nomes, deixei eles no campo para tentar de novo:<br>${fail.map(f=>`${esc(f.name)} — ${esc(f.message)}`).join('<br>')}`;
+    }
     out(`<div class="v18-empty ${fail.length?'error':''}">${msg}</div>` + ($('v408ListAdminResult')?.innerHTML || ''));
+    if(duplicated.length && ok===0 && !fail.length) alert('Esse nome já está na lista. Não salvei duplicado.');
   }
 
   async function remove(listId, name){
@@ -142,13 +180,13 @@
     const panel=$('v408SimpleListAdmin');
     if(!panel) return;
     const ta=$('v408ListNames');
-    if(ta && !ta.dataset.v423Draft){
-      ta.dataset.v423Draft='1';
+    if(ta && !ta.dataset.v424Draft){
+      ta.dataset.v424Draft='1';
       ta.addEventListener('input',saveDraft);
     }
     const sel=$('v408ListEvent');
-    if(sel && !sel.dataset.v423Event){
-      sel.dataset.v423Event='1';
+    if(sel && !sel.dataset.v424Event){
+      sel.dataset.v424Event='1';
       sel.addEventListener('change',onEventChange);
     }
     if(!ready()){
@@ -161,7 +199,7 @@
     }
   }
 
-  window.HypeListaAdmin={loadEvents,add,load,remove,onEventChange,saveDraft,restoreDraft};
+  window.HypeListaAdmin={loadEvents,add,load,remove,onEventChange,saveDraft,restoreDraft,nameKey};
   document.addEventListener('DOMContentLoaded',()=>{
     setTimeout(boot,300);
     bootTimer=setInterval(()=>{

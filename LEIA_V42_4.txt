@@ -1,0 +1,7 @@
+HYPE V42.4
+- Admin avisa quando nome da lista ja existe.
+- Nao salva duplicado no mesmo evento.
+- Comparacao ignora maiuscula/minuscula e acentos simples.
+- Mantem exclusao, sorteio e lista no Supabase.
+
+Suba os arquivos no GitHub depois de rodar o SQL V42.4.
