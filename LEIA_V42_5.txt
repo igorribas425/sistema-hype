@@ -1,0 +1,11 @@
+HYPE V42.5 - Excluir dispositivos
+
+- Adiciona botão de excluir em cada computador/celular leitor.
+- Adiciona botão para limpar desconectados/expirados.
+- Adiciona botão para excluir todos os celulares leitores.
+- Só Admin logado pode executar.
+- Não mexe em vendas, PIX, ingressos, lista, sorteio ou chat.
+
+Ordem:
+1) Rodar SUPABASE_V42_5_EXCLUIR_DISPOSITIVOS.sql no Supabase.
+2) Subir este ZIP no GitHub.
