@@ -1,0 +1,7 @@
+HYPE V42.3
+- Lista Simples fica no Admin e salva no Supabase.
+- Admin pode excluir nome da lista.
+- Nome excluído some da Portaria e não entra no sorteio.
+- Sorteio agora entende ingressos pagos + nomes da Lista Simples.
+- Cada pessoa sorteada não volta a participar no mesmo evento.
+- Não mexe em PIX, vendas, ingressos pagos, chat ou portaria de QR.

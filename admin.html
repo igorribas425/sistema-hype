@@ -517,11 +517,11 @@ html,body{max-width:100%;overflow-x:hidden}
 
 
   <section class="panel-box admin-only" id="v18ControlPanel">
-    <div class="v16-management-head"><div><h3>🎁 SORTEIO DO EVENTO</h3><p>Quem entrou no painel Admin com uma conta autorizada pode configurar e realizar o sorteio. Somente ingressos com pagamento PAGO participam.</p></div></div>
+    <div class="v16-management-head"><div><h3>🎁 SORTEIO DO EVENTO</h3><p>Quem entrou no painel Admin com uma conta autorizada pode configurar e realizar o sorteio. Ingressos PAGOS e nomes da Lista Simples participam.</p></div></div>
     <div class="v18-grid" style="margin-top:14px">
       <div class="v18-card">
         <h4>🎁 Sorteio do evento</h4>
-        <p>Selecione o evento, defina o prêmio e ative. Compras do site, promoters e vendas na hora da Portaria entram automaticamente quando o pagamento estiver <b style="color:#fff">PAGO</b>. O vencedor só é escolhido quando você clicar em realizar o sorteio.</p>
+        <p>Selecione o evento, defina o prêmio e ative. Compras do site/promoters/Portaria entram quando estiverem <b style="color:#fff">PAGAS</b>, e nomes da <b style="color:#fff">Lista Simples</b> também entram no sorteio. Cada clique sorteia 1 pessoa.</p>
         <div class="form-group"><label>Evento do sorteio</label><div style="display:grid;grid-template-columns:1fr auto;gap:8px"><select id="v18RaffleEvent" onchange="onRaffleEventChangeV19()"></select><button class="btn-action" type="button" onclick="refreshRaffleEventsV19().then(()=>loadRaffleV18(false))">↻ EVENTOS</button></div><small id="v19RaffleSelectedLabel" style="display:block;margin-top:7px;color:var(--muted)">Selecione o evento que será sorteado.</small></div>
         <div class="v18-row">
           <div class="form-group" style="margin-bottom:0"><label>Prêmio</label><input id="v18RafflePrize" placeholder="Ex.: 1 combo + camarote"></div>
@@ -530,7 +530,7 @@ html,body{max-width:100%;overflow-x:hidden}
         </div>
         <div id="v18RaffleState" class="v18-state">Carregando sorteio...</div>
         <div class="v18-raffle-stats">
-          <div><b id="v18RaffleCount">0</b><span>participantes pagos</span></div>
+          <div><b id="v18RaffleCount">0</b><span>participantes elegíveis</span></div>
           <div><span id="v18RaffleLastWinner">Nenhum sorteio realizado.</span></div>
         </div>
         <button id="v18DrawBtn" class="btn" style="margin-top:12px" onclick="drawRaffleV18()">🎲 REALIZAR SORTEIO AGORA</button>
@@ -748,7 +748,7 @@ Bruna Santos"></textarea>
       const prize=document.getElementById('v18RafflePrize'); if(prize) prize.value=data.prize||'';
       const count=document.getElementById('v18RaffleCount'); if(count) count.textContent=String(data.participant_count||0);
       const last=document.getElementById('v18RaffleLastWinner'); if(last) last.innerHTML=data.last_winner_name?`Último vencedor: <b>${esc(data.last_winner_name)}</b> • ${esc(data.last_winner_code||'')} • ${esc(fmt(data.last_draw_at))}`:'Nenhum sorteio realizado neste evento.';
-      if(box){box.textContent=data.enabled?'SORTEIO ATIVO • compra PAGA participa automaticamente • quem já ganhou não volta no sorteio':'SORTEIO DESATIVADO';box.className=`v18-state ${data.enabled?'on':''}`;}
+      if(box){box.textContent=data.enabled?'SORTEIO ATIVO • ingressos pagos + lista simples • quem já ganhou não volta no sorteio':'SORTEIO DESATIVADO';box.className=`v18-state ${data.enabled?'on':''}`;}
     }catch(err){ if(box){box.textContent=err.message||'Erro ao carregar sorteio.';box.className='v18-state error';} }
   }
 
@@ -766,7 +766,7 @@ Bruna Santos"></textarea>
     if(!adminReady()) return alert('Sua sessão do Admin expirou. Entre novamente.');
     const select=document.getElementById('v18RaffleEvent'); const id=Number(select?.value||0); if(!id) return alert('Selecione um evento.');
     const prize=document.getElementById('v18RafflePrize')?.value.trim()||'o prêmio'; const eventName=select?.selectedOptions?.[0]?.textContent||'evento selecionado';
-    if(!confirm(`Confirmar o sorteio?\n\n${eventName}\nPrêmio: ${prize}\n\nSomente ingressos PAGOS participam. Quem já ganhou neste evento não participa de novo.`)) return;
+    if(!confirm(`Confirmar o sorteio?\n\n${eventName}\nPrêmio: ${prize}\n\nIngressos PAGOS e nomes da Lista Simples participam. Quem já ganhou neste evento não participa de novo.`)) return;
     const btn=document.getElementById('v18DrawBtn'); if(btn){btn.disabled=true;btn.textContent='SORTEANDO...';}
     try{
       const winner=arr(await sbRpc('staff_draw_raffle_v18',{p_username:HYPE.user,p_password:HYPE.pass,p_event_id:id}))[0];
@@ -781,10 +781,10 @@ Bruna Santos"></textarea>
     if(!adminReady()) return; const id=Number(document.getElementById('v18RaffleEvent')?.value||0); if(!id) return;
     const list=document.getElementById('v18RaffleParticipants'); if(!list) return;
     if(!forceShow&&list.dataset.open==='1'){list.dataset.open='0';list.innerHTML='';return;}
-    list.dataset.open='1';list.innerHTML='<div class="v18-empty">Carregando participantes pagos...</div>';
+    list.dataset.open='1';list.innerHTML='<div class="v18-empty">Carregando participantes elegíveis...</div>';
     try{
       const data=arr(await sbRpc('staff_raffle_participants_v18',{p_username:HYPE.user,p_password:HYPE.pass,p_event_id:id}));
-      list.innerHTML=data.length?`<div class="v18-participants-head">${data.length} participante(s) elegível(is) • quem já ganhou não aparece de novo</div>${data.map((p,i)=>`<div class="v18-participant"><b>${i+1}. ${esc(p.customer_name)}</b><span>${esc(p.ticket_code)}${p.promoter_code?` • promoter ${esc(p.promoter_code)}`:''}</span></div>`).join('')}`:'<div class="v18-empty">Nenhum pagamento confirmado neste evento ainda.</div>';
+      list.innerHTML=data.length?`<div class="v18-participants-head">${data.length} participante(s) elegível(is) • quem já ganhou não aparece de novo</div>${data.map((p,i)=>`<div class="v18-participant"><b>${i+1}. ${esc(p.customer_name)}</b><span>${esc(p.ticket_code)}${p.promoter_code?` • promoter ${esc(p.promoter_code)}`:''}</span></div>`).join('')}`:'<div class="v18-empty">Nenhum ingresso pago ou nome na lista para este evento ainda.</div>';
     }catch(err){list.innerHTML=`<div class="v18-empty error">${esc(err.message||'Erro ao carregar participantes.')}</div>`;}
   }
 
@@ -846,6 +846,6 @@ Bruna Santos"></textarea>
   <script src="hype-v38-reset.js?v=20260905-v38-1"></script>
 
 <script src="hype-v39-admin-simple.js?v=20260905-v39-1"></script>
-  <script src="hype-v408-lista-admin.js?v=20260905-v42-2"></script>
+  <script src="hype-v408-lista-admin.js?v=20260905-v42-3"></script>
 </body>
 </html>
