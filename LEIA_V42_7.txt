@@ -1,0 +1,8 @@
+HYPE V42.7
+
+- Venda rápida da Portaria agora pede Nome + CPF + Gênero + Ingresso.
+- O nome fica salvo no ticket da Portaria.
+- Quando o Asaas confirmar como PAGO, o ticket entra automaticamente no evento e no sorteio.
+- FREE masculino/feminino também entra no sorteio na hora se estiver ativo.
+- Sorteio não repete vencedor no mesmo evento.
+- Lista simples continua separada.

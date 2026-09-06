@@ -1,0 +1,5 @@
+HYPE V42.8
+- Lista Simples continua só para entrada manual, sem QR e fora do sorteio.
+- Admin avisa se tentar colocar na lista alguém que já tem ingresso/venda no evento.
+- Sorteio usa somente ingressos/vendas válidas PAGAS, incluindo site/promoter/Portaria.
+- Quem já foi sorteado no evento não volta no próximo sorteio.

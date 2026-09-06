@@ -1,6 +1,6 @@
-/* HYPE V42.4 — Lista simples somente pelo Admin
-   Salva nomes no Supabase, avisa quando o nome já existe, permite excluir pelo Admin
-   e faz a lista entrar no sorteio sem repetir vencedor.
+/* HYPE V42.8 — Lista simples somente pelo Admin
+   Salva nomes no Supabase, avisa repetido e bloqueia colocar na lista
+   quem já tem ingresso/venda no evento. Lista sem QR e fora do sorteio.
 */
 (() => {
   'use strict';
@@ -142,13 +142,13 @@
       msg+=`<br><br>❌ Não salvou estes nomes, deixei eles no campo para tentar de novo:<br>${fail.map(f=>`${esc(f.name)} — ${esc(f.message)}`).join('<br>')}`;
     }
     out(`<div class="v18-empty ${fail.length?'error':''}">${msg}</div>` + ($('v408ListAdminResult')?.innerHTML || ''));
-    if(duplicated.length && ok===0 && !fail.length) alert('Esse nome já está na lista. Não salvei duplicado.');
+    if(duplicated.length && ok===0 && !fail.length) alert('Esse nome já está na lista ou já tem ingresso. Não salvei duplicado.');
   }
 
   async function remove(listId, name){
     if(!ready()) return alert('Entre no Admin primeiro.');
     if(!listId) return;
-    if(!confirm(`Excluir da lista?\n\n${name || 'Nome selecionado'}\n\nEle some da Portaria e não participa mais do sorteio.`)) return;
+    if(!confirm(`Excluir da lista?\n\n${name || 'Nome selecionado'}\n\nEle some da Portaria. A lista não participa do sorteio.`)) return;
     try{
       await rpc('staff_guest_simple_delete_v423',auth({p_list_id:Number(listId)}));
       if(typeof hypeNotify==='function') hypeNotify('Nome excluído da lista.');
@@ -169,7 +169,7 @@
       out(`<div class="v18-participants-head">${rows.length} nome(s) salvo(s) na lista • participa do sorteio</div>` + rows.map(r=>{
         const entered=String(r.status||'')==='Entrou';
         const safeName=esc(r.name||'Nome');
-        return `<div class="v408-admin-list-row"><div><b>${safeName}</b><span>${esc(r.status||'Liberado')} ${r.entered_at?`• entrou ${esc(fmt(r.entered_at))}`:''} ${r.created_at?`• salvo ${esc(fmt(r.created_at))}`:''} ${r.added_by?`• por ${esc(r.added_by)}`:''}</span></div><div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span class="v408-pill ${entered?'bad':'ok'}">${entered?'JÁ ENTROU':'SALVO / SORTEIO'}</span><button class="btn-action btn-del" type="button" onclick="HypeListaAdmin.remove(${Number(r.list_id)}, '${safeName.replace(/'/g,'&#039;')}')">EXCLUIR</button></div></div>`;
+        return `<div class="v408-admin-list-row"><div><b>${safeName}</b><span>${esc(r.status||'Liberado')} ${r.entered_at?`• entrou ${esc(fmt(r.entered_at))}`:''} ${r.created_at?`• salvo ${esc(fmt(r.created_at))}`:''} ${r.added_by?`• por ${esc(r.added_by)}`:''}</span></div><div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span class="v408-pill ${entered?'bad':'ok'}">${entered?'JÁ ENTROU':'SALVO / LISTA'}</span><button class="btn-action btn-del" type="button" onclick="HypeListaAdmin.remove(${Number(r.list_id)}, '${safeName.replace(/'/g,'&#039;')}')">EXCLUIR</button></div></div>`;
       }).join(''));
     }catch(err){ out(`<div class="v18-empty error">${esc(err.message || 'Erro ao carregar a lista.')}</div>`); }
   }

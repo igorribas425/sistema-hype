@@ -30,7 +30,7 @@ html,body{max-width:100%;overflow-x:hidden}
 @media(max-width:390px){.live-grid{gap:7px}.status-row{gap:6px}.pill{font-size:9px;padding:7px 8px}}
 
 /* HYPE V39 - Portaria simples */
-.v39-door-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 14px}.v39-door-steps span{display:flex;align-items:center;gap:7px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#070709;font-size:11px;font-weight:850}.v39-door-steps b{display:grid;place-items:center;width:24px;height:24px;border-radius:999px;background:#fff;color:#000}.v39-door-simple{grid-template-columns:1fr 1fr}.v39-door-more{border:1px dashed var(--line);border-radius:12px;padding:10px 12px;background:#08080b}.v39-door-more summary{cursor:pointer;font-size:11px;font-weight:850;color:#c8c8ce}.v39-door-more-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.v39-door-more-grid .full{grid-column:1/-1}@media(max-width:680px){.v39-door-steps{grid-template-columns:1fr}.v39-door-simple,.v39-door-more-grid{grid-template-columns:1fr}.v39-door-more-grid .full{grid-column:auto}.v19-door #v19DoorCreate{min-height:58px;font-size:14px}.v19-door-price{font-size:17px;text-align:center}}
+.v39-door-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:4px 0 14px}.v39-door-steps span{display:flex;align-items:center;gap:7px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#070709;font-size:11px;font-weight:850}.v39-door-steps b{display:grid;place-items:center;width:24px;height:24px;border-radius:999px;background:#fff;color:#000}.v39-door-simple{grid-template-columns:1fr 1fr}.v39-door-more{border:1px dashed var(--line);border-radius:12px;padding:10px 12px;background:#08080b}.v39-door-more summary{cursor:pointer;font-size:11px;font-weight:850;color:#c8c8ce}.v39-door-more-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.v39-door-more-grid .full{grid-column:1/-1}@media(max-width:680px){.v39-door-steps{grid-template-columns:1fr}.v39-door-simple,.v39-door-more-grid{grid-template-columns:1fr}.v39-door-more-grid .full{grid-column:auto}.v19-door #v19DoorCreate{min-height:58px;font-size:14px}.v19-door-price{font-size:17px;text-align:center}}
 </style>
   <link rel="stylesheet" href="hype-v38-responsive.css?v=20260905-v42">
   <link rel="manifest" href="manifest.webmanifest?v=42">
@@ -94,11 +94,12 @@ html,body{max-width:100%;overflow-x:hidden}
 
 
     <section class="v19-door" id="v19DoorSale">
-      <div class="v19-section-head"><div><h3>🎟️ VENDA RÁPIDA NA PORTARIA</h3><p>Painel simples para vender na hora: CPF, gênero, ingresso e PIX Asaas automático.</p></div><strong id="v19DoorEventName" style="font-size:11px">Evento selecionado</strong></div>
+      <div class="v19-section-head"><div><h3>🎟️ VENDA RÁPIDA NA PORTARIA</h3><p>Painel simples para vender na hora: nome, CPF, gênero, ingresso e PIX Asaas automático.</p></div><strong id="v19DoorEventName" style="font-size:11px">Evento selecionado</strong></div>
       <div class="v39-door-steps">
-        <span><b>1</b> CPF</span><span><b>2</b> Ingresso</span><span><b>3</b> PIX</span>
+        <span><b>1</b> Nome</span><span><b>2</b> CPF</span><span><b>3</b> Ingresso</span><span><b>4</b> PIX</span>
       </div>
       <div class="v19-door-form v39-door-simple">
+        <div class="full"><label>Nome *</label><input id="v19DoorName" placeholder="Nome da pessoa" autocomplete="name"></div>
         <div class="full"><label>CPF *</label><input id="v19DoorCpf" placeholder="Somente números" inputmode="numeric" maxlength="14" autocomplete="off"></div>
         <div><label>Gênero *</label><select id="v19DoorGender" onchange="HypeV20.updateDoorPrice()"><option value="Feminino">Feminino</option><option value="Masculino">Masculino</option></select></div>
         <div><label>Ingresso *</label><select id="v19DoorLot" onchange="HypeV20.updateDoorPrice()"><option>Carregando...</option></select></div>
@@ -106,7 +107,7 @@ html,body{max-width:100%;overflow-x:hidden}
       </div>
       <div id="v19DoorRaffleHint" class="v19-door-hint">Carregando sorteio do evento...</div>
       <button id="v19DoorCreate" class="btn primary" style="width:100%;margin-top:11px" onclick="HypeV20.createDoorOrder()">💠 GERAR PIX / LIBERAR FREE</button>
-      <div id="v19DoorNotice" class="v19-notice ok">Pronto. Venda na hora voltou para o painel da Portaria. CPF + gênero + ingresso, sem Gmail.</div>
+      <div id="v19DoorNotice" class="v19-notice ok">Pronto. Venda na hora com Nome + CPF + gênero + ingresso. Entra no evento e no sorteio quando ficar PAGO.</div>
       <div id="v19DoorResult" class="v19-door-result"></div>
     </section>
 
