@@ -1,0 +1,8 @@
+HYPE V43.2 - LEITOR iPHONE PERMANENTE
+
+- Link do celular leitor deixa de expirar.
+- Sessão do leitor deixa de expirar.
+- Só para quando o Admin/Portaria desconectar ou excluir o dispositivo.
+- Mantém venda, PIX, sorteio, lista e checkup da V43.
+
+Subir todos os arquivos no GitHub depois de rodar o SQL V43.2.

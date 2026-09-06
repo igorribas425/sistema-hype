@@ -1,7 +1,7 @@
-/* HYPE LOUNGE CLUB // PORTARIA V43 (base V32/V20)
+/* HYPE LOUNGE CLUB // PORTARIA V43.2 (base V32/V20)
    - Computador continua usando portaria.html autorizado pelo Admin
    - Celulares recebem LINK EXCLUSIVO e abrem somente a camera/leitor
-   - Link de ativacao e de uso unico; depois a sessao fica presa ao celular
+   - Link/leitor permanente: só encerra quando o Admin/Portaria desconectar
    - Lista de leitores aparece em tempo real no computador
    - Venda na hora do show com PIX Asaas automático
    - Porteiro confirma SOMENTE vendas criadas neste computador da Portaria
@@ -83,7 +83,7 @@
     if ($('readerLinkEmail')) $('readerLinkEmail').value = '';
     if ($('readerLinkText')) $('readerLinkText').value = '';
     state.currentReaderLabel = '';
-    if ($('readerLinkMeta')) $('readerLinkMeta').textContent = 'Digite um nome opcional e gere o link. O link serve apenas para ativar a câmera deste leitor.';
+    if ($('readerLinkMeta')) $('readerLinkMeta').textContent = 'Digite um nome opcional e gere o link. O link fica permanente até você desconectar esse leitor.';
     state.currentReaderLink = '';
     $('readerLinkModal')?.classList.add('show');
     setTimeout(()=>$('readerLinkLabel')?.focus(),120);
@@ -114,9 +114,9 @@
       if (result.reader_label) url.searchParams.set('name', result.reader_label);
       state.currentReaderLink = url.toString();
       state.currentReaderLabel = result.reader_label || label || 'Celular leitor';
-      state.linkExpiresAt = new Date(result.link_expires_at).getTime();
+      state.linkExpiresAt = 0; // V43.2: link permanente até desconectar
       if ($('readerLinkText')) $('readerLinkText').value = state.currentReaderLink;
-      if ($('readerLinkMeta')) $('readerLinkMeta').textContent = `Link exclusivo para ${result.reader_label || 'celular leitor'} • ativa uma única vez • expira em 15 minutos se não for aberto • depois o celular trabalha por até 16 horas.`;
+      if ($('readerLinkMeta')) $('readerLinkMeta').textContent = `✅ Link permanente para ${result.reader_label || 'celular leitor'} • pode reabrir no iPhone • só para quando você desconectar no Admin/Portaria.`;
     } catch (err) {
       if ($('readerLinkMeta')) $('readerLinkMeta').textContent = err.message || 'Falha ao gerar link.';
     } finally {

@@ -15,7 +15,7 @@ body{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env
 .manual input{font-size:16px}
 @media(max-width:420px){.card{padding:16px 13px;border-radius:20px}.camera video{min-height:54vh}.btn{min-height:52px}}
 </style>
-  <link rel="stylesheet" href="hype-v38-responsive.css?v=20260905-v40-7">
+  <link rel="stylesheet" href="hype-v38-responsive.css?v=20260905-v43-2-2">
 </head>
 <body>
 <div class="app">
@@ -28,7 +28,7 @@ body{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env
     <div id="cameraBox" class="camera"><video id="video" autoplay muted playsinline webkit-playsinline></video><canvas id="qrCanvas" style="display:none"></canvas><div class="scanline"></div></div>
     <div id="lastScan" class="last"><b>QR ENVIADO ✅</b><span id="lastCode"></span></div>
     <button class="btn secondary" onclick="HypeReader.stop()">FECHAR CÂMERA</button><button class="btn secondary" onclick="HypeReader.forget()">DESCONECTAR ESTE CELULAR</button>
-    <p class="note">A leitura aparece em tempo real no computador autorizado da Portaria. No iPhone, o mesmo link enviado por e-mail pode ser reaberto durante a validade sem precisar gerar vários links. A confirmação da entrada continua sendo feita no computador.</p>
+    <p class="note">A leitura aparece em tempo real no computador autorizado da Portaria. No iPhone, o mesmo link pode ser reaberto quando quiser. Ele só deixa de funcionar quando o Admin/Portaria desconectar o leitor. A confirmação da entrada continua sendo feita no computador.</p>
   </section>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
