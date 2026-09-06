@@ -1,4 +1,4 @@
-/* HYPE LOUNGE CLUB // PORTARIA V33 (base V32/V20)
+/* HYPE LOUNGE CLUB // PORTARIA V43 (base V32/V20)
    - Computador continua usando portaria.html autorizado pelo Admin
    - Celulares recebem LINK EXCLUSIVO e abrem somente a camera/leitor
    - Link de ativacao e de uso unico; depois a sessao fica presa ao celular
@@ -553,18 +553,23 @@
     state.contextTimer = setInterval(() => {
       if ($('portariaApp')?.classList.contains('hidden')) return;
       const id = currentEventId();
-      if (id && id !== state.lastEventId) {
+      if (!id) return;
+      // V43: atualiza a venda rápida sozinha. Assim, se der 00:00 e acabar o FREE
+      // masculino/feminino, o preço muda na Portaria sem F5.
+      if (id !== state.lastEventId || Date.now() - (state.lastSalesContextAt || 0) > 7000) {
         state.lastEventId = id;
+        state.lastSalesContextAt = Date.now();
         loadSalesContext().catch(()=>{});
       }
-    }, 900);
+    }, 1200);
     setTimeout(()=>{loadReaders().catch(()=>{});loadSalesContext().catch(()=>{});},1600);
   }
 
   window.HypeV20 = {
     openReaderLink, closeReaderLink, generateReaderLink, copyReaderLink, shareReaderLink, sendReaderLinkEmail, loadReaders, disconnectReader, endAllReaders,
     loadSalesContext, updateDoorPrice, createDoorOrder, copyPix, refreshDoorPayment, confirmDoorPayment,
-    cancelDoorOrder, resetDoorSale, showDoorTicketInPortaria, eventChanged
+    cancelDoorOrder, resetDoorSale, showDoorTicketInPortaria, eventChanged,
+    get currentOrder(){ return state.currentOrder; }
   };
 
   document.addEventListener('DOMContentLoaded', init);

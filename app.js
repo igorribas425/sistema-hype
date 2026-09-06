@@ -60,7 +60,7 @@ function updateServiceFeeInfo(ticketValue) {
     <div class="fee-row"><span>Valor do ingresso</span><b>${hypeFormatMoney(base)}</b></div>
     <div class="fee-row fee-service"><span>Taxa de serviço</span><b>${hypeFormatMoney(HYPE_SERVICE_FEE)}</b></div>
     <div class="fee-row fee-total"><span>Total do pedido</span><b>${hypeFormatMoney(total)}</b></div>
-    <div class="fee-note">A taxa de serviço é exibida antes de criar o pedido. Feminino FREE não gera PIX nem taxa.</div>`;
+    <div class="fee-note">A taxa de serviço é exibida antes de criar o pedido. FREE por horário não gera PIX nem taxa.</div>`;
 }
 
 function hypeCfg() {
@@ -1259,7 +1259,7 @@ function renderAsaasPayment(entry, payment) {
   if (area) area.style.display = "block";
 }
 
-function renderFreeFemaleEntry(entry) {
+function renderFreeEntry(entry) {
   window.__hypeTicketOpened = false;
   fillTicketCard(entry);
   const form = document.getElementById("ticketForm");
@@ -1274,7 +1274,7 @@ function renderFreeFemaleEntry(entry) {
   if (successArea) successArea.style.display = "block";
   const title = successArea?.querySelector("h3");
   const text = successArea?.querySelector("p");
-  if (title) title.textContent = "INGRESSO FEMININO FREE ✅";
+  if (title) title.textContent = `INGRESSO ${String(entry.gender || "").toUpperCase() || "FREE"} FREE ✅`;
   if (text) text.textContent = "Nenhum PIX foi gerado. Seu ingresso já está liberado.";
   const email = document.getElementById("paymentSuccessEmail");
   if (email) email.textContent = "🎟️ Clique em ACESSAR MEU INGRESSO para abrir o QR Code.";
@@ -1326,9 +1326,9 @@ async function createPixOrder(e) {
     HYPE.currentEntryCode = entry.ticket_code;
     window.__hypeCurrentManualEntry = entry;
 
-    if (entry.payment_status === "Pago" && Number(entry.price || 0) <= 0 && String(entry.gender || gender).toLowerCase().startsWith("f")) {
-      renderFreeFemaleEntry(entry);
-      hypeNotify(`Ingresso feminino FREE ${entry.ticket_code} liberado.`);
+    if (entry.payment_status === "Pago" && Number(entry.price || 0) <= 0) {
+      renderFreeEntry(entry);
+      hypeNotify(`Ingresso ${entry.gender || gender || "FREE"} FREE ${entry.ticket_code} liberado.`);
       return;
     }
 

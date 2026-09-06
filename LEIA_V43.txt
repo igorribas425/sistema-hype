@@ -1,0 +1,13 @@
+HYPE V43 - Atualizacao automatica + Checkup Geral
+
+O que muda:
+- Admin atualiza vendas/ingressos sozinho, sem F5.
+- Lista do Admin atualiza sozinha quando nomes forem salvos/excluidos.
+- Sorteio atualiza contagem de participantes automaticamente.
+- Portaria atualiza venda rapida, lotes e FREE masculino/feminino automaticamente.
+- Checkup geral aparece no Admin para conferir FREE, compras, lista, sorteio e Portaria.
+
+Ordem:
+1) Rode SUPABASE_V43_AUTO_SYNC_CHECKUP.sql no Supabase.
+2) Suba HYPE_V43_GITHUB_AUTO_SYNC_CHECKUP.zip no GitHub.
+3) Abra admin.html?v=43 e portaria.html?v=43.

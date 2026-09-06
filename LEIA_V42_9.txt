@@ -1,0 +1,15 @@
+HYPE V42.9 - CHECKUP GERAL
+
+Corrige/garante:
+- Masculino FREE ate horario funciona no site e na Portaria.
+- Feminino FREE ate horario continua funcionando.
+- Quando passar o horario, volta automaticamente ao preco normal.
+- Site trata FREE masculino e feminino sem tentar gerar PIX de R$ 0.
+- Venda rapida da Portaria com Nome + CPF + Genero + Ingresso.
+- Sorteio pega somente ingressos/vendas validas PAGO/FREE, sem Lista Simples.
+- Quem ja ganhou no evento nao sorteia de novo.
+- Lista Simples continua sem QR, sem ingresso e fora do sorteio.
+
+Ordem:
+1) Rode SUPABASE_V42_9_CHECKUP_GERAL.sql no Supabase.
+2) Suba o ZIP HYPE_V42_9_GITHUB_CHECKUP_GERAL.zip no GitHub.
