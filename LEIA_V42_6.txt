@@ -1,0 +1,7 @@
+HYPE V42.6
+- Volta o painel Venda Rápida na Portaria do jeito simples.
+- CPF + gênero + ingresso + Gerar PIX.
+- Mantém PIX Asaas automático.
+- Mantém lista somente no Admin.
+- Corrige FREE masculino/feminino na venda da portaria quando o horário estiver configurado.
+- Não precisa rodar Supabase se a V40.7/V42.5 já foi rodada.

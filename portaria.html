@@ -93,8 +93,8 @@ html,body{max-width:100%;overflow-x:hidden}
     <section class="recent"><h3>🕘 ÚLTIMAS ENTRADAS</h3><div id="recentList"><div class="empty">Nenhuma entrada carregada.</div></div></section>
 
 
-    <section class="v19-door" id="v19DoorSale" style="display:none">
-      <div class="v19-section-head"><div><h3>🎟️ VENDA RÁPIDA NA PORTARIA</h3><p>Bem simples: informe o CPF, escolha gênero e ingresso. O PIX é gerado pelo Asaas e o dinheiro cai na mesma conta da HYPE.</p></div><strong id="v19DoorEventName" style="font-size:11px">Evento selecionado</strong></div>
+    <section class="v19-door" id="v19DoorSale">
+      <div class="v19-section-head"><div><h3>🎟️ VENDA RÁPIDA NA PORTARIA</h3><p>Painel simples para vender na hora: CPF, gênero, ingresso e PIX Asaas automático.</p></div><strong id="v19DoorEventName" style="font-size:11px">Evento selecionado</strong></div>
       <div class="v39-door-steps">
         <span><b>1</b> CPF</span><span><b>2</b> Ingresso</span><span><b>3</b> PIX</span>
       </div>
@@ -106,7 +106,7 @@ html,body{max-width:100%;overflow-x:hidden}
       </div>
       <div id="v19DoorRaffleHint" class="v19-door-hint">Carregando sorteio do evento...</div>
       <button id="v19DoorCreate" class="btn primary" style="width:100%;margin-top:11px" onclick="HypeV20.createDoorOrder()">💠 GERAR PIX / LIBERAR FREE</button>
-      <div id="v19DoorNotice" class="v19-notice ok">Pronto. CPF + gênero + ingresso. Não precisa nome, Gmail ou WhatsApp.</div>
+      <div id="v19DoorNotice" class="v19-notice ok">Pronto. Venda na hora voltou para o painel da Portaria. CPF + gênero + ingresso, sem Gmail.</div>
       <div id="v19DoorResult" class="v19-door-result"></div>
     </section>
 
@@ -135,7 +135,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="supabase-config.js?v=20260902-v21"></script>
 <script src="hype-qrcode.js?v=20260902-v21"></script>
 <script src="portaria-v18.js?v=20260905-v39-autoentrada"></script>
-<script src="portaria-v20.js?v=20260905-v39-venda-simples"></script>
+<script src="portaria-v20.js?v=20260905-v426-venda-painel"></script>
 <script src="register-sw.js?v=20260902-v21"></script>
   <script src="hype-push-config.js?v=421"></script>
   <script src="hype-v38-chat.js?v=421"></script>

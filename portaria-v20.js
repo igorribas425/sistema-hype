@@ -3,7 +3,7 @@
    - Celulares recebem LINK EXCLUSIVO e abrem somente a camera/leitor
    - Link de ativacao e de uso unico; depois a sessao fica presa ao celular
    - Lista de leitores aparece em tempo real no computador
-   - Venda na hora do show com PIX cadastrado no evento
+   - Venda na hora do show com PIX Asaas automático
    - Porteiro confirma SOMENTE vendas criadas neste computador da Portaria
    - Venda paga entra automaticamente no sorteio; sorteio continua apenas no Admin
 */
@@ -314,7 +314,11 @@
     const gender = $('v19DoorGender')?.value || 'Feminino';
     const base = Number(gender === 'Masculino' ? row?.price_male : row?.price_female) || 0;
     const total = base > 0 ? base + 1.98 : 0;
-    if ($('v19DoorPrice')) $('v19DoorPrice').textContent = row ? (base <= 0 && gender === 'Feminino' ? '♀ FEMININO FREE — sem PIX e sem taxa' : `${money(base)} + taxa R$ 1,98 = ${money(total)}`) : 'Selecione um ingresso';
+    if ($('v19DoorPrice')) {
+      $('v19DoorPrice').textContent = row
+        ? (base <= 0 ? `${gender.toUpperCase()} FREE — sem PIX e sem taxa` : `${money(base)} + taxa R$ 1,98 = ${money(total)}`)
+        : 'Selecione um ingresso';
+    }
   }
 
   function cpfDigits(value) { return String(value || '').replace(/\D/g,'').slice(0,11); }
@@ -366,11 +370,11 @@
       }))[0];
       if (!result?.ticket_id) throw new Error('A venda não foi criada.');
 
-      if (result.payment_status === 'Pago' && Number(result.price || 0) <= 0 && String(result.gender || '').toLowerCase().startsWith('f')) {
+      if (result.payment_status === 'Pago' && Number(result.price || 0) <= 0) {
         const order = { ...result, payment_status:'Pago', asaas_pix:'', asaas_qr_base64:null, asaas_payment_id:null };
         state.currentOrder = order;
         renderDoorOrder(order, true);
-        notify(`♀ ${result.ticket_code} liberado como FEMININO FREE. Nenhum PIX foi gerado.`, true);
+        notify(`${result.gender || 'Ingresso'} FREE liberado. Nenhum PIX foi gerado.`, true);
         await loadSalesContext();
         if (window.HypePortaria?.refresh) window.HypePortaria.refresh(false).catch?.(()=>{});
         return;
@@ -409,7 +413,7 @@
 
     box.innerHTML = `
       <div class="v19-order-head">
-        <div><small>VENDA NA HORA • ${Number(order.price||0)<=0?'FEMININO FREE':'PIX ASAAS'}</small><strong>${esc(maskedCpf(order.cpf||''))}</strong><span>${esc(order.ticket_code||'')}</span></div>
+        <div><small>VENDA NA HORA • ${Number(order.price||0)<=0?'FREE':'PIX ASAAS'}</small><strong>${esc(maskedCpf(order.cpf||''))}</strong><span>${esc(order.ticket_code||'')}</span></div>
         <div class="v19-order-status ${isPaid?'paid':'pending'}">${isPaid?'PAGO':'AGUARDANDO ASAAS'}</div>
       </div>
       <div class="v19-order-grid">
@@ -421,7 +425,7 @@
           <p><b>Gênero:</b> ${esc(order.gender||'')}</p>
           ${order.raffle_enabled ? `<p class="v19-raffle-ok">🎁 Quando o Asaas confirmar como PAGO, este ingresso entra automaticamente no sorteio: <b>${esc(order.raffle_prize||'prêmio do evento')}</b>.</p>` : '<p class="v19-muted">Sorteio do evento desativado.</p>'}
           ${isPaid
-            ? (Number(order.price||0)<=0 ? '<p class="v19-paid-note">✅ Feminino FREE. Ingresso liberado sem PIX.</p>' : '<p class="v19-paid-note">✅ Asaas confirmou o pagamento. O ingresso já está liberado.</p>')
+            ? (Number(order.price||0)<=0 ? `<p class="v19-paid-note">✅ ${esc(order.gender||'Ingresso')} FREE. Ingresso liberado sem PIX.</p>` : '<p class="v19-paid-note">✅ Asaas confirmou o pagamento. O ingresso já está liberado.</p>')
             : '<p class="v19-muted">⏳ Não precisa confirmar manualmente. Esta tela verifica o pagamento e o webhook do Asaas libera o ingresso automaticamente.</p>'}
         </div>
       </div>
@@ -540,6 +544,8 @@
   }
 
   function init() {
+    const salePanel = $('v19DoorSale');
+    if (salePanel) salePanel.style.display = 'block';
     clearInterval(state.readersTimer);
     clearInterval(state.contextTimer);
     state.readersTimer = setInterval(() => {
