@@ -1,5 +1,5 @@
 /* HYPE V42.1 — Service Worker para notificação push real do Chat HYPE */
-const HYPE_CHAT_URL = './admin.html?v=44';
+const HYPE_CHAT_URL = './admin.html?v=45';
 
 self.addEventListener('install', event => {
   self.skipWaiting();

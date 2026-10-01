@@ -651,8 +651,8 @@ Bruna Santos"></textarea>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20261001-v44"></script>
-<script src="app.js?v=20261001-v44"></script>
+<script src="supabase-config.js?v=20261001-v45"></script>
+<script src="app.js?v=20261001-v45"></script>
 <script src="promoter-global-v16-8.js?v=20260902-v24-global"></script>
 <script>
 /* HYPE V24 // correção da sessão do Admin
@@ -713,7 +713,13 @@ Bruna Santos"></textarea>
     try{
       let list=await fetchRaffleEventsV23();
       list=arr(list).slice().sort((a,b)=>String(a?.event_date||'9999-12-31').localeCompare(String(b?.event_date||'9999-12-31'))||Number(a?.id||0)-Number(b?.id||0));
-      if(!list.length) throw new Error('Nenhum evento retornado pelo Supabase. Rode o SQL V23 e clique em ↻ EVENTOS.');
+      if(!list.length){
+        HYPE.adminEvents=[];
+        raffleEventId=0;
+        select.innerHTML='<option value="">Nenhum evento cadastrado para sorteio</option>';
+        if(label) label.textContent='Cadastre um evento para configurar o sorteio.';
+        return 0;
+      }
       HYPE.adminEvents=list;
       select.innerHTML=list.map(e=>`<option value="${Number(e.id)}">${esc(eventLabel(e))}</option>`).join('');
       let chosen=before;

@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 const root = path.resolve(import.meta.dirname, "..");
-const CONFIG_VERSION = "20261001-v44";
+const CONFIG_VERSION = "20261001-v45";
 const NEW_PROJECT_REF = "txxoqfcwqncqyiqgzboz";
 const pages = ["cliente.html", "admin.html", "portaria.html", "leitor.html", "index.html", "pesquisa.html"];
 
@@ -34,15 +34,15 @@ test("service_workers_and_registration_use_the_current_release", async () => {
     read("service-worker.js"),
     read("register-sw.js"),
   ]);
-  assert.match(offlineWorker, /const CACHE='hype-v44-offline'/);
+  assert.match(offlineWorker, /const CACHE='hype-v45-offline'/);
   assert.match(offlineWorker, new RegExp(`supabase-config\\.js\\?v=${CONFIG_VERSION}`));
-  assert.match(offlineWorker, /app\.js\?v=20261001-v44/);
-  assert.match(pushWorker, /HYPE_CHAT_URL = '\.\/admin\.html\?v=44'/);
-  assert.match(registration, /sw\.js\?v=20261001-v44/);
+  assert.match(offlineWorker, /app\.js\?v=20261001-v45/);
+  assert.match(pushWorker, /HYPE_CHAT_URL = '\.\/admin\.html\?v=45'/);
+  assert.match(registration, /sw\.js\?v=20261001-v45/);
 });
 
 test("browser_errors_are_translated_and_empty_states_are_explicit", async () => {
-  const app = await read("app.js");
+  const [app, admin] = await Promise.all([read("app.js"), read("admin.html")]);
   assert.match(app, /function hypeUserMessage\(/);
   assert.doesNotMatch(app, /alert\s*\(\s*err\??\.message/);
   assert.doesNotMatch(app, /alert\s*\([^)]*\+\s*err\??\.message/);
@@ -50,6 +50,8 @@ test("browser_errors_are_translated_and_empty_states_are_explicit", async () => 
   assert.match(app, /Não foi possível carregar o catálogo\. Verifique sua conexão e tente novamente\./);
   assert.match(app, /Nenhum evento cadastrado/);
   assert.match(app, /Nenhum evento ativo/);
+  assert.match(admin, /Nenhum evento cadastrado para sorteio/);
+  assert.doesNotMatch(admin, /if\(!list\.length\) throw new Error\('Nenhum evento retornado/);
 });
 
 test("pix_and_push_requests_include_context_specific_proof", async () => {
