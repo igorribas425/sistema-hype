@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 const root = path.resolve(import.meta.dirname, "..");
-const CONFIG_VERSION = "20261001-v46";
+const CONFIG_VERSION = "20261001-v47";
 const NEW_PROJECT_REF = "txxoqfcwqncqyiqgzboz";
 const pages = ["cliente.html", "admin.html", "portaria.html", "leitor.html", "index.html", "pesquisa.html"];
 
@@ -34,11 +34,11 @@ test("service_workers_and_registration_use_the_current_release", async () => {
     read("service-worker.js"),
     read("register-sw.js"),
   ]);
-  assert.match(offlineWorker, /const CACHE='hype-v46-offline'/);
+  assert.match(offlineWorker, /const CACHE='hype-v47-offline'/);
   assert.match(offlineWorker, new RegExp(`supabase-config\\.js\\?v=${CONFIG_VERSION}`));
-  assert.match(offlineWorker, /app\.js\?v=20261001-v46/);
-  assert.match(pushWorker, /HYPE_CHAT_URL = '\.\/admin\.html\?v=46'/);
-  assert.match(registration, /sw\.js\?v=20261001-v46/);
+  assert.match(offlineWorker, /app\.js\?v=20261001-v47/);
+  assert.match(pushWorker, /HYPE_CHAT_URL = '\.\/admin\.html\?v=47'/);
+  assert.match(registration, /sw\.js\?v=20261001-v47/);
 });
 
 test("browser_errors_are_translated_and_empty_states_are_explicit", async () => {
@@ -76,7 +76,7 @@ test("portaria_exposes_the_existing_guest_list_search", async () => {
   assert.match(portaria, /id=["']v406ListSearch["']/);
   assert.match(portaria, /id=["']v406ListResult["']/);
   assert.match(portaria, /HypeListaSimples\.search\(\)/);
-  assert.match(portaria, /hype-v406-lista-simples\.js\?v=20261001-v46/);
+  assert.match(portaria, /hype-v406-lista-simples\.js\?v=20261001-v47/);
 });
 
 test("admin_login_defaults_to_the_new_username_without_embedding_a_password", async () => {
@@ -84,4 +84,12 @@ test("admin_login_defaults_to_the_new_username_without_embedding_a_password", as
 
   assert.match(admin, /id=["']adminUser["'][^>]*value=["']hype["']/);
   assert.doesNotMatch(admin, /id=["']adminPass["'][^>]*value=/);
+});
+
+test("admin_never_falls_back_to_a_stale_supabase_project", async () => {
+  const app = await read("app.js");
+
+  assert.match(app, /HYPE_EXPECTED_SUPABASE_URL\s*=\s*["']https:\/\/txxoqfcwqncqyiqgzboz\.supabase\.co["']/);
+  assert.match(app, /cfg\.url\s*!==\s*HYPE_EXPECTED_SUPABASE_URL/);
+  assert.match(app, /sb_publishable_dLUCTdk5joZpsHlMtpfTyA_TXF7ujCT/);
 });

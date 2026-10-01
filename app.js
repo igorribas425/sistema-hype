@@ -3,6 +3,9 @@
    O SQL correspondente está em supabase_schema.sql.
 */
 
+const HYPE_EXPECTED_SUPABASE_URL = "https://txxoqfcwqncqyiqgzboz.supabase.co";
+const HYPE_EXPECTED_SUPABASE_KEY = "sb_publishable_dLUCTdk5joZpsHlMtpfTyA_TXF7ujCT";
+
 const HYPE = {
   sb: null,
   user: null,
@@ -65,6 +68,9 @@ function updateServiceFeeInfo(ticketValue) {
 
 function hypeCfg() {
   const cfg = window.HYPE_SUPABASE_CONFIG || {};
+  if (cfg.url !== HYPE_EXPECTED_SUPABASE_URL) {
+    return { url: HYPE_EXPECTED_SUPABASE_URL, anonKey: HYPE_EXPECTED_SUPABASE_KEY };
+  }
   if (!cfg.url || cfg.url.includes("COLE_AQUI") || !cfg.anonKey || cfg.anonKey.includes("COLE_AQUI")) {
     throw new Error("Configure supabase-config.js com a URL e a chave pública do seu projeto.");
   }
