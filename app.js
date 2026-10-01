@@ -84,6 +84,14 @@ function hypeEscape(value) {
   return String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[char]));
 }
 
+function hypeUserMessage(error, fallback = "Não foi possível concluir a operação. Tente novamente.") {
+  const message = String(error?.message || error || "").trim();
+  if (!message) return fallback;
+  const technical = /PGRST|PostgREST|schema cache|permission denied|relation .* does not exist|function .* does not exist|Failed to fetch|NetworkError|TypeError:/i;
+  if (technical.test(message) || message.length > 240) return fallback;
+  return message;
+}
+
 function hypeNotify(message) {
   const toast = document.getElementById("toast");
   if (!toast) return;
@@ -654,7 +662,7 @@ async function selectEvent(eventId) {
     hypeV14Render();
     document.getElementById("v14Spotlight")?.scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (err) {
-    alert(err.message || "Não foi possível carregar os ingressos deste evento.");
+    alert(hypeUserMessage(err, "Não foi possível carregar os ingressos deste evento."));
   }
 }
 
@@ -719,10 +727,10 @@ async function refreshAdminOrders(showToast = true) {
   } catch (err) {
     const status = document.getElementById("adminOrdersStatus");
     if (status) {
-      status.textContent = `Erro ao carregar pedidos: ${err.message}`;
+      status.textContent = hypeUserMessage(err, "Não foi possível carregar os pedidos. Verifique sua conexão.");
       status.className = "admin-sync-status error";
     }
-    if (showToast) alert(err.message || "Erro ao atualizar pedidos.");
+    if (showToast) alert(hypeUserMessage(err, "Não foi possível atualizar os pedidos."));
   }
 }
 
@@ -799,7 +807,7 @@ async function checkLogin() {
     sessionSave(found.username, password, found.role);
     hideLogin();
     await initAdmin(true);
-  } catch (err) { alert(err.message); }
+  } catch (err) { alert(hypeUserMessage(err, "Não foi possível entrar no Admin.")); }
 }
 
 async function checkPortariaLogin() {
@@ -815,7 +823,7 @@ async function checkPortariaLogin() {
     applyStaffRoleUI();
     await portariaInitProDashboard();
     document.getElementById("portariaSearch")?.focus();
-  } catch (err) { alert(err.message); }
+  } catch (err) { alert(hypeUserMessage(err, "Não foi possível entrar na Portaria.")); }
 }
 
 function logoutStaff() {
@@ -897,7 +905,16 @@ async function initClient() {
       }
     }, 1000);
   } catch (err) {
-    alert(err.message);
+    console.error("[HYPE][catálogo]", err);
+    const target = document.getElementById("eventCarousel");
+    if (target) {
+      target.innerHTML = `<div class="event-empty backend-error">Não foi possível carregar o catálogo. Verifique sua conexão e tente novamente.<br><button type="button" class="event-select-btn" onclick="initClient()">TENTAR NOVAMENTE</button></div>`;
+    }
+    const select = document.getElementById("ticketType");
+    if (select) {
+      select.innerHTML = `<option value="">Catálogo temporariamente indisponível</option>`;
+      select.disabled = true;
+    }
   }
 }
 
@@ -1199,7 +1216,7 @@ async function createManualOrder(e) {
     await loadPublicState().catch(() => {});
     renderEventCarousel();
     renderClientTickets();
-    alert(err.message || "Erro ao criar pedido.");
+    alert(hypeUserMessage(err, "Não foi possível criar o pedido."));
   } finally {
     if (submit) {
       submit.disabled = false;
@@ -1208,7 +1225,7 @@ async function createManualOrder(e) {
   }
 }
 
-async function createAsaasPix(ticketId) {
+async function createAsaasPix(ticketId, ticketToken) {
   const cfg = window.HYPE_SUPABASE_CONFIG;
   if (!cfg?.url || !cfg?.anonKey) throw new Error("Supabase não configurado.");
 
@@ -1219,7 +1236,10 @@ async function createAsaasPix(ticketId) {
       apikey: cfg.anonKey,
       Authorization: `Bearer ${cfg.anonKey}`
     },
-    body: JSON.stringify({ ticket_id: Number(ticketId) })
+    body: JSON.stringify({
+      ticket_id: Number(ticketId),
+      ticket_token: String(ticketToken || "")
+    })
   });
 
   const data = await response.json().catch(() => ({}));
@@ -1332,12 +1352,12 @@ async function createPixOrder(e) {
       return;
     }
 
-    const payment = await createAsaasPix(entry.id);
+    const payment = await createAsaasPix(entry.id, entry.qr_token);
     window.__hypeCurrentPix = payment;
     renderAsaasPayment(entry, payment);
     hypeNotify(`PIX do pedido ${entry.ticket_code} gerado.`);
   } catch (err) {
-    alert(err.message || "Erro ao gerar PIX.");
+    alert(hypeUserMessage(err, "Não foi possível gerar o PIX. Tente novamente em instantes."));
   } finally {
     if (submit) {
       submit.disabled = false;
@@ -1431,7 +1451,7 @@ async function refreshCurrentOrderStatus(showMessage = true) {
       hypeNotify("Pagamento ainda não foi confirmado.");
     }
   } catch (err) {
-    if (showMessage) alert(err.message || "Não foi possível consultar o pedido.");
+    if (showMessage) alert(hypeUserMessage(err, "Não foi possível consultar o pedido."));
   }
 }
 
@@ -1483,7 +1503,7 @@ async function showTicketCard() {
     document.getElementById("pixArea").style.display = "none";
     document.getElementById("ticketCard").style.display = "block";
   } catch (err) {
-    alert(err.message);
+    alert(hypeUserMessage(err, "Não foi possível abrir o ingresso."));
   }
 }
 
@@ -1618,7 +1638,7 @@ async function selectAdminEvent(eventId) {
     if (typeof window.loadRaffleV18 === "function") window.loadRaffleV18().catch?.(() => {});
     document.getElementById("lotsAdminPanel")?.scrollIntoView({behavior:"smooth",block:"start"});
   } catch (err) {
-    alert(err.message || "Erro ao carregar os lotes deste evento.");
+    alert(hypeUserMessage(err, "Não foi possível carregar os ingressos deste evento."));
   }
 }
 
@@ -1751,7 +1771,7 @@ async function saveAdminEvent() {
     closeAdminEventEditor();
     hypeNotify("Evento salvo e publicado.");
   } catch (err) {
-    alert(err.message || "Erro ao salvar evento.");
+    alert(hypeUserMessage(err, "Não foi possível salvar o evento."));
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = "SALVAR EVENTO"; }
   }
@@ -1806,10 +1826,10 @@ async function initAdmin(fromLogin = false) {
   } catch (err) {
     const status = document.getElementById("adminOrdersStatus");
     if (status) {
-      status.textContent = err.message || "Erro ao inicializar o Admin.";
+      status.textContent = hypeUserMessage(err, "Não foi possível carregar o Admin. Verifique sua conexão e tente novamente.");
       status.className = "admin-sync-status error";
     }
-    alert(err.message);
+    alert(hypeUserMessage(err, "Não foi possível carregar o Admin."));
   }
 }
 
@@ -1916,7 +1936,7 @@ async function createAdminLot() {
     renderConfigTickets();
     hypeNotify("Categoria criada para o evento selecionado.");
   } catch (err) {
-    alert(err.message || "Erro ao criar categoria.");
+    alert(hypeUserMessage(err, "Não foi possível salvar a categoria."));
   }
 }
 
@@ -1949,7 +1969,7 @@ async function updateTicket(index) {
     await loadAdminLots(HYPE.selectedEventId);
     renderConfigTickets();
     hypeNotify("Categoria atualizada.");
-  } catch (err) { alert(err.message); }
+  } catch (err) { alert(hypeUserMessage(err, "Não foi possível atualizar a categoria.")); }
 }
 
 async function clearTicketSchedule(index) {
@@ -1970,7 +1990,7 @@ async function clearTicketSchedule(index) {
     await loadAdminLots(HYPE.selectedEventId);
     renderConfigTickets();
     hypeNotify("Horários removidos.");
-  } catch (err) { alert(err.message); }
+  } catch (err) { alert(hypeUserMessage(err, "Não foi possível remover os horários.")); }
 }
 
 async function savePixKey() {
@@ -1978,7 +1998,7 @@ async function savePixKey() {
     const key = document.getElementById("pixKeyInput")?.value.trim() || "";
     await sbRpc("staff_save_pix", {p_username:HYPE.user,p_password:HYPE.pass,p_pix:key});
     HYPE.pixKey = key; hypeNotify("Chave PIX atualizada.");
-  } catch (err) { alert(err.message); }
+  } catch (err) { alert(hypeUserMessage(err, "Não foi possível salvar a chave PIX.")); }
 }
 
 async function renderClientsTable() {
@@ -2067,7 +2087,7 @@ async function setPayment(id, status) {
       } catch (emailErr) {
         alert(
           "O pagamento foi CONFIRMADO, mas o e-mail não foi enviado.\n\n" +
-          (emailErr.message || "Erro no envio.") +
+          hypeUserMessage(emailErr, "Erro no envio.") +
           "\n\nUse o botão 📧 REENVIAR depois de corrigir o envio."
         );
       }
@@ -2078,7 +2098,7 @@ async function setPayment(id, status) {
     await loadStaffTickets(document.getElementById("searchInput")?.value || "");
     renderClientsTable();
   } catch (err) {
-    alert(err.message);
+    alert(hypeUserMessage(err, "Não foi possível atualizar o pagamento."));
   }
 }
 
@@ -2118,7 +2138,7 @@ async function purgeSingleTicketV25(id) {
     renderClientsTable();
     hypeNotify(`🗑 Teste de ${name} excluído. Os demais ingressos foram preservados.`);
   } catch (err) {
-    alert(err?.message || "Não foi possível excluir este registro.");
+    alert(hypeUserMessage(err, "Não foi possível excluir este registro."));
   }
 }
 
@@ -2179,7 +2199,7 @@ async function renderUsers() {
   try {
     const rows = await loadUsersIfAllowed();
     body.innerHTML = (rows||[]).map(u=>`<tr><td>${hypeEscape(u.name)}<br><small>${hypeEscape(u.username)}</small></td><td>${hypeEscape(u.role)}</td><td>${u.active ? `<button class="btn-action btn-del" onclick="deleteUser(${u.id})">DESATIVAR</button>` : '<span class="badge cancelado">INATIVO</span>'}</td></tr>`).join('');
-  } catch (err) { body.innerHTML=`<tr><td colspan="3">${hypeEscape(err.message)}</td></tr>`; }
+  } catch (err) { body.innerHTML=`<tr><td colspan="3">${hypeEscape(hypeUserMessage(err, "Não foi possível carregar a equipe."))}</td></tr>`; }
 }
 
 async function addUser() {
@@ -2193,14 +2213,14 @@ async function addUser() {
     await sbRpc('staff_add_user',{p_username:HYPE.user,p_password:HYPE.pass,p_name:name,p_new_username:username,p_new_password:password,p_role:role});
     ['newUserName','newUsername','newUserPassword'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
     await renderUsers(); hypeNotify('Pessoa adicionada à equipe.');
-  } catch(err){ alert(err.message); }
+  } catch(err){ alert(hypeUserMessage(err, "Não foi possível salvar o usuário.")); }
 }
 
 async function deleteUser(id) {
   if (HYPE.role !== 'admin') return alert('Somente o Admin pode gerenciar a equipe.');
   if (!confirm('Desativar este usuário?')) return;
   try { await sbRpc('staff_delete_user',{p_username:HYPE.user,p_password:HYPE.pass,p_user_id:id}); await renderUsers(); hypeNotify('Usuário desativado.'); }
-  catch(err){ alert(err.message); }
+  catch(err){ alert(hypeUserMessage(err, "Não foi possível atualizar o usuário.")); }
 }
 
 function exportEntriesCSV() {
@@ -2258,7 +2278,7 @@ async function searchClient() {
     const eventId = Number(HYPE.portariaEventId || 0);
     const scoped = eventId ? list.filter(item => Number(item.event_id) === eventId) : list;
     renderPortariaResults(scoped);
-  } catch(err){ container.innerHTML=`<div class="empty-state" style="color:var(--red)">${hypeEscape(err.message)}</div>`; }
+  } catch(err){ container.innerHTML=`<div class="empty-state" style="color:var(--red)">${hypeEscape(hypeUserMessage(err, "Não foi possível pesquisar os ingressos."))}</div>`; }
 }
 
 function portariaEventLabel(item) {
@@ -2428,7 +2448,7 @@ async function startQrScanner() {
         }
       } catch (_) {}
     }, 450);
-  } catch(err){ alert('Não foi possível abrir a câmera: ' + err.message); }
+  } catch(err){ alert(hypeUserMessage(err, "Não foi possível abrir a câmera. Verifique a permissão do navegador.")); }
 }
 
 function stopQrScanner() {
@@ -2533,7 +2553,7 @@ async function portariaRefreshDashboard(showToast = false) {
   } catch(err) {
     const stamp = document.getElementById('portariaLiveUpdated');
     if (stamp) stamp.textContent = 'Dashboard aguardando SQL V16.9';
-    if (showToast) alert(err.message || 'Erro ao atualizar a portaria.');
+    if (showToast) alert(hypeUserMessage(err, 'Não foi possível atualizar a portaria.'));
   }
 }
 
@@ -2635,7 +2655,7 @@ async function eventManagerLogin() {
     document.getElementById("loginScreen").style.display = "none";
     await loadPublicState();
     fillEventManager();
-  } catch (err) { alert(err.message); }
+  } catch (err) { alert(hypeUserMessage(err, "Não foi possível entrar no gerenciador de eventos.")); }
 }
 
 function fillEventManager() {
@@ -2716,7 +2736,7 @@ async function saveEventManager() {
     fillEventManager();
     hypeNotify("Evento publicado no site!");
   } catch (err) {
-    alert(err.message || "Erro ao salvar evento.");
+    alert(hypeUserMessage(err, "Não foi possível salvar o evento."));
   }
 }
 
@@ -3066,7 +3086,7 @@ async function createPromoterV16() {
     const created = (HYPE.promoters || []).find(p => String(p.code || "").toUpperCase() === code);
     hypeNotify(`Promoter cadastrado. Link oficial gerado automaticamente.`);
     if (created) await copyPromoterLinkV16(Number(created.id));
-  } catch (err) { alert(err.message); }
+  } catch (err) { alert(hypeUserMessage(err, "Não foi possível salvar o promoter.")); }
 }
 
 
@@ -3088,7 +3108,7 @@ async function copyPromoterLinkV16(id) {
 
 async function togglePromoterV16(id) {
   const p=(HYPE.promoters||[]).find(x=>Number(x.id)===Number(id)); if(!p)return;
-  try { await sbRpc("staff_upsert_promoter_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:Number(p.id),p_name:p.name,p_code:p.code,p_active:!p.active}); await loadV16AdminData(); } catch(err){ alert(err.message); }
+  try { await sbRpc("staff_upsert_promoter_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:Number(p.id),p_name:p.name,p_code:p.code,p_active:!p.active}); await loadV16AdminData(); } catch(err){ alert(hypeUserMessage(err, "Não foi possível atualizar o promoter.")); }
 }
 
 async function createCouponV16() {
@@ -3105,12 +3125,12 @@ async function createCouponV16() {
     await sbRpc("staff_upsert_coupon_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:0,p_code:code,p_discount_type:type,p_discount_value:value,p_usage_limit:limit,p_starts_at:starts,p_ends_at:ends,p_active:true});
     ["v16CouponCode","v16CouponValue","v16CouponLimit","v16CouponStart","v16CouponEnd"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
     await loadV16AdminData(); hypeNotify("Cupom criado.");
-  } catch(err){ alert(err.message); }
+  } catch(err){ alert(hypeUserMessage(err, "Não foi possível salvar o cupom.")); }
 }
 
 async function toggleCouponV16(id) {
   const c=(HYPE.coupons||[]).find(x=>Number(x.id)===Number(id)); if(!c)return;
-  try { await sbRpc("staff_upsert_coupon_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:Number(c.id),p_code:c.code,p_discount_type:c.discount_type,p_discount_value:Number(c.discount_value),p_usage_limit:Number(c.usage_limit),p_starts_at:c.starts_at,p_ends_at:c.ends_at,p_active:!c.active}); await loadV16AdminData(); } catch(err){ alert(err.message); }
+  try { await sbRpc("staff_upsert_coupon_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:Number(c.id),p_code:c.code,p_discount_type:c.discount_type,p_discount_value:Number(c.discount_value),p_usage_limit:Number(c.usage_limit),p_starts_at:c.starts_at,p_ends_at:c.ends_at,p_active:!c.active}); await loadV16AdminData(); } catch(err){ alert(hypeUserMessage(err, "Não foi possível atualizar o cupom.")); }
 }
 
 function renderV16Dashboard() {
@@ -3212,6 +3232,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } catch (err) {
     console.error(err);
-    alert(err.message || 'Erro ao inicializar o sistema.');
+    alert(hypeUserMessage(err, 'Não foi possível inicializar o sistema. Verifique sua conexão e tente novamente.'));
   }
 });

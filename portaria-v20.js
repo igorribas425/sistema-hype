@@ -242,7 +242,7 @@
   // ------------------------------------------------------------------
   // PIX ASAAS — mesma cobrança automática usada no site
   // ------------------------------------------------------------------
-  async function createAsaasPix(ticketId) {
+  async function createAsaasPix(ticketId, ticketToken) {
     const cfg = window.HYPE_SUPABASE_CONFIG || {};
     if (!cfg.url || !cfg.anonKey) throw new Error('Supabase não configurado.');
 
@@ -253,7 +253,10 @@
         'apikey': cfg.anonKey,
         'Authorization': `Bearer ${cfg.anonKey}`
       },
-      body: JSON.stringify({ticket_id:Number(ticketId)})
+      body: JSON.stringify({
+        ticket_id:Number(ticketId),
+        ticket_token:String(ticketToken || '')
+      })
     });
 
     const data = await response.json().catch(()=>({}));
@@ -378,7 +381,7 @@
         return;
       }
 
-      const payment = await createAsaasPix(result.ticket_id);
+      const payment = await createAsaasPix(result.ticket_id, result.qr_token);
       const order = {
         ...result,
         payment_status:'Pendente',

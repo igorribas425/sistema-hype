@@ -1,4 +1,4 @@
 window.HYPE_SUPABASE_CONFIG = {
-  url: "https://axkbfrljohpkjnbotqnf.supabase.co",
-  anonKey: "sb_publishable_QLfFi3Cl5FCL1SZnHOl8DQ_nigRxb-c"
+  url: "https://txxoqfcwqncqyiqgzboz.supabase.co",
+  anonKey: "sb_publishable_dLUCTdk5joZpsHlMtpfTyA_TXF7ujCT"
 };

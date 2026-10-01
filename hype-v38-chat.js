@@ -89,7 +89,15 @@
   }
 
   function pushFunctionUrl() {
-    return String(window.HYPE_CHAT_PUSH_FUNCTION_URL || 'https://axkbfrljohpkjnbotqnf.supabase.co/functions/v1/hype-chat-push').replace(/\/$/, '');
+    return String(window.HYPE_CHAT_PUSH_FUNCTION_URL || 'https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-chat-push').replace(/\/$/, '');
+  }
+
+  function edgeAuthProof() {
+    if (role === 'admin') {
+      const creds = adminCreds();
+      return creds ? {username:creds.p_username, password:creds.p_password} : {};
+    }
+    return {device_key:String(localStorage.getItem('hype_portaria_device_key_v18') || '')};
   }
 
   function edgeHeaders() {
@@ -202,7 +210,7 @@
         return false;
       }
 
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=421', {scope:'./'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=44', {scope:'./'});
       await navigator.serviceWorker.ready;
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
@@ -220,7 +228,8 @@
           endpoint: json.endpoint,
           keys: json.keys || {},
           role,
-          userAgent: navigator.userAgent || ''
+          userAgent: navigator.userAgent || '',
+          ...edgeAuthProof()
         })
       });
       if (!res.ok) throw new Error((await res.text()) || 'Falha ao registrar push.');
@@ -448,7 +457,8 @@
         senderRole: role,
         senderName: role === 'admin' ? 'Admin' : 'Portaria',
         message: text,
-        endpoint
+        endpoint,
+        ...edgeAuthProof()
       })
     });
     if (!res.ok) throw new Error((await res.text()) || 'Falha no push.');
