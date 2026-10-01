@@ -32,6 +32,17 @@ html,body{max-width:100%;overflow-x:hidden}
 /* HYPE V39 - Portaria simples */
 .v39-door-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:4px 0 14px}.v39-door-steps span{display:flex;align-items:center;gap:7px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#070709;font-size:11px;font-weight:850}.v39-door-steps b{display:grid;place-items:center;width:24px;height:24px;border-radius:999px;background:#fff;color:#000}.v39-door-simple{grid-template-columns:1fr 1fr}.v39-door-more{border:1px dashed var(--line);border-radius:12px;padding:10px 12px;background:#08080b}.v39-door-more summary{cursor:pointer;font-size:11px;font-weight:850;color:#c8c8ce}.v39-door-more-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.v39-door-more-grid .full{grid-column:1/-1}@media(max-width:680px){.v39-door-steps{grid-template-columns:1fr}.v39-door-simple,.v39-door-more-grid{grid-template-columns:1fr}.v39-door-more-grid .full{grid-column:auto}.v19-door #v19DoorCreate{min-height:58px;font-size:14px}.v19-door-price{font-size:17px;text-align:center}}
 </style>
+  <style id="hype-v48-portaria-core">
+  .portaria-extra{display:none!important}
+  .controls{grid-template-columns:1fr}
+  .live-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}
+  .live{min-height:116px;display:grid;place-content:center}
+  .live b{font-size:38px}.live span{font-size:11px}
+  .search-row{grid-template-columns:minmax(0,1fr) auto}
+  .search-card{padding:18px}.results{margin-top:12px}
+  @media(max-width:800px){.controls{grid-template-columns:1fr}.live-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.search-row{grid-template-columns:1fr}}
+  @media(max-width:460px){.live-grid{grid-template-columns:1fr 1fr}.live:first-child{grid-column:1/-1}.live{min-height:96px}.live b{font-size:32px}}
+  </style>
   <link rel="stylesheet" href="hype-v38-responsive.css?v=20260905-v42">
   <link rel="manifest" href="manifest.webmanifest?v=42">
 </head>
@@ -48,49 +59,46 @@ html,body{max-width:100%;overflow-x:hidden}
     <div class="brand"><img src="logo-hype.png" alt="HYPE Lounge Club"></div>
     <div class="top">
       <div><h1>PORTARIA // HYPE</h1><small id="deviceLabel">Computador fixo da Portaria</small></div>
-      <div class="status-row"><span id="networkBadge" class="pill on">ONLINE</span><span id="offlineBadge" class="pill">OFFLINE NÃO PREPARADO</span><span id="readerBadge" class="pill">SEM LEITOR</span></div>
+      <div class="status-row portaria-extra"><span id="networkBadge" class="pill on">ONLINE</span><span id="offlineBadge" class="pill portaria-extra">OFFLINE NÃO PREPARADO</span><span id="readerBadge" class="pill portaria-extra">SEM LEITOR</span></div>
     </div>
 
     <div class="controls">
       <select id="eventSelect" class="select" onchange="HypePortaria.changeEvent();HypeV20.eventChanged()"><option>Carregando eventos...</option></select>
-      <small style="display:block;margin-top:7px;color:var(--muted)">A Portaria escolhe o evento automaticamente pela data e horário. A festa continua como evento atual até 08:00 do dia seguinte. Quando virar para o próximo evento, o feedback pós-evento é disparado automaticamente para quem realmente entrou.</small>
-      <div class="auto-event-row"><span id="autoEventBadge" class="pill on">AUTO • CARREGANDO EVENTO</span><button class="btn mini" onclick="HypePortaria.enableAutoEvent()">↻ VOLTAR AO AUTOMÁTICO</button></div>
-      <button class="btn" onclick="HypePortaria.prepareOffline()">⬇ PREPARAR OFFLINE</button>
-      <button class="btn" onclick="HypePortaria.refresh(true)">↻ ATUALIZAR</button>
+      <small class="portaria-extra">A Portaria escolhe o evento automaticamente pela data e horário.</small>
+      <div class="auto-event-row portaria-extra"><span id="autoEventBadge" class="pill on">AUTO • CARREGANDO EVENTO</span><button class="btn mini" onclick="HypePortaria.enableAutoEvent()">↻ VOLTAR AO AUTOMÁTICO</button></div>
+      <button class="btn portaria-extra" onclick="HypePortaria.prepareOffline()">⬇ PREPARAR OFFLINE</button>
+      <button class="btn portaria-extra" onclick="HypePortaria.refresh(true)">↻ ATUALIZAR</button>
     </div>
 
 
-    <section class="v19-readers">
+    <section class="v19-readers portaria-extra">
       <div class="v19-section-head"><div><h3>📱 CELULARES LEITORES</h3><p>O computador continua nesta Portaria. Para o celular, gere um link exclusivo: ao abrir, ele recebe somente a câmera para ler QR Code. Os leitores ativos aparecem aqui em tempo real.</p></div><button class="btn primary" onclick="HypeV20.openReaderLink()">+ GERAR LINK DO CELULAR</button></div>
       <div id="v19ReaderList" class="v19-reader-list"><div class="v19-reader-empty">Aguardando leitores...</div></div>
     </section>
 
-    <div class="live-grid">
-      <div class="live"><b id="enteredCount">0</b><span>Já entraram</span></div>
-      <div class="live"><b id="remainingCount">0</b><span>Faltam entrar</span></div>
-      <div class="live"><b id="paidCount">0</b><span>Pagos</span></div>
-      <div class="live"><b id="femaleCount">0</b><span>Feminino dentro</span></div>
-      <div class="live"><b id="maleCount">0</b><span>Masculino dentro</span></div>
+    <div id="portariaCoreStats" class="live-grid">
+      <div class="live"><b id="paidCount">0</b><span>Vendas</span></div>
+      <div class="live"><b id="femaleCount">0</b><span>Feminino entrou</span></div>
+      <div class="live"><b id="maleCount">0</b><span>Masculino entrou</span></div>
     </div>
-    <div id="sectorStats" class="sectors"><span>Aguardando movimento...</span></div>
+    <div class="portaria-extra"><b id="enteredCount">0</b><b id="remainingCount">0</b></div>
+    <div id="sectorStats" class="sectors portaria-extra"><span>Aguardando movimento...</span></div>
 
     <section class="search-card">
       <div class="search-row">
-        <input id="searchInput" class="input" placeholder="Nome, CPF, WhatsApp ou código HYPE" autocomplete="off" oninput="clearTimeout(window.__hypePortariaSearch);window.__hypePortariaSearch=setTimeout(()=>{if(this.value.trim())HypePortaria.search()},220)" onkeydown="if(event.key==='Enter'){event.preventDefault();HypePortaria.search()}">
-        <button class="btn" onclick="HypePortaria.search()">🔎 BUSCAR</button>
-        <button class="btn" onclick="HypePortaria.startCamera()">📷 CÂMERA DO PC</button>
+        <input id="searchInput" class="input" placeholder="Buscar por nome, CPF, WhatsApp ou código HYPE" autocomplete="off" oninput="clearTimeout(window.__hypePortariaSearch);window.__hypePortariaSearch=setTimeout(()=>{if(this.value.trim())HypePortaria.search()},220)" onkeydown="if(event.key==='Enter'){event.preventDefault();HypePortaria.search()}">
+        <button class="btn primary" onclick="HypePortaria.search()">BUSCAR PESSOA</button>
       </div>
-      <div id="scannerArea" class="scanner"><video id="cameraVideo" autoplay muted playsinline></video><div class="scanline"></div><button class="btn red" style="position:absolute;right:10px;bottom:10px" onclick="HypePortaria.stopCamera()">FECHAR</button></div>
-      <div class="offline-note">O celular aberto pelo link exclusivo funciona somente como leitor. Ele não recebe senha, lista de clientes, vendas nem acesso ao Admin.</div>
+      <div id="scannerArea" class="scanner portaria-extra"><video id="cameraVideo" autoplay muted playsinline></video><div class="scanline"></div><button class="btn red" style="position:absolute;right:10px;bottom:10px" onclick="HypePortaria.stopCamera()">FECHAR</button></div>
     </section>
 
 
 
 
 
-    <div id="results" class="results"><div class="empty">Leia um QR pelo celular conectado, pela câmera deste computador ou pesquise o cliente.</div></div>
+    <div id="results" class="results"><div class="empty">Busque uma pessoa para liberar ou conferir a entrada.</div></div>
 
-    <section class="search-card" style="margin-top:16px">
+    <section class="search-card portaria-extra" style="margin-top:16px">
       <div class="v19-section-head"><div><h3>LISTA DE CONVIDADOS</h3><p>Busque um nome cadastrado no Admin e confirme a entrada sem ingresso.</p></div></div>
       <div class="search-row" style="grid-template-columns:1fr auto">
         <input id="v406ListSearch" class="input" placeholder="Nome ou CPF da lista" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();HypeListaSimples.search()}">
@@ -99,10 +107,10 @@ html,body{max-width:100%;overflow-x:hidden}
       <div id="v406ListResult" class="results" style="margin-top:12px"><div class="empty">Digite um nome para consultar a lista deste evento.</div></div>
     </section>
 
-    <section class="recent"><h3>🕘 ÚLTIMAS ENTRADAS</h3><div id="recentList"><div class="empty">Nenhuma entrada carregada.</div></div></section>
+    <section class="recent portaria-extra"><h3>ÚLTIMAS ENTRADAS</h3><div id="recentList"><div class="empty">Nenhuma entrada carregada.</div></div></section>
 
 
-    <section class="v19-door" id="v19DoorSale">
+    <section id="v19DoorSale" class="v19-door portaria-extra">
       <div class="v19-section-head"><div><h3>🎟️ VENDA RÁPIDA NA PORTARIA</h3><p>Painel simples para vender na hora: nome, CPF, gênero, ingresso e PIX Asaas automático.</p></div><strong id="v19DoorEventName" style="font-size:11px">Evento selecionado</strong></div>
       <div class="v39-door-steps">
         <span><b>1</b> Nome</span><span><b>2</b> CPF</span><span><b>3</b> Ingresso</span><span><b>4</b> PIX</span>
@@ -142,12 +150,12 @@ html,body{max-width:100%;overflow-x:hidden}
 <div id="flash" class="flash"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20261001-v47"></script>
+<script src="supabase-config.js?v=20261001-v48"></script>
 <script src="hype-qrcode.js?v=20260902-v21"></script>
 <script src="portaria-v18.js?v=20260905-v39-autoentrada"></script>
-<script src="hype-v406-lista-simples.js?v=20261001-v47"></script>
-<script src="portaria-v20.js?v=20261001-v47"></script>
-<script src="register-sw.js?v=20261001-v47"></script>
+<script src="hype-v406-lista-simples.js?v=20261001-v48"></script>
+<script src="portaria-v20.js?v=20261001-v48"></script>
+<script src="register-sw.js?v=20261001-v48"></script>
   <script src="hype-push-config.js?v=44"></script>
   <script src="hype-v38-chat.js?v=44"></script>
   <script src="hype-v38-reset.js?v=20260905-v38-1"></script>

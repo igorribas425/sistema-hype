@@ -500,7 +500,10 @@
       // devolva registros a mais, a Portaria NUNCA mostra ingresso de outro evento.
       const scoped=rows.filter(item=>Number(item.event_id)===Number(state.eventId));
       renderResults(scoped);
-      if(!scoped.length) flash(false,'NÃO ENCONTRADO','Nenhum ingresso com esse nome/código neste evento.');
+      const guestCount=window.HypeListaSimples
+        ? await window.HypeListaSimples.search(q,'results',scoped.length>0)
+        : 0;
+      if(!scoped.length&&!guestCount) flash(false,'NÃO ENCONTRADO','Nenhuma pessoa encontrada neste evento.');
     }catch(err){flash(false,'ERRO',err.message||'Falha na busca.');}
   }
 

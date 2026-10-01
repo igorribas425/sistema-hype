@@ -25,7 +25,12 @@
   }
   function deviceKey(){ return localStorage.getItem(DEVICE_KEY) || ''; }
   function eventId(){ return Number(($('eventSelect')?.value || 0)); }
-  function out(html){ const box=$('v406ListResult'); if(box) box.innerHTML=html; }
+  function out(html,targetId='v406ListResult',append=false){
+    const box=$(targetId);
+    if(!box) return;
+    if(append) box.insertAdjacentHTML('beforeend',html);
+    else box.innerHTML=html;
+  }
   function flash(ok,title,msg){
     if(window.HypePortaria?.flash) return window.HypePortaria.flash(ok,title,msg);
     const f=$('flash');
@@ -44,18 +49,20 @@
     alert('Agora a lista é cadastrada somente no Admin. A Portaria só busca e confirma entrada.');
   }
 
-  async function search(){
-    const q=($('v406ListSearch')?.value || $('v406ListName')?.value || '').trim();
-    if(!q) return out('<div class="empty">Digite um nome para buscar na lista.</div>');
-    if(!deviceKey()) return out('<div class="empty error">Portaria não autorizada neste computador.</div>');
-    if(!eventId()) return out('<div class="empty error">Selecione o evento.</div>');
-    out('<div class="empty">Buscando na lista...</div>');
+  async function search(query,targetId='v406ListResult',append=false){
+    const q=String(query || $('v406ListSearch')?.value || $('searchInput')?.value || '').trim();
+    if(!q){ if(!append) out('<div class="empty">Digite um nome para buscar.</div>',targetId); return 0; }
+    if(!deviceKey()){ if(!append) out('<div class="empty error">Portaria não autorizada neste computador.</div>',targetId); return 0; }
+    if(!eventId()){ if(!append) out('<div class="empty error">Selecione o evento.</div>',targetId); return 0; }
+    if(!append) out('<div class="empty">Buscando pessoas...</div>',targetId);
     try{
       const rows=arr(await rpc('portaria_guest_simple_search_v406',{p_device_key:deviceKey(),p_event_id:eventId(),p_query:q}));
-      if(!rows.length) return out('<div class="empty error">Nenhum nome encontrado na lista deste evento.</div>');
-      out(rows.map(render).join(''));
+      if(!rows.length){ if(!append) out('<div class="empty error">Nenhuma pessoa encontrada neste evento.</div>',targetId); return 0; }
+      out(rows.map(render).join(''),targetId,append);
+      return rows.length;
     }catch(err){
-      out(`<div class="empty error">${esc(err.message || 'Erro ao buscar lista.')}</div>`);
+      if(!append) out(`<div class="empty error">${esc(err.message || 'Erro ao buscar lista.')}</div>`,targetId);
+      return 0;
     }
   }
 
@@ -74,9 +81,9 @@
     try{
       const rows=arr(await rpc('portaria_guest_simple_enter_v406',{p_device_key:deviceKey(),p_list_id:Number(id)}));
       const r=rows[0];
-      if(!r?.ok){ flash(false,'NEGADO',r?.message || 'Não liberado.'); return search(); }
+      if(!r?.ok){ flash(false,'NEGADO',r?.message || 'Não liberado.'); return window.HypePortaria?.search?.(); }
       flash(true,'ENTRADA DA LISTA',r.name || 'Liberado');
-      await search();
+      await window.HypePortaria?.search?.();
       if(window.HypePortaria?.refresh) window.HypePortaria.refresh(false).catch(()=>{});
     }catch(err){
       flash(false,'ERRO',err.message || 'Erro ao confirmar entrada.');

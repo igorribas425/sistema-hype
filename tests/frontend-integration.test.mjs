@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 const root = path.resolve(import.meta.dirname, "..");
-const CONFIG_VERSION = "20261001-v47";
+const CONFIG_VERSION = "20261001-v48";
 const NEW_PROJECT_REF = "txxoqfcwqncqyiqgzboz";
 const pages = ["cliente.html", "admin.html", "portaria.html", "leitor.html", "index.html", "pesquisa.html"];
 
@@ -34,11 +34,11 @@ test("service_workers_and_registration_use_the_current_release", async () => {
     read("service-worker.js"),
     read("register-sw.js"),
   ]);
-  assert.match(offlineWorker, /const CACHE='hype-v47-offline'/);
+  assert.match(offlineWorker, /const CACHE='hype-v48-offline'/);
   assert.match(offlineWorker, new RegExp(`supabase-config\\.js\\?v=${CONFIG_VERSION}`));
-  assert.match(offlineWorker, /app\.js\?v=20261001-v47/);
-  assert.match(pushWorker, /HYPE_CHAT_URL = '\.\/admin\.html\?v=47'/);
-  assert.match(registration, /sw\.js\?v=20261001-v47/);
+  assert.match(offlineWorker, /app\.js\?v=20261001-v48/);
+  assert.match(pushWorker, /HYPE_CHAT_URL = '\.\/admin\.html\?v=48'/);
+  assert.match(registration, /sw\.js\?v=20261001-v48/);
 });
 
 test("browser_errors_are_translated_and_empty_states_are_explicit", async () => {
@@ -70,13 +70,25 @@ test("pix_and_push_requests_include_context_specific_proof", async () => {
   assert.doesNotMatch(pushConfig, /axkbfrljohpkjnbotqnf/);
 });
 
-test("portaria_exposes_the_existing_guest_list_search", async () => {
-  const portaria = await read("portaria.html");
+test("portaria_focuses_on_sales_gender_counts_and_one_people_search", async () => {
+  const [portaria, portariaApp, guestList] = await Promise.all([
+    read("portaria.html"),
+    read("portaria-v18.js"),
+    read("hype-v406-lista-simples.js"),
+  ]);
+  const stats = portaria.match(/<div id="portariaCoreStats"[\s\S]*?<\/div>\s*<\/div>/)?.[0] ?? "";
 
-  assert.match(portaria, /id=["']v406ListSearch["']/);
-  assert.match(portaria, /id=["']v406ListResult["']/);
-  assert.match(portaria, /HypeListaSimples\.search\(\)/);
-  assert.match(portaria, /hype-v406-lista-simples\.js\?v=20261001-v47/);
+  assert.match(stats, /id="paidCount"/);
+  assert.match(stats, /id="femaleCount"/);
+  assert.match(stats, /id="maleCount"/);
+  assert.doesNotMatch(stats, /id="enteredCount"|id="remainingCount"/);
+  assert.match(portaria, /id="searchInput"[^>]*placeholder="Buscar por nome, CPF, WhatsApp ou código HYPE"/);
+  assert.doesNotMatch(portaria, />📷 CÂMERA DO PC</);
+  assert.match(portaria, /class="v19-readers portaria-extra"/);
+  assert.match(portaria, /id="v19DoorSale"[^>]*class="v19-door portaria-extra"/);
+  assert.match(portariaApp, /HypeListaSimples\.search\(q,'results',scoped\.length>0\)/);
+  assert.match(guestList, /function search\(query,targetId='v406ListResult',append=false\)/);
+  assert.match(portaria, /hype-v406-lista-simples\.js\?v=20261001-v48/);
 });
 
 test("admin_login_defaults_to_the_new_username_without_embedding_a_password", async () => {
