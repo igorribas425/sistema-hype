@@ -90,6 +90,15 @@ html,body{max-width:100%;overflow-x:hidden}
 
     <div id="results" class="results"><div class="empty">Leia um QR pelo celular conectado, pela câmera deste computador ou pesquise o cliente.</div></div>
 
+    <section class="search-card" style="margin-top:16px">
+      <div class="v19-section-head"><div><h3>LISTA DE CONVIDADOS</h3><p>Busque um nome cadastrado no Admin e confirme a entrada sem ingresso.</p></div></div>
+      <div class="search-row" style="grid-template-columns:1fr auto">
+        <input id="v406ListSearch" class="input" placeholder="Nome ou CPF da lista" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();HypeListaSimples.search()}">
+        <button class="btn" onclick="HypeListaSimples.search()">BUSCAR NA LISTA</button>
+      </div>
+      <div id="v406ListResult" class="results" style="margin-top:12px"><div class="empty">Digite um nome para consultar a lista deste evento.</div></div>
+    </section>
+
     <section class="recent"><h3>🕘 ÚLTIMAS ENTRADAS</h3><div id="recentList"><div class="empty">Nenhuma entrada carregada.</div></div></section>
 
 
@@ -133,11 +142,12 @@ html,body{max-width:100%;overflow-x:hidden}
 <div id="flash" class="flash"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20261001-v45"></script>
+<script src="supabase-config.js?v=20261001-v46"></script>
 <script src="hype-qrcode.js?v=20260902-v21"></script>
 <script src="portaria-v18.js?v=20260905-v39-autoentrada"></script>
-<script src="portaria-v20.js?v=20261001-v45"></script>
-<script src="register-sw.js?v=20261001-v45"></script>
+<script src="hype-v406-lista-simples.js?v=20261001-v46"></script>
+<script src="portaria-v20.js?v=20261001-v46"></script>
+<script src="register-sw.js?v=20261001-v46"></script>
   <script src="hype-push-config.js?v=44"></script>
   <script src="hype-v38-chat.js?v=44"></script>
   <script src="hype-v38-reset.js?v=20260905-v38-1"></script>

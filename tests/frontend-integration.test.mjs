@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 const root = path.resolve(import.meta.dirname, "..");
-const CONFIG_VERSION = "20261001-v45";
+const CONFIG_VERSION = "20261001-v46";
 const NEW_PROJECT_REF = "txxoqfcwqncqyiqgzboz";
 const pages = ["cliente.html", "admin.html", "portaria.html", "leitor.html", "index.html", "pesquisa.html"];
 
@@ -34,11 +34,11 @@ test("service_workers_and_registration_use_the_current_release", async () => {
     read("service-worker.js"),
     read("register-sw.js"),
   ]);
-  assert.match(offlineWorker, /const CACHE='hype-v45-offline'/);
+  assert.match(offlineWorker, /const CACHE='hype-v46-offline'/);
   assert.match(offlineWorker, new RegExp(`supabase-config\\.js\\?v=${CONFIG_VERSION}`));
-  assert.match(offlineWorker, /app\.js\?v=20261001-v45/);
-  assert.match(pushWorker, /HYPE_CHAT_URL = '\.\/admin\.html\?v=45'/);
-  assert.match(registration, /sw\.js\?v=20261001-v45/);
+  assert.match(offlineWorker, /app\.js\?v=20261001-v46/);
+  assert.match(pushWorker, /HYPE_CHAT_URL = '\.\/admin\.html\?v=46'/);
+  assert.match(registration, /sw\.js\?v=20261001-v46/);
 });
 
 test("browser_errors_are_translated_and_empty_states_are_explicit", async () => {
@@ -68,4 +68,20 @@ test("pix_and_push_requests_include_context_specific_proof", async () => {
   assert.match(chat, /password/);
   assert.match(pushConfig, new RegExp(`https://${NEW_PROJECT_REF}\\.supabase\\.co/functions/v1/hype-chat-push`));
   assert.doesNotMatch(pushConfig, /axkbfrljohpkjnbotqnf/);
+});
+
+test("portaria_exposes_the_existing_guest_list_search", async () => {
+  const portaria = await read("portaria.html");
+
+  assert.match(portaria, /id=["']v406ListSearch["']/);
+  assert.match(portaria, /id=["']v406ListResult["']/);
+  assert.match(portaria, /HypeListaSimples\.search\(\)/);
+  assert.match(portaria, /hype-v406-lista-simples\.js\?v=20261001-v46/);
+});
+
+test("admin_login_defaults_to_the_new_username_without_embedding_a_password", async () => {
+  const admin = await read("admin.html");
+
+  assert.match(admin, /id=["']adminUser["'][^>]*value=["']hype["']/);
+  assert.doesNotMatch(admin, /id=["']adminPass["'][^>]*value=/);
 });
