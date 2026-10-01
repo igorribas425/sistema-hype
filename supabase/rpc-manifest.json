@@ -1,0 +1,974 @@
+[
+  {
+    "name": "create_manual_order_v16",
+    "group": "public-sales",
+    "exposure": "anon",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "hype_chat_clear_v41",
+    "group": "chat-checkup",
+    "exposure": "staff",
+    "sourceFiles": [
+      "hype-v38-chat.js"
+    ]
+  },
+  {
+    "name": "hype_chat_list_v41",
+    "group": "chat-checkup",
+    "exposure": "staff",
+    "sourceFiles": [
+      "hype-v38-chat.js"
+    ]
+  },
+  {
+    "name": "hype_chat_send_v41",
+    "group": "chat-checkup",
+    "exposure": "staff",
+    "sourceFiles": [
+      "hype-v38-chat.js"
+    ]
+  },
+  {
+    "name": "hype_chat_state_v41",
+    "group": "chat-checkup",
+    "exposure": "staff",
+    "sourceFiles": [
+      "hype-v38-chat.js"
+    ]
+  },
+  {
+    "name": "portaria_claim_pair_v18",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "leitor-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_claim_pair_v19",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "leitor-v19.js"
+    ]
+  },
+  {
+    "name": "portaria_claim_reader_link_v20",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "leitor-v20.js"
+    ]
+  },
+  {
+    "name": "portaria_create_pair_v18",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_create_pair_v19",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v19-extra.js"
+    ]
+  },
+  {
+    "name": "portaria_current_event_v32",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_device_cancel_door_order_v19",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v19-extra.js",
+      "portaria-v20.js"
+    ]
+  },
+  {
+    "name": "portaria_device_confirm_door_payment_v19",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v19-extra.js"
+    ]
+  },
+  {
+    "name": "portaria_device_create_door_order_v19",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v19-extra.js",
+      "portaria-v20.js"
+    ]
+  },
+  {
+    "name": "portaria_device_create_reader_link_v20",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v20.js"
+    ]
+  },
+  {
+    "name": "portaria_device_dashboard_v18",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_device_disconnect_reader_v19",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v19-extra.js",
+      "portaria-v20.js"
+    ]
+  },
+  {
+    "name": "portaria_device_document_v18",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_device_end_readers_v18",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js",
+      "portaria-v19-extra.js",
+      "portaria-v20.js"
+    ]
+  },
+  {
+    "name": "portaria_device_list_readers_v19",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v19-extra.js",
+      "portaria-v20.js"
+    ]
+  },
+  {
+    "name": "portaria_device_lookup_event_v26",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_device_lookup_v18",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_device_pull_scan_v18",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_device_pull_scan_v29",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_device_pull_scan_v31",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_device_qr_event_v30",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_device_reentry_v18",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_device_request_v18",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_device_sales_context_v19",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v19-extra.js",
+      "portaria-v20.js"
+    ]
+  },
+  {
+    "name": "portaria_device_search_v18",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_device_snapshot_v18",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_device_status_v18",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_device_temporary_exit_v18",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_device_validate_v18",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "portaria-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_guest_simple_enter_v406",
+    "group": "lists-raffles-surveys",
+    "exposure": "device",
+    "sourceFiles": [
+      "hype-v406-lista-simples.js"
+    ]
+  },
+  {
+    "name": "portaria_guest_simple_search_v406",
+    "group": "lists-raffles-surveys",
+    "exposure": "device",
+    "sourceFiles": [
+      "hype-v406-lista-simples.js"
+    ]
+  },
+  {
+    "name": "portaria_reader_status_v25",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "leitor-v20.js"
+    ]
+  },
+  {
+    "name": "portaria_reader_submit_v18",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "leitor-v18.js"
+    ]
+  },
+  {
+    "name": "portaria_reader_submit_v19",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "leitor-v19.js",
+      "leitor-v20.js"
+    ]
+  },
+  {
+    "name": "portaria_reader_submit_v31",
+    "group": "portaria-reader",
+    "exposure": "device",
+    "sourceFiles": [
+      "leitor-v20.js"
+    ]
+  },
+  {
+    "name": "public_events",
+    "group": "public-sales",
+    "exposure": "anon",
+    "sourceFiles": [
+      "app.js",
+      "portaria-v18.js",
+      "v21-admin.js"
+    ]
+  },
+  {
+    "name": "public_events_v13",
+    "group": "public-sales",
+    "exposure": "anon",
+    "sourceFiles": [
+      "admin.html",
+      "app.js",
+      "portaria-v18.js",
+      "v21-admin.js"
+    ]
+  },
+  {
+    "name": "public_get_ticket",
+    "group": "public-sales",
+    "exposure": "anon",
+    "sourceFiles": [
+      "app.js",
+      "portaria-v20.js"
+    ]
+  },
+  {
+    "name": "public_lot_free_rules_v38",
+    "group": "public-sales",
+    "exposure": "anon",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "public_lots_by_event_v16",
+    "group": "public-sales",
+    "exposure": "anon",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "public_pix_key",
+    "group": "public-sales",
+    "exposure": "anon",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "public_quote_v16",
+    "group": "public-sales",
+    "exposure": "anon",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "public_raffle_info_v18",
+    "group": "lists-raffles-surveys",
+    "exposure": "anon",
+    "sourceFiles": [
+      "v18-client.js"
+    ]
+  },
+  {
+    "name": "public_survey_open_v34",
+    "group": "lists-raffles-surveys",
+    "exposure": "anon",
+    "sourceFiles": [
+      "pesquisa.html"
+    ]
+  },
+  {
+    "name": "public_survey_submit_v34",
+    "group": "lists-raffles-surveys",
+    "exposure": "anon",
+    "sourceFiles": [
+      "pesquisa.html"
+    ]
+  },
+  {
+    "name": "staff_action_logs_v17",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "v17-extra.js"
+    ]
+  },
+  {
+    "name": "staff_add_guest_ticket_v40",
+    "group": "lists-raffles-surveys",
+    "exposure": "staff",
+    "sourceFiles": [
+      "hype-v40-guests.js"
+    ]
+  },
+  {
+    "name": "staff_add_user",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_approve_portaria_device_v18",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin.html",
+      "v18-admin.js",
+      "v19-admin.js",
+      "v21-admin.js"
+    ]
+  },
+  {
+    "name": "staff_authorize_reentry_v17",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "v17-extra.js"
+    ]
+  },
+  {
+    "name": "staff_clear_access_devices_v42_5",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin.html"
+    ]
+  },
+  {
+    "name": "staff_close_event_v17",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "v17-extra.js"
+    ]
+  },
+  {
+    "name": "staff_delete_access_item_v42_5",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin.html"
+    ]
+  },
+  {
+    "name": "staff_delete_promoter_global_v16",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "promoter-global-v16-8.js"
+    ]
+  },
+  {
+    "name": "staff_delete_promoter_v16",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "promoter-admin-v16-7.js"
+    ]
+  },
+  {
+    "name": "staff_delete_user",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_draw_raffle_v18",
+    "group": "lists-raffles-surveys",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin.html",
+      "v18-admin.js",
+      "v19-admin.js",
+      "v21-admin.js"
+    ]
+  },
+  {
+    "name": "staff_event_summary_v17",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "v17-extra.js"
+    ]
+  },
+  {
+    "name": "staff_guest_simple_add_v408",
+    "group": "lists-raffles-surveys",
+    "exposure": "staff",
+    "sourceFiles": [
+      "hype-v408-lista-admin.js"
+    ]
+  },
+  {
+    "name": "staff_guest_simple_delete_v423",
+    "group": "lists-raffles-surveys",
+    "exposure": "staff",
+    "sourceFiles": [
+      "hype-v408-lista-admin.js"
+    ]
+  },
+  {
+    "name": "staff_guest_simple_list_v406",
+    "group": "lists-raffles-surveys",
+    "exposure": "staff",
+    "sourceFiles": [
+      "hype-v408-lista-admin.js"
+    ]
+  },
+  {
+    "name": "staff_list_access_devices_v23",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin.html"
+    ]
+  },
+  {
+    "name": "staff_list_coupons_v16",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_list_events",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js",
+      "v21-admin.js"
+    ]
+  },
+  {
+    "name": "staff_list_events_v13",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin-v34.js",
+      "admin.html",
+      "app.js",
+      "hype-v40-guests.js",
+      "hype-v408-lista-admin.js",
+      "v21-admin.js"
+    ]
+  },
+  {
+    "name": "staff_list_lots_v16",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js",
+      "hype-v40-guests.js"
+    ]
+  },
+  {
+    "name": "staff_list_portaria_devices_v18",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin.html",
+      "v18-admin.js",
+      "v19-admin.js",
+      "v21-admin.js"
+    ]
+  },
+  {
+    "name": "staff_list_portaria_readers_v20",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin.html",
+      "v20-admin.js",
+      "v21-admin.js"
+    ]
+  },
+  {
+    "name": "staff_list_promoters_global_v16",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "promoter-global-v16-8.js"
+    ]
+  },
+  {
+    "name": "staff_list_promoters_v16",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js",
+      "promoter-admin-v16-7.js"
+    ]
+  },
+  {
+    "name": "staff_list_raffle_events_v23",
+    "group": "lists-raffles-surveys",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin-v34.js",
+      "admin.html",
+      "hype-v40-guests.js",
+      "hype-v408-lista-admin.js"
+    ]
+  },
+  {
+    "name": "staff_list_tickets",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_list_tickets_manual",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_list_tickets_v16",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_list_users",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_live_checkin_v34",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin-v34.js"
+    ]
+  },
+  {
+    "name": "staff_log_action_v17",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "v17-extra.js"
+    ]
+  },
+  {
+    "name": "staff_lookup_ticket",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js",
+      "v17-extra.js"
+    ]
+  },
+  {
+    "name": "staff_lookup_ticket_v17",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "v17-extra.js"
+    ]
+  },
+  {
+    "name": "staff_lot_free_rules_v38",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_mark_document_v17",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "v17-extra.js"
+    ]
+  },
+  {
+    "name": "staff_offline_snapshot_v17",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "v17-extra.js"
+    ]
+  },
+  {
+    "name": "staff_portaria_dashboard_v16_9",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_purge_all_tickets",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_purge_ticket_v25",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_raffle_participants_v18",
+    "group": "lists-raffles-surveys",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin.html",
+      "v18-admin.js",
+      "v19-admin.js",
+      "v21-admin.js"
+    ]
+  },
+  {
+    "name": "staff_raffle_status_v18",
+    "group": "lists-raffles-surveys",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin.html",
+      "v18-admin.js",
+      "v19-admin.js",
+      "v21-admin.js"
+    ]
+  },
+  {
+    "name": "staff_refund_list_v38",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin-v36-refund.js"
+    ]
+  },
+  {
+    "name": "staff_revoke_portaria_device_v18",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin.html",
+      "v18-admin.js",
+      "v19-admin.js",
+      "v21-admin.js"
+    ]
+  },
+  {
+    "name": "staff_revoke_portaria_reader_v20",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin.html",
+      "v20-admin.js",
+      "v21-admin.js"
+    ]
+  },
+  {
+    "name": "staff_save_event_v13",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_save_event_v2",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_save_pix",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_save_raffle_v18",
+    "group": "lists-raffles-surveys",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin.html",
+      "v18-admin.js",
+      "v19-admin.js",
+      "v21-admin.js"
+    ]
+  },
+  {
+    "name": "staff_set_event_cpf_limit_v17",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "v17-extra.js"
+    ]
+  },
+  {
+    "name": "staff_set_lot_free_until_v38",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_set_payment",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_survey_attendees_v34",
+    "group": "lists-raffles-surveys",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin-v34.js"
+    ]
+  },
+  {
+    "name": "staff_survey_attendees_v35",
+    "group": "lists-raffles-surveys",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin-v34.js"
+    ]
+  },
+  {
+    "name": "staff_survey_report_v34",
+    "group": "lists-raffles-surveys",
+    "exposure": "staff",
+    "sourceFiles": [
+      "admin-v34.js"
+    ]
+  },
+  {
+    "name": "staff_system_checkup_v429",
+    "group": "chat-checkup",
+    "exposure": "staff",
+    "sourceFiles": [
+      "hype-v43-auto-checkup.js"
+    ]
+  },
+  {
+    "name": "staff_system_checkup_v43",
+    "group": "chat-checkup",
+    "exposure": "staff",
+    "sourceFiles": [
+      "hype-v43-auto-checkup.js"
+    ]
+  },
+  {
+    "name": "staff_temporary_exit_v17",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "v17-extra.js"
+    ]
+  },
+  {
+    "name": "staff_upsert_coupon_v16",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_upsert_lot_v16",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_upsert_promoter_global_v16",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "promoter-global-v16-8.js"
+    ]
+  },
+  {
+    "name": "staff_upsert_promoter_v16",
+    "group": "admin",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js",
+      "promoter-admin-v16-7.js"
+    ]
+  },
+  {
+    "name": "staff_validate_entry",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "app.js"
+    ]
+  },
+  {
+    "name": "staff_validate_entry_v17",
+    "group": "portaria-reader",
+    "exposure": "staff",
+    "sourceFiles": [
+      "v17-extra.js"
+    ]
+  },
+  {
+    "name": "verify_staff",
+    "group": "admin",
+    "exposure": "anon",
+    "sourceFiles": [
+      "app.js"
+    ]
+  }
+]

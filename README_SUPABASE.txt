@@ -9,17 +9,17 @@ ARQUIVOS
 - supabase_schema.sql — tabelas, RLS e funções do banco
 
 CONFIGURAÇÃO
-1. Crie um projeto no Supabase.
-2. Abra SQL Editor > New query.
-3. Cole o conteúdo de supabase_schema.sql e execute.
-4. Abra supabase-config.js e coloque a Project URL e a chave publicável/anon.
-5. Sirva esta pasta por HTTP/HTTPS (por exemplo Live Server no VS Code). Não abra os HTML pelo file://.
-6. Acesse cliente.html.
+1. Crie um projeto dedicado no Supabase. Não compartilhe o banco com outro sistema.
+2. Aplique, em ordem, as migrations da pasta supabase/migrations.
+3. Abra supabase-config.js e coloque somente a Project URL e a chave publicável.
+4. Crie os primeiros usuários de equipe por um procedimento administrativo privado.
+5. Gere senhas fortes e exclusivas; nunca grave senhas reais neste repositório.
+6. Sirva esta pasta por HTTP/HTTPS (por exemplo Live Server no VS Code). Não abra os HTML pelo file://.
+7. Execute node scripts/verify-public-rpcs.mjs e, depois, acesse cliente.html.
 
 ACESSOS INICIAIS
-Admin: admin / Hype@2026
-Portaria: portaria / portaria2026
-Troque/desative essas credenciais após configurar o sistema.
+O repositório não fornece usuários ou senhas padrão. As credenciais iniciais devem ser
+criadas diretamente no ambiente protegido e substituídas sempre que houver suspeita de exposição.
 
 COMO FUNCIONA
 - Cliente chama create_ticket no banco; estoque é protegido por trava transacional.
