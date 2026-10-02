@@ -15,6 +15,13 @@
   let listSettings = [];
   let settingsLoadPromise = null;
 
+  function fmt(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return date.toLocaleString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+  }
+
   function copyText(text) {
     const value = String(text || '');
     return navigator.clipboard?.writeText(value).catch(() => {
@@ -86,7 +93,7 @@
     const open = rows.some(row => Boolean(row?.registration_open));
     status.className = `v49-link-status ${open ? 'open' : 'closed'}`;
     status.textContent = open
-      ? `ABERTO • ${rows.filter(row => row.registration_open).length} festa(s) aparecem no link.`
+      ? 'ABERTO • link da lista ativo.'
       : 'BLOQUEADO • o link continua válido, mas não aceita novos cadastros.';
     toggle.textContent = open ? 'BLOQUEAR LINK' : 'ATIVAR LINK';
     toggle.classList.toggle('btn-action', open);
@@ -107,11 +114,11 @@
       return;
     }
     const quota = $('v50ListQuota');
-    if (quota) quota.textContent = listSettings.map(setting => {
-      const eventRows = reviewRows.filter(row => Number(row.event_id) === Number(setting.event_id));
-      const approvedMen = eventRows.filter(row => row.gender === 'Masculino' && ['Liberado','Entrou'].includes(row.status)).length;
-      return `${esc(setting.event_name || 'festa')}: ${approvedMen}/${Number(setting.male_limit ?? 10)} homens`;
-    }).join(' • ');
+    if (quota) {
+      const approvedMen = reviewRows.filter(row => row.gender === 'Masculino' && ['Liberado','Entrou'].includes(row.status)).length;
+      const totalLimit = listSettings.reduce((sum, setting) => sum + Number(setting.male_limit ?? 10), 0);
+      quota.textContent = `Limite masculino: ${approvedMen}/${totalLimit || 10} aprovados nas festas.`;
+    }
     target.innerHTML = reviewRows.map(row => {
       const pending = row.status === 'Pendente';
       const emailState = row.email_sent_at ? `Gmail enviado em ${fmt(row.email_sent_at)}` : (row.email_error ? `Falha no Gmail: ${esc(row.email_error)}` : (pending ? 'Gmail aguardando aprovação' : 'Gmail ainda não enviado'));

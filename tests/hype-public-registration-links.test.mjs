@@ -52,7 +52,7 @@ test("admin keeps manual flows and adds one link tab to each area", async () => 
   assert.match(controller, /staff_set_guest_registration_v50/);
   assert.match(controller, /navigator\.share/);
   assert.match(controller, /HypeQRCode\.toDataUrl/);
-  assert.match(admin, /hype-v49-registration-admin\.js\?v=20261001-v50/);
+  assert.match(admin, /hype-v49-registration-admin\.js\?v=20261001-v51/);
 });
 
 test("portaria stays focused on entry and does not expose public registration links", async () => {

@@ -32,6 +32,7 @@ test("Admin review shows private photo metadata and approval actions", async () 
   assert.match(js, /recusar|rejeitar|RECUSAR/i);
   assert.match(js, /instagram/i);
   assert.match(js, /email_sent_at|email_error/i);
+  assert.match(js, /function fmt\(/i);
 });
 
 test("Admin review never writes a public photo URL and Portaria stays release-only", async () => {
