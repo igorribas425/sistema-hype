@@ -39,7 +39,7 @@ function officialUrl(value: string, requiredPath?: RegExp) {
 }
 
 async function postMail(payload: Record<string, unknown>) {
-  const appsScriptUrl = Deno.env.get("HYPE_APPS_SCRIPT_URL");
+  const appsScriptUrl = "https://script.google.com/macros/s/AKfycbxgovFRJvAtUq5GSFgGMiGKuzRyod9O0Ld8wG-jxRtpqByhNvSI8r_LDTLhmVJkb6Rc/exec";
   const webhookSecret = Deno.env.get("HYPE_WEBHOOK_SECRET");
   if (!appsScriptUrl || !webhookSecret) {
     throw new Error("HYPE_APPS_SCRIPT_URL/HYPE_WEBHOOK_SECRET não configurados.");
