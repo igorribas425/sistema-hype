@@ -134,7 +134,7 @@ html,body{max-width:100%;overflow-x:hidden}
     <section class="recent portaria-extra"><h3>ÚLTIMAS ENTRADAS</h3><div id="recentList"><div class="empty">Nenhuma entrada carregada.</div></div></section>
 
 
-    <section id="v19DoorSale" class="v19-door portaria-extra">
+    <section id="v19DoorSale" class="v19-door">
       <div class="v19-section-head"><div><h3>🎟️ VENDA RÁPIDA NA PORTARIA</h3><p>Venda na hora por PIX Asaas ou cartão na Stone. FREE continua liberando sem cobrança.</p></div><strong id="v19DoorEventName" style="font-size:11px">Evento selecionado</strong></div>
       <div class="v39-door-steps">
         <span><b>1</b> Cadastro</span><span><b>2</b> Ingresso</span><span><b>3</b> Pagamento</span><span><b>4</b> Liberar</span>
@@ -238,14 +238,31 @@ html,body{max-width:100%;overflow-x:hidden}
 </div>
 <div id="flash" class="flash"></div>
 
+<script id="hype-portaria-v66-cache-cleanup">
+(function(){
+  // V66: a Portaria não usa mais Service Worker enquanto corrigimos o loop.
+  // Limpa somente caches HYPE; não apaga a chave/autorização da Portaria.
+  try{
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations()
+        .then(list=>Promise.all(list.map(reg=>reg.unregister())))
+        .catch(()=>{});
+    }
+    if('caches' in window){
+      caches.keys()
+        .then(keys=>Promise.all(keys.filter(k=>String(k).startsWith('hype-')).map(k=>caches.delete(k))))
+        .catch(()=>{});
+    }
+  }catch(_){}
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
 <script src="hype-qrcode.js?v=20260902-v21"></script>
-<script src="portaria-v18.js?v=20261002-v60"></script>
+<script src="portaria-v18.js?v=20261002-v66"></script>
 <script src="hype-v406-lista-simples.js?v=20261001-v50"></script>
-<script src="portaria-v20.js?v=20261002-v64"></script>
-<script src="register-sw.js?v=20261002-v64"></script>
-  <script src="hype-push-config.js?v=44"></script>
+<script src="portaria-v20.js?v=20261002-v66"></script>
+<script src="hype-push-config.js?v=44"></script>
   <script src="hype-v38-chat.js?v=44"></script>
   <script src="hype-v38-reset.js?v=20260905-v38-1"></script>
   <script src="hype-v43-auto-checkup.js?v=20260905-v43-2"></script>
