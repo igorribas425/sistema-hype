@@ -134,6 +134,7 @@ test("admin client list includes public guest-list names without treating them a
 
   assert.match(app, /staff_guest_simple_list_v406/);
   assert.match(app, /guest_list/);
+  assert.match(app, /HypeV49Registration\.deleteGuest/);
   assert.match(app, /Lista HYPE|LISTA HYPE/);
   assert.match(app, /record_type/);
 });
