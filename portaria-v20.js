@@ -547,13 +547,17 @@
     box.classList.add('show');
 
     const isPaid = paid || order.payment_status === 'Pago';
+    const isFree = Number(order.price || 0) <= 0;
+    const isStone = /stone/i.test(String(order.payment_method || '')) || Boolean(order.stone_nsu);
     const pix = String(order.asaas_pix || '');
     const qrBase64 = order.asaas_qr_base64 ? String(order.asaas_qr_base64) : '';
+    const saleLabel = isFree ? 'FREE' : isStone ? String(order.payment_method || 'STONE').toUpperCase() : 'PIX ASAAS';
+    const statusLabel = isPaid ? (isFree ? 'FREE' : isStone ? 'PAGO • STONE' : 'PAGO') : 'AGUARDANDO ASAAS';
 
     box.innerHTML = `
       <div class="v19-order-head">
-        <div><small>VENDA NA HORA • ${Number(order.price||0)<=0?'FREE':'PIX ASAAS'}</small><strong>${esc(order.customer_name||'Cliente Portaria')}</strong><span>${esc(maskedCpf(order.cpf||''))} • ${esc(order.ticket_code||'')}</span></div>
-        <div class="v19-order-status ${isPaid?'paid':'pending'}">${isPaid?'PAGO':'AGUARDANDO ASAAS'}</div>
+        <div><small>VENDA NA HORA • ${esc(saleLabel)}</small><strong>${esc(order.customer_name||'Cliente Portaria')}</strong><span>${esc(maskedCpf(order.cpf||''))} • ${esc(order.ticket_code||'')}</span></div>
+        <div class="v19-order-status ${isPaid?'paid':'pending'}">${esc(statusLabel)}</div>
       </div>
       <div class="v19-order-grid">
         ${!isPaid ? `<div class="v19-qr-block"><h4>1. CLIENTE PAGA O PIX DO ASAAS</h4>${pix?`<img id="v19PixQr" alt="QR PIX Asaas"><textarea id="v19PixPayload" readonly>${esc(pix)}</textarea><button class="btn" onclick="HypeV20.copyPix()">COPIAR PIX COPIA E COLA</button>`:'<div class="v19-reader-empty">PIX do Asaas ainda não foi carregado.</div>'}</div>` : ''}
@@ -561,11 +565,20 @@
           <p><b>Nome:</b> ${esc(order.customer_name||'')}</p>
           <p><b>Evento:</b> ${esc(order.event_name||$('v19DoorEventName')?.textContent||'')}</p>
           <p><b>Ingresso:</b> ${esc(order.lot_name||'')} • ${esc(order.sector||'')}</p>
-          <p><b>Valor:</b> ${Number(order.price||0)<=0?'FREE':money(order.price)}</p>
+          <p><b>Valor:</b> ${isFree?'FREE':money(order.price)}</p>
           <p><b>Gênero:</b> ${esc(order.gender||'')}</p>
-          ${order.raffle_enabled ? `<p class="v19-raffle-ok">🎁 Quando ficar PAGO, este nome entra automaticamente no sorteio: <b>${esc(order.raffle_prize||'prêmio do evento')}</b>.</p>` : '<p class="v19-muted">Sorteio do evento desativado.</p>'}
+          ${isStone && order.stone_nsu ? `<p><b>Stone:</b> ${esc(order.payment_method||'Stone')} • NSU ${esc(order.stone_nsu)}</p>` : ''}
+          ${isFree
+            ? '<p class="v19-muted">🎁 FREE não entra no sorteio reservado aos ingressos pagos.</p>'
+            : order.raffle_enabled
+              ? `<p class="v19-raffle-ok">🎁 Ingresso PAGO participa automaticamente do sorteio: <b>${esc(order.raffle_prize||'prêmio do evento')}</b>.</p>`
+              : '<p class="v19-muted">Sorteio do evento desativado.</p>'}
           ${isPaid
-            ? (Number(order.price||0)<=0 ? `<p class="v19-paid-note">✅ ${esc(order.gender||'Ingresso')} FREE. Ingresso liberado sem PIX.</p>` : '<p class="v19-paid-note">✅ Asaas confirmou o pagamento. O ingresso já está liberado.</p>')
+            ? (isFree
+                ? `<p class="v19-paid-note">✅ ${esc(order.gender||'Ingresso')} FREE. Ingresso liberado sem cobrança.</p>`
+                : isStone
+                  ? '<p class="v19-paid-note">✅ Pagamento Stone registrado. O ingresso já está liberado.</p>'
+                  : '<p class="v19-paid-note">✅ Asaas confirmou o pagamento. O ingresso já está liberado.</p>')
             : '<p class="v19-muted">⏳ Não precisa confirmar manualmente. Esta tela verifica o pagamento e o webhook do Asaas libera o ingresso automaticamente.</p>'}
         </div>
       </div>
