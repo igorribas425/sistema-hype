@@ -379,25 +379,13 @@ html,body{max-width:100%;overflow-x:hidden}
       <div class="v59-flow-card good"><span>Comentários bons</span><b id="v59GoodCount">0</b><small>Clientes na saída</small></div>
       <div class="v59-flow-card bad"><span>Comentários ruins</span><b id="v59BadCount">0</b><small>Clientes na saída</small></div>
     </div>
-
-    <div class="v59-evaluation-admin">
-      <div class="v59-evaluation-head">
-        <div><b>📝 FEEDBACK NA SAÍDA</b><small>Comentários dos clientes registrados na hora da saída, junto com o fluxo daquele momento.</small></div>
-        <div class="v59-evaluation-tabs">
-          <button id="v59EvalFilterAll" class="active" type="button" onclick="HypeV34.setEvaluationFilter('ALL')">TODAS</button>
-          <button id="v59EvalFilterGood" type="button" onclick="HypeV34.setEvaluationFilter('BOA')">COM BOM</button>
-          <button id="v59EvalFilterBad" type="button" onclick="HypeV34.setEvaluationFilter('RUIM')">COM RUIM</button>
-        </div>
-      </div>
-      <div id="v59EvaluationList" class="v59-evaluation-list"><div class="v34-empty">Nenhum feedback de saída registrado ainda.</div></div>
-    </div>
-  </section>
+</section>
 
   <section class="panel-box v34-panel" id="v34SurveyPanel">
     <div class="v34-panel-head">
       <div>
         <h3>⭐ PÓS-EVENTO</h3>
-        <p>Reúne a pesquisa dos clientes e as avaliações operacionais registradas pela Portaria durante a noite, tudo vinculado ao mesmo evento.</p>
+        <p>Reúne a pesquisa pós-evento e os comentários feitos pelos próprios clientes na hora da saída, tudo vinculado ao mesmo evento.</p>
       </div>
       <div class="v34-survey-actions">
         <button class="btn-action" type="button" onclick="HypeV34.loadSurveyAttendees()">↻ ATUALIZAR</button>
@@ -432,8 +420,8 @@ html,body{max-width:100%;overflow-x:hidden}
     <div class="v59-postevent-wrap">
       <div class="v59-postevent-head">
         <div>
-          <b>🚪 FEEDBACK DA PORTARIA</b>
-          <small>Comentário bom e/ou ruim feito pela pessoa na hora da saída. Usa o mesmo evento do Check-in ao vivo.</small>
+          <b>🚪 FEEDBACK DOS CLIENTES NA SAÍDA</b>
+          <small>Na saída, a pessoa pode deixar um comentário bom e um comentário ruim ao mesmo tempo. O registro fica ligado ao mesmo evento do Check-in ao vivo.</small>
         </div>
         <div class="v59-evaluation-tabs">
           <button id="v59PostFilterAll" class="active" type="button" onclick="HypeV34.setEvaluationFilter('ALL')">TODAS</button>
@@ -448,7 +436,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <div><span>Pico entrada / 15 min</span><b id="v59PostPeakEntry">0</b></div>
         <div><span>Pico saída / 15 min</span><b id="v59PostPeakExit">0</b></div>
       </div>
-      <div id="v59PostEvaluationList" class="v59-evaluation-list"><div class="v34-empty">Nenhuma avaliação da Portaria neste evento.</div></div>
+      <div id="v59PostEvaluationList" class="v59-evaluation-list"><div class="v34-empty">Nenhum feedback de saída registrado neste evento.</div></div>
     </div>
 
     <div class="v34-survey-columns">
