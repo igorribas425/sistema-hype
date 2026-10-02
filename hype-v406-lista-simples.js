@@ -59,7 +59,7 @@
 
   async function publicListEvent(){
     try{
-      return arr(await rpc('public_guest_registration_context_v49'))[0] || null;
+      return arr(await rpc('public_guest_registration_events_v50'))[0] || null;
     }catch(_){
       return null;
     }

@@ -414,7 +414,7 @@ begin
       update public.guest_list_simple_v406
       set status = 'Cancelado', reviewed_by = v_staff.username, reviewed_at = now(), email_sent_at = null
       where id = v_row.id returning * into v_row;
-    elsif v_row.status not in ('Cancelado',) then
+    elsif v_row.status <> 'Cancelado' then
       raise exception 'Cadastro ja foi aprovado';
     end if;
   else

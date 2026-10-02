@@ -134,7 +134,7 @@ test("portaria keeps public guest-list search scoped to the selected event", asy
 
   assert.match(js, /portaria_guest_simple_search_v406/);
   assert.match(js, /portaria_guest_simple_enter_v406/);
-  assert.match(js, /public_guest_registration_context_v49/);
+  assert.match(js, /public_guest_registration_events_v50/);
   assert.match(js, /event_id/);
   assert.match(portaria, /HypeListaSimples\.search/);
   assert.match(portaria, /state\.eventId/);

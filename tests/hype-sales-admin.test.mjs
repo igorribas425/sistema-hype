@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
@@ -8,7 +8,10 @@ const migrationPath = path.join(root, "supabase", "migrations", "202610010002_hy
 
 async function migrationSql() {
   try {
-    return await readFile(migrationPath, "utf8");
+    const files = (await readdir(path.dirname(migrationPath)))
+      .filter((file) => /^\d+.*\.sql$/.test(file))
+      .sort();
+    return (await Promise.all(files.map((file) => readFile(path.join(path.dirname(migrationPath), file), "utf8")))).join("\n");
   } catch (error) {
     assert.fail(`Sales/admin migration is required: ${error.message}`);
   }

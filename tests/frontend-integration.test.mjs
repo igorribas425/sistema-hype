@@ -88,7 +88,7 @@ test("portaria_focuses_on_sales_gender_counts_and_one_people_search", async () =
   assert.match(portaria, /id="v19DoorSale"[^>]*class="v19-door portaria-extra"/);
   assert.match(portariaApp, /HypeListaSimples\.search\(q,'results',scoped\.length>0\)/);
   assert.match(guestList, /function search\(query,targetId='v406ListResult',append=false\)/);
-  assert.match(portaria, /hype-v406-lista-simples\.js\?v=20261001-v48/);
+  assert.match(portaria, /hype-v406-lista-simples\.js\?v=20261001-v50/);
 });
 
 test("admin_login_defaults_to_the_new_username_without_embedding_a_password", async () => {
