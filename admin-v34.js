@@ -132,11 +132,24 @@
 
   function renderEvaluation(data) {
     V34.lastLiveData = data || null;
-    setText('v59PeakInside', data?.peak_inside || 0);
-    setText('v59PeakEntry', data?.peak_entry_15m || 0);
-    setText('v59PeakExit', data?.peak_exit_15m || 0);
-    setText('v59GoodCount', data?.good_observations || 0);
-    setText('v59BadCount', data?.bad_observations || 0);
+
+    const peakInside = Number(data?.peak_inside || 0);
+    const peakEntry = Number(data?.peak_entry_15m || 0);
+    const peakExit = Number(data?.peak_exit_15m || 0);
+    const goodCount = Number(data?.good_observations || 0);
+    const badCount = Number(data?.bad_observations || 0);
+
+    setText('v59PeakInside', peakInside);
+    setText('v59PeakEntry', peakEntry);
+    setText('v59PeakExit', peakExit);
+    setText('v59GoodCount', goodCount);
+    setText('v59BadCount', badCount);
+
+    setText('v59PostPeakInside', peakInside);
+    setText('v59PostPeakEntry', peakEntry);
+    setText('v59PostPeakExit', peakExit);
+    setText('v59PostGoodCount', goodCount);
+    setText('v59PostBadCount', badCount);
 
     const peakInsideAt = $('v59PeakInsideAt');
     const peakEntryAt = $('v59PeakEntryAt');
@@ -150,27 +163,31 @@
       ? all
       : all.filter(item => String(item?.sentiment || '').toUpperCase() === V34.evaluationFilter);
 
-    const box = $('v59EvaluationList');
-    if (box) {
-      box.innerHTML = filtered.length ? filtered.map(item => {
-        const isGood = String(item?.sentiment || '').toUpperCase() === 'BOA';
-        return `<div class="v59-evaluation-row ${isGood ? 'good' : 'bad'}">
-          <div class="v59-evaluation-row-head">
-            <span class="v59-evaluation-badge">${isGood ? '👍 BOA' : '👎 RUIM'}</span>
-            <time>${esc(fmtTime(item?.created_at))}</time>
-          </div>
-          <p>${esc(item?.description || '')}</p>
-          <div class="v59-evaluation-meta">${esc(item?.device_label || 'Portaria')} • ${Number(item?.inside_now || 0)} dentro • ${Number(item?.entered_total || 0)} entraram • ${Number(item?.temporary_out || 0)} em saída temporária</div>
-        </div>`;
-      }).join('') : '<div class="v34-empty">Nenhuma avaliação nesta aba.</div>';
-    }
+    const html = filtered.length ? filtered.map(item => {
+      const isGood = String(item?.sentiment || '').toUpperCase() === 'BOA';
+      return `<div class="v59-evaluation-row ${isGood ? 'good' : 'bad'}">
+        <div class="v59-evaluation-row-head">
+          <span class="v59-evaluation-badge">${isGood ? '👍 BOA' : '👎 RUIM'}</span>
+          <time>${esc(fmtDateTime(item?.created_at))}</time>
+        </div>
+        <p>${esc(item?.description || '')}</p>
+        <div class="v59-evaluation-meta">${esc(item?.device_label || 'Portaria')} • ${Number(item?.inside_now || 0)} dentro • ${Number(item?.entered_total || 0)} entraram • ${Number(item?.temporary_out || 0)} em saída temporária</div>
+      </div>`;
+    }).join('') : '<div class="v34-empty">Nenhuma avaliação nesta aba.</div>';
 
-    const map = {
-      ALL: 'v59EvalFilterAll',
-      BOA: 'v59EvalFilterGood',
-      RUIM: 'v59EvalFilterBad'
+    const liveBox = $('v59EvaluationList');
+    const postBox = $('v59PostEvaluationList');
+    if (liveBox) liveBox.innerHTML = html;
+    if (postBox) postBox.innerHTML = html;
+
+    const buttons = {
+      ALL: ['v59EvalFilterAll','v59PostFilterAll'],
+      BOA: ['v59EvalFilterGood','v59PostFilterGood'],
+      RUIM: ['v59EvalFilterBad','v59PostFilterBad']
     };
-    Object.entries(map).forEach(([key,id]) => $(''+id)?.classList.toggle('active', V34.evaluationFilter === key));
+    Object.entries(buttons).forEach(([key,ids]) => {
+      ids.forEach(id => $(id)?.classList.toggle('active', V34.evaluationFilter === key));
+    });
   }
 
   function setEvaluationFilter(filter) {
