@@ -84,6 +84,7 @@ test("public guest page requires only the approved identity fields", async () =>
   assert.match(js, /public_guest_registration_context_v49/);
   assert.match(js, /public_guest_registration_submit_v49/);
   assert.doesNotMatch(html + js, /p_username|p_password|service_role/i);
+  assert.doesNotMatch(html, /Já é promoter|Cadastre-se aqui|promoter\.html/i);
 });
 
 test("public promoter page returns copyable and shareable sales link", async () => {
