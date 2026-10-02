@@ -22,6 +22,7 @@
     readers: [],
     salesRows: [],
     currentOrder: null,
+    pendingStoneSale: null,
     lastEventId: 0,
     activeReaderCount: 0,
     paymentTimer: null
@@ -315,12 +316,28 @@
   function updateDoorPrice() {
     const row = selectedSalesRow();
     const gender = $('v19DoorGender')?.value || 'Feminino';
+    const payment = $('v62DoorPayment')?.value || 'PIX';
     const base = Number(gender === 'Masculino' ? row?.price_male : row?.price_female) || 0;
     const total = base > 0 ? base + 1.98 : 0;
     if ($('v19DoorPrice')) {
+      const paymentLabel = payment === 'STONE_CREDITO'
+        ? ' • cobrar na Stone em CRÉDITO'
+        : payment === 'STONE_DEBITO'
+          ? ' • cobrar na Stone em DÉBITO'
+          : ' • PIX Asaas';
       $('v19DoorPrice').textContent = row
-        ? (base <= 0 ? `${gender.toUpperCase()} FREE — sem PIX e sem taxa` : `${money(base)} + taxa R$ 1,98 = ${money(total)}`)
+        ? (base <= 0 ? `${gender.toUpperCase()} FREE — sem cobrança e sem taxa` : `${money(base)} + taxa R$ 1,98 = ${money(total)}${paymentLabel}`)
         : 'Selecione um ingresso';
+    }
+    const btn = $('v19DoorCreate');
+    if (btn) {
+      btn.textContent = base <= 0
+        ? '🎟️ LIBERAR FREE'
+        : payment === 'STONE_CREDITO'
+          ? '💳 COBRAR NA STONE • CRÉDITO'
+          : payment === 'STONE_DEBITO'
+            ? '💳 COBRAR NA STONE • DÉBITO'
+            : '💠 GERAR PIX ASAAS';
     }
   }
 
@@ -344,30 +361,151 @@
     return d.length === 11 ? `***.***.***-${d.slice(-2)}` : 'CPF não informado';
   }
 
-  async function createDoorOrder() {
-    if (!isOnline()) return notify('Venda na hora precisa de internet para gerar o PIX do Asaas.', false);
-    const eventId = currentEventId();
-    const lotId = Number($('v19DoorLot')?.value || 0);
-    const name = String($('v19DoorName')?.value || '').trim().replace(/\s+/g,' ');
-    const cpf = cpfDigits($('v19DoorCpf')?.value || '');
+  function validEmailOptional(value) {
+    const email = String(value || '').trim();
+    return !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function currentDoorForm() {
+    const row = selectedSalesRow();
     const gender = $('v19DoorGender')?.value || 'Feminino';
-    if (!eventId) return notify('Selecione o evento na parte de cima.', false);
-    if (!lotId) return notify('Selecione o ingresso.', false);
-    if (name.length < 2) return notify('Digite o nome da pessoa para entrar no evento e no sorteio.', false);
-    if (!validCpf(cpf)) return notify('Digite um CPF válido com 11 números.', false);
+    const base = Number(gender === 'Masculino' ? row?.price_male : row?.price_female) || 0;
+    return {
+      eventId: currentEventId(),
+      lotId: Number($('v19DoorLot')?.value || 0),
+      name: String($('v19DoorName')?.value || '').trim().replace(/\s+/g,' '),
+      cpf: cpfDigits($('v19DoorCpf')?.value || ''),
+      phone: String($('v62DoorPhone')?.value || '').trim(),
+      email: String($('v62DoorEmail')?.value || '').trim().toLowerCase(),
+      gender,
+      payment: $('v62DoorPayment')?.value || 'PIX',
+      row,
+      base,
+      total: base > 0 ? Number((base + 1.98).toFixed(2)) : 0
+    };
+  }
+
+  function validateDoorForm(form) {
+    if (!form.eventId) return 'Selecione o evento na parte de cima.';
+    if (!form.lotId) return 'Selecione o ingresso.';
+    if (form.name.length < 2) return 'Digite o nome da pessoa.';
+    if (!validCpf(form.cpf)) return 'Digite um CPF válido com 11 números.';
+    if (!validEmailOptional(form.email)) return 'Digite um e-mail válido ou deixe o campo vazio.';
+    return '';
+  }
+
+  function openStoneSale(form) {
+    state.pendingStoneSale = form;
+    const label = form.payment === 'STONE_DEBITO' ? 'STONE • DÉBITO' : 'STONE • CRÉDITO';
+    if ($('v62StonePerson')) $('v62StonePerson').textContent = form.name;
+    if ($('v62StoneTicket')) $('v62StoneTicket').textContent = `${form.row?.lot_name || 'Ingresso'} • ${form.row?.sector || ''}`;
+    if ($('v62StoneAmount')) $('v62StoneAmount').textContent = money(form.total);
+    if ($('v62StoneMethod')) $('v62StoneMethod').textContent = label;
+    if ($('v62StoneNsu')) $('v62StoneNsu').value = '';
+    if ($('v62StoneStatus')) $('v62StoneStatus').textContent = 'Cobre primeiro na maquininha. Depois de APROVADO, informe o NSU/código e confirme.';
+    $('v62StoneModal')?.classList.add('show');
+    setTimeout(()=>$('v62StoneNsu')?.focus(),100);
+  }
+
+  function closeStoneSale() {
+    $('v62StoneModal')?.classList.remove('show');
+    state.pendingStoneSale = null;
+  }
+
+  async function sendStoneTicketEmail(order) {
+    if (!order?.email) return { skipped:true };
+    const cfg = window.HYPE_SUPABASE_CONFIG || {};
+    if (!cfg.url || !cfg.anonKey) return { skipped:true };
+    const response = await fetch(`${cfg.url}/functions/v1/stone-ticket-email`, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        apikey:cfg.anonKey,
+        Authorization:`Bearer ${cfg.anonKey}`
+      },
+      body:JSON.stringify({
+        device_key:deviceKey(),
+        ticket_id:Number(order.ticket_id),
+        qr_token:String(order.qr_token || '')
+      })
+    });
+    const data = await response.json().catch(()=>({}));
+    if (!response.ok || data?.ok === false) throw new Error(data?.error || 'Não foi possível enviar o ingresso por e-mail.');
+    return data;
+  }
+
+  async function confirmStoneSale() {
+    const form = state.pendingStoneSale;
+    if (!form) return;
+    const nsu = String($('v62StoneNsu')?.value || '').trim();
+    if (nsu.length < 3) {
+      if ($('v62StoneStatus')) $('v62StoneStatus').textContent = 'Informe o NSU/código da transação que aparece no comprovante Stone.';
+      return;
+    }
+    const btn = $('v62StoneConfirm');
+    if (btn) { btn.disabled=true; btn.textContent='SALVANDO VENDA...'; }
+    try {
+      const paymentType = form.payment === 'STONE_DEBITO' ? 'DEBITO' : 'CREDITO';
+      const result = rows(await rpc('portaria_device_stone_sale_v62',{
+        p_device_key:deviceKey(),
+        p_event_id:Number(form.eventId),
+        p_lot_id:Number(form.lotId),
+        p_name:form.name,
+        p_phone:form.phone || null,
+        p_email:form.email || null,
+        p_cpf:form.cpf,
+        p_gender:form.gender,
+        p_payment_type:paymentType,
+        p_nsu:nsu
+      }))[0];
+      if (!result?.ticket_id) throw new Error('A venda Stone não foi salva.');
+      state.currentOrder = {
+        ...result,
+        stone_nsu:result.stone_nsu || nsu,
+        payment_status:'Pago'
+      };
+      $('v62StoneModal')?.classList.remove('show');
+      state.pendingStoneSale = null;
+      renderDoorOrder(state.currentOrder,true);
+      notify(`✅ Stone aprovada e ingresso ${result.ticket_code} liberado.`,true);
+      await loadSalesContext();
+      if (window.HypePortaria?.refresh) window.HypePortaria.refresh(false).catch?.(()=>{});
+      if (result.email) {
+        sendStoneTicketEmail(state.currentOrder)
+          .then(()=>notify(`✅ Stone aprovada. Ingresso liberado e enviado para ${result.email}.`,true))
+          .catch(err=>notify(`Stone aprovada e ingresso liberado. E-mail não enviado: ${err.message}`,false));
+      }
+    } catch (err) {
+      if ($('v62StoneStatus')) $('v62StoneStatus').textContent = err.message || 'Não foi possível salvar a venda Stone.';
+    } finally {
+      if (btn) { btn.disabled=false; btn.textContent='✅ PAGAMENTO APROVADO NA STONE'; }
+    }
+  }
+
+  async function createDoorOrder() {
+    if (!isOnline()) return notify('Venda na hora precisa de internet.', false);
+    const form = currentDoorForm();
+    const validation = validateDoorForm(form);
+    if (validation) return notify(validation,false);
+
+    // FREE nunca passa pela Stone. Mantém a liberação automática já existente.
+    if (form.base > 0 && (form.payment === 'STONE_CREDITO' || form.payment === 'STONE_DEBITO')) {
+      openStoneSale(form);
+      return;
+    }
 
     const btn = $('v19DoorCreate');
     if (btn) { btn.disabled=true; btn.textContent='PROCESSANDO VENDA...'; }
     try {
       const result = rows(await rpc('portaria_device_create_door_order_v19',{
         p_device_key:deviceKey(),
-        p_event_id:eventId,
-        p_lot_id:lotId,
-        p_name:name,
-        p_phone:null,
-        p_cpf:cpf,
-        p_email:null,
-        p_gender:gender
+        p_event_id:form.eventId,
+        p_lot_id:form.lotId,
+        p_name:form.name,
+        p_phone:form.phone || null,
+        p_cpf:form.cpf,
+        p_email:form.email || null,
+        p_gender:form.gender
       }))[0];
       if (!result?.ticket_id) throw new Error('A venda não foi criada.');
 
@@ -375,7 +513,7 @@
         const order = { ...result, payment_status:'Pago', asaas_pix:'', asaas_qr_base64:null, asaas_payment_id:null };
         state.currentOrder = order;
         renderDoorOrder(order, true);
-        notify(`${result.customer_name || result.gender || 'Ingresso'} FREE liberado e já entra no sorteio se ele estiver ativo.`, true);
+        notify(`${result.customer_name || result.gender || 'Ingresso'} FREE liberado.`, true);
         await loadSalesContext();
         if (window.HypePortaria?.refresh) window.HypePortaria.refresh(false).catch?.(()=>{});
         return;
@@ -394,12 +532,12 @@
       state.currentOrder = order;
       renderDoorOrder(order, false);
       startDoorPaymentWatch();
-      notify(`PIX Asaas de ${result.customer_name || name} gerado. Quando pagar, entra no evento e no sorteio automático.`, true);
+      notify(`PIX Asaas de ${result.customer_name || form.name} gerado. Quando pagar, o ingresso é liberado automaticamente.`, true);
       await loadSalesContext();
     } catch (err) {
-      notify(err.message || 'Erro ao gerar PIX no Asaas.', false);
+      notify(err.message || 'Erro ao gerar a venda na Portaria.', false);
     } finally {
-      if (btn) { btn.disabled=false; btn.textContent='💠 GERAR PIX / LIBERAR FREE'; }
+      if (btn) { btn.disabled=false; updateDoorPrice(); }
     }
   }
 
@@ -525,7 +663,9 @@
     state.currentOrder = null;
     $('v19DoorResult')?.classList.remove('show');
     if ($('v19DoorResult')) $('v19DoorResult').innerHTML='';
-    ['v19DoorName','v19DoorCpf'].forEach(id=>{if($(id))$(id).value='';});
+    ['v19DoorName','v19DoorCpf','v62DoorPhone','v62DoorEmail'].forEach(id=>{if($(id))$(id).value='';});
+    if ($('v62DoorPayment')) $('v62DoorPayment').value='PIX';
+    updateDoorPrice();
     notify('Pronto para uma nova venda na hora.', true);
     $('v19DoorName')?.focus();
   }
@@ -570,7 +710,7 @@
 
   window.HypeV20 = {
     openReaderLink, closeReaderLink, generateReaderLink, copyReaderLink, shareReaderLink, sendReaderLinkEmail, loadReaders, disconnectReader, endAllReaders,
-    loadSalesContext, updateDoorPrice, createDoorOrder, copyPix, refreshDoorPayment, confirmDoorPayment,
+    loadSalesContext, updateDoorPrice, createDoorOrder, openStoneSale, closeStoneSale, confirmStoneSale, copyPix, refreshDoorPayment, confirmDoorPayment,
     cancelDoorOrder, resetDoorSale, showDoorTicketInPortaria, eventChanged,
     get currentOrder(){ return state.currentOrder; }
   };
