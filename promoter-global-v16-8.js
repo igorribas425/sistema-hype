@@ -66,18 +66,42 @@
   window.hypeApplyPromoterLinkV16 = function() {
     const input = document.getElementById('clientPromoter');
     const status = document.getElementById('clientPromoterStatus');
+    const form = document.getElementById('ticketForm');
+    const sticky = document.getElementById('v14StickyBuy');
     const code = String(HYPE?.promoterLinkCode || '').trim().toUpperCase();
     if (input) input.value = code;
-    const submit = document.querySelector('#ticketForm button[type="submit"]');
-    if (status) {
-      if (code && HYPE?.promoterLinkInvalid) {
-        status.textContent = '❌ Este link de promoter foi excluído ou desativado. A compra por este link não está mais disponível.';
+
+    let blockedBox = document.getElementById('promoterInvalidBox');
+    if (code && HYPE?.promoterLinkInvalid) {
+      if (status) {
+        status.textContent = '❌ Este link de promoter foi excluído ou desativado.';
         status.className = 'v16-coupon-status error';
-        if (submit) {
-          submit.disabled = true;
-          submit.textContent = 'LINK DE PROMOTER INVÁLIDO';
-        }
-      } else if (code) {
+      }
+      if (!blockedBox && form?.parentNode) {
+        blockedBox = document.createElement('div');
+        blockedBox.id = 'promoterInvalidBox';
+        blockedBox.style.cssText = 'margin:18px 0;padding:18px;border:1px solid rgba(255,77,103,.45);background:rgba(255,77,103,.10);border-radius:16px;color:#ffd7de;font-weight:800;line-height:1.5;text-align:center';
+        form.parentNode.insertBefore(blockedBox, form);
+      }
+      if (blockedBox) {
+        blockedBox.innerHTML = '❌ <strong>LINK DE PROMOTER ENCERRADO</strong><br><span style="font-weight:600;font-size:12px">Este promoter foi excluído ou desativado. Este link não pode mais gerar compras.</span>';
+        blockedBox.style.display = 'block';
+      }
+      if (form) {
+        form.dataset.promoterBlocked = '1';
+        form.style.display = 'none';
+      }
+      if (sticky) sticky.style.display = 'none';
+      return;
+    }
+
+    if (blockedBox) blockedBox.style.display = 'none';
+    if (form?.dataset.promoterBlocked === '1') {
+      delete form.dataset.promoterBlocked;
+      form.style.display = '';
+    }
+    if (status) {
+      if (code) {
         status.innerHTML = `✅ Compra vinculada ao promoter <b>${esc(code)}</b>. Este link vale para qualquer evento HYPE.`;
         status.className = 'v16-coupon-status ok';
       } else {
