@@ -87,6 +87,7 @@
     if (action === 'ENTRY') return 'Entrada';
     if (action === 'REENTRY') return 'Reentrada';
     if (action === 'TEMPORARY_EXIT') return 'Saída temporária';
+    if (action === 'EXIT') return 'Saída confirmada';
     return action || '';
   }
 
@@ -136,8 +137,8 @@
     const peakInside = Number(data?.peak_inside || 0);
     const peakEntry = Number(data?.peak_entry_15m || 0);
     const peakExit = Number(data?.peak_exit_15m || 0);
-    const goodCount = Number(data?.good_observations || 0);
-    const badCount = Number(data?.bad_observations || 0);
+    const goodCount = Number(data?.good_feedback_count || 0);
+    const badCount = Number(data?.bad_feedback_count || 0);
 
     setText('v59PeakInside', peakInside);
     setText('v59PeakEntry', peakEntry);
@@ -158,22 +159,27 @@
     if (peakEntryAt) peakEntryAt.textContent = data?.peak_entry_15m_at ? `janela iniciada ${fmtTime(data.peak_entry_15m_at)}` : 'Sem movimento';
     if (peakExitAt) peakExitAt.textContent = data?.peak_exit_15m_at ? `janela iniciada ${fmtTime(data.peak_exit_15m_at)}` : 'Sem movimento';
 
-    const all = arr(data?.observations);
+    const all = arr(data?.exit_feedbacks);
     const filtered = V34.evaluationFilter === 'ALL'
       ? all
-      : all.filter(item => String(item?.sentiment || '').toUpperCase() === V34.evaluationFilter);
+      : V34.evaluationFilter === 'BOA'
+        ? all.filter(item => String(item?.good_comment || '').trim())
+        : all.filter(item => String(item?.bad_comment || '').trim());
 
     const html = filtered.length ? filtered.map(item => {
-      const isGood = String(item?.sentiment || '').toUpperCase() === 'BOA';
-      return `<div class="v59-evaluation-row ${isGood ? 'good' : 'bad'}">
+      const good = String(item?.good_comment || '').trim();
+      const bad = String(item?.bad_comment || '').trim();
+      return `<div class="v59-evaluation-row ${bad ? 'bad' : 'good'}">
         <div class="v59-evaluation-row-head">
-          <span class="v59-evaluation-badge">${isGood ? '👍 BOA' : '👎 RUIM'}</span>
-          <time>${esc(fmtDateTime(item?.created_at))}</time>
+          <span class="v59-evaluation-badge">🚪 ${esc(item?.customer_name || 'Cliente')}</span>
+          <time>${esc(fmtDateTime(item?.exit_at))}</time>
         </div>
-        <p>${esc(item?.description || '')}</p>
-        <div class="v59-evaluation-meta">${esc(item?.device_label || 'Portaria')} • ${Number(item?.inside_now || 0)} dentro • ${Number(item?.entered_total || 0)} entraram • ${Number(item?.temporary_out || 0)} em saída temporária</div>
+        ${good ? `<div class="v59-feedback-good"><b>👍 BOM</b><p>${esc(good)}</p></div>` : ''}
+        ${bad ? `<div class="v59-feedback-bad"><b>👎 RUIM</b><p>${esc(bad)}</p></div>` : ''}
+        ${!good && !bad ? '<p class="v59-no-comment">Saída confirmada sem comentário.</p>' : ''}
+        <div class="v59-evaluation-meta">${Number(item?.inside_after || 0)} pessoa(s) dentro depois da saída • ${esc(item?.device_label || 'Portaria')}</div>
       </div>`;
-    }).join('') : '<div class="v34-empty">Nenhuma avaliação nesta aba.</div>';
+    }).join('') : '<div class="v34-empty">Nenhum feedback nesta aba.</div>';
 
     const liveBox = $('v59EvaluationList');
     const postBox = $('v59PostEvaluationList');
