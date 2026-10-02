@@ -396,8 +396,8 @@ html,body{max-width:100%;overflow-x:hidden}
   <section class="panel-box v34-panel" id="v34SurveyPanel">
     <div class="v34-panel-head">
       <div>
-        <h3>⭐ PESQUISA PÓS-EVENTO</h3>
-        <p>Somente clientes que realmente passaram pela Portaria entram na lista. Ao virar para o próximo evento, o sistema tenta enviar o feedback automaticamente por Gmail e WhatsApp.</p>
+        <h3>⭐ PÓS-EVENTO</h3>
+        <p>Reúne a pesquisa dos clientes e as avaliações operacionais registradas pela Portaria durante a noite, tudo vinculado ao mesmo evento.</p>
       </div>
       <div class="v34-survey-actions">
         <button class="btn-action" type="button" onclick="HypeV34.loadSurveyAttendees()">↻ ATUALIZAR</button>
@@ -427,6 +427,28 @@ html,body{max-width:100%;overflow-x:hidden}
         <div class="v35-rank-row"><span>⛔ Péssimo</span><div><i style="width:0%"></i></div><b>0</b></div>
       </div>
       <div id="v35AutoFeedbackStatus" class="v35-auto-status">Envio automático: aguardando encerramento do evento.</div>
+    </div>
+
+    <div class="v59-postevent-wrap">
+      <div class="v59-postevent-head">
+        <div>
+          <b>🚪 FEEDBACK DA PORTARIA</b>
+          <small>Boa/ruim + descrição + fluxo do momento. Usa o mesmo evento do Check-in ao vivo.</small>
+        </div>
+        <div class="v59-evaluation-tabs">
+          <button id="v59PostFilterAll" class="active" type="button" onclick="HypeV34.setEvaluationFilter('ALL')">TODAS</button>
+          <button id="v59PostFilterGood" type="button" onclick="HypeV34.setEvaluationFilter('BOA')">BOAS</button>
+          <button id="v59PostFilterBad" type="button" onclick="HypeV34.setEvaluationFilter('RUIM')">RUINS</button>
+        </div>
+      </div>
+      <div class="v59-postevent-stats">
+        <div><span>Boas</span><b id="v59PostGoodCount">0</b></div>
+        <div><span>Ruins</span><b id="v59PostBadCount">0</b></div>
+        <div><span>Pico dentro</span><b id="v59PostPeakInside">0</b></div>
+        <div><span>Pico entrada / 15 min</span><b id="v59PostPeakEntry">0</b></div>
+        <div><span>Pico saída / 15 min</span><b id="v59PostPeakExit">0</b></div>
+      </div>
+      <div id="v59PostEvaluationList" class="v59-evaluation-list"><div class="v34-empty">Nenhuma avaliação da Portaria neste evento.</div></div>
     </div>
 
     <div class="v34-survey-columns">
