@@ -68,8 +68,16 @@
     const status = document.getElementById('clientPromoterStatus');
     const code = String(HYPE?.promoterLinkCode || '').trim().toUpperCase();
     if (input) input.value = code;
+    const submit = document.querySelector('#ticketForm button[type="submit"]');
     if (status) {
-      if (code) {
+      if (code && HYPE?.promoterLinkInvalid) {
+        status.textContent = '❌ Este link de promoter foi excluído ou desativado. A compra por este link não está mais disponível.';
+        status.className = 'v16-coupon-status error';
+        if (submit) {
+          submit.disabled = true;
+          submit.textContent = 'LINK DE PROMOTER INVÁLIDO';
+        }
+      } else if (code) {
         status.innerHTML = `✅ Compra vinculada ao promoter <b>${esc(code)}</b>. Este link vale para qualquer evento HYPE.`;
         status.className = 'v16-coupon-status ok';
       } else {
