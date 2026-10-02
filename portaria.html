@@ -43,6 +43,22 @@ html,body{max-width:100%;overflow-x:hidden}
   @media(max-width:800px){.controls{grid-template-columns:1fr}.live-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.search-row{grid-template-columns:1fr}}
   @media(max-width:460px){.live-grid{grid-template-columns:1fr 1fr}.live:first-child{grid-column:1/-1}.live{min-height:96px}.live b{font-size:32px}}
   </style>
+  <style id="hype-v59-evaluation-style">
+  .v59-eval{margin:0 0 16px;background:linear-gradient(180deg,#101014,#09090b);border:1px solid var(--line);border-radius:20px;padding:16px}
+  .v59-eval-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
+  .v59-eval-head h3{margin:0;font-size:15px}.v59-eval-head p{margin:5px 0 0;color:var(--muted);font-size:11px;line-height:1.5}
+  .v59-eval-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+  .v59-eval-tab{min-height:44px;border:1px solid var(--line);border-radius:12px;background:#08080b;color:#fff;font-weight:950;cursor:pointer}
+  .v59-eval-tab.good.active{border-color:rgba(40,209,124,.55);background:rgba(40,209,124,.12);color:#9bf1bd}
+  .v59-eval-tab.bad.active{border-color:rgba(255,22,61,.55);background:rgba(255,22,61,.12);color:#ff9bab}
+  .v59-eval textarea{width:100%;min-height:92px;resize:vertical;background:#070709;color:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;outline:none}
+  .v59-eval textarea:focus{border-color:#55555f}
+  .v59-eval-type{display:block;margin:0 0 6px;color:#cfcfd5;font-size:9px;font-weight:950;letter-spacing:.7px}
+  .v59-eval-submit{width:100%;margin-top:9px}
+  .v59-eval-status{margin-top:9px;padding:10px 12px;border:1px dashed var(--line);border-radius:11px;color:var(--muted);font-size:10px;line-height:1.45}
+  .v59-eval-status.ok{color:#a8f3c4;border-color:rgba(40,209,124,.35)}.v59-eval-status.bad{color:#ff9bab;border-color:rgba(255,22,61,.35)}
+  @media(max-width:560px){.v59-eval-head{display:block}.v59-eval-tabs{margin-top:10px}}
+  </style>
   <link rel="stylesheet" href="hype-v38-responsive.css?v=20260905-v42">
   <link rel="manifest" href="manifest.webmanifest?v=42">
 </head>
@@ -83,6 +99,23 @@ html,body{max-width:100%;overflow-x:hidden}
     </div>
     <div class="portaria-extra"><b id="enteredCount">0</b><b id="remainingCount">0</b></div>
     <div id="sectorStats" class="sectors portaria-extra"><span>Aguardando movimento...</span></div>
+
+    <section id="v59EvaluationPanel" class="v59-eval">
+      <div class="v59-eval-head">
+        <div>
+          <h3>📝 AVALIAÇÃO DA NOITE</h3>
+          <p>Registre rapidamente o que está bom ou ruim. O Admin recebe junto com o fluxo da Portaria em tempo real.</p>
+        </div>
+      </div>
+      <div class="v59-eval-tabs" role="tablist" aria-label="Tipo da avaliação">
+        <button id="v59EvalGood" class="v59-eval-tab good active" type="button">👍 BOA</button>
+        <button id="v59EvalBad" class="v59-eval-tab bad" type="button">👎 RUIM</button>
+      </div>
+      <label id="v59EvalType" class="v59-eval-type" for="v59EvalDescription">OBSERVAÇÃO BOA</label>
+      <textarea id="v59EvalDescription" maxlength="500" placeholder="Ex.: entrada fluindo bem, fila rápida, público elogiou a organização..."></textarea>
+      <button id="v59EvalSubmit" class="btn primary v59-eval-submit" type="button">REGISTRAR AVALIAÇÃO</button>
+      <div id="v59EvalStatus" class="v59-eval-status">A observação fica vinculada ao evento e ao movimento registrado neste momento.</div>
+    </section>
 
     <section class="search-card">
       <div class="search-row">
@@ -160,5 +193,6 @@ html,body{max-width:100%;overflow-x:hidden}
   <script src="hype-v38-chat.js?v=44"></script>
   <script src="hype-v38-reset.js?v=20260905-v38-1"></script>
   <script src="hype-v43-auto-checkup.js?v=20260905-v43-2"></script>
+  <script src="portaria-v59-evaluation.js?v=20261002-v59"></script>
 </body>
 </html>
