@@ -14,6 +14,8 @@
     attendees: [],
     initialized: false,
     busy: false,
+    evaluationFilter: 'ALL',
+    lastLiveData: null,
   };
 
   const $ = (id) => document.getElementById(id);
@@ -128,6 +130,55 @@
       <div class="v34-chart-footer"><span>Última movimentação: <b>${esc(actionLabel(last.action))}</b> • ${esc(fmtTime(last.at))}</span><strong>${Number(last.inside||0)} dentro</strong></div>`;
   }
 
+  function renderEvaluation(data) {
+    V34.lastLiveData = data || null;
+    setText('v59PeakInside', data?.peak_inside || 0);
+    setText('v59PeakEntry', data?.peak_entry_15m || 0);
+    setText('v59PeakExit', data?.peak_exit_15m || 0);
+    setText('v59GoodCount', data?.good_observations || 0);
+    setText('v59BadCount', data?.bad_observations || 0);
+
+    const peakInsideAt = $('v59PeakInsideAt');
+    const peakEntryAt = $('v59PeakEntryAt');
+    const peakExitAt = $('v59PeakExitAt');
+    if (peakInsideAt) peakInsideAt.textContent = data?.peak_inside_at ? `às ${fmtTime(data.peak_inside_at)}` : 'Sem movimento';
+    if (peakEntryAt) peakEntryAt.textContent = data?.peak_entry_15m_at ? `janela iniciada ${fmtTime(data.peak_entry_15m_at)}` : 'Sem movimento';
+    if (peakExitAt) peakExitAt.textContent = data?.peak_exit_15m_at ? `janela iniciada ${fmtTime(data.peak_exit_15m_at)}` : 'Sem movimento';
+
+    const all = arr(data?.observations);
+    const filtered = V34.evaluationFilter === 'ALL'
+      ? all
+      : all.filter(item => String(item?.sentiment || '').toUpperCase() === V34.evaluationFilter);
+
+    const box = $('v59EvaluationList');
+    if (box) {
+      box.innerHTML = filtered.length ? filtered.map(item => {
+        const isGood = String(item?.sentiment || '').toUpperCase() === 'BOA';
+        return `<div class="v59-evaluation-row ${isGood ? 'good' : 'bad'}">
+          <div class="v59-evaluation-row-head">
+            <span class="v59-evaluation-badge">${isGood ? '👍 BOA' : '👎 RUIM'}</span>
+            <time>${esc(fmtTime(item?.created_at))}</time>
+          </div>
+          <p>${esc(item?.description || '')}</p>
+          <div class="v59-evaluation-meta">${esc(item?.device_label || 'Portaria')} • ${Number(item?.inside_now || 0)} dentro • ${Number(item?.entered_total || 0)} entraram • ${Number(item?.temporary_out || 0)} em saída temporária</div>
+        </div>`;
+      }).join('') : '<div class="v34-empty">Nenhuma avaliação nesta aba.</div>';
+    }
+
+    const map = {
+      ALL: 'v59EvalFilterAll',
+      BOA: 'v59EvalFilterGood',
+      RUIM: 'v59EvalFilterBad'
+    };
+    Object.entries(map).forEach(([key,id]) => $(''+id)?.classList.toggle('active', V34.evaluationFilter === key));
+  }
+
+  function setEvaluationFilter(filter) {
+    const value = String(filter || 'ALL').toUpperCase();
+    V34.evaluationFilter = ['ALL','BOA','RUIM'].includes(value) ? value : 'ALL';
+    renderEvaluation(V34.lastLiveData || {});
+  }
+
   function renderLive(data) {
     setText('v34InsideNow', data?.inside_now || 0);
     setText('v34EnteredTotal', data?.entered_total || 0);
@@ -147,6 +198,7 @@
     }
     V34.lastLogId = newLog;
     renderChart(data);
+    renderEvaluation(data);
   }
 
   async function refreshLive(silent = true) {
@@ -401,6 +453,7 @@
     refreshSurveyReport,
     sendSurveyEmail,
     whatsApp,
-    copyLink
+    copyLink,
+    setEvaluationFilter
   };
 })();
