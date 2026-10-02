@@ -1,0 +1,18 @@
+-- HYPE V61 — separação contábil PAGO x FREE x LISTA
+-- Aplicado no Supabase de produção em 2026-10-02.
+--
+-- Regras:
+-- PAGO = tickets.payment_status='Pago' e price > 0
+-- FREE = tickets.payment_status='Pago' e price <= 0
+-- LISTA = registros de guest_list_simple_v406
+--
+-- Também corrige os sorteios e contagem de promoters para que FREE não seja contado como PAGO.
+--
+-- RPC adicionada:
+-- public.staff_list_promoters_v61(text,text,bigint)
+--
+-- RPCs atualizadas:
+-- public.public_raffle_info_v18(bigint)
+-- public.staff_raffle_status_v18(text,text,bigint)
+-- public.staff_raffle_participants_v18(text,text,bigint)
+-- public.staff_draw_raffle_v18(text,text,bigint)
