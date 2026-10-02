@@ -18,6 +18,7 @@ const HYPE = {
   coupons: [],
   promoterLinkCode: "",
   promoterLinkEventId: null,
+  promoterLinkInvalid: false,
   currentQuote: null,
   pixKey: "",
   events: [],
@@ -473,6 +474,7 @@ function hypeReadPromoterLinkV16() {
     const code = String(params.get("promoter") || "").trim().toUpperCase();
     const eventId = Number(params.get("event") || 0) || null;
     HYPE.promoterLinkCode = code;
+    HYPE.promoterLinkInvalid = false;
     // V18: promoter é global. Links antigos com ?event= continuam válidos,
     // mas a venda acompanha o promoter em qualquer evento atual ou futuro.
     HYPE.promoterLinkEventId = null;
@@ -480,7 +482,27 @@ function hypeReadPromoterLinkV16() {
   } catch (_) {
     HYPE.promoterLinkCode = "";
     HYPE.promoterLinkEventId = null;
+    HYPE.promoterLinkInvalid = false;
     return { code: "", eventId: null };
+  }
+}
+
+async function hypeValidatePromoterLinkV56(code) {
+  const normalized = String(code || "").trim().toUpperCase();
+  if (!normalized) {
+    HYPE.promoterLinkInvalid = false;
+    return true;
+  }
+  try {
+    const rows = await sbRpc("public_promoter_link_status_v56", { p_code: normalized });
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    HYPE.promoterLinkInvalid = !(row && row.valid === true);
+    return !HYPE.promoterLinkInvalid;
+  } catch (err) {
+    console.warn("[HYPE][promoter-link]", err);
+    // Falha de validação não transforma um promoter em compra direta.
+    HYPE.promoterLinkInvalid = true;
+    return false;
   }
 }
 
@@ -490,10 +512,22 @@ function hypeApplyPromoterLinkV16() {
   const hasCode = Boolean(HYPE.promoterLinkCode);
   const activeCode = hasCode ? HYPE.promoterLinkCode : "";
   if (input) input.value = activeCode;
+  const submit = document.querySelector('#ticketForm button[type="submit"]');
   if (status) {
-    if (activeCode) {
+    if (activeCode && HYPE.promoterLinkInvalid) {
+      status.innerHTML = `❌ Este link de promoter foi excluído ou desativado. A compra por este link não está mais disponível.`;
+      status.className = "v16-coupon-status error";
+      if (submit) {
+        submit.disabled = true;
+        submit.textContent = "LINK DE PROMOTER INVÁLIDO";
+      }
+    } else if (activeCode) {
       status.innerHTML = `✅ Compra vinculada ao promoter <b>${hypeEscape(activeCode)}</b> pelo link oficial.`;
       status.className = "v16-coupon-status ok";
+      if (submit && submit.textContent === "LINK DE PROMOTER INVÁLIDO") {
+        submit.disabled = false;
+        submit.textContent = "GERAR QR CODE PIX";
+      }
     } else {
       status.textContent = "Compra direta: nenhum promoter vinculado.";
       status.className = "v16-coupon-status";
@@ -562,6 +596,7 @@ async function loadPublicState() {
   HYPE.pixKey = typeof pix === "string" ? pix : "";
 
   const promoterLink = hypeReadPromoterLinkV16();
+  await hypeValidatePromoterLinkV56(promoterLink.code);
   if (hypeIsClientPageV37()) {
     const chosen = hypeChooseClientEventV37(HYPE.events, promoterLink);
     HYPE.selectedEventId = chosen?.id ? Number(chosen.id) : null;
@@ -1208,6 +1243,10 @@ function sendReceiptWhatsApp() {
 async function createManualOrder(e) {
   e.preventDefault();
 
+  if (HYPE.promoterLinkInvalid) {
+    return alert("Este link de promoter foi excluído ou desativado. Abra o site oficial da HYPE para comprar.");
+  }
+
   const lot = currentSelectedLot();
   if (!lot) return alert("Escolha um ingresso disponível.");
 
@@ -1360,6 +1399,10 @@ function renderFreeEntry(entry) {
 
 async function createPixOrder(e) {
   e.preventDefault();
+
+  if (HYPE.promoterLinkInvalid) {
+    return alert("Este link de promoter foi excluído ou desativado. Abra o site oficial da HYPE para comprar.");
+  }
 
   const lot = currentSelectedLot();
   if (!lot) return alert("Escolha um ingresso disponível.");
