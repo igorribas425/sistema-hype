@@ -1,4 +1,4 @@
-const CACHE='hype-v63-offline';
+const CACHE='hype-v64-offline';
 const CORE=[
   './',
   './cliente.html',
@@ -6,7 +6,7 @@ const CORE=[
   './admin.html',
   './portaria.html',
   './leitor.html',
-  './app.js?v=20261002-v62-2',
+  './app.js?v=20261002-v64',
   './promoter-global-v16-8.js?v=20260902-v20-global',
   './v19-admin.js?v=20260902-v20',
   './v20-admin.js?v=20260902-v20',
@@ -14,7 +14,7 @@ const CORE=[
   './portaria-v18.js?v=20261002-v60',
   './portaria-v60-exit-feedback.js?v=20261002-v60',
   './hype-v406-lista-simples.js?v=20261001-v50',
-  './portaria-v20.js?v=20261002-v63',
+  './portaria-v20.js?v=20261002-v64',
   './leitor-v20.js?v=20260902-v20',
   './hype-qrcode.js?v=20260902-v20',
   './supabase-config.js?v=20261001-v48',
@@ -46,8 +46,11 @@ self.addEventListener('fetch',event=>{
   if(req.mode==='navigate'){
     event.respondWith((async()=>{
       const cache=await caches.open(CACHE);
-      try{const fresh=await fetch(req);if(fresh.ok)await cache.put(req,fresh.clone());return fresh;}
-      catch(_){
+      try{
+        const fresh=await fetch(req,{cache:'no-store'});
+        if(fresh.ok)await cache.put(req,fresh.clone());
+        return fresh;
+      }catch(_){
         const direct=await cache.match(req);if(direct)return direct;
         const file=url.pathname.split('/').pop()||'index.html';
         return (await cache.match(`./${file}`))||(await cache.match('./portaria.html'))||Response.error();
@@ -56,9 +59,15 @@ self.addEventListener('fetch',event=>{
   }
   if(url.origin===self.location.origin){
     event.respondWith((async()=>{
-      const cache=await caches.open(CACHE);const cached=await cache.match(req);
-      if(cached){fetch(req).then(r=>{if(r.ok)cache.put(req,r.clone())}).catch(()=>{});return cached;}
-      try{const fresh=await fetch(req);if(fresh.ok)await cache.put(req,fresh.clone());return fresh;}catch(_){return Response.error();}
+      const cache=await caches.open(CACHE);
+      try{
+        const fresh=await fetch(req,{cache:'no-store'});
+        if(fresh.ok)await cache.put(req,fresh.clone());
+        return fresh;
+      }catch(_){
+        const cached=await cache.match(req);
+        return cached||Response.error();
+      }
     })());return;
   }
   event.respondWith((async()=>{
