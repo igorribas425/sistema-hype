@@ -1383,6 +1383,30 @@ function renderAsaasPayment(entry, payment) {
   if (area) area.style.display = "block";
 }
 
+async function autoSendFreeTicketEmail(entry) {
+  const cfg = hypeCfg();
+  const response = await fetch(`${cfg.url}/functions/v1/send-ticket-email`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": cfg.anonKey,
+      "Authorization": `Bearer ${cfg.anonKey}`
+    },
+    body: JSON.stringify({
+      action: "free_ticket_auto",
+      ticket_id: Number(entry?.id || 0),
+      qr_token: String(entry?.qr_token || "")
+    })
+  });
+
+  let data = null;
+  try { data = await response.json(); } catch (_) {}
+  if (!response.ok || data?.ok === false) {
+    throw new Error(data?.error || "Não foi possível enviar o ingresso FREE por e-mail.");
+  }
+  return data || { ok: true };
+}
+
 function renderFreeEntry(entry) {
   window.__hypeTicketOpened = false;
   fillTicketCard(entry);
@@ -1460,7 +1484,21 @@ async function createPixOrder(e) {
 
     if (entry.payment_status === "Pago" && Number(entry.price || 0) <= 0) {
       renderFreeEntry(entry);
-      hypeNotify(`Ingresso ${entry.gender || gender || "FREE"} FREE ${entry.ticket_code} liberado.`);
+      try {
+        const emailResult = await autoSendFreeTicketEmail(entry);
+        const emailNotice = document.getElementById("paymentSuccessEmail");
+        if (emailNotice && (emailResult?.email_sent || emailResult?.already_sent)) {
+          emailNotice.textContent = "📧 Ingresso enviado automaticamente para o e-mail informado.";
+        }
+        hypeNotify(`Ingresso ${entry.gender || gender || "FREE"} FREE ${entry.ticket_code} liberado e enviado por e-mail.`);
+      } catch (emailErr) {
+        console.warn("[HYPE][free-email]", emailErr);
+        const emailNotice = document.getElementById("paymentSuccessEmail");
+        if (emailNotice) {
+          emailNotice.textContent = "⚠️ Ingresso liberado. O envio automático por e-mail falhou, mas você pode acessar o ingresso nesta tela.";
+        }
+        hypeNotify(`Ingresso ${entry.gender || gender || "FREE"} FREE ${entry.ticket_code} liberado.`);
+      }
       return;
     }
 
