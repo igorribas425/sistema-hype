@@ -85,6 +85,7 @@ test("public guest page requires event choice, review fields, and no promoter fo
   assert.match(html, /id="guestEmail"[^>]+required/i);
   assert.match(html, /id="guestInstagram"[^>]+required/i);
   assert.match(html, /id="guestPhoto"[^>]+required/i);
+  assert.match(html, /id="guestPhoto"[^>]+capture="user"/i);
   assert.match(html, /id="guestPhotoConsent"[^>]+required/i);
   assert.match(html, /id="guestWebsite"[^>]+tabindex="-1"/i);
   assert.match(js, /public_guest_registration_events_v50/);

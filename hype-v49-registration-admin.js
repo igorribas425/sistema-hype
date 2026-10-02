@@ -13,6 +13,7 @@
   const state = () => { try { return HYPE; } catch (_) { return null; } };
   let settingsRequested = false;
   let listSettings = [];
+  let settingsLoadPromise = null;
 
   function copyText(text) {
     const value = String(text || '');
@@ -77,105 +78,101 @@
     setTimeout(() => { if (!apply()) setTimeout(apply, 900); }, 250);
   }
 
-  function renderListStatus(row) {
+  function renderListStatus(settings = listSettings) {
     const status = $('v49ListStatus');
     const toggle = $('v49ListToggle');
     if (!status || !toggle) return;
-    const open = Boolean(row?.registration_open);
+    const rows = Array.isArray(settings) ? settings : [];
+    const open = rows.some(row => Boolean(row?.registration_open));
     status.className = `v49-link-status ${open ? 'open' : 'closed'}`;
     status.textContent = open
-      ? `ABERTO • ${row?.event_name || 'evento selecionado'} recebe novos cadastros.`
+      ? `ABERTO • ${rows.filter(row => row.registration_open).length} festa(s) aparecem no link.`
       : 'BLOQUEADO • o link continua válido, mas não aceita novos cadastros.';
-    toggle.textContent = open ? 'BLOQUEAR CADASTRO' : 'LIBERAR CADASTRO';
+    toggle.textContent = open ? 'BLOQUEAR LINK' : 'ATIVAR LINK';
     toggle.classList.toggle('btn-action', open);
     const limit = $('v50MaleLimit');
-    if (limit && row?.male_limit !== undefined) limit.value = String(row.male_limit);
+    if (limit && rows[0]?.male_limit !== undefined) limit.value = String(rows[0].male_limit);
     const quota = $('v50ListQuota');
-    if (quota) quota.textContent = `Limite masculino: ${Number(row?.male_slots_used || 0)} / ${Number(row?.male_limit ?? 10)} aprovados • ${Number(row?.male_slots_remaining ?? row?.male_limit ?? 10)} vaga(s) restantes.`;
-  }
-
-  function selectedListSettings() {
-    const eventId = Number($('v49ListEvent')?.value || 0);
-    return listSettings.find(row => Number(row.event_id) === eventId) || {};
+    if (quota) quota.textContent = `Limite masculino: ${rows.map(row => Number(row.male_limit ?? 10)).join(' / ') || '10'} por festa.`;
   }
 
   function renderReviewRows(data) {
     const target = $('v50GuestReviewList');
     if (!target) return;
     const reviewRows = rows(data);
-    const current = selectedListSettings();
     if (!reviewRows.length) {
-      target.innerHTML = '<div class="v18-empty">Nenhum cadastro enviado para este evento ainda.</div>';
+      target.innerHTML = '<div class="v18-empty">Nenhum cadastro enviado para as festas abertas ainda.</div>';
       const quota = $('v50ListQuota');
-      if (quota) quota.textContent = `Limite masculino: 0 / ${Number(current.male_limit ?? 10)} aprovados • ${Number(current.male_limit ?? 10)} vaga(s) restantes.`;
+      if (quota) quota.textContent = `Limite masculino: ${listSettings.map(row => Number(row.male_limit ?? 10)).join(' / ') || '10'} por festa.`;
       return;
     }
-    const approvedMen = reviewRows.filter(row => row.gender === 'Masculino' && ['Liberado','Entrou'].includes(row.status)).length;
     const quota = $('v50ListQuota');
-    if (quota) quota.textContent = `Limite masculino: ${approvedMen} / ${Number(current.male_limit ?? reviewRows[0]?.male_limit ?? 10)} aprovados • ${Number(reviewRows[0]?.male_slots_remaining ?? Math.max(0, Number(current.male_limit ?? 10) - approvedMen))} vaga(s) restantes.`;
+    if (quota) quota.textContent = listSettings.map(setting => {
+      const eventRows = reviewRows.filter(row => Number(row.event_id) === Number(setting.event_id));
+      const approvedMen = eventRows.filter(row => row.gender === 'Masculino' && ['Liberado','Entrou'].includes(row.status)).length;
+      return `${esc(setting.event_name || 'festa')}: ${approvedMen}/${Number(setting.male_limit ?? 10)} homens`;
+    }).join(' • ');
     target.innerHTML = reviewRows.map(row => {
       const pending = row.status === 'Pendente';
       const emailState = row.email_sent_at ? `Gmail enviado em ${fmt(row.email_sent_at)}` : (row.email_error ? `Falha no Gmail: ${esc(row.email_error)}` : (pending ? 'Gmail aguardando aprovação' : 'Gmail ainda não enviado'));
-      return `<div class="v50-review-row ${pending ? 'pending' : ''}"><div><strong>${esc(row.name || 'Sem nome')} <span class="v408-pill ${pending ? 'bad' : 'ok'}">${esc(row.status || '')}</span></strong><small>${esc(row.gender || 'N/I')} • CPF ${esc(row.cpf || '—')} • WhatsApp ${esc(row.phone || '—')}</small><small>📧 ${esc(row.email || '—')} • Instagram ${esc(row.instagram || '—')}</small><small>${emailState}${row.created_at ? ` • cadastro ${fmt(row.created_at)}` : ''}</small></div><div class="v50-review-actions">${row.photo_path ? `<button class="btn-action" type="button" onclick="HypeV49Registration.openPhoto(${Number(row.list_id)})">📷 FOTO</button>` : ''}${pending ? `<button class="btn-action btn-confirm" type="button" onclick="HypeV49Registration.reviewGuest(${Number(row.list_id)},'aprovar')">✓ APROVAR</button><button class="btn-action btn-del" type="button" onclick="HypeV49Registration.reviewGuest(${Number(row.list_id)},'recusar')">RECUSAR</button>` : ''}${!pending && row.email ? `<button class="btn-action" type="button" onclick="HypeV49Registration.sendApprovedGuestEmail(${Number(row.list_id)},true)">📧 ${row.email_sent_at ? 'REENVIAR' : 'ENVIAR GMAIL'}</button>` : ''}</div></div>`;
+      return `<div class="v50-review-row ${pending ? 'pending' : ''}"><div><strong>${esc(row.name || 'Sem nome')} <span class="v408-pill ${pending ? 'bad' : 'ok'}">${esc(row.status || '')}</span></strong><small>EVENTO: ${esc(row.event_name || 'HYPE')} • ${esc(row.gender || 'N/I')}</small><small>CPF ${esc(row.cpf || '—')} • WhatsApp ${esc(row.phone || '—')}</small><small>📧 ${esc(row.email || '—')} • Instagram ${esc(row.instagram || '—')}</small><small>${emailState}${row.created_at ? ` • cadastro ${fmt(row.created_at)}` : ''}</small></div><div class="v50-review-actions">${row.photo_path ? `<button class="btn-action" type="button" onclick="HypeV49Registration.openPhoto(${Number(row.list_id)})">📷 FOTO</button>` : ''}${pending ? `<button class="btn-action btn-confirm" type="button" onclick="HypeV49Registration.reviewGuest(${Number(row.list_id)},'aprovar')">✓ APROVAR</button><button class="btn-action btn-del" type="button" onclick="HypeV49Registration.reviewGuest(${Number(row.list_id)},'recusar')">RECUSAR</button>` : ''}${!pending && row.email ? `<button class="btn-action" type="button" onclick="HypeV49Registration.sendApprovedGuestEmail(${Number(row.list_id)},true)">📧 ${row.email_sent_at ? 'REENVIAR' : 'ENVIAR GMAIL'}</button>` : ''}</div></div>`;
     }).join('');
   }
 
   async function loadReview() {
     const target = $('v50GuestReviewList');
     const hype = state();
-    const eventId = Number($('v49ListEvent')?.value || 0);
-    if (!target || !hype?.user || !hype.pass || !eventId) return;
+    if (!target || !hype?.user || !hype.pass || !listSettings.length) return;
     target.innerHTML = '<div class="v18-empty">Carregando cadastros para análise...</div>';
     try {
-      const data = await sbRpc('staff_guest_registration_list_v50', {p_username:hype.user,p_password:hype.pass,p_event_id:eventId,p_status:null});
-      renderReviewRows(data);
+      const data = await Promise.all(listSettings.map(setting => sbRpc('staff_guest_registration_list_v50', {p_username:hype.user,p_password:hype.pass,p_event_id:Number(setting.event_id),p_status:null})));
+      renderReviewRows(data.flatMap(rows));
     } catch (error) {
       target.innerHTML = `<div class="v18-empty error">Não foi possível carregar os cadastros: ${esc(error?.message || 'erro de conexão')}</div>`;
     }
   }
 
   async function loadListSettings() {
+    if (settingsLoadPromise) return settingsLoadPromise;
     const status = $('v49ListStatus');
     const hype = state();
     if (!status || !hype?.user || !hype.pass) return;
-    try {
-      listSettings = rows(await sbRpc('staff_guest_registration_settings_v50', {
-        p_username: hype.user,
-        p_password: hype.pass
-      }));
-      const selected = Number($('v49ListEvent')?.value || listSettings.find(row => row.registration_open)?.event_id || listSettings[0]?.event_id || 0);
-      fillEvents(selected);
-      const row = selectedListSettings();
-      syncManualListEvent(row.event_id);
-      renderListStatus(row);
-      await loadReview();
-    } catch (error) {
-      status.className = 'v49-link-status closed';
-      status.textContent = `Não foi possível carregar o status: ${error?.message || 'erro de conexão'}`;
-    }
+    settingsLoadPromise = (async () => {
+      try {
+        listSettings = rows(await sbRpc('staff_guest_registration_settings_v50', {
+          p_username: hype.user,
+          p_password: hype.pass
+        }));
+        renderListStatus(listSettings);
+        await loadReview();
+      } catch (error) {
+        status.className = 'v49-link-status closed';
+        status.textContent = `Não foi possível carregar o status: ${error?.message || 'erro de conexão'}`;
+      } finally {
+        settingsLoadPromise = null;
+      }
+    })();
+    return settingsLoadPromise;
   }
 
   async function toggleGuestList() {
-    const select = $('v49ListEvent');
     const button = $('v49ListToggle');
-    const currentOpen = Boolean(selectedListSettings().registration_open);
-    const eventId = Number(select?.value || 0);
-    if (!eventId && !currentOpen) return alert('Selecione um evento ativo antes de liberar a lista.');
+    const currentOpen = listSettings.some(row => Boolean(row.registration_open));
+    if (!listSettings.length) return alert('Nenhuma festa ativa encontrada.');
     if (button) { button.disabled = true; button.textContent = 'SALVANDO...'; }
     try {
       const hype = state();
-      const row = rows(await sbRpc('staff_set_guest_registration_v50', {
+      const open = !currentOpen;
+      const limit = Number($('v50MaleLimit')?.value || 10);
+      await Promise.all(listSettings.map(setting => sbRpc('staff_set_guest_registration_v50', {
         p_username: hype.user,
         p_password: hype.pass,
-        p_event_id: eventId || null,
-        p_registration_open: !currentOpen,
-        p_male_limit: Number($('v50MaleLimit')?.value || 10)
-      }))[0] || {};
+        p_event_id: Number(setting.event_id),
+        p_registration_open: open,
+        p_male_limit: Number.isInteger(limit) && limit >= 0 ? limit : Number(setting.male_limit || 10)
+      })));
       await loadListSettings();
-      fillEvents(row.event_id);
-      syncManualListEvent(row.event_id);
-      renderListStatus(row);
-      if (typeof hypeNotify === 'function') hypeNotify(row.registration_open ? 'Cadastro público da lista liberado.' : 'Cadastro público da lista bloqueado.');
+      if (typeof hypeNotify === 'function') hypeNotify(open ? 'Link da lista ativado para todas as festas.' : 'Link da lista bloqueado.');
     } catch (error) {
       alert(error?.message || 'Não foi possível atualizar o cadastro público.');
     } finally {
@@ -185,14 +182,13 @@
 
   async function saveGuestListSettings() {
     const hype = state();
-    const eventId = Number($('v49ListEvent')?.value || 0);
-    if (!hype?.user || !hype.pass || !eventId) return alert('Selecione um evento ativo.');
+    if (!hype?.user || !hype.pass || !listSettings.length) return alert('Nenhuma festa ativa encontrada.');
     const limit = Number($('v50MaleLimit')?.value || 10);
     if (!Number.isInteger(limit) || limit < 0) return alert('Informe um limite masculino válido.');
     const button = $('v50ListSave');
     if (button) { button.disabled = true; button.textContent = 'SALVANDO...'; }
     try {
-      await sbRpc('staff_set_guest_registration_v50', {p_username:hype.user,p_password:hype.pass,p_event_id:eventId,p_registration_open:Boolean(selectedListSettings().registration_open),p_male_limit:limit});
+      await Promise.all(listSettings.map(setting => sbRpc('staff_set_guest_registration_v50', {p_username:hype.user,p_password:hype.pass,p_event_id:Number(setting.event_id),p_registration_open:Boolean(setting.registration_open),p_male_limit:limit})));
       await loadListSettings();
       if (typeof hypeNotify === 'function') hypeNotify('Limite masculino salvo para este evento.');
     } catch (error) { alert(error?.message || 'Não foi possível salvar o limite.'); }
@@ -286,11 +282,6 @@
     setQr('v49PromoterPublicQr', promoterUrl);
     setQr('v49ListPublicQr', listUrl);
     fillEvents();
-    const listSelect = $('v49ListEvent');
-    if (listSelect && !listSelect.dataset.v50Bound) {
-      listSelect.dataset.v50Bound = '1';
-      listSelect.addEventListener('change', () => { renderListStatus(selectedListSettings()); loadReview(); });
-    }
     const hype = state();
     if (hype?.user && hype.pass && !settingsRequested) {
       settingsRequested = true;

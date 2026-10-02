@@ -18,7 +18,7 @@ test("Admin exposes per-event registration controls and male limit", async () =>
   assert.match(js, /staff_guest_registration_settings_v50/);
   assert.match(js, /staff_set_guest_registration_v50/);
   assert.match(js, /p_male_limit/);
-  assert.match(js, /male_slots_remaining/);
+  assert.match(js, /male_limit/);
 });
 
 test("Admin review shows private photo metadata and approval actions", async () => {
@@ -44,4 +44,13 @@ test("Admin review never writes a public photo URL and Portaria stays release-on
   assert.doesNotMatch(admin, /getPublicUrl/i);
   assert.match(list, /staff_guest_simple_list_v406/);
   assert.doesNotMatch(portaria, /guest-list-admin-photo|photo_path|photo_consent/i);
+});
+
+test("Admin link control is global and review aggregates every event", async () => {
+  const [html, js] = await Promise.all([read("admin.html"), read("hype-v49-registration-admin.js")]);
+
+  assert.doesNotMatch(html, /id="v49ListEvent"/i);
+  assert.match(js, /Promise\.all|listSettings\.map|for\s*\(.*listSettings/i);
+  assert.match(js, /staff_guest_registration_list_v50/);
+  assert.match(js, /registration_open/);
 });

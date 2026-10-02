@@ -617,9 +617,8 @@ Bruna Santos"></textarea>
     <div id="v49ListLinkPanel" class="v49-link-panel" hidden>
       <div class="v49-link-copy">
         <h4>Cadastro público da lista</h4>
-        <p>O link é o mesmo para todos e não expira. As festas abertas aparecem no link e cada pessoa escolhe a sua.</p>
-        <div class="form-group"><label>Evento em análise</label><select id="v49ListEvent"></select></div>
-        <div class="v50-settings"><div class="form-group" style="margin:0"><label>Limite de homens aprovados</label><input id="v50MaleLimit" type="number" min="0" max="10000" step="1" value="10"></div><button id="v50ListSave" class="btn-action" type="button" onclick="HypeV49Registration.saveGuestListSettings()">SALVAR LIMITE</button></div>
+        <p>O link é o mesmo para todos e não expira. Ative ou bloqueie aqui; as festas abertas aparecem em um carrossel e cada pessoa escolhe a sua.</p>
+        <div class="v50-settings"><div class="form-group" style="margin:0"><label>Limite de homens por festa</label><input id="v50MaleLimit" type="number" min="0" max="10000" step="1" value="10"></div><button id="v50ListSave" class="btn-action" type="button" onclick="HypeV49Registration.saveGuestListSettings()">SALVAR LIMITE EM TODAS</button></div>
         <div class="v49-link-status" id="v49ListStatus">Carregando status...</div>
         <div id="v50ListQuota" class="v49-link-status">Limite por evento: carregando...</div>
         <div class="v49-link-row"><input id="v49ListPublicUrl" readonly value="https://hypeloungeclub.com.br/lista.html"><button class="btn-action" type="button" onclick="HypeV49Registration.copyListRegistrationLink()">COPIAR</button><button class="btn-action" type="button" onclick="HypeV49Registration.shareListRegistrationLink()">COMPARTILHAR</button></div>
@@ -629,7 +628,7 @@ Bruna Santos"></textarea>
       <div id="v50GuestReviewPanel" class="v50-review">
         <h4>ANÁLISE DOS CADASTROS COM FOTO</h4>
         <p>Veja a foto, Instagram e dados do cadastro. Somente após aprovar o nome ele aparece na Portaria; o Gmail é enviado depois da aprovação.</p>
-        <div id="v50GuestReviewList" class="v18-empty">Selecione um evento para carregar os cadastros.</div>
+        <div id="v50GuestReviewList" class="v18-empty">Carregando cadastros de todas as festas...</div>
       </div>
     </div>
   </section>
