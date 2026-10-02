@@ -49,6 +49,28 @@
       button.classList.toggle('active', Number(button.dataset.eventId) === Number(selectedEventId));
       button.setAttribute('aria-checked', Number(button.dataset.eventId) === Number(selectedEventId) ? 'true' : 'false');
     });
+    document.querySelectorAll('.event-dot').forEach(dot => {
+      dot.classList.toggle('active', Number(dot.dataset.eventId) === Number(selectedEventId));
+    });
+    updateEventNavigation();
+  }
+  function updateEventNavigation() {
+    const index = events.findIndex(item => Number(item.event_id) === Number(selectedEventId));
+    const disabled = events.length < 2;
+    const previous = $('guestEventPrev');
+    const next = $('guestEventNext');
+    if (previous) previous.disabled = disabled || index <= 0;
+    if (next) next.disabled = disabled || index < 0 || index >= events.length - 1;
+  }
+  function moveEvent(direction) {
+    if (events.length < 2) return;
+    const index = events.findIndex(item => Number(item.event_id) === Number(selectedEventId));
+    const nextIndex = Math.max(0, Math.min(events.length - 1, (index < 0 ? 0 : index) + direction));
+    const row = events[nextIndex];
+    if (!row) return;
+    selectedEventId = Number(row.event_id);
+    renderSelectedEvent();
+    document.querySelector(`.event-choice[data-event-id="${selectedEventId}"]`)?.scrollIntoView({behavior: 'smooth', inline: 'center', block: 'nearest'});
   }
   function renderEvents() {
     const list = $('guestEvents');
@@ -61,7 +83,7 @@
       return;
     }
     if (!selectedEventId || !events.some(item => Number(item.event_id) === Number(selectedEventId))) selectedEventId = Number(events[0].event_id);
-    list.innerHTML = events.map(row => `<button class="event-choice" type="button" role="radio" aria-checked="false" data-event-id="${Number(row.event_id)}"><strong>${esc(row.event_name || 'Evento HYPE')}</strong><span>${row.event_date ? esc(row.event_date) : 'Data a confirmar'}${row.venue ? ` • ${esc(row.venue)}` : ''}</span></button>`).join('');
+    list.innerHTML = events.map(row => `<button class="event-choice" type="button" role="radio" aria-checked="false" data-event-id="${Number(row.event_id)}"><span class="event-choice-art">${row.cover_image ? `<img src="${esc(row.cover_image)}" alt="" loading="lazy">` : 'HYPE'}</span><span class="event-choice-copy"><strong>${esc(row.event_name || 'Evento HYPE')}</strong><span>${row.event_date ? esc(row.event_date) : 'Data a confirmar'}${row.venue ? ` • ${esc(row.venue)}` : ''}</span><small>ABERTO PARA CADASTRO</small></span></button>`).join('');
     list.querySelectorAll('.event-choice').forEach(button => button.addEventListener('click', () => {
       selectedEventId = Number(button.dataset.eventId || 0);
       renderSelectedEvent();
@@ -225,6 +247,8 @@
   }
   $('guestCpf')?.addEventListener('input', event => formatCpf(event.currentTarget));
   $('guestPhone')?.addEventListener('input', event => formatPhone(event.currentTarget));
+  $('guestEventPrev')?.addEventListener('click', () => moveEvent(-1));
+  $('guestEventNext')?.addEventListener('click', () => moveEvent(1));
   setupCamera();
   $('guestForm')?.addEventListener('submit', submit);
   loadContext();

@@ -122,7 +122,7 @@
     target.innerHTML = reviewRows.map(row => {
       const pending = row.status === 'Pendente';
       const emailState = row.email_sent_at ? `Gmail enviado em ${fmt(row.email_sent_at)}` : (row.email_error ? `Falha no Gmail: ${esc(row.email_error)}` : (pending ? 'Gmail aguardando aprovação' : 'Gmail ainda não enviado'));
-      return `<div class="v50-review-row ${pending ? 'pending' : ''}"><div><strong>${esc(row.name || 'Sem nome')} <span class="v408-pill ${pending ? 'bad' : 'ok'}">${esc(row.status || '')}</span></strong><small>EVENTO: ${esc(row.event_name || 'HYPE')} • ${esc(row.gender || 'N/I')}</small><small>CPF ${esc(row.cpf || '—')} • WhatsApp ${esc(row.phone || '—')}</small><small>📧 ${esc(row.email || '—')} • Instagram ${esc(row.instagram || '—')}</small><small>${emailState}${row.created_at ? ` • cadastro ${fmt(row.created_at)}` : ''}</small></div><div class="v50-review-actions">${row.photo_path ? `<button class="btn-action" type="button" onclick="HypeV49Registration.openPhoto(${Number(row.list_id)})">📷 FOTO</button>` : ''}${pending ? `<button class="btn-action btn-confirm" type="button" onclick="HypeV49Registration.reviewGuest(${Number(row.list_id)},'aprovar')">✓ APROVAR</button><button class="btn-action btn-del" type="button" onclick="HypeV49Registration.reviewGuest(${Number(row.list_id)},'recusar')">RECUSAR</button>` : ''}${!pending && row.email ? `<button class="btn-action" type="button" onclick="HypeV49Registration.sendApprovedGuestEmail(${Number(row.list_id)},true)">📧 ${row.email_sent_at ? 'REENVIAR' : 'ENVIAR GMAIL'}</button>` : ''}</div></div>`;
+      return `<div class="v50-review-row ${pending ? 'pending' : ''}"><div><strong>${esc(row.name || 'Sem nome')} <span class="v408-pill ${pending ? 'bad' : 'ok'}">${esc(row.status || '')}</span></strong><small>EVENTO: ${esc(row.event_name || 'HYPE')} • ${esc(row.gender || 'N/I')}</small><small>CPF ${esc(row.cpf || '—')} • WhatsApp ${esc(row.phone || '—')}</small><small>📧 ${esc(row.email || '—')} • Instagram ${esc(row.instagram || '—')}</small><small>${emailState}${row.created_at ? ` • cadastro ${fmt(row.created_at)}` : ''}</small></div><div class="v50-review-actions">${row.photo_path ? `<button class="btn-action" type="button" onclick="HypeV49Registration.openPhoto(${Number(row.list_id)})">📷 FOTO</button>` : ''}${pending ? `<button class="btn-action btn-confirm" type="button" onclick="HypeV49Registration.reviewGuest(${Number(row.list_id)},'aprovar')">✓ APROVAR</button><button class="btn-action btn-del" type="button" onclick="HypeV49Registration.reviewGuest(${Number(row.list_id)},'recusar')">RECUSAR</button>` : ''}${!pending && row.email ? `<button class="btn-action" type="button" onclick="HypeV49Registration.sendApprovedGuestEmail(${Number(row.list_id)},true)">📧 ${row.email_sent_at ? 'REENVIAR' : 'ENVIAR GMAIL'}</button>` : ''}<button class="btn-action btn-del" type="button" onclick="HypeV49Registration.deleteGuest(${Number(row.list_id)})">🗑 EXCLUIR</button></div></div>`;
     }).join('');
   }
 
@@ -221,6 +221,24 @@
     return body;
   }
 
+  async function deleteGuest(listId) {
+    const hype = state();
+    const cfg = window.HYPE_SUPABASE_CONFIG || {};
+    if (!hype?.user || !hype.pass || !cfg.url) return alert('Entre no Admin primeiro.');
+    if (!confirm('Excluir definitivamente este cadastro da lista? A foto privada também será apagada.')) return;
+    try {
+      const response = await fetch(`${cfg.url}/functions/v1/guest-list-admin-delete`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({username:hype.user,password:hype.pass,list_id:Number(listId)})
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || body.ok !== true) throw new Error(body.error || 'Não foi possível excluir o cadastro.');
+      await loadReview();
+      if (typeof hypeNotify === 'function') hypeNotify('Cadastro excluído da lista.');
+    } catch (error) { alert(error?.message || 'Não foi possível excluir o cadastro.'); }
+  }
+
   async function reviewGuest(listId, decision) {
     const hype = state();
     if (!hype?.user || !hype.pass) return alert('Entre no Admin primeiro.');
@@ -310,7 +328,8 @@
     reviewGuest,
     openPhoto,
     closePhoto,
-    sendApprovedGuestEmail
+    sendApprovedGuestEmail,
+    deleteGuest
   };
 
   document.addEventListener('DOMContentLoaded', () => {

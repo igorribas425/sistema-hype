@@ -4,6 +4,41 @@ function respostaJson(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+// Compatibilidade com a implantação antiga: cadastros aprovados da lista
+// também precisam ser enviados mesmo quando este arquivo é o doPost ativo.
+function hypeHtmlEscapeLegacy(value) {
+  return String(value || "").replace(/[&<>\"]/g, function(char) {
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[char];
+  });
+}
+
+function hypeGuestListApprovedLegacy(dados) {
+  const email = String(dados.email || "").trim();
+  if (!email || !email.includes("@")) return respostaJson({ok:false, erro:"E-mail inválido"});
+  const nome = String(dados.customer_name || "Cliente HYPE").trim();
+  const evento = String(dados.event_name || "HYPE LOUNGE CLUB").trim();
+  const data = String(dados.event_date || "").trim();
+  const local = String(dados.venue || "").trim();
+  const assunto = "✅ Nome confirmado na lista — " + evento;
+  const texto = "HYPE LOUNGE CLUB\n\nNome confirmado na lista!\n\n" +
+    "Olá, " + nome + ". Seu nome foi aprovado na lista para " + evento + ".\n" +
+    (data ? "Data: " + data + "\n" : "") +
+    (local ? "Local: " + local + "\n" : "") +
+    "Na entrada, apresente seu documento à Portaria.";
+  const htmlNome = hypeHtmlEscapeLegacy(nome);
+  const htmlEvento = hypeHtmlEscapeLegacy(evento);
+  const htmlData = hypeHtmlEscapeLegacy(data);
+  const htmlLocal = hypeHtmlEscapeLegacy(local);
+  const html = "<div style=\"font-family:Arial,sans-serif;background:#080808;color:#fff;padding:28px\">" +
+    "<h1>HYPE LOUNGE CLUB</h1><h2>✅ NOME CONFIRMADO NA LISTA</h2>" +
+    "<p>Olá, " + htmlNome + ". Seu nome foi aprovado na lista.</p>" +
+    "<p><b>Evento:</b> " + htmlEvento + "<br>" + (data ? "<b>Data:</b> " + htmlData + "<br>" : "") +
+    (local ? "<b>Local:</b> " + htmlLocal + "<br>" : "") +
+    "Na entrada, apresente seu documento à Portaria.</p></div>";
+  GmailApp.sendEmail(email, assunto, texto, {name:"HYPE LOUNGE CLUB", htmlBody:html});
+  return respostaJson({ok:true, enviado:true, tipo:"guest_list_approved", email:email});
+}
+
 function doPost(e) {
   try {
     const dados = JSON.parse(e.postData.contents || "{}");
@@ -17,6 +52,10 @@ function doPost(e) {
         ok: false,
         erro: "Não autorizado"
       });
+    }
+
+    if (String(dados.action || "").toLowerCase() === "guest_list_approved") {
+      return hypeGuestListApprovedLegacy(dados);
     }
 
     if (String(dados.payment_status || "").toLowerCase() !== "pago") {

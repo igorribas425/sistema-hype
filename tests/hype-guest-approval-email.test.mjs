@@ -19,6 +19,7 @@ test("approval e-mail action is staff-authenticated and loads only approved cand
   assert.match(source, /email_sent_at/i);
   assert.match(source, /email_error/i);
   assert.match(source, /force|retry|reenvi/i);
+  assert.match(source, /HYPE_APPS_SCRIPT_URL\/HYPE_WEBHOOK_SECRET/);
 });
 
 test("Apps Script has a dedicated approved-list message with event artwork", async () => {
@@ -31,6 +32,13 @@ test("Apps Script has a dedicated approved-list message with event artwork", asy
   assert.match(source, /event_name|event_date|venue/i);
 });
 
+test("legacy Apps Script entrypoint also accepts approved-list mail", async () => {
+  const source = await read("Codigo.gs");
+  assert.match(source, /guest_list_approved/i);
+  assert.match(source, /hypeGuestListApprovedLegacy/i);
+  assert.match(source, /GmailApp\.sendEmail/i);
+});
+
 test("Admin approval refreshes e-mail state and exposes retry only after approval", async () => {
   const source = await read("hype-v49-registration-admin.js");
 
@@ -38,4 +46,5 @@ test("Admin approval refreshes e-mail state and exposes retry only after approva
   assert.match(source, /guest_list_approved/);
   assert.match(source, /email_sent_at|email_error/);
   assert.match(source, /reviewGuest/);
+  assert.match(source, /Falha no Gmail|ENVIAR GMAIL|REENVIAR/i);
 });

@@ -33,6 +33,8 @@ test("Admin review shows private photo metadata and approval actions", async () 
   assert.match(js, /instagram/i);
   assert.match(js, /email_sent_at|email_error/i);
   assert.match(js, /function fmt\(/i);
+  assert.match(js, /deleteGuest/);
+  assert.match(js, /guest-list-admin-delete/);
 });
 
 test("Admin review never writes a public photo URL and Portaria stays release-only", async () => {
@@ -54,4 +56,18 @@ test("Admin link control is global and review aggregates every event", async () 
   assert.match(js, /Promise\.all|listSettings\.map|for\s*\(.*listSettings/i);
   assert.match(js, /staff_guest_registration_list_v50/);
   assert.match(js, /registration_open/);
+});
+
+test("guest-list deletion is admin-only and cleans the private photo", async () => {
+  const [migration, fn] = await Promise.all([
+    read("supabase/migrations/202610020002_hype_guest_delete_v51.sql"),
+    read("supabase/functions/guest-list-admin-delete/index.ts")
+  ]);
+
+  assert.match(migration, /staff_guest_registration_delete_v51/i);
+  assert.match(migration, /hype_require_staff\(p_username, p_password, array\['admin'\]\)/i);
+  assert.match(fn, /staff_guest_registration_delete_v51/i);
+  assert.match(fn, /storage\.from\(BUCKET\)/i);
+  assert.match(fn, /remove\(/i);
+  assert.match(fn, /verify_staff/i);
 });

@@ -52,7 +52,7 @@ test("admin keeps manual flows and adds one link tab to each area", async () => 
   assert.match(controller, /staff_set_guest_registration_v50/);
   assert.match(controller, /navigator\.share/);
   assert.match(controller, /HypeQRCode\.toDataUrl/);
-  assert.match(admin, /hype-v49-registration-admin\.js\?v=20261001-v51/);
+  assert.match(admin, /hype-v49-registration-admin\.js\?v=20261001-v52/);
 });
 
 test("portaria stays focused on entry and does not expose public registration links", async () => {
@@ -77,6 +77,9 @@ test("public guest page requires event choice, review fields, and no promoter fo
   const [html, js] = await Promise.all([read("lista.html"), read("lista-v49.js")]);
 
   assert.match(html, /id="guestEvents"/i);
+  assert.match(html, /id="guestEventPrev"/i);
+  assert.match(html, /id="guestEventNext"/i);
+  assert.match(html, /id="guestEventDots"/i);
   assert.match(html, /name="event_id"/i);
   assert.match(html, /id="guestName"[^>]+required/i);
   assert.match(html, /id="guestCpf"[^>]+required/i);
@@ -95,6 +98,8 @@ test("public guest page requires event choice, review fields, and no promoter fo
   assert.match(js, /new FormData/);
   assert.match(js, /getUserMedia/);
   assert.match(js, /toBlob/);
+  assert.match(js, /guestEventPrev|guestEventNext/);
+  assert.match(js, /scrollBy|scrollIntoView/);
   assert.match(js, /Em análise|analise/i);
   assert.doesNotMatch(html + js, /p_username|p_password|service_role/i);
   assert.doesNotMatch(html, /Já é promoter|Cadastre-se aqui|promoter\.html/i);
