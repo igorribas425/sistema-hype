@@ -3346,10 +3346,12 @@ function renderV16Dashboard() {
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   set("v16DashSold",paid.length); set("v16DashFree",free.length); set("v16DashList",guestList.length); set("v16DashRevenue",hypeFormatMoney(revenue)); set("v16DashFemale",female); set("v16DashMale",male); set("v16DashDiscount",hypeFormatMoney(discounts)); set("v16DashEntered",entered);
   const sectors={}; confirmed.forEach(t=>{const k=t.sector||t.lot_name||"Outro"; sectors[k]=(sectors[k]||0)+1;}); if(guestList.length) sectors["Lista"]=(sectors["Lista"]||0)+guestList.length;
+  const methods={}; paid.forEach(t=>{const k=String(t.payment_method||"Manual").trim()||"Manual"; if(!methods[k]) methods[k]={count:0,total:0}; methods[k].count++; methods[k].total+=Number(t.price||0);});
   const promoters={}; paid.filter(t=>t.promoter_code).forEach(t=>{promoters[t.promoter_code]=(promoters[t.promoter_code]||0)+1;});
   const breakdown=document.getElementById("v16DashboardBreakdown");
   const promoterRanking = Object.entries(promoters).sort((a,b)=>b[1]-a[1]);
-  if(breakdown) breakdown.innerHTML=`<div><b>Por tipo</b><span>PAGO: ${paid.length} • FREE: ${free.length} • LISTA: ${guestList.length}</span></div><div><b>Por setor</b><span>${Object.entries(sectors).map(([k,v])=>`${hypeEscape(k)}: ${v}`).join(" • ")||"Sem movimentação"}</span></div><div><b>Ranking de promoters (pagos)</b><span>${promoterRanking.map(([k,v],i)=>`${i+1}º ${hypeEscape(k)}: ${v}`).join(" • ")||"Sem vendas pagas por promoter"}</span></div>`;
+  const methodText=Object.entries(methods).map(([k,v])=>`${hypeEscape(k)}: ${v.count} • ${hypeFormatMoney(v.total)}`).join(" | ");
+  if(breakdown) breakdown.innerHTML=`<div><b>Por tipo</b><span>PAGO: ${paid.length} • FREE: ${free.length} • LISTA: ${guestList.length}</span></div><div><b>Formas de pagamento</b><span>${methodText||"Sem vendas pagas"}</span></div><div><b>Por setor</b><span>${Object.entries(sectors).map(([k,v])=>`${hypeEscape(k)}: ${v}`).join(" • ")||"Sem movimentação"}</span></div><div><b>Ranking de promoters (pagos)</b><span>${promoterRanking.map(([k,v],i)=>`${i+1}º ${hypeEscape(k)}: ${v}`).join(" • ")||"Sem vendas pagas por promoter"}</span></div>`;
 }
 
 /* ========================= AUTO SYNC V16.10 ========================= */
