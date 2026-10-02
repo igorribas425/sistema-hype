@@ -666,7 +666,7 @@
     let actions='';
     if(paid&&!wrong&&!finalExited){
       if(!entered&&!temp) actions+=`<button class="btn green" onclick="HypePortaria.validate(${id})">✅ CONFIRMAR ENTRADA</button>`;
-      if(entered&&!temp) actions+=`<button class="btn green" onclick="HypeV60Exit.open(${id})">🚪 CONFIRMAR SAÍDA</button>`;
+      if(entered&&!temp) actions+=`<button class="btn green" onclick="HypeV60Exit.open(${id})">🚪 SAINDO</button>`;
       if(entered&&!temp) actions+=`<button class="btn" onclick="HypePortaria.temporaryExit(${id})">↗ SAÍDA TEMPORÁRIA</button>`;
       if(temp&&!auth) actions+=`<button class="btn" onclick="HypePortaria.authorizeReentry(${id})">↩ AUTORIZAR REENTRADA</button>`;
       if(temp&&auth) actions+=`<button class="btn green" onclick="HypePortaria.validate(${id})">✅ CONFIRMAR REENTRADA</button>`;
