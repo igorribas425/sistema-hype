@@ -1,7 +1,7 @@
 (function(){
   if(!('serviceWorker' in navigator)||!location.protocol.startsWith('http'))return;
   window.addEventListener('load',async()=>{
-    try{const reg=await navigator.serviceWorker.register('./sw.js?v=20261002-v62',{updateViaCache:'none'});try{await reg.update();}catch(_){} }
+    try{const reg=await navigator.serviceWorker.register('./sw.js?v=20261002-v62-2',{updateViaCache:'none'});try{await reg.update();}catch(_){} }
     catch(err){console.warn('[HYPE V20] Service Worker não registrado:',err);}
   });
 })();
