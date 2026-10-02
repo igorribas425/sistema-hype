@@ -57,6 +57,8 @@
   
   .badge{display:inline-block;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:900}
   .badge.pago{background:rgba(40,209,124,.15);color:var(--green);border:1px solid rgba(40,209,124,.3)}
+  .badge.free{background:rgba(96,165,250,.14);color:#93c5fd;border:1px solid rgba(96,165,250,.32)}
+  .badge.lista{background:rgba(192,132,252,.14);color:#d8b4fe;border:1px solid rgba(192,132,252,.32)}
   .badge.pendente{background:rgba(255,22,61,.15);color:var(--red);border:1px solid rgba(255,22,61,.3)}
   .badge.gender{background:rgba(255,255,255,.07);color:#fff;border:1px solid var(--line);margin-right:5px}
   
@@ -324,8 +326,10 @@ html,body{max-width:100%;overflow-x:hidden}
   </header>
 
   <div class="stats stats-extended">
-    <div class="stat-card"><span>Total na Lista</span><h3 id="totalCount">0</h3></div>
-    <div class="stat-card green"><span>Pagos</span><h3 id="paidCount">0</h3></div>
+    <div class="stat-card"><span>Total geral</span><h3 id="totalCount">0</h3></div>
+    <div class="stat-card green"><span>PAGO</span><h3 id="paidCount">0</h3></div>
+    <div class="stat-card blue"><span>FREE</span><h3 id="freeCount">0</h3></div>
+    <div class="stat-card"><span>LISTA</span><h3 id="listCount">0</h3></div>
     <div class="stat-card red"><span>Pendentes</span><h3 id="pendingCount">0</h3></div>
     <div class="stat-card blue"><span>Caixa</span><h3 id="totalCash">R$ 0,00</h3></div>
     <div class="stat-card green"><span>Entraram</span><h3 id="enteredCount">0</h3></div>
@@ -336,8 +340,10 @@ html,body{max-width:100%;overflow-x:hidden}
   <section class="panel-box v16-dashboard" id="v16DashboardPanel">
     <div class="v16-dashboard-head"><div><h3>📊 DASHBOARD DE VENDAS</h3><p>Resumo por evento, gênero, descontos, entradas e promoters.</p></div><select id="v16DashboardEvent" onchange="renderV16Dashboard()"><option value="all">TODOS OS EVENTOS</option></select></div>
     <div class="v16-dashboard-grid">
-      <div><span>Ingressos pagos</span><b id="v16DashSold">0</b></div>
-      <div><span>Faturamento</span><b id="v16DashRevenue">R$ 0,00</b></div>
+      <div><span>PAGO</span><b id="v16DashSold">0</b></div>
+      <div><span>FREE</span><b id="v16DashFree">0</b></div>
+      <div><span>LISTA</span><b id="v16DashList">0</b></div>
+      <div><span>Faturamento PAGO</span><b id="v16DashRevenue">R$ 0,00</b></div>
       <div><span>Feminino</span><b id="v16DashFemale">0</b></div>
       <div><span>Masculino</span><b id="v16DashMale">0</b></div>
       <div><span>Descontos</span><b id="v16DashDiscount">R$ 0,00</b></div>
@@ -365,7 +371,9 @@ html,body{max-width:100%;overflow-x:hidden}
       <div class="v34-live-card"><span>Saída temporária</span><b id="v34TempOut">0</b></div>
       <div class="v34-live-card"><span>Ainda não chegaram</span><b id="v34Remaining">0</b></div>
       <div class="v34-live-card"><span>Reentradas</span><b id="v34Reentries">0</b></div>
-      <div class="v34-live-card"><span>Ingressos pagos</span><b id="v34PaidTotal">0</b></div>
+      <div class="v34-live-card"><span>PAGO</span><b id="v34PaidTotal">0</b></div>
+      <div class="v34-live-card"><span>FREE</span><b id="v61FreeTotal">0</b></div>
+      <div class="v34-live-card"><span>LISTA</span><b id="v61ListTotal">0</b></div>
     </div>
     <div class="v34-chart-wrap">
       <div class="v34-chart-title"><b>PESSOAS DENTRO DA CASA</b><small>Atualiza automaticamente em cerca de 1 segundo</small></div>
@@ -736,7 +744,7 @@ Bruna Santos"></textarea>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
-<script src="app.js?v=20261002-v58"></script>
+<script src="app.js?v=20261002-v61"></script>
 <script src="promoter-global-v16-8.js?v=20261002-v57-global"></script>
 <script src="hype-qrcode.js?v=20261001-v49"></script>
 <script src="hype-v49-registration-admin.js?v=20261001-v52"></script>
@@ -957,7 +965,7 @@ Bruna Santos"></textarea>
   document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{if(adminReady())hypeV23AdminInit();},900));
 })();
 </script>
-  <script src="admin-v34.js?v=20261002-v60"></script>
+  <script src="admin-v34.js?v=20261002-v61"></script>
   <script src="admin-v36-refund.js?v=20260905-v38-geral"></script>
   <script src="hype-push-config.js?v=421"></script>
   <script src="hype-v38-chat.js?v=421"></script>
