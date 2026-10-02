@@ -1607,12 +1607,15 @@ async function refreshCurrentOrderStatus(showMessage = true) {
 
       const successEmail = document.getElementById("paymentSuccessEmail");
       if (successEmail) {
+        const isFreeConfirmed = Number(entry.price || 0) <= 0;
         successEmail.textContent = entry.email_sent
           ? "📧 Uma cópia do ingresso já foi enviada para o e-mail informado na compra."
-          : "📧 Pagamento confirmado. O envio do ingresso por e-mail está sendo processado automaticamente.";
+          : isFreeConfirmed
+            ? "📧 Ingresso FREE liberado. O envio por e-mail está sendo processado automaticamente."
+            : "📧 Pagamento confirmado. O envio do ingresso por e-mail está sendo processado automaticamente.";
       }
 
-      if (showMessage) hypeNotify("Pagamento confirmado. Seu ingresso está liberado!");
+      if (showMessage) hypeNotify(Number(entry.price || 0) <= 0 ? "Ingresso FREE liberado!" : "Pagamento confirmado. Seu ingresso está liberado!");
     } else if (showMessage) {
       hypeNotify("Pagamento ainda não foi confirmado.");
     }
@@ -2481,12 +2484,13 @@ function renderPortariaResults(list) {
   if (!list.length) { container.innerHTML='<div class="empty-state" style="color:var(--red)">❌ Nenhum ingresso encontrado neste evento.</div>'; return; }
   container.innerHTML = list.map(item=>{
     const paid = item.payment_status==='Pago';
+    const free = paid && Number(item.price||0)<=0;
     const used = item.entry_status==='Entrada utilizada';
     const canceled = item.payment_status==='Cancelado';
     const selectedEventId = Number(HYPE.portariaEventId || 0);
     const wrongEvent = selectedEventId && Number(item.event_id) !== selectedEventId;
     const cls = wrongEvent || canceled ? 'cancelado' : used ? 'used' : paid ? 'pago' : 'pendente';
-    let text = wrongEvent ? 'OUTRO EVENTO ⚠️' : canceled ? 'CANCELADO ❌' : used ? 'JÁ ENTROU ⚠️' : paid ? 'PAGO — CONFIRMAR ✅' : 'BLOQUEADO ❌';
+    let text = wrongEvent ? 'OUTRO EVENTO ⚠️' : canceled ? 'CANCELADO ❌' : used ? 'JÁ ENTROU ⚠️' : free ? 'FREE — CONFIRMAR ✅' : paid ? 'PAGO — CONFIRMAR ✅' : 'BLOQUEADO ❌';
     const canValidate = paid && !used && !canceled && !wrongEvent;
     const eventLabel = portariaEventLabel(item);
     const sector = String(item.sector || item.lot_name || 'INGRESSO').toUpperCase();
