@@ -13,6 +13,7 @@ const HYPE = {
   role: null,
   lots: [],
   tickets: [],
+  guestLists: [],
   promoters: [],
   coupons: [],
   promoterLinkCode: "",
@@ -714,10 +715,47 @@ async function loadStaffTickets(search = "") {
     return bd - ad;
   });
 
+  const events = (Array.isArray(HYPE.adminEvents) && HYPE.adminEvents.length
+    ? HYPE.adminEvents
+    : HYPE.events || [])
+    .filter(event => event && event.id != null);
+  const guestResults = await Promise.allSettled(events.map(event => sbRpc("staff_guest_simple_list_v406", {
+    p_username: HYPE.user,
+    p_password: HYPE.pass,
+    p_event_id: Number(event.id)
+  })));
+  HYPE.guestLists = guestResults.flatMap((result, index) => {
+    if (result.status !== "fulfilled" || !Array.isArray(result.value)) return [];
+    const event = events[index] || {};
+    return result.value.map(row => ({
+      record_type: "guest_list",
+      list_id: Number(row.list_id),
+      customer_name: row.name || "SEM NOME",
+      gender: row.gender || "N/I",
+      phone: row.phone || "",
+      cpf: row.cpf || "",
+      email: "",
+      event_id: Number(event.id),
+      event_name: event.name || "Evento HYPE",
+      event_date: event.event_date || "",
+      guest_status: row.status || "Liberado",
+      created_at: row.created_at || null,
+      entered_at: row.entered_at || null,
+      added_by: row.added_by || "",
+      payment_status: "Lista",
+      entry_status: row.status === "Entrou" ? "Entrada utilizada" : "Lista liberada",
+      lot_name: "Lista HYPE",
+      sector: "Lista",
+      payment_method: "Lista",
+      price: 0
+    }));
+  }).sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+
   HYPE.ticketLoadSource = v16.length ? "v16" : manual.length ? "manual+compatibilidade" : "compatibilidade";
   const status = document.getElementById("adminOrdersStatus");
   if (status) {
-    status.textContent = `${HYPE.tickets.length} pedido(s) carregado(s) • atualizado ${new Date().toLocaleTimeString("pt-BR", {hour:"2-digit",minute:"2-digit",second:"2-digit"})}`;
+    const listLabel = HYPE.guestLists.length ? ` + ${HYPE.guestLists.length} nome(s) de lista` : "";
+    status.textContent = `${HYPE.tickets.length} pedido(s)${listLabel} carregado(s) • atualizado ${new Date().toLocaleTimeString("pt-BR", {hour:"2-digit",minute:"2-digit",second:"2-digit"})}`;
     status.className = "admin-sync-status ok";
   }
 
@@ -1811,6 +1849,10 @@ async function initAdmin(fromLogin = false) {
       }
     }
 
+    // O link público da lista pode apontar para outro evento que o padrão do Admin.
+    // Recarrega as configurações depois do login para alinhar a lista manual e a Portaria.
+    try { await window.HypeV49Registration?.loadListSettings?.(); } catch (listErr) { console.warn("[HYPE][lista pública]", listErr); }
+
     renderAdminEvents();
     renderConfigTickets();
     renderClientsTable();
@@ -2011,9 +2053,17 @@ async function renderClientsTable() {
   const tbody = document.getElementById("adminTableBody");
   if (!tbody) return;
   const term = (document.getElementById("searchInput")?.value || "").toLowerCase();
-  const list = (HYPE.tickets || []).filter(item => String(item.customer_name || '').toLowerCase().includes(term) || String(item.lot_name || '').toLowerCase().includes(term) || String(item.ticket_code || '').toLowerCase().includes(term) || String(item.phone || '').toLowerCase().includes(term) || String(item.email || '').toLowerCase().includes(term) || String(item.event_name || '').toLowerCase().includes(term) || String(item.promoter_code || '').toLowerCase().includes(term) || String(item.coupon_code || '').toLowerCase().includes(term));
+  const records = [...(HYPE.tickets || []), ...(HYPE.guestLists || [])];
+  const list = records.filter(item => String(item.customer_name || '').toLowerCase().includes(term) || String(item.lot_name || '').toLowerCase().includes(term) || String(item.ticket_code || '').toLowerCase().includes(term) || String(item.phone || '').toLowerCase().includes(term) || String(item.email || '').toLowerCase().includes(term) || String(item.event_name || '').toLowerCase().includes(term) || String(item.promoter_code || '').toLowerCase().includes(term) || String(item.coupon_code || '').toLowerCase().includes(term) || String(item.cpf || '').toLowerCase().includes(term));
   if (!list.length) tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">Nenhum cliente encontrado.</td></tr>`;
   else tbody.innerHTML = list.map(item => {
+    if (item.record_type === "guest_list") {
+      const entered = item.guest_status === "Entrou";
+      const guestState = entered ? "ENTROU" : "LISTA LIBERADA";
+      const guestStateColor = entered ? "#ff9bab" : "#a8f3c4";
+      const savedAt = item.created_at ? `Salvo ${hypeFormatDateTime(item.created_at)}` : "";
+      return `<tr><td><strong>${hypeEscape(item.customer_name || "SEM NOME")}</strong><br><span class="badge gender">${hypeEscape(item.gender || "N/I")}</span><small style="display:block;color:var(--muted);line-height:1.55">📋 Lista HYPE${item.cpf ? `<br>CPF: ${hypeEscape(item.cpf)}` : ""}${item.phone ? `<br>📱 ${hypeEscape(item.phone)}` : ""}</small></td><td>—<br><small style="color:var(--muted)">Sem ingresso / sem pagamento</small><small style="display:block;color:var(--muted)">🎤 ${hypeEscape(item.event_name || "Evento HYPE")}</small>${savedAt ? `<small style="display:block;color:var(--muted)">${hypeEscape(savedAt)}</small>` : ""}</td><td><span class="badge" style="color:${guestStateColor};border-color:${guestStateColor}">${guestState}</span><br><small>LISTA • não é venda</small></td><td><small style="color:var(--muted)">Consultar e confirmar na Portaria</small></td></tr>`;
+    }
     const status = item.payment_status === 'Pago' ? 'pago' : item.payment_status === 'Cancelado' ? 'cancelado' : 'pendente';
     const entry = item.entry_status === 'Entrada utilizada' ? ` • Entrada ${hypeFormatDateTime(item.entry_at)}` : '';
     const canPay = ['admin','gerente','caixa'].includes(HYPE.role);
@@ -2027,11 +2077,11 @@ async function renderClientsTable() {
     return `<tr><td><strong>${hypeEscape(item.customer_name || "SEM NOME")}</strong><br><span class="badge gender">${hypeEscape(item.gender || "N/I")}</span><small style="color:var(--muted)">${hypeEscape(item.ticket_code || "")} ${entry}</small><small style="display:block;color:var(--muted);line-height:1.55">📱 ${hypeEscape(item.phone || "—")}<br>📧 ${hypeEscape(item.email || "—")}<br>CPF: ${cpf}</small>${emailState}</td><td>${hypeFormatMoney(item.price)}<br><small style="color:var(--muted)">${hypeEscape(item.lot_name || "")}</small><small style="display:block;color:var(--muted)">${hypeEscape(item.sector || "")} • ${hypeEscape(item.payment_method || "Manual")}</small>${item.event_name ? `<small style="display:block;color:var(--muted)">🎤 ${hypeEscape(item.event_name)}</small>` : ""}${item.promoter_code ? `<small style="display:block;color:#7dd3fc">Promoter: ${hypeEscape(item.promoter_code)}</small>` : ""}${item.coupon_code ? `<small style="display:block;color:#86efac">Cupom: ${hypeEscape(item.coupon_code)} • -${hypeFormatMoney(item.discount_amount || 0)}</small>` : ""}</td><td><span class="badge ${status}">${hypeEscape(paymentStatus.toUpperCase())}</span><br><small>${hypeEscape(item.entry_status || "Não utilizado")}</small></td><td><div class="actions-cell">${canPay && paymentStatus !== "Pago" ? `<button class="btn-action btn-confirm" onclick="setPayment(${item.id},'Pago')">✅ CONFIRMAR</button>` : ""}${canPay && paymentStatus === "Pago" && item.email ? `<button class="btn-action" onclick="sendTicketEmail(${item.id},true)">📧 REENVIAR</button>` : ""}${canPay && paymentStatus === "Pago" ? `<button class="btn-action" onclick="setPayment(${item.id},'Pendente')">PENDENTE</button>` : ""}${canPay && paymentStatus !== "Cancelado" ? `<button class="btn-action btn-del" onclick="setPayment(${item.id},'Cancelado')">CANCELAR</button>` : ""}${HYPE.role === "admin" ? `<button class="btn-action btn-del" style="border-color:#ff4d67;background:rgba(255,22,61,.18)" onclick="purgeSingleTicketV25(${item.id})">🧪 EXCLUIR TESTE</button>` : ""}</div></td></tr>`;
   }).join('');
 
-  const total = HYPE.tickets.length;
+  const total = HYPE.tickets.length + (HYPE.guestLists || []).length;
   const paid = HYPE.tickets.filter(x=>x.payment_status==='Pago').length;
   const pending = HYPE.tickets.filter(x=>x.payment_status==='Pendente').length;
   const canceled = HYPE.tickets.filter(x=>x.payment_status==='Cancelado').length;
-  const entered = HYPE.tickets.filter(x=>x.entry_status==='Entrada utilizada').length;
+  const entered = HYPE.tickets.filter(x=>x.entry_status==='Entrada utilizada').length + (HYPE.guestLists || []).filter(x=>x.guest_status==='Entrou').length;
   const cash = HYPE.tickets.filter(x=>x.payment_status==='Pago').reduce((s,x)=>s+Number(x.price||0),0);
   const pendingValue = HYPE.tickets.filter(x=>x.payment_status==='Pendente').reduce((s,x)=>s+Number(x.price||0),0);
   const set = (id,v)=>{const el=document.getElementById(id);if(el)el.innerText=v;};

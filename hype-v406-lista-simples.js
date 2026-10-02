@@ -49,6 +49,22 @@
     alert('Agora a lista é cadastrada somente no Admin. A Portaria só busca e confirma entrada.');
   }
 
+  async function searchRowsForEvent(query, selectedEventId){
+    return arr(await rpc('portaria_guest_simple_search_v406',{
+      p_device_key:deviceKey(),
+      p_event_id:Number(selectedEventId),
+      p_query:query
+    })).map(row=>({...row,event_id:Number(selectedEventId)}));
+  }
+
+  async function publicListEvent(){
+    try{
+      return arr(await rpc('public_guest_registration_context_v49'))[0] || null;
+    }catch(_){
+      return null;
+    }
+  }
+
   async function search(query,targetId='v406ListResult',append=false){
     const q=String(query || $('v406ListSearch')?.value || $('searchInput')?.value || '').trim();
     if(!q){ if(!append) out('<div class="empty">Digite um nome para buscar.</div>',targetId); return 0; }
@@ -56,7 +72,15 @@
     if(!eventId()){ if(!append) out('<div class="empty error">Selecione o evento.</div>',targetId); return 0; }
     if(!append) out('<div class="empty">Buscando pessoas...</div>',targetId);
     try{
-      const rows=arr(await rpc('portaria_guest_simple_search_v406',{p_device_key:deviceKey(),p_event_id:eventId(),p_query:q}));
+      let rows=await searchRowsForEvent(q,eventId());
+      if(!rows.length){
+        const publicEvent=await publicListEvent();
+        const publicEventId=Number(publicEvent?.event_id || 0);
+        if(publicEventId && publicEventId!==eventId()){
+          const fallback=await searchRowsForEvent(q,publicEventId);
+          rows=fallback.map(row=>({...row,remote_event_name:publicEvent.event_name,remote_event_date:publicEvent.event_date}));
+        }
+      }
       if(!rows.length){ if(!append) out('<div class="empty error">Nenhuma pessoa encontrada neste evento.</div>',targetId); return 0; }
       out(rows.map(render).join(''),targetId,append);
       return rows.length;
@@ -69,10 +93,13 @@
   function render(row){
     const entrou=String(row.status||'')==='Entrou';
     const cancelado=String(row.status||'')==='Cancelado';
+    const rowEventId=Number(row.event_id || 0);
+    const eventMismatch=Boolean(rowEventId && rowEventId!==eventId());
     const cls=cancelado?'bad':(entrou?'bad':'ok');
-    const state=cancelado?'CANCELADO':(entrou?'JÁ ENTROU':'LISTA LIBERADA');
-    const btn=(!entrou && !cancelado) ? `<button class="btn green" onclick="HypeListaSimples.enter(${Number(row.list_id)})">✅ CONFIRMAR ENTRADA</button>` : '';
-    return `<article class="ticket ${cls}"><div><span class="sector">LISTA SIMPLES</span><h2>${esc(row.name||'Nome')}</h2><div class="meta">Sem ingresso • sem QR Code<br>${row.created_at?`Adicionado ${esc(fmt(row.created_at))}`:''}${row.entered_at?`<br>Entrou ${esc(fmt(row.entered_at))}`:''}</div></div><div class="ticket-actions"><div class="state ${entrou||cancelado?'danger':'good'}">${esc(state)}</div>${btn}</div></article>`;
+    const state=cancelado?'CANCELADO':(entrou?'JÁ ENTROU':(eventMismatch?'OUTRO EVENTO':'LISTA LIBERADA'));
+    const btn=(!entrou && !cancelado && !eventMismatch) ? `<button class="btn green" onclick="HypeListaSimples.enter(${Number(row.list_id)})">✅ CONFIRMAR ENTRADA</button>` : '';
+    const mismatch=eventMismatch ? `<br><b>Selecione ${esc(row.remote_event_name||'o evento correto')}${row.remote_event_date?` • ${esc(fmt(row.remote_event_date))}`:''} acima para liberar.</b>` : '';
+    return `<article class="ticket ${cls}"><div><span class="sector">LISTA SIMPLES</span><h2>${esc(row.name||'Nome')}</h2><div class="meta">Sem ingresso • sem QR Code${row.remote_event_name?`<br>Evento do cadastro: ${esc(row.remote_event_name)}`:''}<br>${row.created_at?`Adicionado ${esc(fmt(row.created_at))}`:''}${row.entered_at?`<br>Entrou ${esc(fmt(row.entered_at))}`:''}${mismatch}</div></div><div class="ticket-actions"><div class="state ${entrou||cancelado||eventMismatch?'danger':'good'}">${esc(state)}</div>${btn}</div></article>`;
   }
 
   async function enter(id){

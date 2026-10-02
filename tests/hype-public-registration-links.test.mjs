@@ -100,6 +100,7 @@ test("public promoter page returns copyable and shareable sales link", async () 
   assert.match(js, /navigator\.clipboard/);
   assert.match(js, /promoterOpenSales|window\.open|location\.href/i);
   assert.doesNotMatch(html + js, /p_username|p_password|service_role/i);
+  assert.doesNotMatch(html, /Quer entrar na lista|lista\.html/i);
 });
 
 test("admin promoter rows can open the linked ticket catalog", async () => {
@@ -107,4 +108,25 @@ test("admin promoter rows can open the linked ticket catalog", async () => {
 
   assert.match(js, /cliente\.html\?promoter=/i);
   assert.match(js, /openPromoterSalesV168|ABRIR INGRESSOS/i);
+});
+
+test("admin client list includes public guest-list names without treating them as payments", async () => {
+  const app = await read("app.js");
+
+  assert.match(app, /staff_guest_simple_list_v406/);
+  assert.match(app, /guest_list/);
+  assert.match(app, /Lista HYPE|LISTA HYPE/);
+  assert.match(app, /record_type/);
+});
+
+test("portaria keeps public guest-list search scoped to the selected event", async () => {
+  const js = await read("hype-v406-lista-simples.js");
+  const portaria = await read("portaria-v18.js");
+
+  assert.match(js, /portaria_guest_simple_search_v406/);
+  assert.match(js, /portaria_guest_simple_enter_v406/);
+  assert.match(js, /public_guest_registration_context_v49/);
+  assert.match(js, /event_id/);
+  assert.match(portaria, /HypeListaSimples\.search/);
+  assert.match(portaria, /state\.eventId/);
 });
