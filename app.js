@@ -14,6 +14,7 @@ const HYPE = {
   lots: [],
   tickets: [],
   guestLists: [],
+  stoneSales: [],
   promoters: [],
   coupons: [],
   promoterLinkCode: "",
@@ -743,17 +744,20 @@ async function loadStaffTickets(search = "") {
 
   // Carrega as duas versões da listagem. A versão manual traz e-mail/método
   // e a versão antiga funciona como segurança para nenhum pedido sumir do Admin.
-  const [v54Result, v16Result, manualResult, legacyResult] = await Promise.allSettled([
+  const [v54Result, v16Result, manualResult, legacyResult, stoneResult] = await Promise.allSettled([
     sbRpc("staff_list_tickets_v54", params),
     sbRpc("staff_list_tickets_v16", params),
     sbRpc("staff_list_tickets_manual", params),
-    sbRpc("staff_list_tickets", params)
+    sbRpc("staff_list_tickets", params),
+    sbRpc("staff_list_stone_sales_v62", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:null})
   ]);
 
   const v54 = v54Result.status === "fulfilled" && Array.isArray(v54Result.value) ? v54Result.value : [];
   const v16 = v16Result.status === "fulfilled" && Array.isArray(v16Result.value) ? v16Result.value : [];
   const manual = manualResult.status === "fulfilled" && Array.isArray(manualResult.value) ? manualResult.value : [];
   const legacy = legacyResult.status === "fulfilled" && Array.isArray(legacyResult.value) ? legacyResult.value : [];
+  HYPE.stoneSales = stoneResult.status === "fulfilled" && Array.isArray(stoneResult.value) ? stoneResult.value : [];
+  const stoneByTicket = new Map(HYPE.stoneSales.map(row => [Number(row.ticket_id), row]));
 
   if (v54Result.status === "rejected" && v16Result.status === "rejected" && manualResult.status === "rejected" && legacyResult.status === "rejected") {
     const msg = v54Result.reason?.message || v16Result.reason?.message || manualResult.reason?.message || legacyResult.reason?.message || "Não foi possível carregar os pedidos.";
@@ -765,6 +769,10 @@ async function loadStaffTickets(search = "") {
   manual.forEach(row => { const old = byId.get(Number(row.id)) || {}; byId.set(Number(row.id), { ...old, ...row }); });
   v16.forEach(row => { const old = byId.get(Number(row.id)) || {}; byId.set(Number(row.id), { ...old, ...row }); });
   v54.forEach(row => { const old = byId.get(Number(row.id)) || {}; byId.set(Number(row.id), { ...old, ...row }); });
+  for (const [id,row] of byId.entries()) {
+    const stone = stoneByTicket.get(Number(id));
+    if (stone) byId.set(Number(id), { ...row, stone_nsu:stone.nsu||"", stone_payment_type:stone.payment_type||"", stone_amount:stone.amount ?? row.price });
+  }
 
   HYPE.tickets = [...byId.values()].sort((a, b) => {
     const ad = new Date(a.purchased_at || 0).getTime();
@@ -2204,7 +2212,7 @@ async function renderClientsTable() {
       : paymentStatus === "Pago" && item.email
         ? `<small style="display:block;color:#ffcc00;margin-top:4px">📧 E-MAIL AINDA NÃO ENVIADO</small>`
         : "";
-    return `<tr><td><strong>${hypeEscape(item.customer_name || "SEM NOME")}</strong><br><span class="badge gender">${hypeEscape(item.gender || "N/I")}</span><small style="color:var(--muted)">${hypeEscape(item.ticket_code || "")} ${entry}</small><small style="display:block;color:var(--muted);line-height:1.55">📱 ${hypeEscape(item.phone || "—")}<br>📧 ${hypeEscape(item.email || "—")}<br>CPF: ${cpf}</small>${emailState}</td><td>${isFree ? "FREE" : hypeFormatMoney(item.price)}<br><small style="color:var(--muted)">${hypeEscape(item.lot_name || "")}</small><small style="display:block;color:var(--muted)">${hypeEscape(item.sector || "")} • ${hypeEscape(item.payment_method || "Manual")}</small>${item.event_name ? `<small style="display:block;color:var(--muted)">🎤 ${hypeEscape(item.event_name)}</small>` : ""}${item.promoter_code ? `<small style="display:block;color:#7dd3fc">Promoter: ${hypeEscape(item.promoter_code)}</small>` : ""}${item.coupon_code ? `<small style="display:block;color:#86efac">Cupom: ${hypeEscape(item.coupon_code)} • -${hypeFormatMoney(item.discount_amount || 0)}</small>` : ""}</td><td><span class="badge ${status}">${hypeEscape(displayStatus)}</span>${paymentStatus === "Pendente" && /asaas/i.test(String(item.payment_method || "")) ? (item.asaas_payment_id ? '<small style="display:block;color:#a8f3c4;margin-top:5px;font-weight:800">✅ PIX GERADO NO ASAAS • AGUARDANDO CLIENTE PAGAR</small>' : '<small style="display:block;color:#ff8da0;margin-top:5px;font-weight:900">⚠️ PIX NÃO GERADO NO ASAAS • NÃO HÁ COBRANÇA</small>') : ''}<br><small>${hypeEscape(item.entry_status || "Não utilizado")}</small></td><td><div class="actions-cell">${canPay && paymentStatus !== "Pago" ? `<button class="btn-action btn-confirm" onclick="setPayment(${item.id},'Pago')">✅ CONFIRMAR</button>` : ""}${canPay && paymentStatus === "Pago" && item.email ? `<button class="btn-action" onclick="sendTicketEmail(${item.id},true)">📧 REENVIAR</button>` : ""}${canPay && paymentStatus === "Pago" ? `<button class="btn-action" onclick="setPayment(${item.id},'Pendente')">PENDENTE</button>` : ""}${canPay && paymentStatus !== "Cancelado" ? `<button class="btn-action btn-del" onclick="setPayment(${item.id},'Cancelado')">CANCELAR</button>` : ""}${HYPE.role === "admin" ? `<button class="btn-action btn-del" style="border-color:#ff4d67;background:rgba(255,22,61,.18)" onclick="purgeSingleTicketV25(${item.id})">🧪 EXCLUIR TESTE</button>` : ""}</div></td></tr>`;
+    return `<tr><td><strong>${hypeEscape(item.customer_name || "SEM NOME")}</strong><br><span class="badge gender">${hypeEscape(item.gender || "N/I")}</span><small style="color:var(--muted)">${hypeEscape(item.ticket_code || "")} ${entry}</small><small style="display:block;color:var(--muted);line-height:1.55">📱 ${hypeEscape(item.phone || "—")}<br>📧 ${hypeEscape(item.email || "—")}<br>CPF: ${cpf}</small>${emailState}</td><td>${isFree ? "FREE" : hypeFormatMoney(item.price)}<br><small style="color:var(--muted)">${hypeEscape(item.lot_name || "")}</small><small style="display:block;color:var(--muted)">${hypeEscape(item.sector || "")} • ${hypeEscape(item.payment_method || "Manual")}</small>${item.event_name ? `<small style="display:block;color:var(--muted)">🎤 ${hypeEscape(item.event_name)}</small>` : ""}${item.stone_nsu ? `<small style="display:block;color:#a8f3c4">💳 Stone • NSU ${hypeEscape(item.stone_nsu)}</small>` : ""}${item.promoter_code ? `<small style="display:block;color:#7dd3fc">Promoter: ${hypeEscape(item.promoter_code)}</small>` : ""}${item.coupon_code ? `<small style="display:block;color:#86efac">Cupom: ${hypeEscape(item.coupon_code)} • -${hypeFormatMoney(item.discount_amount || 0)}</small>` : ""}</td><td><span class="badge ${status}">${hypeEscape(displayStatus)}</span>${paymentStatus === "Pendente" && /asaas/i.test(String(item.payment_method || "")) ? (item.asaas_payment_id ? '<small style="display:block;color:#a8f3c4;margin-top:5px;font-weight:800">✅ PIX GERADO NO ASAAS • AGUARDANDO CLIENTE PAGAR</small>' : '<small style="display:block;color:#ff8da0;margin-top:5px;font-weight:900">⚠️ PIX NÃO GERADO NO ASAAS • NÃO HÁ COBRANÇA</small>') : ''}<br><small>${hypeEscape(item.entry_status || "Não utilizado")}</small></td><td><div class="actions-cell">${canPay && paymentStatus !== "Pago" ? `<button class="btn-action btn-confirm" onclick="setPayment(${item.id},'Pago')">✅ CONFIRMAR</button>` : ""}${canPay && paymentStatus === "Pago" && item.email ? `<button class="btn-action" onclick="sendTicketEmail(${item.id},true)">📧 REENVIAR</button>` : ""}${canPay && paymentStatus === "Pago" ? `<button class="btn-action" onclick="setPayment(${item.id},'Pendente')">PENDENTE</button>` : ""}${canPay && paymentStatus !== "Cancelado" ? `<button class="btn-action btn-del" onclick="setPayment(${item.id},'Cancelado')">CANCELAR</button>` : ""}${HYPE.role === "admin" ? `<button class="btn-action btn-del" style="border-color:#ff4d67;background:rgba(255,22,61,.18)" onclick="purgeSingleTicketV25(${item.id})">🧪 EXCLUIR TESTE</button>` : ""}</div></td></tr>`;
   }).join('');
 
   const total = HYPE.tickets.length + (HYPE.guestLists || []).length;
