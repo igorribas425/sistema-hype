@@ -1,4 +1,4 @@
-const CACHE='hype-v60-offline';
+const CACHE='hype-v62-offline';
 const CORE=[
   './',
   './cliente.html',
@@ -6,7 +6,7 @@ const CORE=[
   './admin.html',
   './portaria.html',
   './leitor.html',
-  './app.js?v=20261001-v48',
+  './app.js?v=20261002-v62',
   './promoter-global-v16-8.js?v=20260902-v20-global',
   './v19-admin.js?v=20260902-v20',
   './v20-admin.js?v=20260902-v20',
@@ -14,7 +14,7 @@ const CORE=[
   './portaria-v18.js?v=20261002-v60',
   './portaria-v60-exit-feedback.js?v=20261002-v60',
   './hype-v406-lista-simples.js?v=20261001-v50',
-  './portaria-v20.js?v=20261001-v48',
+  './portaria-v20.js?v=20261002-v62',
   './leitor-v20.js?v=20260902-v20',
   './hype-qrcode.js?v=20260902-v20',
   './supabase-config.js?v=20261001-v48',
