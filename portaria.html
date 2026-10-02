@@ -127,20 +127,23 @@ html,body{max-width:100%;overflow-x:hidden}
 
 
     <section id="v19DoorSale" class="v19-door portaria-extra">
-      <div class="v19-section-head"><div><h3>🎟️ VENDA RÁPIDA NA PORTARIA</h3><p>Painel simples para vender na hora: nome, CPF, gênero, ingresso e PIX Asaas automático.</p></div><strong id="v19DoorEventName" style="font-size:11px">Evento selecionado</strong></div>
+      <div class="v19-section-head"><div><h3>🎟️ VENDA RÁPIDA NA PORTARIA</h3><p>Venda na hora por PIX Asaas ou cartão na Stone. FREE continua liberando sem cobrança.</p></div><strong id="v19DoorEventName" style="font-size:11px">Evento selecionado</strong></div>
       <div class="v39-door-steps">
-        <span><b>1</b> Nome</span><span><b>2</b> CPF</span><span><b>3</b> Ingresso</span><span><b>4</b> PIX</span>
+        <span><b>1</b> Pessoa</span><span><b>2</b> Ingresso</span><span><b>3</b> Pagamento</span><span><b>4</b> Liberar</span>
       </div>
       <div class="v19-door-form v39-door-simple">
         <div class="full"><label>Nome *</label><input id="v19DoorName" placeholder="Nome da pessoa" autocomplete="name"></div>
         <div class="full"><label>CPF *</label><input id="v19DoorCpf" placeholder="Somente números" inputmode="numeric" maxlength="14" autocomplete="off"></div>
+        <div><label>WhatsApp</label><input id="v62DoorPhone" placeholder="(54) 99999-9999" inputmode="tel" autocomplete="tel"></div>
+        <div><label>E-mail</label><input id="v62DoorEmail" type="email" placeholder="cliente@gmail.com" autocomplete="email"></div>
         <div><label>Gênero *</label><select id="v19DoorGender" onchange="HypeV20.updateDoorPrice()"><option value="Feminino">Feminino</option><option value="Masculino">Masculino</option></select></div>
         <div><label>Ingresso *</label><select id="v19DoorLot" onchange="HypeV20.updateDoorPrice()"><option>Carregando...</option></select></div>
+        <div class="full"><label>Forma de pagamento</label><select id="v62DoorPayment" onchange="HypeV20.updateDoorPrice()"><option value="PIX">PIX ASAAS</option><option value="STONE_CREDITO">STONE • CRÉDITO</option><option value="STONE_DEBITO">STONE • DÉBITO</option></select></div>
         <div class="full"><label>Valor a pagar</label><div id="v19DoorPrice" class="v19-door-price">Selecione um ingresso</div></div>
       </div>
       <div id="v19DoorRaffleHint" class="v19-door-hint">Carregando sorteio do evento...</div>
       <button id="v19DoorCreate" class="btn primary" style="width:100%;margin-top:11px" onclick="HypeV20.createDoorOrder()">💠 GERAR PIX / LIBERAR FREE</button>
-      <div id="v19DoorNotice" class="v19-notice ok">Pronto. Venda na hora com Nome + CPF + gênero + ingresso. Entra no evento e no sorteio quando ficar PAGO.</div>
+      <div id="v19DoorNotice" class="v19-notice ok">PIX confirma automaticamente. Na Stone, cobre na maquininha e confirme no site somente depois de aparecer APROVADO.</div>
       <div id="v19DoorResult" class="v19-door-result"></div>
     </section>
 
@@ -161,6 +164,30 @@ html,body{max-width:100%;overflow-x:hidden}
     <div class="modal-actions" style="margin-top:14px"><button class="btn primary" onclick="HypeV20.copyReaderLink()">COPIAR LINK</button><button class="btn" onclick="HypeV20.shareReaderLink()">COMPARTILHAR</button></div>
     <button id="readerEmailSend" class="btn primary" style="width:100%;margin-top:8px" onclick="HypeV20.sendReaderLinkEmail()">✉️ ENVIAR LINK POR GMAIL / E-MAIL</button>
     <div class="modal-actions" style="margin-top:8px"><button class="btn red" onclick="HypeV20.endAllReaders()">BLOQUEAR TODOS</button><button class="btn" onclick="HypeV20.closeReaderLink()">FECHAR</button></div>
+  </div>
+</div>
+<div id="v62StoneModal" class="modal">
+  <div class="modal-card" style="text-align:left;max-width:620px">
+    <h2 style="text-align:center">💳 PAGAMENTO STONE</h2>
+    <div style="margin:10px 0 14px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#09090c">
+      <div id="v62StonePerson" style="font-weight:950;font-size:15px">Cliente</div>
+      <div id="v62StoneTicket" style="color:var(--muted);font-size:10px;margin-top:5px">Ingresso</div>
+      <div id="v62StoneAmount" style="font-size:28px;font-weight:950;margin-top:8px">R$ 0,00</div>
+      <div id="v62StoneMethod" style="color:#a8f3c4;font-size:11px;font-weight:900;margin-top:5px">STONE</div>
+    </div>
+    <div style="padding:11px 12px;border:1px solid rgba(255,204,0,.25);background:rgba(255,204,0,.06);border-radius:12px;color:#ddd;font-size:10px;line-height:1.55">
+      1. Digite este valor na maquininha Stone.<br>
+      2. Aguarde aparecer <b style="color:#a8f3c4">APROVADO</b> na Stone.<br>
+      3. Digite abaixo o NSU/código da transação do comprovante.<br>
+      4. Só então confirme a venda no sistema.
+    </div>
+    <label style="display:block;font-size:10px;color:var(--muted);font-weight:900;margin:14px 0 6px">NSU / CÓDIGO DA TRANSAÇÃO STONE *</label>
+    <input id="v62StoneNsu" class="input" style="width:100%" placeholder="Ex.: 123456 / código do comprovante" autocomplete="off" inputmode="numeric">
+    <div id="v62StoneStatus" style="margin-top:9px;color:var(--muted);font-size:10px">A confirmação ainda é manual. O site não lê o cartão nem os dados bancários.</div>
+    <div class="modal-actions" style="margin-top:14px">
+      <button id="v62StoneConfirm" class="btn green" onclick="HypeV20.confirmStoneSale()">✅ PAGAMENTO APROVADO NA STONE</button>
+      <button class="btn" onclick="HypeV20.closeStoneSale()">CANCELAR</button>
+    </div>
   </div>
 </div>
 <div id="v60ExitFeedbackModal" class="modal v60-exit-modal">
@@ -192,7 +219,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="hype-qrcode.js?v=20260902-v21"></script>
 <script src="portaria-v18.js?v=20261002-v60"></script>
 <script src="hype-v406-lista-simples.js?v=20261001-v50"></script>
-<script src="portaria-v20.js?v=20261001-v48"></script>
+<script src="portaria-v20.js?v=20261002-v62"></script>
 <script src="register-sw.js?v=20261002-v60"></script>
   <script src="hype-push-config.js?v=44"></script>
   <script src="hype-v38-chat.js?v=44"></script>
