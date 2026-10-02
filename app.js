@@ -1064,7 +1064,7 @@ function updateClientTicketState() {
   }
 }
 
-const HYPE_WHATSAPP = "555496776514";
+const HYPE_WHATSAPP = "555496956070";
 
 function normalizePhone(value) {
   return String(value || "").replace(/\D/g, "");
@@ -2888,8 +2888,8 @@ function hypeV14CurrentShareText() {
   return `${parts.join("\n")}\n${location.href}`;
 }
 
-const HYPE_V15_CONTACT_PHONE_DISPLAY = "(54) 9677-6514";
-const HYPE_V15_CONTACT_PHONE_WA = "555496776514";
+const HYPE_V15_CONTACT_PHONE_DISPLAY = "(54) 9695-6070";
+const HYPE_V15_CONTACT_PHONE_WA = "555496956070";
 const HYPE_V15_MAP_URL = "https://maps.app.goo.gl/NxRfJDYs9iR2uk2v8";
 
 function hypeV14OpenWhatsAppContact() {
