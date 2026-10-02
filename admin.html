@@ -294,7 +294,9 @@ html,body{max-width:100%;overflow-x:hidden}
   .v49-link-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:7px;align-items:center}.v49-link-row input{min-width:0;font-size:11px}
   .v49-link-qr{display:flex;justify-content:center;align-items:center;min-height:150px}.v49-link-qr img{width:150px;height:150px;background:#fff;border-radius:10px;padding:7px;box-sizing:border-box}
   .v49-link-status{margin:10px 0;padding:9px 10px;border:1px solid var(--line);border-radius:9px;color:var(--muted);font-size:11px}.v49-link-status.open{color:#9ff0be;border-color:rgba(40,209,124,.4)}.v49-link-status.closed{color:#ffb2bc;border-color:rgba(255,77,103,.35)}
+  .v50-review{grid-column:1/-1;border-top:1px solid var(--line);padding-top:15px;margin-top:4px}.v50-review h4{margin:0 0 6px;font-size:14px}.v50-review p{color:var(--muted);font-size:11px;line-height:1.5;margin:0 0 10px}.v50-settings{display:grid;grid-template-columns:minmax(0,1fr) 140px auto;gap:8px;align-items:end}.v50-review-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:12px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.03);margin-top:8px}.v50-review-row.pending{border-color:rgba(251,191,36,.4)}.v50-review-row strong{display:block}.v50-review-row small{display:block;color:var(--muted);line-height:1.5}.v50-review-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:wrap}.v50-review-photo{max-width:130px;max-height:130px;border-radius:9px;border:1px solid var(--line);object-fit:cover;margin-top:8px}.v50-photo-modal{position:fixed;inset:0;background:rgba(0,0,0,.84);z-index:10000;display:grid;place-items:center;padding:20px}.v50-photo-modal[hidden]{display:none}.v50-photo-modal img{max-width:min(680px,92vw);max-height:82vh;border-radius:12px}.v50-photo-modal button{margin-top:10px}
   @media(max-width:700px){.v49-link-panel{grid-template-columns:1fr}.v49-link-qr{order:-1}.v49-link-row{grid-template-columns:1fr 1fr}.v49-link-row input{grid-column:1/-1}.v49-link-row button{width:100%}}
+  @media(max-width:700px){.v50-settings{grid-template-columns:1fr}.v50-review-row{grid-template-columns:1fr}.v50-review-actions{justify-content:flex-start}}
 </style>
   <link rel="manifest" href="manifest.webmanifest?v=42">
 </head>
@@ -615,15 +617,24 @@ Bruna Santos"></textarea>
     <div id="v49ListLinkPanel" class="v49-link-panel" hidden>
       <div class="v49-link-copy">
         <h4>Cadastro público da lista</h4>
-        <p>O link é o mesmo para todos e não expira. O Admin escolhe o evento e decide quando os cadastros ficam liberados.</p>
-        <div class="form-group"><label>Evento liberado no link</label><select id="v49ListEvent"></select></div>
+        <p>O link é o mesmo para todos e não expira. As festas abertas aparecem no link e cada pessoa escolhe a sua.</p>
+        <div class="form-group"><label>Evento em análise</label><select id="v49ListEvent"></select></div>
+        <div class="v50-settings"><div class="form-group" style="margin:0"><label>Limite de homens aprovados</label><input id="v50MaleLimit" type="number" min="0" max="10000" step="1" value="10"></div><button id="v50ListSave" class="btn-action" type="button" onclick="HypeV49Registration.saveGuestListSettings()">SALVAR LIMITE</button></div>
         <div class="v49-link-status" id="v49ListStatus">Carregando status...</div>
+        <div id="v50ListQuota" class="v49-link-status">Limite por evento: carregando...</div>
         <div class="v49-link-row"><input id="v49ListPublicUrl" readonly value="https://hypeloungeclub.com.br/lista.html"><button class="btn-action" type="button" onclick="HypeV49Registration.copyListRegistrationLink()">COPIAR</button><button class="btn-action" type="button" onclick="HypeV49Registration.shareListRegistrationLink()">COMPARTILHAR</button></div>
         <button id="v49ListToggle" class="btn" type="button" onclick="HypeV49Registration.toggleGuestList()">LIBERAR CADASTRO</button>
       </div>
       <div class="v49-link-qr"><img id="v49ListPublicQr" alt="QR Code da lista pública"></div>
+      <div id="v50GuestReviewPanel" class="v50-review">
+        <h4>ANÁLISE DOS CADASTROS COM FOTO</h4>
+        <p>Veja a foto, Instagram e dados do cadastro. Somente após aprovar o nome ele aparece na Portaria; o Gmail é enviado depois da aprovação.</p>
+        <div id="v50GuestReviewList" class="v18-empty">Selecione um evento para carregar os cadastros.</div>
+      </div>
     </div>
   </section>
+
+  <div id="v50PhotoPreview" class="v50-photo-modal" hidden><div><img id="v50PhotoImage" alt="Foto do cadastro"><button class="btn-action" type="button" onclick="HypeV49Registration.closePhoto()">FECHAR</button></div></div>
 
   <div class="grid-admin">
     <div class="panel-box admin-only">

@@ -48,8 +48,8 @@ test("admin keeps manual flows and adds one link tab to each area", async () => 
   assert.match(admin, /id="v49ListTabLink"/);
   assert.match(admin, /id="v49ListLinkPanel"/);
   assert.match(admin, /https:\/\/hypeloungeclub\.com\.br\/lista\.html/);
-  assert.match(controller, /staff_guest_registration_settings_v49/);
-  assert.match(controller, /staff_set_guest_registration_v49/);
+  assert.match(controller, /staff_guest_registration_settings_v50/);
+  assert.match(controller, /staff_set_guest_registration_v50/);
   assert.match(controller, /navigator\.share/);
   assert.match(controller, /HypeQRCode\.toDataUrl/);
   assert.match(admin, /hype-v49-registration-admin\.js\?v=20261001-v49/);
@@ -70,7 +70,7 @@ test("admin synchronizes manual guest-list view with the public-registration eve
 
   assert.match(controller, /v408ListEvent/);
   assert.match(controller, /HypeListaAdmin\.load/);
-  assert.match(controller, /staff_guest_registration_settings_v49/);
+  assert.match(controller, /staff_guest_registration_settings_v50/);
 });
 
 test("public guest page requires event choice, review fields, and no promoter footer", async () => {
