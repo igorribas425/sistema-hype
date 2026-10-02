@@ -75,6 +75,29 @@
     }
   }
 
+  function setDoorTab(tab) {
+    const cadastro = tab !== 'venda';
+    $('v63DoorTabCadastro')?.classList.toggle('active', cadastro);
+    $('v63DoorTabVenda')?.classList.toggle('active', !cadastro);
+    $('v63DoorPaneCadastro')?.classList.toggle('active', cadastro);
+    $('v63DoorPaneVenda')?.classList.toggle('active', !cadastro);
+    if (!cadastro) {
+      updateDoorPrice();
+      setTimeout(()=>$('v19DoorLot')?.focus(),80);
+    } else {
+      setTimeout(()=>$('v19DoorName')?.focus(),80);
+    }
+  }
+
+  function continueDoorCadastro() {
+    const form = currentDoorForm();
+    if (!form.name || form.name.length < 2) return notify('Digite o nome completo da pessoa.', false);
+    if (!validCpf(form.cpf)) return notify('Digite um CPF válido com 11 números.', false);
+    if (!validEmailOptional(form.email)) return notify('Digite um e-mail válido ou deixe o campo vazio.', false);
+    setDoorTab('venda');
+    notify('Cadastro preenchido. Agora escolha o ingresso e a forma de pagamento.', true);
+  }
+
   // ------------------------------------------------------------------
   // CELULARES LEITORES POR LINK EXCLUSIVO
   // ------------------------------------------------------------------
@@ -679,8 +702,8 @@
     ['v19DoorName','v19DoorCpf','v62DoorPhone','v62DoorEmail'].forEach(id=>{if($(id))$(id).value='';});
     if ($('v62DoorPayment')) $('v62DoorPayment').value='PIX';
     updateDoorPrice();
-    notify('Pronto para uma nova venda na hora.', true);
-    $('v19DoorName')?.focus();
+    setDoorTab('cadastro');
+    notify('Pronto para cadastrar a próxima pessoa.', true);
   }
 
   function showDoorTicketInPortaria() {
@@ -701,6 +724,7 @@
   function init() {
     const salePanel = $('v19DoorSale');
     if (salePanel) salePanel.style.display = 'block';
+    setDoorTab('cadastro');
     clearInterval(state.readersTimer);
     clearInterval(state.contextTimer);
     state.readersTimer = setInterval(() => {
@@ -723,7 +747,7 @@
 
   window.HypeV20 = {
     openReaderLink, closeReaderLink, generateReaderLink, copyReaderLink, shareReaderLink, sendReaderLinkEmail, loadReaders, disconnectReader, endAllReaders,
-    loadSalesContext, updateDoorPrice, createDoorOrder, openStoneSale, closeStoneSale, confirmStoneSale, copyPix, refreshDoorPayment, confirmDoorPayment,
+    loadSalesContext, updateDoorPrice, setDoorTab, continueDoorCadastro, createDoorOrder, openStoneSale, closeStoneSale, confirmStoneSale, copyPix, refreshDoorPayment, confirmDoorPayment,
     cancelDoorOrder, resetDoorSale, showDoorTicketInPortaria, eventChanged,
     get currentOrder(){ return state.currentOrder; }
   };
