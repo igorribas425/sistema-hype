@@ -193,6 +193,62 @@ function hypeSendSurveyBatch(dados) {
   return respostaJson({ ok: true, sent: sent, failed: failed, results: results });
 }
 
+// V50: confirmação da lista após aprovação manual do Admin.
+function hypeSendGuestListApproved(dados) {
+  const email = String(dados.email || "").trim();
+  const nome = String(dados.customer_name || "Cliente HYPE").trim();
+  const evento = String(dados.event_name || "HYPE LOUNGE CLUB").trim();
+  const artista = String(dados.artist_name || "").trim();
+  const dataEvento = hypeFormatEventDate(dados.event_date || "");
+  const abertura = String(dados.opening_time || "").trim();
+  const local = String(dados.venue || "").trim();
+  const instagram = String(dados.instagram || "").trim();
+  if (!email || email.indexOf("@") < 1) return respostaJson({ ok: false, erro: "E-mail inválido" });
+
+  const imagens = {};
+  let arteHtml = "";
+  if (dados.event_cover_image) {
+    const arte = hypeImageBlob(dados.event_cover_image, "arte-evento-hype.jpg");
+    if (arte && arte.getBytes().length <= 8 * 1024 * 1024) {
+      imagens.arteEvento = arte;
+      arteHtml = '<tr><td style="padding:0;background:#050505"><img src="cid:arteEvento" alt="Arte do evento" style="display:block;width:100%;max-height:420px;object-fit:cover;border:0"></td></tr>';
+    }
+  }
+
+  const detalhes = [
+    dataEvento ? "📅 " + hypeEsc(dataEvento) : "",
+    abertura ? "🕘 " + hypeEsc(abertura) : "",
+    local ? "📍 " + hypeEsc(local) : ""
+  ].filter(Boolean).join(" &nbsp; • &nbsp; ");
+  const assunto = "✅ Nome confirmado na lista — " + evento;
+  const html = `
+<!doctype html><html><body style="margin:0;padding:0;background:#050505;color:#fff;font-family:Arial,Helvetica,sans-serif">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#050505;padding:24px 10px"><tr><td align="center">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#0b0b0e;border:1px solid #25252b;border-radius:24px;overflow:hidden">
+${arteHtml}<tr><td style="padding:30px 28px 18px;text-align:center;background:linear-gradient(180deg,#121217,#0b0b0e)">
+<div style="font-size:11px;letter-spacing:4px;color:#bdbdc4;font-weight:700">HYPE LOUNGE CLUB</div>
+<div style="font-size:30px;line-height:1.05;font-weight:900;margin-top:10px">NOME CONFIRMADO NA LISTA</div>
+<div style="font-size:16px;color:#d6d6dc;margin-top:10px">${hypeEsc(evento)}</div>
+${artista ? `<div style="font-size:13px;color:#a9a9b2;margin-top:7px">${hypeEsc(artista)}</div>` : ""}
+${detalhes ? `<div style="font-size:12px;color:#9c9ca5;margin-top:13px;line-height:1.7">${detalhes}</div>` : ""}
+</td></tr><tr><td style="padding:0 28px 30px">
+<div style="margin:0 auto 22px;text-align:center;background:#0d2117;border:1px solid #1f6c46;border-radius:999px;padding:10px 14px;color:#72e4a8;font-size:12px;font-weight:900;max-width:300px">✓ CADASTRO APROVADO PELO ADMIN</div>
+<div style="font-size:23px;font-weight:800;margin:0 0 8px">Olá, ${hypeEsc(nome)}!</div>
+<div style="font-size:14px;line-height:1.7;color:#b7b7c0">Seu nome foi aprovado na lista da HYPE. Na entrada, apresente seu documento e informe seu nome completo à equipe da Portaria.</div>
+<div style="margin-top:22px;background:#121217;border:1px solid #282830;border-radius:16px;padding:18px 20px;line-height:1.9;font-size:14px">
+<b style="color:#fff">🎟️ Lista HYPE</b><br>${detalhes || "Consulte os detalhes do evento com a equipe HYPE."}${instagram ? `<br><span style="color:#bdbdc4">Instagram: ${hypeEsc(instagram)}</span>` : ""}
+</div><div style="margin-top:28px;padding-top:20px;border-top:1px solid #24242a;text-align:center"><div style="font-size:18px;font-weight:900;color:#fff">Nos vemos na HYPE 🔥</div><div style="font-size:11px;color:#707078;margin-top:8px">HYPE LOUNGE CLUB • confirmação oficial da lista</div></div>
+</td></tr></table></td></tr></table></body></html>`;
+  const texto = "HYPE LOUNGE CLUB\n\n" +
+    "Nome confirmado na lista!\n\n" +
+    "Olá, " + nome + ". Seu nome foi aprovado na lista para " + evento + ".\n" +
+    (dataEvento ? "Data: " + dataEvento + "\n" : "") +
+    (local ? "Local: " + local + "\n" : "") +
+    "Na entrada, apresente seu documento à Portaria.";
+  GmailApp.sendEmail(email, assunto, texto, { name: "HYPE LOUNGE CLUB", htmlBody: html, inlineImages: imagens });
+  return respostaJson({ ok: true, enviado: true, tipo: "guest_list_approved", email: email });
+}
+
 function doPost(e) {
   try {
     const dados = JSON.parse(e.postData.contents || "{}");
@@ -213,6 +269,11 @@ function doPost(e) {
     // V34: pesquisa pos-evento para quem realmente entrou.
     if (String(dados.action || "").toLowerCase() === "survey_batch") {
       return hypeSendSurveyBatch(dados);
+    }
+
+    // V50: Gmail somente depois da aprovação manual do cadastro da lista.
+    if (String(dados.action || "").toLowerCase() === "guest_list_approved") {
+      return hypeSendGuestListApproved(dados);
     }
 
     if (String(dados.payment_status || "").toLowerCase() !== "pago") {

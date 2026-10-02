@@ -129,6 +129,61 @@ async function sendSurveyBatch(
   };
 }
 
+async function sendApprovedGuestListEmail(supabase: any, req: Request, body: any) {
+  const staff = await verifyStaff(supabase, body, ["admin"]);
+  if (!staff) return json(req, { ok: false, error: "Sem permissão." }, 403);
+  const listId = Number(body?.list_id || 0);
+  if (!Number.isInteger(listId) || listId <= 0) return json(req, { ok: false, error: "list_id inválido." }, 400);
+
+  const candidateResult = await supabase.from("guest_list_simple_v406")
+    .select("id,event_id,name,cpf,phone,gender,email,instagram,status,email_sent_at,email_error")
+    .eq("id", listId).maybeSingle();
+  if (candidateResult.error) throw new Error(candidateResult.error.message);
+  const candidate = candidateResult.data;
+  if (!candidate) return json(req, { ok: false, error: "Cadastro não encontrado." }, 404);
+  if (!["Liberado", "Entrou"].includes(String(candidate.status || ""))) {
+    return json(req, { ok: false, error: "O cadastro ainda não foi aprovado." }, 409);
+  }
+  const email = String(candidate.email || "").trim().toLowerCase();
+  if (!validEmail(email)) return json(req, { ok: false, error: "Cadastro aprovado sem e-mail válido." }, 400);
+  if (candidate.email_sent_at && !body?.force) {
+    return json(req, { ok: true, already_sent: true, email_sent_at: candidate.email_sent_at });
+  }
+
+  const eventResult = await supabase.from("events")
+    .select("name,artist_name,event_date,opening_time,venue,cover_image")
+    .eq("id", candidate.event_id).maybeSingle();
+  if (eventResult.error) throw new Error(eventResult.error.message);
+  if (!eventResult.data) return json(req, { ok: false, error: "Evento não encontrado." }, 404);
+
+  try {
+    await postMail({
+      action: "guest_list_approved",
+      email,
+      customer_name: candidate.name,
+      gender: candidate.gender || "",
+      instagram: candidate.instagram || "",
+      event_name: eventResult.data.name || "HYPE LOUNGE CLUB",
+      artist_name: eventResult.data.artist_name || "",
+      event_date: eventResult.data.event_date || "",
+      opening_time: eventResult.data.opening_time || "",
+      venue: eventResult.data.venue || "",
+      event_cover_image: eventResult.data.cover_image || "",
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Gmail recusou o envio.";
+    await supabase.from("guest_list_simple_v406").update({ email_error: message }).eq("id", listId);
+    return json(req, { ok: false, error: message, email_sent: false }, 502);
+  }
+
+  const sentAt = new Date().toISOString();
+  const update = await supabase.from("guest_list_simple_v406")
+    .update({ email_sent_at: sentAt, email_error: null })
+    .eq("id", listId);
+  if (update.error) throw new Error(update.error.message);
+  return json(req, { ok: true, email_sent: true, email, email_sent_at: sentAt });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   if (req.method !== "POST") return json(req, { ok: false, error: "Método não permitido." }, 405);
@@ -142,6 +197,10 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceRole, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
+
+    if (action === "guest_list_approved") {
+      return await sendApprovedGuestListEmail(supabase, req, body);
+    }
 
     if (action === "reader_link") {
       const deviceKey = String(body?.device_key || "").trim();

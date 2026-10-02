@@ -199,6 +199,25 @@
     finally { if (button) { button.disabled = false; button.textContent = 'SALVAR LIMITE'; } }
   }
 
+  async function sendApprovedGuestEmail(listId, force = false) {
+    const hype = state();
+    const cfg = window.HYPE_SUPABASE_CONFIG || {};
+    if (!hype?.user || !hype.pass || !cfg.url) throw new Error('Entre no Admin primeiro.');
+    const response = await fetch(`${cfg.url}/functions/v1/send-ticket-email`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({action:'guest_list_approved',username:hype.user,password:hype.pass,list_id:Number(listId),force:Boolean(force)})
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok || body.ok !== true) {
+      await loadReview();
+      throw new Error(body.error || 'Não foi possível enviar o Gmail.');
+    }
+    await loadReview();
+    if (typeof hypeNotify === 'function') hypeNotify(body.already_sent ? 'Este Gmail já foi enviado.' : 'Gmail da aprovação enviado.');
+    return body;
+  }
+
   async function reviewGuest(listId, decision) {
     const hype = state();
     if (!hype?.user || !hype.pass) return alert('Entre no Admin primeiro.');
@@ -293,7 +312,7 @@
     reviewGuest,
     openPhoto,
     closePhoto,
-    sendApprovedGuestEmail: async () => { throw new Error('Envio de Gmail será ativado após a integração do Apps Script.'); }
+    sendApprovedGuestEmail
   };
 
   document.addEventListener('DOMContentLoaded', () => {
