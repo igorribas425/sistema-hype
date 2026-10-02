@@ -58,6 +58,14 @@ html,body{max-width:100%;overflow-x:hidden}
   .v60-exit-status.ok{color:#a8f3c4;border-color:rgba(40,209,124,.35)}.v60-exit-status.bad{color:#ff9bab;border-color:rgba(255,22,61,.35)}
   @media(max-width:620px){.v60-feedback-grid,.v60-exit-actions{grid-template-columns:1fr}}
   </style>
+  <style id="hype-v63-door-tabs">
+  .v63-door-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+  .v63-door-tab{min-height:44px;border:1px solid var(--line);border-radius:12px;background:#08080b;color:#aaa;font-weight:950;cursor:pointer}
+  .v63-door-tab.active{background:#f2f2f4;color:#080808;border-color:#f2f2f4}
+  .v63-door-pane{display:none}.v63-door-pane.active{display:block}
+  .v63-step-note{margin:8px 0 12px;color:var(--muted);font-size:10px;line-height:1.5}
+  .v63-continue{width:100%;margin-top:10px}
+  </style>
   <link rel="stylesheet" href="hype-v38-responsive.css?v=20260905-v42">
   <link rel="manifest" href="manifest.webmanifest?v=42">
 </head>
@@ -129,20 +137,36 @@ html,body{max-width:100%;overflow-x:hidden}
     <section id="v19DoorSale" class="v19-door portaria-extra">
       <div class="v19-section-head"><div><h3>🎟️ VENDA RÁPIDA NA PORTARIA</h3><p>Venda na hora por PIX Asaas ou cartão na Stone. FREE continua liberando sem cobrança.</p></div><strong id="v19DoorEventName" style="font-size:11px">Evento selecionado</strong></div>
       <div class="v39-door-steps">
-        <span><b>1</b> Pessoa</span><span><b>2</b> Ingresso</span><span><b>3</b> Pagamento</span><span><b>4</b> Liberar</span>
+        <span><b>1</b> Cadastro</span><span><b>2</b> Ingresso</span><span><b>3</b> Pagamento</span><span><b>4</b> Liberar</span>
       </div>
-      <div class="v19-door-form v39-door-simple">
-        <div class="full"><label>Nome *</label><input id="v19DoorName" placeholder="Nome da pessoa" autocomplete="name"></div>
-        <div class="full"><label>CPF *</label><input id="v19DoorCpf" placeholder="Somente números" inputmode="numeric" maxlength="14" autocomplete="off"></div>
-        <div><label>WhatsApp</label><input id="v62DoorPhone" placeholder="(54) 99999-9999" inputmode="tel" autocomplete="tel"></div>
-        <div><label>E-mail</label><input id="v62DoorEmail" type="email" placeholder="cliente@gmail.com" autocomplete="email"></div>
-        <div><label>Gênero *</label><select id="v19DoorGender" onchange="HypeV20.updateDoorPrice()"><option value="Feminino">Feminino</option><option value="Masculino">Masculino</option></select></div>
-        <div><label>Ingresso *</label><select id="v19DoorLot" onchange="HypeV20.updateDoorPrice()"><option>Carregando...</option></select></div>
-        <div class="full"><label>Forma de pagamento</label><select id="v62DoorPayment" onchange="HypeV20.updateDoorPrice()"><option value="PIX">PIX ASAAS</option><option value="STONE_CREDITO">STONE • CRÉDITO</option><option value="STONE_DEBITO">STONE • DÉBITO</option></select></div>
-        <div class="full"><label>Valor a pagar</label><div id="v19DoorPrice" class="v19-door-price">Selecione um ingresso</div></div>
+
+      <div class="v63-door-tabs" role="tablist" aria-label="Cadastro e venda na Portaria">
+        <button id="v63DoorTabCadastro" class="v63-door-tab active" type="button" onclick="HypeV20.setDoorTab('cadastro')">👤 CADASTRAR PESSOA</button>
+        <button id="v63DoorTabVenda" class="v63-door-tab" type="button" onclick="HypeV20.setDoorTab('venda')">🎟️ INGRESSO / PAGAMENTO</button>
       </div>
-      <div id="v19DoorRaffleHint" class="v19-door-hint">Carregando sorteio do evento...</div>
-      <button id="v19DoorCreate" class="btn primary" style="width:100%;margin-top:11px" onclick="HypeV20.createDoorOrder()">💠 GERAR PIX / LIBERAR FREE</button>
+
+      <div id="v63DoorPaneCadastro" class="v63-door-pane active">
+        <div class="v63-step-note">Use os mesmos dados pedidos na compra de ingresso pelo site.</div>
+        <div class="v19-door-form v39-door-simple">
+          <div class="full"><label>Nome completo *</label><input id="v19DoorName" placeholder="Nome no documento" autocomplete="name"></div>
+          <div><label>Telefone / WhatsApp</label><input id="v62DoorPhone" placeholder="(54) 99999-9999" inputmode="tel" autocomplete="tel"></div>
+          <div><label>E-mail para receber o ingresso</label><input id="v62DoorEmail" type="email" placeholder="cliente@gmail.com" autocomplete="email"></div>
+          <div><label>CPF *</label><input id="v19DoorCpf" placeholder="Somente números" inputmode="numeric" maxlength="14" autocomplete="off"></div>
+          <div><label>Gênero *</label><select id="v19DoorGender" onchange="HypeV20.updateDoorPrice()"><option value="Feminino">Feminino</option><option value="Masculino">Masculino</option></select></div>
+        </div>
+        <button class="btn primary v63-continue" type="button" onclick="HypeV20.continueDoorCadastro()">CONTINUAR PARA O INGRESSO →</button>
+      </div>
+
+      <div id="v63DoorPaneVenda" class="v63-door-pane">
+        <div class="v63-step-note">Pessoa cadastrada. Agora escolha ingresso e forma de pagamento.</div>
+        <div class="v19-door-form v39-door-simple">
+          <div class="full"><label>Ingresso *</label><select id="v19DoorLot" onchange="HypeV20.updateDoorPrice()"><option>Carregando...</option></select></div>
+          <div class="full"><label>Forma de pagamento</label><select id="v62DoorPayment" onchange="HypeV20.updateDoorPrice()"><option value="PIX">PIX ASAAS</option><option value="STONE_CREDITO">STONE • CRÉDITO</option><option value="STONE_DEBITO">STONE • DÉBITO</option></select></div>
+          <div class="full"><label>Valor a pagar</label><div id="v19DoorPrice" class="v19-door-price">Selecione um ingresso</div></div>
+        </div>
+        <div id="v19DoorRaffleHint" class="v19-door-hint">Carregando sorteio do evento...</div>
+        <button id="v19DoorCreate" class="btn primary" style="width:100%;margin-top:11px" onclick="HypeV20.createDoorOrder()">💠 GERAR PIX / LIBERAR FREE</button>
+      </div>
       <div id="v19DoorNotice" class="v19-notice ok">PIX confirma automaticamente. Na Stone, cobre na maquininha e confirme no site somente depois de aparecer APROVADO.</div>
       <div id="v19DoorResult" class="v19-door-result"></div>
     </section>
@@ -219,7 +243,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="hype-qrcode.js?v=20260902-v21"></script>
 <script src="portaria-v18.js?v=20261002-v60"></script>
 <script src="hype-v406-lista-simples.js?v=20261001-v50"></script>
-<script src="portaria-v20.js?v=20261002-v62-2"></script>
+<script src="portaria-v20.js?v=20261002-v63"></script>
 <script src="register-sw.js?v=20261002-v62-2"></script>
   <script src="hype-push-config.js?v=44"></script>
   <script src="hype-v38-chat.js?v=44"></script>
