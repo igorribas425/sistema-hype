@@ -733,6 +733,44 @@ function renderPublicEvent() {
   renderEventCarousel();
 }
 
+async function hypeSyncPendingAsaasV64(tickets) {
+  if (!HYPE.user || !HYPE.pass) return 0;
+  const pending = (tickets || []).filter(item =>
+    item &&
+    item.payment_status === "Pendente" &&
+    item.asaas_payment_id &&
+    /asaas/i.test(String(item.payment_method || ""))
+  ).slice(0, 10);
+  if (!pending.length) return 0;
+
+  const cfg = hypeCfg();
+  let changed = 0;
+  await Promise.allSettled(pending.map(async item => {
+    const response = await fetch(`${cfg.url}/functions/v1/asaas-sync`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: cfg.anonKey,
+        Authorization: `Bearer ${cfg.anonKey}`
+      },
+      body: JSON.stringify({
+        username: HYPE.user,
+        password: HYPE.pass,
+        ticket_id: Number(item.id)
+      })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data?.ok === false) return;
+    if (data?.paid === true && item.payment_status !== "Pago") {
+      item.payment_status = "Pago";
+      item.paid_at = data.paid_at || new Date().toISOString();
+      item.payment_method = "PIX Asaas";
+      changed += 1;
+    }
+  }));
+  return changed;
+}
+
 async function loadStaffTickets(search = "") {
   if (!HYPE.user || !HYPE.pass) throw new Error("Usuário não autenticado.");
 
@@ -779,6 +817,14 @@ async function loadStaffTickets(search = "") {
     const bd = new Date(b.purchased_at || 0).getTime();
     return bd - ad;
   });
+
+  // V64: corrige automaticamente pagamentos PIX que o Asaas marcou como pagos
+  // mas cujo webhook não conseguiu atualizar o ingresso.
+  try {
+    await hypeSyncPendingAsaasV64(HYPE.tickets);
+  } catch (_) {
+    // Mantém o Admin carregando mesmo se o Asaas estiver temporariamente indisponível.
+  }
 
   const events = (Array.isArray(HYPE.adminEvents) && HYPE.adminEvents.length
     ? HYPE.adminEvents
