@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Promoter HYPE Lounge Club</title>
+  <style>
+    :root{color-scheme:dark;--bg:#050506;--panel:#111116;--line:#2b2b34;--muted:#a3a3ad;--ok:#28d17c;--red:#ff4d67}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -10%,#3d1823 0,#120b10 32%,var(--bg) 68%);font-family:Inter,system-ui,Arial,sans-serif;color:#fff;padding:24px 14px}
+    main{width:min(620px,100%);margin:0 auto}.brand{text-align:center}.brand img{width:min(260px,68vw);height:auto}.eyebrow{margin:20px 0 7px;text-align:center;color:#ff6b80;font-size:11px;font-weight:900;letter-spacing:2px}.title{text-align:center;font-size:clamp(25px,6vw,42px);margin:0;letter-spacing:.5px}.sub{text-align:center;color:var(--muted);font-size:13px;line-height:1.55;margin:11px auto 20px;max-width:480px}.panel{background:rgba(17,17,22,.94);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 20px 55px #0008}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{margin-bottom:12px}.field.full{grid-column:1/-1}label{display:block;font-size:10px;font-weight:900;letter-spacing:.7px;color:#d8d8df;margin-bottom:6px}input{width:100%;height:46px;border:1px solid var(--line);border-radius:9px;background:#07070a;color:#fff;padding:0 12px;font-size:14px;outline:none}input:focus{border-color:#fff}.hint{color:var(--muted);font-size:11px;line-height:1.45;margin:0 0 14px}.btn{width:100%;height:48px;border:0;border-radius:9px;background:linear-gradient(135deg,#fff,#bdbdc3);color:#080808;font-weight:950;cursor:pointer}.btn:disabled{opacity:.6;cursor:wait}.status{display:none;margin-top:14px;padding:12px;border-radius:10px;border:1px solid var(--line);font-size:12px;line-height:1.5}.status.show{display:block}.status.ok{border-color:rgba(40,209,124,.42);color:#a8f5c7;background:rgba(40,209,124,.08)}.status.error{border-color:rgba(255,77,103,.42);color:#ffadb9;background:rgba(255,77,103,.08)}.result{display:none;margin-top:14px;padding:13px;border:1px solid rgba(40,209,124,.42);border-radius:10px;background:rgba(40,209,124,.08)}.result.show{display:block}.result strong,.result code{display:block}.result code{margin-top:8px;color:#fff;word-break:break-all;font-size:11px}.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.footer{text-align:center;color:#777;font-size:11px;margin:18px 0}.footer a{color:#fff}.hp{position:absolute;left:-10000px;opacity:0;height:1px;width:1px}
+    @media(max-width:520px){body{padding:16px 10px}.panel{padding:15px}.grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand"><img src="logo-hype.png" alt="HYPE Lounge Club"></div>
+    <div class="eyebrow">CADASTRO OFICIAL</div>
+    <h1 class="title">Seja promoter HYPE</h1>
+    <p class="sub">Preencha seus dados e receba seu link permanente para vender ingressos nos eventos HYPE.</p>
+    <section class="panel">
+      <p class="hint">O CPF identifica seu cadastro. Se você já estiver cadastrado, o mesmo link será mostrado novamente.</p>
+      <form id="promoterForm" novalidate>
+        <div class="grid">
+          <div class="field full"><label for="promoterName">NOME COMPLETO</label><input id="promoterName" name="name" required autocomplete="name" maxlength="120"></div>
+          <div class="field"><label for="promoterCpf">CPF</label><input id="promoterCpf" name="cpf" required inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00"></div>
+          <div class="field"><label for="promoterPhone">WHATSAPP</label><input id="promoterPhone" name="phone" required inputmode="tel" autocomplete="tel" maxlength="15" placeholder="(00) 00000-0000"></div>
+        </div>
+        <input id="promoterWebsite" name="website" class="hp" tabindex="-1" autocomplete="off">
+        <button id="promoterSubmit" class="btn" type="submit">GERAR MEU LINK DE VENDAS</button>
+      </form>
+      <div id="promoterStatus" class="status" role="status" aria-live="polite"></div>
+      <div id="promoterResult" class="result"><strong>Seu link de vendas está pronto:</strong><code id="promoterSalesLink"></code><div class="result-actions"><button id="promoterCopy" class="btn" type="button">COPIAR LINK</button><button id="promoterShare" class="btn" type="button">COMPARTILHAR</button></div></div>
+    </section>
+    <p class="footer">Quer entrar na lista? <a href="lista.html">Cadastre seu nome aqui</a>.</p>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js?v=20261001-v49"></script>
+  <script src="promoter-v49.js?v=20261001-v49"></script>
+</body>
+</html>

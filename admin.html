@@ -284,6 +284,18 @@ html,body{max-width:100%;overflow-x:hidden}
   @media (min-width:900px){#v408SimpleListAdmin .v408-list-grid{grid-template-columns:280px 1fr}#v408SimpleListAdmin .form-group.full{grid-column:1/-1}}
   @media (max-width:640px){.v408-admin-list-row{align-items:flex-start;flex-direction:column}.v408-pill{white-space:normal}}
 </style>
+<style id="hype-v49-registration-admin-style">
+  .v49-area-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+  .v49-area-tab{border:1px solid var(--line);border-radius:9px;background:#111116;color:var(--muted);padding:10px 13px;font-size:10px;font-weight:900;letter-spacing:.5px;cursor:pointer}
+  .v49-area-tab.active{border-color:#fff;background:#fff;color:#080808}
+  .v49-link-panel{display:grid;grid-template-columns:1fr 180px;gap:16px;align-items:center;border:1px solid rgba(40,209,124,.28);border-radius:13px;padding:15px;background:rgba(40,209,124,.04)}
+  .v49-link-panel[hidden]{display:none}
+  .v49-link-copy h4{margin:0 0 6px;font-size:14px}.v49-link-copy p{margin:0 0 12px;color:var(--muted);font-size:11px;line-height:1.5}
+  .v49-link-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:7px;align-items:center}.v49-link-row input{min-width:0;font-size:11px}
+  .v49-link-qr{display:flex;justify-content:center;align-items:center;min-height:150px}.v49-link-qr img{width:150px;height:150px;background:#fff;border-radius:10px;padding:7px;box-sizing:border-box}
+  .v49-link-status{margin:10px 0;padding:9px 10px;border:1px solid var(--line);border-radius:9px;color:var(--muted);font-size:11px}.v49-link-status.open{color:#9ff0be;border-color:rgba(40,209,124,.4)}.v49-link-status.closed{color:#ffb2bc;border-color:rgba(255,77,103,.35)}
+  @media(max-width:700px){.v49-link-panel{grid-template-columns:1fr}.v49-link-qr{order:-1}.v49-link-row{grid-template-columns:1fr 1fr}.v49-link-row input{grid-column:1/-1}.v49-link-row button{width:100%}}
+</style>
   <link rel="manifest" href="manifest.webmanifest?v=42">
 </head>
 <body>
@@ -501,6 +513,11 @@ html,body{max-width:100%;overflow-x:hidden}
 
   <section class="panel-box v16-management admin-only" id="v16ManagementPanel">
     <div class="v16-management-head"><div><h3>🎯 VENDAS / PROMOTERS / CUPONS</h3><p>Promoters são globais e funcionam em todos os eventos. Cupons continuam ligados ao evento selecionado.</p></div></div>
+    <div class="v49-area-tabs" role="tablist" aria-label="Promoters do Admin">
+      <button id="v49PromoterTabManage" class="v49-area-tab active" type="button" onclick="HypeV49Registration.showPromoterTab('manage')">PROMOTERS CADASTRADOS</button>
+      <button id="v49PromoterTabLink" class="v49-area-tab" type="button" onclick="HypeV49Registration.showPromoterTab('link')">LINK PARA PROMOTER</button>
+    </div>
+    <div id="v49PromoterManagePanel">
     <div class="v16-management-grid">
       <div class="v16-manage-card">
         <h4>Promoters</h4>
@@ -512,6 +529,15 @@ html,body{max-width:100%;overflow-x:hidden}
         <div class="v16-coupon-admin-grid"><input id="v16CouponCode" placeholder="Código, ex.: HYPE10" oninput="this.value=this.value.toUpperCase()"><select id="v16CouponType"><option value="percent">%</option><option value="fixed">R$</option></select><input id="v16CouponValue" type="number" step="0.01" min="0" placeholder="Desconto"><input id="v16CouponLimit" type="number" min="0" placeholder="Limite (0=∞)"><input id="v16CouponStart" type="datetime-local"><input id="v16CouponEnd" type="datetime-local"><button class="btn-action" onclick="createCouponV16()">+ CRIAR CUPOM</button></div>
         <div id="v16CouponList" class="v16-manage-list"></div>
       </div>
+    </div>
+    </div>
+    <div id="v49PromoterLinkPanel" class="v49-link-panel" hidden>
+      <div class="v49-link-copy">
+        <h4>Cadastro de promoter</h4>
+        <p>Envie este link para o promoter preencher nome, CPF e WhatsApp. O cadastro cria um link permanente de vendas para todos os eventos.</p>
+        <div class="v49-link-row"><input id="v49PromoterPublicUrl" readonly value="https://hypeloungeclub.com.br/promoter.html"><button class="btn-action" type="button" onclick="HypeV49Registration.copyPromoterRegistrationLink()">COPIAR</button><button class="btn-action" type="button" onclick="HypeV49Registration.sharePromoterRegistrationLink()">COMPARTILHAR</button></div>
+      </div>
+      <div class="v49-link-qr"><img id="v49PromoterPublicQr" alt="QR Code do cadastro de promoter"></div>
     </div>
   </section>
 
@@ -560,6 +586,12 @@ html,body{max-width:100%;overflow-x:hidden}
       </div>
     </div>
 
+    <div class="v49-area-tabs" role="tablist" aria-label="Lista do Admin">
+      <button id="v49ListTabManual" class="v49-area-tab active" type="button" onclick="HypeV49Registration.showListTab('manual')">LISTA MANUAL</button>
+      <button id="v49ListTabLink" class="v49-area-tab" type="button" onclick="HypeV49Registration.showListTab('link')">LINK PARA LISTA</button>
+    </div>
+
+    <div id="v49ListManualPanel">
     <div class="v408-list-grid">
       <div class="form-group">
         <label>Evento da lista</label>
@@ -579,6 +611,18 @@ Bruna Santos"></textarea>
       </div>
     </div>
     <div id="v408ListAdminResult" class="v18-empty">Entre no Admin para colocar nomes na lista.</div>
+    </div>
+    <div id="v49ListLinkPanel" class="v49-link-panel" hidden>
+      <div class="v49-link-copy">
+        <h4>Cadastro público da lista</h4>
+        <p>O link é o mesmo para todos e não expira. O Admin escolhe o evento e decide quando os cadastros ficam liberados.</p>
+        <div class="form-group"><label>Evento liberado no link</label><select id="v49ListEvent"></select></div>
+        <div class="v49-link-status" id="v49ListStatus">Carregando status...</div>
+        <div class="v49-link-row"><input id="v49ListPublicUrl" readonly value="https://hypeloungeclub.com.br/lista.html"><button class="btn-action" type="button" onclick="HypeV49Registration.copyListRegistrationLink()">COPIAR</button><button class="btn-action" type="button" onclick="HypeV49Registration.shareListRegistrationLink()">COMPARTILHAR</button></div>
+        <button id="v49ListToggle" class="btn" type="button" onclick="HypeV49Registration.toggleGuestList()">LIBERAR CADASTRO</button>
+      </div>
+      <div class="v49-link-qr"><img id="v49ListPublicQr" alt="QR Code da lista pública"></div>
+    </div>
   </section>
 
   <div class="grid-admin">
@@ -654,6 +698,8 @@ Bruna Santos"></textarea>
 <script src="supabase-config.js?v=20261001-v48"></script>
 <script src="app.js?v=20261001-v48"></script>
 <script src="promoter-global-v16-8.js?v=20260902-v24-global"></script>
+<script src="hype-qrcode.js?v=20261001-v49"></script>
+<script src="hype-v49-registration-admin.js?v=20261001-v49"></script>
 <script>
 /* HYPE V24 // correção da sessão do Admin
    - JavaScript incorporado no próprio admin.html: não depende de v21-admin.js.

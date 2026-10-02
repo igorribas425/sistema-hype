@@ -40,7 +40,7 @@
 - Create `lista.html` and `lista-v49.js` for guest self-registration.
 - Create `promoter.html` and `promoter-v49.js` for promoter self-registration and personal-link output.
 - Create `hype-v49-registration-admin.js` for Admin registration settings, permanent link tools, and block management.
-- Create `portaria-v49-list-link.js` for the Portaria tab switch and permanent guest-link QR/share controls.
+- Create `hype-v49-registration-admin.js` for the Admin-only permanent guest/promoter link tabs, QR/share controls, and guest-list open/block state.
 - Modify `hype-v408-lista-admin.js` only for richer guest-list RPCs and block actions.
 - Modify `promoter-global-v16-8.js` only for richer promoter RPCs and block actions.
 - Modify `hype-v406-lista-simples.js` only for richer Portaria list search/entry results.
@@ -322,10 +322,11 @@ Commit: `feat: manage registrations and blocks in admin`
 
 ---
 
-### Task 7: Add the Portaria Link Tab and Block-Aware Guest Results
+### Task 7: Keep Public Links in Admin and Block-Aware Guest Results
 
 **Files:**
-- Create: `portaria-v49-list-link.js`
+- Modify: `admin.html`
+- Modify: `hype-v49-registration-admin.js`
 - Modify: `portaria.html`
 - Modify: `hype-v406-lista-simples.js`
 - Modify: `tests/frontend-integration.test.mjs`
@@ -334,9 +335,9 @@ Commit: `feat: manage registrations and blocks in admin`
 - Consumes: Task 2 v49 Portaria guest RPCs and existing `HypeQR` utility.
 - Produces: `window.HypeV49ListLink` with `show(tab)`, `copy()`, and `share()`.
 
-- [ ] **Step 1: Write failing Portaria UI tests**
+- [ ] **Step 1: Write failing Admin/Portaria UI tests**
 
-Assert `Entrada` is the default tab, `Link da lista` is the only additional tab, the entry view keeps exactly Vendas/Feminino/Masculino plus unified search, and the link view contains the permanent URL, QR, copy, and share controls.
+Assert Admin exposes the permanent list/promoter links with QR, copy, and share controls, while Portaria keeps only Vendas/Feminino/Masculino plus unified search and contains no public registration links.
 
 - [ ] **Step 2: Run frontend tests and verify red**
 
@@ -346,7 +347,7 @@ Expected: FAIL on missing tabs and controller.
 
 - [ ] **Step 3: Implement the tab controller and link tools**
 
-Keep the current entry panel visible by default. Render the fixed official guest URL and QR locally, use native share when supported, and fall back to clipboard. Do not add event controls or a secret to the public URL.
+Keep the current Portaria entry panel visible by default. Render the fixed official guest URL and QR only in Admin, use native share when supported, and fall back to clipboard. Do not add event controls or a secret to either public URL.
 
 - [ ] **Step 4: Upgrade Portaria guest search and entry**
 

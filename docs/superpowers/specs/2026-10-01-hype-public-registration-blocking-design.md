@@ -19,7 +19,7 @@ Add a centralized person-blocking rule so Admin can temporarily or permanently p
 - Admin can create temporary blocks with an end date/time or permanent blocks.
 - Blocks display and can be searched by both name and CPF.
 - An active block applies to public list registration, ticket purchase, and Portaria entry.
-- The Portaria page gets an `Entrada` tab and a `Link da lista` tab. The latter shows the permanent URL, QR code, copy, and share actions.
+- The Admin page gets a `Link para lista` tab beside the manual list. It shows the permanent URL, QR code, copy, share, and open/block controls. The Portaria remains focused on search and entry and does not generate or display public registration links.
 - The promoter registration URL is permanent and shared by all prospective promoters.
 - Promoter registration requires full name, CPF, and WhatsApp.
 - A successful promoter registration creates a global, immediately active promoter and returns the personal sales link.
@@ -56,10 +56,10 @@ Only one event can receive public registrations at a time. If registrations are 
 5. A repeated CPF for that event returns a friendly `Voce ja esta na lista` response and does not create another row.
 6. A blocked person receives a generic message directing them to HYPE staff. The public response does not expose the block reason or duration.
 
-### Portaria shares and uses the list
+### Admin shares and Portaria uses the list
 
 - `Entrada` remains the default tab and preserves the simplified search and three counters.
-- `Link da lista` displays the permanent URL and a QR code, with copy and native-share actions.
+- Admin `Link para lista` displays the permanent URL and a QR code, with copy, native-share, and open/block actions.
 - Portaria search continues to combine tickets and guest-list records.
 - Guest-list results show the saved name, masked CPF, WhatsApp, gender, source, and entry state.
 - Confirming guest-list entry checks the centralized block rule again before marking the person as entered.
