@@ -86,11 +86,15 @@ test("public guest page requires event choice, review fields, and no promoter fo
   assert.match(html, /id="guestInstagram"[^>]+required/i);
   assert.match(html, /id="guestPhoto"[^>]+required/i);
   assert.match(html, /id="guestPhoto"[^>]+capture="user"/i);
+  assert.match(html, /id="guestCameraStart"/i);
+  assert.match(html, /id="guestCameraPreview"/i);
   assert.match(html, /id="guestPhotoConsent"[^>]+required/i);
   assert.match(html, /id="guestWebsite"[^>]+tabindex="-1"/i);
   assert.match(js, /public_guest_registration_events_v50/);
   assert.match(js, /guest-list-registration/);
   assert.match(js, /new FormData/);
+  assert.match(js, /getUserMedia/);
+  assert.match(js, /toBlob/);
   assert.match(js, /Em análise|analise/i);
   assert.doesNotMatch(html + js, /p_username|p_password|service_role/i);
   assert.doesNotMatch(html, /Já é promoter|Cadastre-se aqui|promoter\.html/i);

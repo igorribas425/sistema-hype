@@ -8,10 +8,18 @@
   const edgeUrl = `${config.url || ''}/functions/v1/guest-list-registration`;
   let events = [];
   let selectedEventId = 0;
+  let cameraStream = null;
+  let capturedPhoto = null;
   const status = (message, kind) => {
     const box = $('guestStatus');
     if (!box) return;
     box.className = `status show ${kind || ''}`;
+    box.textContent = message;
+  };
+  const setCameraStatus = (message, kind) => {
+    const box = $('guestCameraStatus');
+    if (!box) return;
+    box.className = `hint camera-status ${kind || ''}`;
     box.textContent = message;
   };
   const formatCpf = input => {
@@ -73,15 +81,132 @@
       if ($('guestSubmit')) $('guestSubmit').disabled = true;
     }
   }
+  function stopCamera() {
+    cameraStream?.getTracks().forEach(track => track.stop());
+    cameraStream = null;
+    const video = $('guestCameraPreview');
+    if (video) video.srcObject = null;
+  }
+  function setPhotoFile(file) {
+    if (!file) return;
+    capturedPhoto = file;
+    const input = $('guestPhoto');
+    if (input) {
+      try {
+        const transfer = new DataTransfer();
+        transfer.items.add(file);
+        input.files = transfer.files;
+      } catch (_) {}
+    }
+    const preview = $('guestPhotoPreview');
+    if (preview) {
+      if (preview.dataset.url) URL.revokeObjectURL(preview.dataset.url);
+      preview.dataset.url = URL.createObjectURL(file);
+      preview.src = preview.dataset.url;
+      preview.hidden = false;
+    }
+  }
+  function resetCamera() {
+    stopCamera();
+    capturedPhoto = null;
+    const input = $('guestPhoto');
+    if (input) input.value = '';
+    const preview = $('guestPhotoPreview');
+    if (preview) {
+      if (preview.dataset.url) URL.revokeObjectURL(preview.dataset.url);
+      delete preview.dataset.url;
+      preview.removeAttribute('src');
+      preview.hidden = true;
+    }
+    const video = $('guestCameraPreview');
+    if (video) video.hidden = true;
+    $('guestCameraStart')?.removeAttribute('hidden');
+    $('guestCameraCapture')?.setAttribute('hidden', '');
+    $('guestCameraRetake')?.setAttribute('hidden', '');
+    setCameraStatus('A câmera tira a selfie na hora. Se preferir, use um arquivo.');
+  }
+  async function openCamera() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraStatus('Câmera indisponível neste dispositivo. Use um arquivo.', 'error');
+      $('guestPhoto')?.click();
+      return;
+    }
+    try {
+      stopCamera();
+      cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: {facingMode: 'user', width: {ideal: 1280}, height: {ideal: 1280}},
+        audio: false
+      });
+      const video = $('guestCameraPreview');
+      video.srcObject = cameraStream;
+      video.hidden = false;
+      await video.play().catch(() => {});
+      $('guestCameraStart')?.setAttribute('hidden', '');
+      $('guestCameraCapture')?.removeAttribute('hidden');
+      $('guestCameraRetake')?.setAttribute('hidden', '');
+      setCameraStatus('Posicione o rosto e toque em TIRAR SELFIE.');
+    } catch (_) {
+      stopCamera();
+      setCameraStatus('Não foi possível abrir a câmera. Use o botão USAR ARQUIVO.', 'error');
+      $('guestPhoto')?.click();
+    }
+  }
+  function captureSelfie() {
+    const video = $('guestCameraPreview');
+    const canvas = $('guestCameraCanvas');
+    if (!video?.videoWidth || !video?.videoHeight || !canvas) {
+      setCameraStatus('A câmera ainda está carregando.', 'error');
+      return;
+    }
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(blob => {
+      if (!blob) {
+        setCameraStatus('Não foi possível capturar a selfie.', 'error');
+        return;
+      }
+      setPhotoFile(new File([blob], 'selfie-hype.jpg', {type: 'image/jpeg'}));
+      stopCamera();
+      video.hidden = true;
+      $('guestCameraCapture')?.setAttribute('hidden', '');
+      $('guestCameraStart')?.setAttribute('hidden', '');
+      $('guestCameraRetake')?.removeAttribute('hidden');
+      setCameraStatus('Selfie capturada. Você pode enviar o cadastro.', 'ok');
+    }, 'image/jpeg', 0.9);
+  }
+  function setupCamera() {
+    $('guestCameraStart')?.addEventListener('click', openCamera);
+    $('guestCameraCapture')?.addEventListener('click', captureSelfie);
+    $('guestCameraRetake')?.addEventListener('click', () => {
+      resetCamera();
+      openCamera();
+    });
+    $('guestCameraFile')?.addEventListener('click', () => $('guestPhoto')?.click());
+    $('guestPhoto')?.addEventListener('change', event => {
+      const file = event.currentTarget.files?.[0];
+      if (!file) return;
+      setPhotoFile(file);
+      stopCamera();
+      $('guestCameraPreview')?.setAttribute('hidden', '');
+      $('guestCameraStart')?.setAttribute('hidden', '');
+      $('guestCameraCapture')?.setAttribute('hidden', '');
+      $('guestCameraRetake')?.removeAttribute('hidden');
+      setCameraStatus('Foto selecionada. Você pode enviar o cadastro.', 'ok');
+    });
+  }
   async function submit(event) {
     event.preventDefault();
     const form = event.currentTarget;
     const submitButton = $('guestSubmit');
+    if (capturedPhoto && !$('guestPhoto')?.files?.length) setPhotoFile(capturedPhoto);
     if (!form.reportValidity() || !client) return;
     submitButton.disabled = true;
     submitButton.textContent = 'ENVIANDO...';
     try {
       const payload = new FormData(form);
+      const photo = payload.get('photo');
+      if ((!photo || !photo.size) && capturedPhoto) payload.set('photo', capturedPhoto);
       payload.set('event_id', String(selectedEventId || ''));
       payload.set('photo_consent', $('guestPhotoConsent')?.checked ? 'true' : 'false');
       const response = await fetch(edgeUrl, {method: 'POST', body: payload});
@@ -89,6 +214,7 @@
       if (!response.ok || body.ok !== true) throw new Error(body.error || body.message || 'Não foi possível concluir o cadastro.');
       status('Cadastro enviado e está em análise. O Gmail só será enviado se o Admin aprovar.', 'ok');
       form.reset();
+      resetCamera();
       renderSelectedEvent();
     } catch (error) {
       status(error?.message || 'Não foi possível concluir o cadastro.', 'error');
@@ -99,6 +225,7 @@
   }
   $('guestCpf')?.addEventListener('input', event => formatCpf(event.currentTarget));
   $('guestPhone')?.addEventListener('input', event => formatPhone(event.currentTarget));
+  setupCamera();
   $('guestForm')?.addEventListener('submit', submit);
   loadContext();
 })();
