@@ -507,19 +507,43 @@ async function hypeValidatePromoterLinkV56(code) {
 function hypeApplyPromoterLinkV16() {
   const input = document.getElementById("clientPromoter");
   const status = document.getElementById("clientPromoterStatus");
-  const hasCode = Boolean(HYPE.promoterLinkCode);
-  const activeCode = hasCode ? HYPE.promoterLinkCode : "";
+  const form = document.getElementById("ticketForm");
+  const sticky = document.getElementById("v14StickyBuy");
+  const activeCode = String(HYPE.promoterLinkCode || "").trim().toUpperCase();
   if (input) input.value = activeCode;
-  const submit = document.querySelector('#ticketForm button[type="submit"]');
-  if (status) {
-    if (activeCode && HYPE.promoterLinkInvalid) {
-      status.textContent = "❌ Este link de promoter foi excluído ou desativado. A compra por este link não está mais disponível.";
+
+  let blockedBox = document.getElementById("promoterInvalidBox");
+  if (activeCode && HYPE.promoterLinkInvalid) {
+    if (status) {
+      status.textContent = "❌ Este link de promoter foi excluído ou desativado.";
       status.className = "v16-coupon-status error";
-      if (submit) {
-        submit.disabled = true;
-        submit.textContent = "LINK DE PROMOTER INVÁLIDO";
-      }
-    } else if (activeCode) {
+    }
+    if (!blockedBox && form?.parentNode) {
+      blockedBox = document.createElement("div");
+      blockedBox.id = "promoterInvalidBox";
+      blockedBox.style.cssText = "margin:18px 0;padding:18px;border:1px solid rgba(255,77,103,.45);background:rgba(255,77,103,.10);border-radius:16px;color:#ffd7de;font-weight:800;line-height:1.5;text-align:center";
+      form.parentNode.insertBefore(blockedBox, form);
+    }
+    if (blockedBox) {
+      blockedBox.innerHTML = "❌ <strong>LINK DE PROMOTER ENCERRADO</strong><br><span style=\"font-weight:600;font-size:12px\">Este promoter foi excluído ou desativado. Este link não pode mais gerar compras.</span>";
+      blockedBox.style.display = "block";
+    }
+    if (form) {
+      form.dataset.promoterBlocked = "1";
+      form.style.display = "none";
+    }
+    if (sticky) sticky.style.display = "none";
+    return;
+  }
+
+  if (blockedBox) blockedBox.style.display = "none";
+  if (form?.dataset.promoterBlocked === "1") {
+    delete form.dataset.promoterBlocked;
+    form.style.display = "";
+  }
+
+  if (status) {
+    if (activeCode) {
       status.innerHTML = `✅ Compra vinculada ao promoter <b>${hypeEscape(activeCode)}</b> pelo link oficial.`;
       status.className = "v16-coupon-status ok";
     } else {
@@ -528,7 +552,6 @@ function hypeApplyPromoterLinkV16() {
     }
   }
 }
-
 
 function hypeMergeFreeRulesV38(lots, rules) {
   const map = new Map((Array.isArray(rules) ? rules : []).map(r => [Number(r.lot_id), r]));
@@ -1234,7 +1257,13 @@ function sendReceiptWhatsApp() {
 async function createManualOrder(e) {
   e.preventDefault();
 
-  if (HYPE.promoterLinkInvalid) return alert("Este link de promoter foi excluído ou desativado. Abra o site oficial da HYPE para comprar.");
+  if (HYPE.promoterLinkCode) {
+    const promoterOk = await hypeValidatePromoterLinkV56(HYPE.promoterLinkCode);
+    if (!promoterOk) {
+      hypeApplyPromoterLinkV16();
+      return alert("Este link de promoter foi excluído ou desativado. Ele não pode mais gerar compras.");
+    }
+  }
 
   const lot = currentSelectedLot();
   if (!lot) return alert("Escolha um ingresso disponível.");
@@ -1378,7 +1407,13 @@ function renderFreeEntry(entry) {
 async function createPixOrder(e) {
   e.preventDefault();
 
-  if (HYPE.promoterLinkInvalid) return alert("Este link de promoter foi excluído ou desativado. Abra o site oficial da HYPE para comprar.");
+  if (HYPE.promoterLinkCode) {
+    const promoterOk = await hypeValidatePromoterLinkV56(HYPE.promoterLinkCode);
+    if (!promoterOk) {
+      hypeApplyPromoterLinkV16();
+      return alert("Este link de promoter foi excluído ou desativado. Ele não pode mais gerar compras.");
+    }
+  }
 
   const lot = currentSelectedLot();
   if (!lot) return alert("Escolha um ingresso disponível.");
