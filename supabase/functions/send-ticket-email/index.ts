@@ -44,12 +44,22 @@ async function postMail(payload: Record<string, unknown>) {
   if (!appsScriptUrl || !webhookSecret) {
     throw new Error("HYPE_APPS_SCRIPT_URL/HYPE_WEBHOOK_SECRET não configurados.");
   }
-  const response = await fetch(appsScriptUrl, {
-    method: "POST",
-    redirect: "follow",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ secret: webhookSecret, ...payload }),
-  });
+  const requestBody = JSON.stringify({ secret: webhookSecret, ...payload });
+  let target = appsScriptUrl;
+  let response: Response | null = null;
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    response = await fetch(target, {
+      method: "POST",
+      redirect: "manual",
+      headers: { "Content-Type": "application/json" },
+      body: requestBody,
+    });
+    if (![301, 302, 303, 307, 308].includes(response.status)) break;
+    const location = response.headers.get("location");
+    if (!location) throw new Error("Google Apps Script redirecionou sem informar o destino.");
+    target = new URL(location, target).toString();
+  }
+  if (!response) throw new Error("Não foi possível conectar ao Apps Script.");
   const text = await response.text();
   let data: any = null;
   try { data = JSON.parse(text); } catch (_) { /* handled below */ }
