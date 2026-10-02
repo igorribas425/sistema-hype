@@ -493,15 +493,15 @@ body{overflow-x:hidden}
       <div class="pix-area" id="pixArea">
         <h3 style="font-size:20px">PIX GERADO ✅</h3>
         <p style="font-size:13px;color:var(--muted);margin-top:7px">Pague pelo QR Code ou use o PIX Copia e Cola. A liberação acontece quando o Asaas confirmar o pagamento.</p>
-        <div style="margin:14px 0;padding:13px 14px;border:1px solid rgba(40,209,124,.32);background:rgba(40,209,124,.08);border-radius:14px;font-size:12px;line-height:1.6;color:#d9f8e6">
-          <strong style="display:block;color:#a8f3c4;margin-bottom:4px">✅ PIX OFICIAL HYPE</strong>
-          O recebedor poderá aparecer como <strong>IGOR ANDRIEL GARCIA RIBAS DE OLIVEIRA</strong>. Ele é responsável pelo <strong>financeiro</strong> e também é o <strong>desenvolvedor</strong> da HYPE Lounge Club.
-        </div>
         <div class="manual-status-card">
           <div style="font-size:10px;color:var(--muted);font-weight:900;letter-spacing:1px">CÓDIGO DO PEDIDO</div>
           <div class="manual-order-code" id="pixOrderCode"></div>
           <div class="qrcode"><img id="qrImg" src="" alt="QR Code PIX"></div>
           <div class="pix-key" id="pixKeyText"></div>
+          <div id="pixOfficialRecipientInfo" style="margin:10px 0 14px;padding:13px 14px;border:1px solid rgba(40,209,124,.32);background:rgba(40,209,124,.08);border-radius:14px;font-size:12px;line-height:1.6;color:#d9f8e6;text-align:left">
+            <strong style="display:block;color:#a8f3c4;margin-bottom:4px">✅ PIX OFICIAL HYPE</strong>
+            O recebedor poderá aparecer como <strong>IGOR ANDRIEL GARCIA RIBAS DE OLIVEIRA</strong>. Ele é responsável pelo <strong>financeiro</strong> e também é o <strong>desenvolvedor</strong> da HYPE Lounge Club.
+          </div>
           <div class="manual-status" id="pixPaymentStatus">AGUARDANDO PAGAMENTO</div>
         </div>
         <button class="btn" onclick="copyPixCode()">COPIAR PIX COPIA E COLA</button>
@@ -563,7 +563,7 @@ body{overflow-x:hidden}
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
-<script src="app.js?v=20261001-v48"></script>
+<script src="app.js?v=20261002-v53"></script>
 <script src="promoter-global-v16-8.js?v=20260902-v20-global"></script>
 <script src="v18-client.js?v=20260902-v20"></script>
 </body>
