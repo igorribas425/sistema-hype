@@ -13,3 +13,33 @@
 
 /* V37 mobile */
 @media(max-width:650px){.v34-live-card,.v34-survey-stat{min-width:0}.v34-survey-columns{grid-template-columns:1fr!important}.v34-comment{overflow-wrap:anywhere}.v34-attendee{padding:12px}.v35-rank-row{gap:8px}}
+
+
+/* HYPE V59 // Picos de fluxo + avaliação operacional da Portaria */
+.v59-flow-grid{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:9px;margin-top:12px}
+.v59-flow-card{border:1px solid var(--line);border-radius:13px;background:#09090c;padding:13px}
+.v59-flow-card span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.55px;font-weight:900}
+.v59-flow-card b{display:block;font-size:24px;margin-top:6px}
+.v59-flow-card small{display:block;color:var(--muted);font-size:9px;margin-top:4px}
+.v59-flow-card.good{border-color:rgba(40,209,124,.28);background:rgba(40,209,124,.05)}
+.v59-flow-card.good b{color:#8cf2b7}
+.v59-flow-card.bad{border-color:rgba(255,61,94,.30);background:rgba(255,61,94,.05)}
+.v59-flow-card.bad b{color:#ff9bac}
+.v59-evaluation-admin{margin-top:12px;border:1px solid var(--line);border-radius:15px;background:#08080b;padding:12px}
+.v59-evaluation-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
+.v59-evaluation-head b{display:block;font-size:12px}.v59-evaluation-head small{display:block;color:var(--muted);font-size:9px;margin-top:4px}
+.v59-evaluation-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.v59-evaluation-tabs button{min-height:34px;border:1px solid var(--line);border-radius:999px;background:#101014;color:#b9b9c1;padding:0 11px;font-size:9px;font-weight:950;cursor:pointer}
+.v59-evaluation-tabs button.active{background:#f2f2f4;color:#080808;border-color:#f2f2f4}
+.v59-evaluation-list{display:grid;gap:8px;max-height:330px;overflow:auto;padding-right:2px}
+.v59-evaluation-row{border:1px solid var(--line);border-radius:12px;padding:11px;background:#0b0b0f}
+.v59-evaluation-row.good{border-color:rgba(40,209,124,.25)}.v59-evaluation-row.bad{border-color:rgba(255,61,94,.27)}
+.v59-evaluation-row-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.v59-evaluation-badge{font-size:9px;font-weight:950;padding:5px 8px;border-radius:999px;border:1px solid var(--line)}
+.v59-evaluation-row.good .v59-evaluation-badge{color:#8cf2b7;border-color:rgba(40,209,124,.35)}
+.v59-evaluation-row.bad .v59-evaluation-badge{color:#ff9bac;border-color:rgba(255,61,94,.35)}
+.v59-evaluation-row time{color:var(--muted);font-size:9px}
+.v59-evaluation-row p{margin:8px 0 6px;font-size:11px;line-height:1.55;color:#dedee4;overflow-wrap:anywhere}
+.v59-evaluation-meta{color:var(--muted);font-size:9px;line-height:1.45}
+@media(max-width:1050px){.v59-flow-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){.v59-flow-grid{grid-template-columns:repeat(2,1fr)}.v59-evaluation-head{flex-direction:column}.v59-evaluation-tabs{width:100%}.v59-evaluation-tabs button{flex:1}}
