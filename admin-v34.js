@@ -208,7 +208,13 @@
     setText('v34TempOut', data?.temporary_out || 0);
     setText('v34Remaining', data?.remaining || 0);
     setText('v34Reentries', data?.reentries || 0);
-    setText('v34PaidTotal', data?.paid_total || 0);
+    const eventTickets = (typeof HYPE !== 'undefined' && Array.isArray(HYPE.tickets) ? HYPE.tickets : []).filter(t=>Number(t.event_id)===Number(V34.eventId));
+    const eventGuests = (typeof HYPE !== 'undefined' && Array.isArray(HYPE.guestLists) ? HYPE.guestLists : []).filter(t=>Number(t.event_id)===Number(V34.eventId));
+    const paidCount = eventTickets.filter(t=>t.payment_status==='Pago' && Number(t.price||0)>0).length;
+    const freeCount = eventTickets.filter(t=>t.payment_status==='Pago' && Number(t.price||0)<=0).length;
+    setText('v34PaidTotal', paidCount);
+    setText('v61FreeTotal', freeCount);
+    setText('v61ListTotal', eventGuests.length);
     const status = $('v34LiveStatus');
     if (status) {
       status.textContent = `AO VIVO • ${data?.event_name || 'Evento'} • atualização automática ~1s`;
