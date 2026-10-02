@@ -376,20 +376,20 @@ html,body{max-width:100%;overflow-x:hidden}
       <div class="v59-flow-card"><span>Pico dentro da casa</span><b id="v59PeakInside">0</b><small id="v59PeakInsideAt">Sem movimento</small></div>
       <div class="v59-flow-card"><span>Pico entrando / 15 min</span><b id="v59PeakEntry">0</b><small id="v59PeakEntryAt">Sem movimento</small></div>
       <div class="v59-flow-card"><span>Pico saindo / 15 min</span><b id="v59PeakExit">0</b><small id="v59PeakExitAt">Sem movimento</small></div>
-      <div class="v59-flow-card good"><span>Avaliações boas</span><b id="v59GoodCount">0</b><small>Portaria</small></div>
-      <div class="v59-flow-card bad"><span>Avaliações ruins</span><b id="v59BadCount">0</b><small>Portaria</small></div>
+      <div class="v59-flow-card good"><span>Comentários bons</span><b id="v59GoodCount">0</b><small>Clientes na saída</small></div>
+      <div class="v59-flow-card bad"><span>Comentários ruins</span><b id="v59BadCount">0</b><small>Clientes na saída</small></div>
     </div>
 
     <div class="v59-evaluation-admin">
       <div class="v59-evaluation-head">
-        <div><b>📝 AVALIAÇÃO DA PORTARIA</b><small>Descrição boa e ruim registrada durante a noite, junto com o fluxo daquele momento.</small></div>
+        <div><b>📝 FEEDBACK NA SAÍDA</b><small>Comentários dos clientes registrados na hora da saída, junto com o fluxo daquele momento.</small></div>
         <div class="v59-evaluation-tabs">
           <button id="v59EvalFilterAll" class="active" type="button" onclick="HypeV34.setEvaluationFilter('ALL')">TODAS</button>
-          <button id="v59EvalFilterGood" type="button" onclick="HypeV34.setEvaluationFilter('BOA')">BOAS</button>
-          <button id="v59EvalFilterBad" type="button" onclick="HypeV34.setEvaluationFilter('RUIM')">RUINS</button>
+          <button id="v59EvalFilterGood" type="button" onclick="HypeV34.setEvaluationFilter('BOA')">COM BOM</button>
+          <button id="v59EvalFilterBad" type="button" onclick="HypeV34.setEvaluationFilter('RUIM')">COM RUIM</button>
         </div>
       </div>
-      <div id="v59EvaluationList" class="v59-evaluation-list"><div class="v34-empty">Nenhuma avaliação registrada pela Portaria.</div></div>
+      <div id="v59EvaluationList" class="v59-evaluation-list"><div class="v34-empty">Nenhum feedback de saída registrado ainda.</div></div>
     </div>
   </section>
 
@@ -433,17 +433,17 @@ html,body{max-width:100%;overflow-x:hidden}
       <div class="v59-postevent-head">
         <div>
           <b>🚪 FEEDBACK DA PORTARIA</b>
-          <small>Boa/ruim + descrição + fluxo do momento. Usa o mesmo evento do Check-in ao vivo.</small>
+          <small>Comentário bom e/ou ruim feito pela pessoa na hora da saída. Usa o mesmo evento do Check-in ao vivo.</small>
         </div>
         <div class="v59-evaluation-tabs">
           <button id="v59PostFilterAll" class="active" type="button" onclick="HypeV34.setEvaluationFilter('ALL')">TODAS</button>
-          <button id="v59PostFilterGood" type="button" onclick="HypeV34.setEvaluationFilter('BOA')">BOAS</button>
-          <button id="v59PostFilterBad" type="button" onclick="HypeV34.setEvaluationFilter('RUIM')">RUINS</button>
+          <button id="v59PostFilterGood" type="button" onclick="HypeV34.setEvaluationFilter('BOA')">COM BOM</button>
+          <button id="v59PostFilterBad" type="button" onclick="HypeV34.setEvaluationFilter('RUIM')">COM RUIM</button>
         </div>
       </div>
       <div class="v59-postevent-stats">
-        <div><span>Boas</span><b id="v59PostGoodCount">0</b></div>
-        <div><span>Ruins</span><b id="v59PostBadCount">0</b></div>
+        <div><span>Comentários bons</span><b id="v59PostGoodCount">0</b></div>
+        <div><span>Comentários ruins</span><b id="v59PostBadCount">0</b></div>
         <div><span>Pico dentro</span><b id="v59PostPeakInside">0</b></div>
         <div><span>Pico entrada / 15 min</span><b id="v59PostPeakEntry">0</b></div>
         <div><span>Pico saída / 15 min</span><b id="v59PostPeakExit">0</b></div>
