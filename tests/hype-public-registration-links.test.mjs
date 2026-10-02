@@ -65,6 +65,14 @@ test("portaria stays focused on entry and does not expose public registration li
   assert.doesNotMatch(html + js, /public_(?:guest|promoter)_registration_(?:context|submit)_v49/i);
 });
 
+test("admin synchronizes manual guest-list view with the public-registration event", async () => {
+  const controller = await read("hype-v49-registration-admin.js");
+
+  assert.match(controller, /v408ListEvent/);
+  assert.match(controller, /HypeListaAdmin\.load/);
+  assert.match(controller, /staff_guest_registration_settings_v49/);
+});
+
 test("public guest page requires only the approved identity fields", async () => {
   const [html, js] = await Promise.all([read("lista.html"), read("lista-v49.js")]);
 
@@ -86,8 +94,17 @@ test("public promoter page returns copyable and shareable sales link", async () 
   assert.match(html, /id="promoterPhone"[^>]+required/i);
   assert.match(html, /id="promoterWebsite"[^>]+tabindex="-1"/i);
   assert.match(html, /id="promoterSalesLink"/i);
+  assert.match(html, /id="promoterOpenSales"/i);
   assert.match(js, /public_promoter_registration_submit_v49/);
   assert.match(js, /navigator\.share/);
   assert.match(js, /navigator\.clipboard/);
+  assert.match(js, /promoterOpenSales|window\.open|location\.href/i);
   assert.doesNotMatch(html + js, /p_username|p_password|service_role/i);
+});
+
+test("admin promoter rows can open the linked ticket catalog", async () => {
+  const js = await read("promoter-global-v16-8.js");
+
+  assert.match(js, /cliente\.html\?promoter=/i);
+  assert.match(js, /openPromoterSalesV168|ABRIR INGRESSOS/i);
 });

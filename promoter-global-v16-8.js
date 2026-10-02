@@ -131,6 +131,7 @@
               </div>
               <div style="display:flex;gap:7px;flex-wrap:wrap">
                 <button class="btn-action" type="button" onclick="copyPromoterLinkV168(${Number(p.id)})">🔗 COPIAR LINK</button>
+                <button class="btn-action" type="button" onclick="openPromoterSalesV168(${Number(p.id)})">🎟️ ABRIR INGRESSOS</button>
                 <button class="btn-action" type="button" onclick="togglePromoterV168(${Number(p.id)})">${p.active ? 'DESATIVAR' : 'ATIVAR'}</button>
                 <button class="btn-action btn-del" type="button" onclick="deletePromoterV168(${Number(p.id)})">🗑️ EXCLUIR</button>
               </div>
@@ -177,6 +178,12 @@
     if (!row) return alert('Promoter não encontrado.');
     await copyText(promoterLink(row));
     if (typeof hypeNotify === 'function') hypeNotify(`Link global de ${row.name} copiado.`);
+  };
+
+  window.openPromoterSalesV168 = function(id) {
+    const row = (window.__HYPE_V168_PROMOTERS || []).find(p => Number(p.id) === Number(id));
+    if (!row) return alert('Promoter não encontrado.');
+    window.open(promoterLink(row), '_blank', 'noopener');
   };
 
   window.togglePromoterV16 = async function(id) { return window.togglePromoterV168(id); };

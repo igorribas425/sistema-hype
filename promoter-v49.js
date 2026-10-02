@@ -34,6 +34,9 @@
     }
     await copy();
   }
+  function openSales() {
+    if (salesUrl) window.location.href = salesUrl;
+  }
   async function submit(event) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -69,4 +72,5 @@
   $('promoterForm')?.addEventListener('submit', submit);
   $('promoterCopy')?.addEventListener('click', copy);
   $('promoterShare')?.addEventListener('click', share);
+  $('promoterOpenSales')?.addEventListener('click', openSales);
 })();

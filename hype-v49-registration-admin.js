@@ -11,6 +11,7 @@
     : String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
   const rows = data => Array.isArray(data) ? data : (data ? [data] : []);
   const state = () => { try { return HYPE; } catch (_) { return null; } };
+  let settingsRequested = false;
 
   function copyText(text) {
     const value = String(text || '');
@@ -57,6 +58,22 @@
       : '<option value="">Nenhum evento ativo</option>';
   }
 
+  function syncManualListEvent(eventId) {
+    const select = $('v408ListEvent');
+    const id = Number(eventId || 0);
+    if (!select || !id) return;
+    const apply = () => {
+      const option = Array.from(select.options || []).find(item => Number(item.value) === id);
+      if (!option) return false;
+      const changed = select.value !== String(id);
+      select.value = String(id);
+      if (changed && window.HypeListaAdmin?.load) window.HypeListaAdmin.load();
+      return true;
+    };
+    if (apply()) return;
+    setTimeout(() => { if (!apply()) setTimeout(apply, 900); }, 250);
+  }
+
   function renderListStatus(row) {
     const status = $('v49ListStatus');
     const toggle = $('v49ListToggle');
@@ -80,6 +97,7 @@
         p_password: hype.pass
       }))[0] || {};
       fillEvents(row.event_id);
+      syncManualListEvent(row.event_id);
       renderListStatus(row);
     } catch (error) {
       status.className = 'v49-link-status closed';
@@ -103,6 +121,7 @@
         p_registration_open: !currentOpen
       }))[0] || {};
       fillEvents(row.event_id);
+      syncManualListEvent(row.event_id);
       renderListStatus(row);
       if (typeof hypeNotify === 'function') hypeNotify(row.registration_open ? 'Cadastro público da lista liberado.' : 'Cadastro público da lista bloqueado.');
     } catch (error) {
@@ -144,6 +163,11 @@
     setQr('v49PromoterPublicQr', promoterUrl);
     setQr('v49ListPublicQr', listUrl);
     fillEvents();
+    const hype = state();
+    if (hype?.user && hype.pass && !settingsRequested) {
+      settingsRequested = true;
+      loadListSettings();
+    }
     return true;
   }
 
