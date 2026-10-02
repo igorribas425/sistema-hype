@@ -46,25 +46,32 @@ async function postMail(payload: Record<string, unknown>) {
   }
   const requestBody = JSON.stringify({ secret: webhookSecret, ...payload });
   let target = appsScriptUrl;
+  let method = "POST";
   let response: Response | null = null;
   for (let attempt = 0; attempt < 4; attempt += 1) {
     response = await fetch(target, {
-      method: "POST",
+      method,
       redirect: "manual",
-      headers: { "Content-Type": "application/json" },
-      body: requestBody,
+      headers: method === "POST" ? { "Content-Type": "application/json" } : undefined,
+      body: method === "POST" ? requestBody : undefined,
     });
     if (![301, 302, 303, 307, 308].includes(response.status)) break;
     const location = response.headers.get("location");
     if (!location) throw new Error("Google Apps Script redirecionou sem informar o destino.");
     target = new URL(location, target).toString();
+    // ContentService redirects its JSON body to a one-time URL. 3xx codes
+    // other than 307/308 intentionally switch the follow-up to GET.
+    method = [307, 308].includes(response.status) ? method : "GET";
   }
   if (!response) throw new Error("Não foi possível conectar ao Apps Script.");
   const text = await response.text();
   let data: any = null;
   try { data = JSON.parse(text); } catch (_) { /* handled below */ }
   if (!response.ok || data?.ok !== true) {
-    throw new Error(data?.erro || data?.error || text || "Gmail recusou o envio.");
+    if (!data && /<html[\s>]/i.test(text)) {
+      throw new Error(`Apps Script não retornou JSON (HTTP ${response.status}). Confira a implantação pública e a URL /exec.`);
+    }
+    throw new Error(data?.erro || data?.error || text.slice(0, 500) || "Gmail recusou o envio.");
   }
   return data;
 }

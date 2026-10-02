@@ -63,7 +63,10 @@ test("email_push_and_refund_require_context_specific_authorization", async () =>
   assert.match(email, /portaria_device_status_v18/);
   assert.match(email, /ticket_id/);
   assert.match(email, /redirect:\s*["']manual["']/i);
-  assert.match(email, /preserv|location|status\s*>=\s*300/i);
+  assert.match(email, /location/);
+  assert.match(email, /method\s*=\s*["']POST["']/i);
+  assert.match(email, /method\s*=\s*\[307,\s*308\]\.includes\(response\.status\)\s*\?\s*method\s*:\s*["']GET["']/i);
+  assert.match(email, /não retornou JSON|não retornou JSON/i);
 
   const push = await source("hype-chat-push");
   assert.match(push, /verify_staff/);
