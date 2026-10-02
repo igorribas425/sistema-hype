@@ -73,16 +73,24 @@ test("admin synchronizes manual guest-list view with the public-registration eve
   assert.match(controller, /staff_guest_registration_settings_v49/);
 });
 
-test("public guest page requires only the approved identity fields", async () => {
+test("public guest page requires event choice, review fields, and no promoter footer", async () => {
   const [html, js] = await Promise.all([read("lista.html"), read("lista-v49.js")]);
 
+  assert.match(html, /id="guestEvents"/i);
+  assert.match(html, /name="event_id"/i);
   assert.match(html, /id="guestName"[^>]+required/i);
   assert.match(html, /id="guestCpf"[^>]+required/i);
   assert.match(html, /id="guestPhone"[^>]+required/i);
   assert.match(html, /id="guestGender"[^>]+required/i);
+  assert.match(html, /id="guestEmail"[^>]+required/i);
+  assert.match(html, /id="guestInstagram"[^>]+required/i);
+  assert.match(html, /id="guestPhoto"[^>]+required/i);
+  assert.match(html, /id="guestPhotoConsent"[^>]+required/i);
   assert.match(html, /id="guestWebsite"[^>]+tabindex="-1"/i);
-  assert.match(js, /public_guest_registration_context_v49/);
-  assert.match(js, /public_guest_registration_submit_v49/);
+  assert.match(js, /public_guest_registration_events_v50/);
+  assert.match(js, /guest-list-registration/);
+  assert.match(js, /new FormData/);
+  assert.match(js, /Em análise|analise/i);
   assert.doesNotMatch(html + js, /p_username|p_password|service_role/i);
   assert.doesNotMatch(html, /Já é promoter|Cadastre-se aqui|promoter\.html/i);
 });
