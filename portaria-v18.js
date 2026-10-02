@@ -460,13 +460,13 @@
     const snap=readJSON(SNAPSHOT_KEY,null);
     const tickets=Number(snap?.event_id)===Number(state.eventId)?(snap.tickets||[]):[];
     const paid=tickets.filter(t=>t.payment_status==='Pago');
-    const inside=paid.filter(t=>t.entry_status==='Entrada utilizada'&&!t.temporary_exit);
+    const inside=paid.filter(t=>t.entry_status==='Entrada utilizada'&&!t.temporary_exit&&!t.final_exit_at);
     const sectors={};
     paid.forEach(t=>{
       const k=t.sector||'Ingresso';
       if(!sectors[k])sectors[k]={sector:k,paid:0,entered:0};
       sectors[k].paid++;
-      if(t.entry_status==='Entrada utilizada'&&!t.temporary_exit)sectors[k].entered++;
+      if(t.entry_status==='Entrada utilizada'&&!t.temporary_exit&&!t.final_exit_at)sectors[k].entered++;
     });
     renderDashboard({
       total_paid:paid.length,
@@ -495,8 +495,14 @@
       return renderResults(rows);
     }
     try{
-      const rows=normalizeRows(await rpc('portaria_device_search_v18',{p_device_key:state.deviceKey,p_event_id:state.eventId,p_query:q}));
-      // V26: defesa extra no navegador. Mesmo que uma função antiga do banco
+      let rows=[];
+      try{
+        rows=normalizeRows(await rpc('portaria_device_search_v60',{p_device_key:state.deviceKey,p_event_id:state.eventId,p_query:q}));
+      }catch(err){
+        if(!/portaria_device_search_v60|function|schema cache|does not exist/i.test(String(err?.message||err))) throw err;
+        rows=normalizeRows(await rpc('portaria_device_search_v18',{p_device_key:state.deviceKey,p_event_id:state.eventId,p_query:q}));
+      }
+      // V60: defesa extra no navegador. Mesmo que uma função antiga do banco
       // devolva registros a mais, a Portaria NUNCA mostra ingresso de outro evento.
       const scoped=rows.filter(item=>Number(item.event_id)===Number(state.eventId));
       renderResults(scoped);
@@ -530,17 +536,25 @@
       try {
         // V26: o próprio Supabase já recebe o evento selecionado e só pode
         // devolver ingresso pertencente a ele.
-        rows=normalizeRows(await rpc('portaria_device_lookup_event_v26',{
+        rows=normalizeRows(await rpc('portaria_device_lookup_event_v60',{
           p_device_key:state.deviceKey,
           p_event_id:state.eventId,
           p_code:String(code||'').trim()
         }));
       } catch (err) {
-        // Compatibilidade durante a atualização: se o SQL V26 ainda não foi
-        // executado, usa a consulta antiga e filtra rigorosamente no navegador.
-        if(!/portaria_device_lookup_event_v26|function|schema cache|does not exist/i.test(String(err?.message||err))) throw err;
-        const legacy=normalizeRows(await rpc('portaria_device_lookup_v18',{p_device_key:state.deviceKey,p_code:String(code||'').trim()}));
-        rows=legacy.filter(item=>Number(item.event_id)===Number(state.eventId));
+        // Compatibilidade: durante o cache do Supabase, usa V26 e depois V18.
+        if(!/portaria_device_lookup_event_v60|function|schema cache|does not exist/i.test(String(err?.message||err))) throw err;
+        try{
+          rows=normalizeRows(await rpc('portaria_device_lookup_event_v26',{
+            p_device_key:state.deviceKey,
+            p_event_id:state.eventId,
+            p_code:String(code||'').trim()
+          }));
+        }catch(err26){
+          if(!/portaria_device_lookup_event_v26|function|schema cache|does not exist/i.test(String(err26?.message||err26))) throw err26;
+          const legacy=normalizeRows(await rpc('portaria_device_lookup_v18',{p_device_key:state.deviceKey,p_code:String(code||'').trim()}));
+          rows=legacy.filter(item=>Number(item.event_id)===Number(state.eventId));
+        }
       }
       if(!rows.length){
         // V30: descobre se o QR existe em OUTRO evento sem liberar entrada.
@@ -634,22 +648,25 @@
   function renderTicket(item) {
     const wrong=Number(item.event_id)!==Number(state.eventId);
     const paid=item.payment_status==='Pago';
-    const entered=item.entry_status==='Entrada utilizada'&&!item.temporary_exit;
-    const temp=Boolean(item.temporary_exit);
-    const auth=Boolean(item.reentry_authorized);
+    const finalExited=Boolean(item.final_exit_at);
+    const entered=item.entry_status==='Entrada utilizada'&&!item.temporary_exit&&!finalExited;
+    const temp=Boolean(item.temporary_exit)&&!finalExited;
+    const auth=Boolean(item.reentry_authorized)&&!finalExited;
     let cls=''; let stateText='AGUARDANDO PAGAMENTO'; let stateCls='warn';
     if(wrong){cls='bad';stateText='OUTRO EVENTO';stateCls='danger';}
     else if(item.payment_status==='Cancelado'){cls='bad';stateText='CANCELADO';stateCls='danger';}
     else if(!paid){stateText='PENDENTE';stateCls='warn';}
+    else if(finalExited){cls='ok';stateText='SAÍDA CONFIRMADA';stateCls='good';}
     else if(temp&&auth){cls='ok';stateText='REENTRADA AUTORIZADA';stateCls='good';}
     else if(temp){stateText='FORA TEMPORARIAMENTE';stateCls='warn';}
-    else if(entered){cls='bad';stateText='JÁ UTILIZADO';stateCls='danger';}
+    else if(entered){cls='ok';stateText='DENTRO DA HYPE';stateCls='good';}
     else {cls='ok';stateText='LIBERADO';stateCls='good';}
 
     const id=Number(item.ticket_id);
     let actions='';
-    if(paid&&!wrong){
+    if(paid&&!wrong&&!finalExited){
       if(!entered&&!temp) actions+=`<button class="btn green" onclick="HypePortaria.validate(${id})">✅ CONFIRMAR ENTRADA</button>`;
+      if(entered&&!temp) actions+=`<button class="btn green" onclick="HypeV60Exit.open(${id})">🚪 CONFIRMAR SAÍDA</button>`;
       if(entered&&!temp) actions+=`<button class="btn" onclick="HypePortaria.temporaryExit(${id})">↗ SAÍDA TEMPORÁRIA</button>`;
       if(temp&&!auth) actions+=`<button class="btn" onclick="HypePortaria.authorizeReentry(${id})">↩ AUTORIZAR REENTRADA</button>`;
       if(temp&&auth) actions+=`<button class="btn green" onclick="HypePortaria.validate(${id})">✅ CONFIRMAR REENTRADA</button>`;
@@ -734,7 +751,13 @@
     if(!online()){if(!silent)alert('Conecte à internet para preparar o modo offline.');return;}
     if(!state.eventId)return;
     try{
-      const rows=normalizeRows(await rpc('portaria_device_snapshot_v18',{p_device_key:state.deviceKey,p_event_id:state.eventId}));
+      let rows=[];
+      try{
+        rows=normalizeRows(await rpc('portaria_device_snapshot_v60',{p_device_key:state.deviceKey,p_event_id:state.eventId}));
+      }catch(err){
+        if(!/portaria_device_snapshot_v60|function|schema cache|does not exist/i.test(String(err?.message||err))) throw err;
+        rows=normalizeRows(await rpc('portaria_device_snapshot_v18',{p_device_key:state.deviceKey,p_event_id:state.eventId}));
+      }
       const event=state.events.find(e=>Number(e.id)===Number(state.eventId))||{};
       const snap={event_id:state.eventId,event_name:event.name||$('eventSelect')?.selectedOptions?.[0]?.textContent||'Evento HYPE',event_date:event.event_date||null,saved_at:new Date().toISOString(),expires_at:new Date(Date.now()+AUTH_OFFLINE_MS).toISOString(),tickets:rows};
       writeJSON(SNAPSHOT_KEY,snap);writeJSON(AUTH_CACHE_KEY,{approved:true,label:state.device?.label||'Computador da Portaria',expires_at:snap.expires_at});updateOfflineBadge();
@@ -797,6 +820,6 @@
     await ensureDevice();
   }
 
-  window.HypePortaria={changeEvent,enableAutoEvent,refresh,search,processCode,toggleDocument,validate,temporaryExit,authorizeReentry,openPair,closePair,endReaders,prepareOffline,startCamera,stopCamera};
+  window.HypePortaria={changeEvent,enableAutoEvent,refresh,search,processCode,toggleDocument,validate,temporaryExit,authorizeReentry,openPair,closePair,endReaders,prepareOffline,startCamera,stopCamera,getItem};
   document.addEventListener('DOMContentLoaded',init);
 })();
