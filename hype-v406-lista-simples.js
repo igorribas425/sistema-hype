@@ -75,27 +75,24 @@
     }
   }
 
-  async function search(query,targetId='v406ListResult',append=false){
+  async function search(query,targetId='v406ListResult',append=false,silent=false){
     const q=String(query || $('v406ListSearch')?.value || $('searchInput')?.value || '').trim();
-    if(!q){ if(!append) out('<div class="empty">Digite um nome para buscar.</div>',targetId); return 0; }
-    if(!deviceKey()){ if(!append) out('<div class="empty error">Portaria não autorizada neste computador.</div>',targetId); return 0; }
-    if(!eventId()){ if(!append) out('<div class="empty error">Selecione o evento.</div>',targetId); return 0; }
-    if(!append) out('<div class="empty">Buscando pessoas...</div>',targetId);
+    if(!q){ if(!append && !silent) out('<div class="empty">Digite um nome para buscar.</div>',targetId); return 0; }
+    if(!deviceKey()){ if(!append && !silent) out('<div class="empty">Portaria não autorizada neste computador.</div>',targetId); return 0; }
+    if(!eventId()){ if(!append && !silent) out('<div class="empty">Selecione o evento.</div>',targetId); return 0; }
+    if(!append && !silent) out('<div class="empty">Buscando pessoas...</div>',targetId);
     try{
-      let rows=await searchRowsForEvent(q,eventId());
+      // V81: busca somente no evento selecionado. Não puxa nomes de outro evento.
+      const rows=await searchRowsForEvent(q,eventId());
       if(!rows.length){
-        const publicEvent=await publicListEvent();
-        const publicEventId=Number(publicEvent?.event_id || 0);
-        if(publicEventId && publicEventId!==eventId()){
-          const fallback=await searchRowsForEvent(q,publicEventId);
-          rows=fallback.map(row=>({...row,remote_event_name:publicEvent.event_name,remote_event_date:publicEvent.event_date}));
-        }
+        if(!append && !silent) out('',targetId);
+        return 0;
       }
-      if(!rows.length){ if(!append) out('<div class="empty error">Nenhuma pessoa encontrada neste evento.</div>',targetId); return 0; }
       out(rows.map(render).join(''),targetId,append);
       return rows.length;
     }catch(err){
-      if(!append) out(`<div class="empty error">${esc(err.message || 'Erro ao buscar lista.')}</div>`,targetId);
+      console.warn('[HYPE V81][busca lista]',err);
+      if(!append && !silent) out('',targetId);
       return 0;
     }
   }
