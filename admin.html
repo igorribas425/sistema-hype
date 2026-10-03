@@ -254,7 +254,6 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 </style>
 
   <link rel="stylesheet" href="admin-v34.css?v=20261002-v60">
-  <link rel="stylesheet" href="admin-v36-refund.css?v=20260905-v38-geral">
 
 <style id="hype-v37-admin-mobile">
 html,body{max-width:100%;overflow-x:hidden}
@@ -299,6 +298,7 @@ html,body{max-width:100%;overflow-x:hidden}
   .v50-review{grid-column:1/-1;border-top:1px solid var(--line);padding-top:15px;margin-top:4px}.v50-review h4{margin:0 0 6px;font-size:14px}.v50-review p{color:var(--muted);font-size:11px;line-height:1.5;margin:0 0 10px}.v50-settings{display:grid;grid-template-columns:minmax(0,1fr) 140px auto;gap:8px;align-items:end}.v50-review-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:12px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.03);margin-top:8px}.v50-review-row.pending{border-color:rgba(251,191,36,.4)}.v50-review-row strong{display:block}.v50-review-row small{display:block;color:var(--muted);line-height:1.5}.v50-review-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:wrap}.v50-review-photo{max-width:130px;max-height:130px;border-radius:9px;border:1px solid var(--line);object-fit:cover;margin-top:8px}.v50-photo-modal{position:fixed;inset:0;background:rgba(0,0,0,.84);z-index:10000;display:grid;place-items:center;padding:20px}.v50-photo-modal[hidden]{display:none}.v50-photo-modal img{max-width:min(680px,92vw);max-height:82vh;border-radius:12px}.v50-photo-modal button{margin-top:10px}
   @media(max-width:700px){.v49-link-panel{grid-template-columns:1fr}.v49-link-qr{order:-1}.v49-link-row{grid-template-columns:1fr 1fr}.v49-link-row input{grid-column:1/-1}.v49-link-row button{width:100%}}
   @media(max-width:700px){.v50-settings{grid-template-columns:1fr}.v50-review-row{grid-template-columns:1fr}.v50-review-actions{justify-content:flex-start}}
+  #v43CheckupPanel{display:none!important}
 </style>
   <link rel="manifest" href="manifest.webmanifest?v=42">
 </head>
@@ -389,76 +389,6 @@ html,body{max-width:100%;overflow-x:hidden}
       <div class="v59-flow-card bad"><span>Comentários ruins</span><b id="v59BadCount">0</b><small>Clientes na saída</small></div>
     </div>
 </section>
-
-  <section class="panel-box v34-panel" id="v34SurveyPanel">
-    <div class="v34-panel-head">
-      <div>
-        <h3>⭐ PÓS-EVENTO</h3>
-        <p>Reúne a pesquisa pós-evento e os comentários feitos pelos próprios clientes na hora da saída, tudo vinculado ao mesmo evento.</p>
-      </div>
-      <div class="v34-survey-actions">
-        <button class="btn-action" type="button" onclick="HypeV34.loadSurveyAttendees()">↻ ATUALIZAR</button>
-        <button id="v34SurveyEmailBtn" class="btn-action btn-confirm" type="button" onclick="HypeV34.sendSurveyEmail()">📧 ENVIAR PESQUISA POR E-MAIL</button>
-      </div>
-    </div>
-    <div class="v34-survey-stats">
-      <div class="v34-survey-stat"><span>Compareceram</span><b id="v34SurveyEligible">0</b></div>
-      <div class="v34-survey-stat"><span>Convites enviados</span><b id="v34SurveyInvited">0</b></div>
-      <div class="v34-survey-stat"><span>Gmail</span><b id="v35SurveyEmail">0</b></div>
-      <div class="v34-survey-stat"><span>WhatsApp</span><b id="v35SurveyWhatsApp">0</b></div>
-      <div class="v34-survey-stat"><span>Respostas</span><b id="v34SurveyAnswers">0</b></div>
-      <div class="v34-survey-stat"><span>Nota média</span><b id="v34SurveyAverage">0.00</b></div>
-      <div class="v34-survey-stat"><span>Voltariam</span><b id="v34SurveyReturn">0%</b></div>
-    </div>
-
-    <div class="v35-feedback-rank-wrap">
-      <div class="v35-rank-head">
-        <div><b>RANKING DOS FEEDBACKS</b><small>Classificação das notas recebidas</small></div>
-        <div id="v35FeedbackDominant" class="v35-dominant">SEM RESPOSTAS</div>
-      </div>
-      <div id="v35FeedbackRanking" class="v35-ranking">
-        <div class="v35-rank-row"><span>🔥 Incrível</span><div><i style="width:0%"></i></div><b>0</b></div>
-        <div class="v35-rank-row"><span>🙂 Bom</span><div><i style="width:0%"></i></div><b>0</b></div>
-        <div class="v35-rank-row"><span>😐 Regular</span><div><i style="width:0%"></i></div><b>0</b></div>
-        <div class="v35-rank-row"><span>🙁 Ruim</span><div><i style="width:0%"></i></div><b>0</b></div>
-        <div class="v35-rank-row"><span>⛔ Péssimo</span><div><i style="width:0%"></i></div><b>0</b></div>
-      </div>
-      <div id="v35AutoFeedbackStatus" class="v35-auto-status">Envio automático: aguardando encerramento do evento.</div>
-    </div>
-
-    <div class="v59-postevent-wrap">
-      <div class="v59-postevent-head">
-        <div>
-          <b>🚪 FEEDBACK DOS CLIENTES NA SAÍDA</b>
-          <small>Na saída, a pessoa pode deixar um comentário bom e um comentário ruim ao mesmo tempo. O registro fica ligado ao mesmo evento do Check-in ao vivo.</small>
-        </div>
-        <div class="v59-evaluation-tabs">
-          <button id="v59PostFilterAll" class="active" type="button" onclick="HypeV34.setEvaluationFilter('ALL')">TODAS</button>
-          <button id="v59PostFilterGood" type="button" onclick="HypeV34.setEvaluationFilter('BOA')">COM BOM</button>
-          <button id="v59PostFilterBad" type="button" onclick="HypeV34.setEvaluationFilter('RUIM')">COM RUIM</button>
-        </div>
-      </div>
-      <div class="v59-postevent-stats">
-        <div><span>Comentários bons</span><b id="v59PostGoodCount">0</b></div>
-        <div><span>Comentários ruins</span><b id="v59PostBadCount">0</b></div>
-        <div><span>Pico dentro</span><b id="v59PostPeakInside">0</b></div>
-        <div><span>Pico entrada / 15 min</span><b id="v59PostPeakEntry">0</b></div>
-        <div><span>Pico saída / 15 min</span><b id="v59PostPeakExit">0</b></div>
-      </div>
-      <div id="v59PostEvaluationList" class="v59-evaluation-list"><div class="v34-empty">Nenhum feedback de saída registrado neste evento.</div></div>
-    </div>
-
-    <div class="v34-survey-columns">
-      <div class="v34-subcard">
-        <div class="v34-subcard-head"><b>PARTICIPANTES DA PESQUISA</b><small>Gmail + WhatsApp automático • link individual</small></div>
-        <div id="v34SurveyAttendees" class="v34-scroll"><div class="v34-empty">Carregando participantes...</div></div>
-      </div>
-      <div class="v34-subcard">
-        <div class="v34-subcard-head"><b>RESPOSTAS / COMENTÁRIOS</b><button class="btn-action" type="button" onclick="HypeV34.refreshSurveyReport()">↻</button></div>
-        <div id="v34SurveyComments" class="v34-scroll"><div class="v34-empty">Ainda não há respostas.</div></div>
-      </div>
-    </div>
-  </section>
 
   <div class="admin-toolbar panel-box">
     <div><strong>CONTROLE DO EVENTO</strong><span>estoque, caixa e entradas em tempo real neste navegador</span></div>
@@ -925,7 +855,6 @@ Bruna Santos"></textarea>
 })();
 </script>
   <script src="admin-v34.js?v=20261003-v79"></script>
-  <script src="admin-v36-refund.js?v=20260905-v38-geral"></script>
   <script src="hype-push-config.js?v=421"></script>
   <script src="hype-v38-chat.js?v=421"></script>
   <script src="hype-v38-reset.js?v=20260905-v38-1"></script>
