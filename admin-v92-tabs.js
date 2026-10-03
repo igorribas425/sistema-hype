@@ -192,7 +192,7 @@
       try { if (typeof loadV16AdminData === 'function') loadV16AdminData().then(()=>window.renderV16Dashboard?.()).catch(()=>{}); } catch (_) {}
     }
 
-    window.scrollTo({top: Math.max(0,($('v92AdminTabs')?.offsetTop || 0)-74),behavior:'smooth'});
+    window.scrollTo({top: 0,behavior:'smooth'});
   }
 
   function tick() {
@@ -205,7 +205,7 @@
   }
 
   function init() {
-    if (!$('v92AdminTabs')) return;
+    if (!document.querySelector('[data-v92-tab]')) return;
     document.querySelectorAll('[data-v92-tab]').forEach(btn => {
       btn.addEventListener('click',()=>setTab(btn.dataset.v92Tab));
     });
