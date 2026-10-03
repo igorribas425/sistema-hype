@@ -305,6 +305,8 @@ html,body{max-width:100%;overflow-x:hidden}
     .v92-admin-tabs::-webkit-scrollbar{display:none}
     .v92-admin-tab{flex:0 0 auto;min-height:42px;border:1px solid rgba(255,255,255,.16);background:#0b0b0e;color:#a8a8b0;border-radius:10px;padding:0 14px;font-size:11px;font-weight:950;letter-spacing:.7px;cursor:pointer}
     .v92-admin-tab.active{color:#fff;border-color:#f0f0f3;background:#17171b;box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}
+    .top-nav .v92-top-tab{flex:0 0 auto;color:var(--muted);background:transparent;border:1px solid rgba(255,255,255,.17);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;cursor:pointer;min-height:32px}
+    .top-nav .v92-top-tab.active{color:#fff;border-color:#fff;background:rgba(255,255,255,.08)}
     .v92-tab-hidden{display:none!important}
     .v92-people-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
     .v92-people-head h3{margin:0}.v92-people-head p{margin:5px 0 0;color:var(--muted);font-size:11px;line-height:1.5}
@@ -326,10 +328,13 @@ html,body{max-width:100%;overflow-x:hidden}
 </head>
 <body>
 
-<nav class="top-nav" id="adminTopNav" aria-label="Acessos do Admin">
+<nav class="top-nav" id="adminTopNav" aria-label="Áreas do Admin">
   <a href="cliente.html">🛒 COMPRAR</a>
-  <a href="admin.html" style="color:#fff;border-color:var(--brand,#f5f5f5)">⚙️ ADMIN</a>
-  <a href="portaria.html">🚪 PORTARIA</a>
+  <button class="v92-top-tab active" type="button" data-v92-tab="geral" aria-selected="true">🏠 GERAL</button>
+  <button class="v92-top-tab" type="button" data-v92-tab="promoter" aria-selected="false">🎯 PROMOTER</button>
+  <button class="v92-top-tab" type="button" data-v92-tab="portaria" aria-selected="false">🚪 PORTARIA</button>
+  <button class="v92-top-tab" type="button" data-v92-tab="lista" aria-selected="false">📋 LISTA</button>
+  <button class="v92-top-tab" type="button" data-v92-tab="avaliacao" aria-selected="false">⭐ AVALIAÇÃO</button>
 </nav>
 
 <div id="loginScreen">
@@ -358,14 +363,6 @@ html,body{max-width:100%;overflow-x:hidden}
     <div class="stat-card red"><span>Cancelados</span><h3 id="canceledCount">0</h3></div>
     <div class="stat-card blue"><span>Pendente em R$</span><h3 id="pendingValue">R$ 0,00</h3></div>
   </div>
-
-  <nav class="v92-admin-tabs" id="v92AdminTabs" role="tablist" aria-label="Áreas do Admin">
-    <button class="v92-admin-tab active" type="button" data-v92-tab="geral" aria-selected="true">🏠 GERAL</button>
-    <button class="v92-admin-tab" type="button" data-v92-tab="promoter" aria-selected="false">🎯 PROMOTER</button>
-    <button class="v92-admin-tab" type="button" data-v92-tab="portaria" aria-selected="false">🚪 PORTARIA</button>
-    <button class="v92-admin-tab" type="button" data-v92-tab="lista" aria-selected="false">📋 LISTA</button>
-    <button class="v92-admin-tab" type="button" data-v92-tab="avaliacao" aria-selected="false">⭐ AVALIAÇÃO</button>
-  </nav>
 
   <section class="panel-box v16-dashboard" id="v16DashboardPanel">
     <div class="v16-dashboard-head"><div><h3>📊 DASHBOARD DE VENDAS</h3><p>Resumo por evento, gênero, descontos, entradas e promoters.</p></div><select id="v16DashboardEvent" onchange="renderV16Dashboard()"><option value="all">TODOS OS EVENTOS</option></select></div>
