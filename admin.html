@@ -619,7 +619,7 @@ html,body{max-width:100%;overflow-x:hidden}
     </div>
   </section>
 
-  <section class="panel-box admin-only" id="v408SimpleListAdmin" style="display:none!important">
+  <section class="panel-box admin-only" id="v408SimpleListAdmin">
     <div class="v16-management-head">
       <div>
         <h3>📋 COLOCAR NOMES NA LISTA</h3>
@@ -651,12 +651,12 @@ Bruna Santos"></textarea>
         <button class="btn-action" type="button" onclick="HypeListaAdmin.load()">↻ ATUALIZAR LISTA</button>
       </div>
     </div>
-    <div id="v408ListAdminResult" class="v18-empty">Entre no Admin para colocar nomes na lista.</div>
+    <div id="v408ListAdminResult" class="v18-empty" style="display:none!important"></div>
     </div>
     <div id="v49ListLinkPanel" class="v49-link-panel" hidden>
       <div class="v49-link-copy">
-        <h4>Cadastro público da lista</h4>
-        <p>O link é o mesmo para todos e não expira. Ative ou bloqueie aqui; as festas abertas aparecem em um carrossel e cada pessoa escolhe a sua.</p>
+        <h4>📋 LISTA HYPE • CADASTROS PARA ANÁLISE</h4>
+        <p>Gerencie o cadastro público da lista de hoje. Os nomes aprovados continuam centralizados em Lista de Clientes & Pagamentos.</p>
         <div class="v50-settings"><div class="form-group" style="margin:0"><label>Limite de homens por festa</label><input id="v50MaleLimit" type="number" min="0" max="10000" step="1" value="10"></div><button id="v50ListSave" class="btn-action" type="button" onclick="HypeV49Registration.saveGuestListSettings()">SALVAR LIMITE EM TODAS</button></div>
         <div class="v49-link-status" id="v49ListStatus">Carregando status...</div>
         <div id="v50ListQuota" class="v49-link-status">Limite por evento: carregando...</div>
@@ -665,9 +665,9 @@ Bruna Santos"></textarea>
       </div>
       <div class="v49-link-qr"><img id="v49ListPublicQr" alt="QR Code da lista pública"></div>
       <div id="v50GuestReviewPanel" class="v50-review">
-        <h4>ANÁLISE DOS CADASTROS COM FOTO</h4>
-        <p>Veja a foto, Instagram e dados do cadastro. Somente após aprovar o nome ele aparece na Portaria; o Gmail é enviado depois da aprovação.</p>
-        <div id="v50GuestReviewList" class="v18-empty">Carregando cadastros de todas as festas...</div>
+        <h4>📸 CONFERIR FOTOS E CONFIRMAR NOMES</h4>
+        <p>Confira a foto e os dados enviados pela pessoa. Aprove ou recuse o cadastro aqui. Depois de aprovado, o nome entra na lista oficial e fica disponível na Portaria.</p>
+        <div id="v50GuestReviewList" class="v18-empty">Carregando cadastros para análise...</div>
       </div>
     </div>
   </section>
