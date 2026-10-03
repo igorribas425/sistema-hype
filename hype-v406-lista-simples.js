@@ -50,11 +50,15 @@
   }
 
   async function searchRowsForEvent(query, selectedEventId){
-    return arr(await rpc('portaria_guest_simple_search_v406',{
+    const args={
       p_device_key:deviceKey(),
       p_event_id:Number(selectedEventId),
       p_query:query
-    })).map(row=>({...row,event_id:Number(selectedEventId)}));
+    };
+    let data;
+    try{ data=await rpc('portaria_guest_simple_search_v67',args); }
+    catch(_){ data=await rpc('portaria_guest_simple_search_v406',args); }
+    return arr(data).map(row=>({...row,event_id:Number(selectedEventId)}));
   }
 
   async function publicListEvent(){
@@ -99,7 +103,15 @@
     const state=cancelado?'CANCELADO':(entrou?'JÁ ENTROU':(eventMismatch?'OUTRO EVENTO':'LISTA LIBERADA'));
     const btn=(!entrou && !cancelado && !eventMismatch) ? `<button class="btn green" onclick="HypeListaSimples.enter(${Number(row.list_id)})">✅ CONFIRMAR ENTRADA</button>` : '';
     const mismatch=eventMismatch ? `<br><b>Selecione ${esc(row.remote_event_name||'o evento correto')}${row.remote_event_date?` • ${esc(fmt(row.remote_event_date))}`:''} acima para liberar.</b>` : '';
-    return `<article class="ticket ${cls}"><div><span class="sector">LISTA SIMPLES</span><h2>${esc(row.name||'Nome')}</h2><div class="meta">Sem ingresso • sem QR Code${row.remote_event_name?`<br>Evento do cadastro: ${esc(row.remote_event_name)}`:''}<br>${row.created_at?`Adicionado ${esc(fmt(row.created_at))}`:''}${row.entered_at?`<br>Entrou ${esc(fmt(row.entered_at))}`:''}${mismatch}</div></div><div class="ticket-actions"><div class="state ${entrou||cancelado||eventMismatch?'danger':'good'}">${esc(state)}</div>${btn}</div></article>`;
+    const fromPortaria=String(row.source||'').toLowerCase().includes('portaria');
+    const sourceLabel=fromPortaria?'CADASTRO PORTARIA':'LISTA SIMPLES';
+    const contact=[
+      row.phone?`📱 ${esc(row.phone)}`:'',
+      row.email?`📧 ${esc(row.email)}`:'',
+      row.cpf?`CPF: ${esc(row.cpf)}`:'',
+      row.payment_method?`Forma registrada: ${esc(row.payment_method)}`:''
+    ].filter(Boolean).join('<br>');
+    return `<article class="ticket ${cls}"><div><span class="sector">${sourceLabel}</span><h2>${esc(row.name||'Nome')}</h2><div class="meta">Sem cobrança na Portaria${contact?`<br>${contact}`:''}${row.remote_event_name?`<br>Evento do cadastro: ${esc(row.remote_event_name)}`:''}<br>${row.created_at?`Adicionado ${esc(fmt(row.created_at))}`:''}${row.entered_at?`<br>Entrou ${esc(fmt(row.entered_at))}`:''}${mismatch}</div></div><div class="ticket-actions"><div class="state ${entrou||cancelado||eventMismatch?'danger':'good'}">${esc(state)}</div>${btn}</div></article>`;
   }
 
   async function enter(id){
