@@ -14,6 +14,7 @@
   let settingsRequested = false;
   let listSettings = [];
   let settingsLoadPromise = null;
+  const autoEmailRetryV98 = new Set();
 
   function fmt(value) {
     if (!value) return '';
@@ -124,6 +125,49 @@
       const emailState = row.email_sent_at ? `Gmail enviado em ${fmt(row.email_sent_at)}` : (row.email_error ? `Falha no Gmail: ${esc(row.email_error)}` : (pending ? 'Gmail aguardando aprovação' : 'Gmail ainda não enviado'));
       return `<div class="v50-review-row ${pending ? 'pending' : ''}"><div><strong>${esc(row.name || 'Sem nome')} <span class="v408-pill ${pending ? 'bad' : 'ok'}">${esc(row.status || '')}</span></strong><small>EVENTO: ${esc(row.event_name || 'HYPE')} • ${esc(row.gender || 'N/I')}</small><small>CPF ${esc(row.cpf || '—')} • WhatsApp ${esc(row.phone || '—')}</small><small>📧 ${esc(row.email || '—')} • Instagram ${esc(row.instagram || '—')}</small><small>${emailState}${row.created_at ? ` • cadastro ${fmt(row.created_at)}` : ''}</small></div><div class="v50-review-actions">${row.photo_path ? `<button class="btn-action" type="button" onclick="HypeV49Registration.openPhoto(${Number(row.list_id)})">📷 FOTO</button>` : ''}${pending ? `<button class="btn-action btn-confirm" type="button" onclick="HypeV49Registration.reviewGuest(${Number(row.list_id)},'aprovar')">✓ APROVAR</button><button class="btn-action btn-del" type="button" onclick="HypeV49Registration.reviewGuest(${Number(row.list_id)},'recusar')">RECUSAR</button>` : ''}${!pending && row.email ? `<button class="btn-action" type="button" onclick="HypeV49Registration.sendApprovedGuestEmail(${Number(row.list_id)},true)">📧 ${row.email_sent_at ? 'REENVIAR' : 'ENVIAR GMAIL'}</button>` : ''}<button class="btn-action btn-del" type="button" onclick="HypeV49Registration.deleteGuest(${Number(row.list_id)})">🗑 EXCLUIR</button></div></div>`;
     }).join('');
+  }
+
+  async function recoverMissingApprovedEmailsV98(reviewRows) {
+    const hype = state();
+    const cfg = window.HYPE_SUPABASE_CONFIG || {};
+    if (!hype?.user || !hype.pass || !cfg.url) return;
+
+    const missing = rows(reviewRows).filter(row => {
+      const id = Number(row.list_id);
+      return id
+        && ['Liberado','Entrou'].includes(String(row.status || ''))
+        && String(row.email || '').trim()
+        && !row.email_sent_at
+        && !autoEmailRetryV98.has(id);
+    }).slice(0, 6);
+
+    if (!missing.length) return;
+
+    let recovered = 0;
+    for (const row of missing) {
+      const id = Number(row.list_id);
+      autoEmailRetryV98.add(id);
+      try {
+        const response = await fetch(`${cfg.url}/functions/v1/send-ticket-email`, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            action:'guest_list_approved',
+            username:hype.user,
+            password:hype.pass,
+            list_id:id,
+            force:false
+          })
+        });
+        const body = await response.json().catch(() => ({}));
+        if (response.ok && body.ok === true) recovered += 1;
+      } catch (_) {}
+    }
+
+    if (recovered > 0) {
+      if (typeof hypeNotify === 'function') hypeNotify(`📧 ${recovered} e-mail(s) pendente(s) da Lista foram recuperados automaticamente.`);
+      setTimeout(() => loadReview().catch(()=>{}), 700);
+    }
   }
 
   async function loadReview() {
@@ -246,7 +290,17 @@
     if (!confirm(`Deseja ${label}?`)) return;
     try {
       const row = rows(await sbRpc('staff_guest_registration_review_v50', {p_username:hype.user,p_password:hype.pass,p_list_id:Number(listId),p_decision:decision}))[0] || {};
-      await loadReview();
+
+      // V98: o e-mail é disparado logo após a aprovação, antes das outras atualizações da tela.
+      if (row.status === 'Liberado' && row.email) {
+        try {
+          await sendApprovedGuestEmail(Number(listId), false);
+        } catch (mailError) {
+          console.warn('[HYPE V98][e-mail Lista]', mailError);
+        }
+      } else {
+        await loadReview();
+      }
 
       // V91: aprovado/recusado reflete imediatamente em "Lista de Clientes & Pagamentos".
       try {
@@ -261,7 +315,6 @@
         if (typeof hypeNotify === 'function') hypeNotify('✅ Esta pessoa já possui ingresso. A lista foi consolidada sem duplicar.');
         return;
       }
-      if (row.status === 'Liberado' && row.email) await sendApprovedGuestEmail(Number(listId), false);
     } catch (error) { alert(error?.message || 'Não foi possível revisar o cadastro.'); }
   }
 
