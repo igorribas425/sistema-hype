@@ -223,6 +223,93 @@
     renderSalesV94();
   }
 
+  function brl(value) {
+    return Number(value || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  }
+
+  function getSalesRows() {
+    let tickets=[], guests=[];
+    try {
+      tickets=[...(HYPE?.tickets || [])];
+      guests=[...(HYPE?.guestLists || [])];
+    } catch (_) {}
+    return {tickets,guests};
+  }
+
+  function fillSalesEventSelect() {
+    const select=$('v94SalesEvent');
+    if (!select) return;
+    let events=[];
+    try {
+      const map=new Map();
+      [...(HYPE?.adminEvents || []),...(HYPE?.events || [])].forEach(e=>{
+        if(e?.id!=null) map.set(Number(e.id),e);
+      });
+      events=[...map.values()].sort((a,b)=>String(b.event_date||'').localeCompare(String(a.event_date||'')));
+    } catch (_) {}
+    const current=select.value || 'all';
+    select.innerHTML='<option value="all">TODOS OS EVENTOS</option>'+events.map(e=>`<option value="${Number(e.id)}">${esc(e.event_date || '')} • ${esc(e.name || 'Evento HYPE')}</option>`).join('');
+    select.value=[...select.options].some(o=>o.value===current)?current:'all';
+  }
+
+  function renderSales() {
+    fillSalesEventSelect();
+    const filter=$('v94SalesEvent')?.value || 'all';
+    const {tickets,guests}=getSalesRows();
+    const scopedTickets=tickets.filter(t=>filter==='all'||Number(t.event_id)===Number(filter));
+    const scopedGuests=guests.filter(g=>filter==='all'||Number(g.event_id)===Number(filter));
+
+    const confirmed=scopedTickets.filter(t=>String(t.payment_status||'')==='Pago');
+    const paid=confirmed.filter(t=>Number(t.price||0)>0);
+    const free=confirmed.filter(t=>Number(t.price||0)<=0);
+    const pending=scopedTickets.filter(t=>String(t.payment_status||'')==='Pendente');
+
+    const revenue=paid.reduce((s,t)=>s+Number(t.price||0),0);
+    const pendingValue=pending.reduce((s,t)=>s+Number(t.price||0),0);
+    const discounts=paid.reduce((s,t)=>s+Number(t.discount_amount||0),0);
+    const avg=paid.length?revenue/paid.length:0;
+
+    const set=(id,val)=>{const el=$(id);if(el)el.textContent=val;};
+    set('v94Revenue',brl(revenue));
+    set('v94PendingValue',brl(pendingValue));
+    set('v94Discounts',brl(discounts));
+    set('v94AverageTicket',brl(avg));
+    set('v94PaidCount',String(paid.length));
+    set('v94FreeCount',String(free.length));
+    set('v94ListCount',String(scopedGuests.length));
+    set('v94PeopleCount',String(paid.length+free.length+scopedGuests.length));
+
+    const byEvent=$('v94SalesByEvent');
+    if(!byEvent)return;
+    const eventIds=new Set([...scopedTickets.map(t=>Number(t.event_id)),...scopedGuests.map(g=>Number(g.event_id))].filter(Boolean));
+    const rows=[...eventIds].map(id=>{
+      const et=scopedTickets.filter(t=>Number(t.event_id)===id);
+      const eg=scopedGuests.filter(g=>Number(g.event_id)===id);
+      const ep=et.filter(t=>String(t.payment_status||'')==='Pago'&&Number(t.price||0)>0);
+      const ef=et.filter(t=>String(t.payment_status||'')==='Pago'&&Number(t.price||0)<=0);
+      const rev=ep.reduce((s,t)=>s+Number(t.price||0),0);
+      return {id,name:eventName(id),paid:ep.length,free:ef.length,list:eg.length,revenue:rev};
+    }).sort((a,b)=>b.revenue-a.revenue);
+
+    byEvent.innerHTML=rows.length?rows.map(r=>`
+      <div class="v94-sales-event-row">
+        <div><strong>${esc(r.name)}</strong><small>${r.paid+r.free+r.list} pessoa(s) contabilizada(s)</small></div>
+        <b>Pago ${r.paid}</b>
+        <b>FREE ${r.free} • Lista ${r.list}</b>
+        <b>${esc(brl(r.revenue))}</b>
+      </div>`).join(''):'<div class="v92-empty">Nenhuma venda registrada neste filtro.</div>';
+  }
+
+  async function refreshSales(forceFetch=true) {
+    try {
+      if(forceFetch && typeof loadStaffTickets==='function' && typeof HYPE!=='undefined' && HYPE.user && HYPE.pass) {
+        await loadStaffTickets('');
+      }
+    } catch (_) {}
+    renderSales();
+    try { if(typeof renderV16Dashboard==='function') renderV16Dashboard(); } catch (_) {}
+  }
+
   async function refreshPeople(forceFetch=false) {
     try {
       if (forceFetch && typeof loadStaffTickets === 'function' && typeof HYPE !== 'undefined' && HYPE.user && HYPE.pass) {
