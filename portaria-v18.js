@@ -436,7 +436,12 @@
     }
     try {
       const data=await rpc('portaria_device_dashboard_v18',{p_device_key:state.deviceKey,p_event_id:state.eventId});
-      renderDashboard(data || {});
+      let access=null;
+      try{
+        const accessRows=normalizeRows(await rpc('portaria_device_access_counts_v68',{p_device_key:state.deviceKey,p_event_id:state.eventId}));
+        access=accessRows[0]||null;
+      }catch(_){}
+      renderDashboard(data || {},access);
       if (showToast) flash(true,'ATUALIZADO','Portaria sincronizada.');
     } catch (err) {
       handleDeviceAuthError(err);
@@ -444,12 +449,12 @@
     }
   }
 
-  function renderDashboard(data) {
+  function renderDashboard(data,access=null) {
     $('enteredCount').textContent=String(data.entered_count||0);
     $('remainingCount').textContent=String(data.remaining_count||0);
-    $('paidCount').textContent=String(data.entered_count||0);
-    $('femaleCount').textContent=String(data.female_entered||0);
-    $('maleCount').textContent=String(data.male_entered||0);
+    $('paidCount').textContent=String(access?.total_access ?? data.total_paid ?? 0);
+    $('femaleCount').textContent=String(access?.female_access ?? data.female_entered ?? 0);
+    $('maleCount').textContent=String(access?.male_access ?? data.male_entered ?? 0);
     const sectors=Array.isArray(data.sector_stats)?data.sector_stats:[];
     $('sectorStats').innerHTML=sectors.length?sectors.map(s=>`<span><b>${esc(s.sector||'Ingresso')}</b> ${Number(s.entered||0)}/${Number(s.paid||0)}</span>`).join(''):'<span>Sem ingressos pagos neste evento.</span>';
     const recent=Array.isArray(data.recent)?data.recent:[];
