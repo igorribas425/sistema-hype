@@ -247,6 +247,16 @@
     try {
       const row = rows(await sbRpc('staff_guest_registration_review_v50', {p_username:hype.user,p_password:hype.pass,p_list_id:Number(listId),p_decision:decision}))[0] || {};
       await loadReview();
+
+      // V91: aprovado/recusado reflete imediatamente em "Lista de Clientes & Pagamentos".
+      try {
+        if (typeof loadStaffTickets === 'function') {
+          await loadStaffTickets(document.getElementById('searchInput')?.value || '');
+        }
+        if (typeof renderClientsTable === 'function') renderClientsTable();
+        if (typeof renderV16Dashboard === 'function') renderV16Dashboard();
+      } catch (_) {}
+
       if (row.status === 'Ingresso existente') {
         if (typeof hypeNotify === 'function') hypeNotify('✅ Esta pessoa já possui ingresso. A lista foi consolidada sem duplicar.');
         return;
