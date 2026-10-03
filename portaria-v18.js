@@ -447,7 +447,7 @@
   function renderDashboard(data) {
     $('enteredCount').textContent=String(data.entered_count||0);
     $('remainingCount').textContent=String(data.remaining_count||0);
-    $('paidCount').textContent=String(data.total_paid||0);
+    $('paidCount').textContent=String(data.entered_count||0);
     $('femaleCount').textContent=String(data.female_entered||0);
     $('maleCount').textContent=String(data.male_entered||0);
     const sectors=Array.isArray(data.sector_stats)?data.sector_stats:[];
