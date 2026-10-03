@@ -337,19 +337,46 @@ html,body{max-width:100%;overflow-x:hidden}
     @media(max-width:720px){.v94-sales-grid{grid-template-columns:1fr 1fr}.v94-sales-card.main{grid-column:span 2}.v94-sales-event-head{grid-template-columns:1fr}.v94-sales-event-row{grid-template-columns:1fr 1fr}.v94-sales-event-row strong{grid-column:1/-1}}
     @media(max-width:720px){.v92-admin-tabs{top:56px;margin-left:-2px;margin-right:-2px;padding:8px}.v92-admin-tab{min-height:40px;padding:0 12px}.v92-person-row{grid-template-columns:1fr}.v92-person-side{text-align:left}}
   </style>
+
+  <style id="hype-v95-hub-style">
+    body{padding-top:18px!important}
+    .v95-brand-header{display:flex!important;justify-content:center!important;align-items:center!important;border:0!important;margin:4px 0 12px!important;padding:10px 0 4px!important}
+    .v95-brand-logo{width:min(260px,68vw);height:auto;display:block}
+    .v95-admin-home{max-width:760px;margin:0 auto 30px}
+    .v95-home-copy{padding:8px 2px 18px}
+    .v95-home-copy strong{display:block;font-size:13px;letter-spacing:1.4px;color:#fff}
+    .v95-home-copy span{display:block;margin-top:5px;color:var(--muted);font-size:11px}
+    .v95-home-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .v95-home-card{appearance:none;text-align:left;min-height:160px;padding:20px;border-radius:22px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(145deg,#0c0c10,#08080b);color:#fff;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.03);transition:transform .16s ease,border-color .16s ease,background .16s ease}
+    .v95-home-card:active{transform:scale(.985)}
+    .v95-home-card:hover{border-color:rgba(255,255,255,.34);background:#101014}
+    .v95-icon{font-size:34px;line-height:1;margin-bottom:18px;filter:saturate(.9)}
+    .v95-home-card b{font-size:20px;line-height:1.15}
+    .v95-home-card small{display:block;color:#888892;font-size:11px;line-height:1.45;margin-top:8px}
+    .v95-section-bar{max-width:1050px;margin:0 auto 14px;display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:rgba(10,10,13,.94);position:sticky;top:8px;z-index:800;backdrop-filter:blur(12px)}
+    .v95-section-bar button{flex:0 0 auto;min-height:38px;border:1px solid rgba(255,255,255,.16);border-radius:10px;background:#151519;color:#fff;padding:0 12px;font-weight:900;font-size:10px;cursor:pointer}
+    .v95-section-bar strong{display:block;font-size:13px}.v95-section-bar small{display:block;color:var(--muted);font-size:9px;margin-top:3px}
+    .v95-hidden{display:none!important}
+    #v94SalesTopStats,#v94SalesFinancePanel,#v16DashboardPanel,#v16ManagementPanel,#v34LivePanel,#v92PortariaPeoplePanel,#v92EvaluationPanel,#eventsAdminPanel,#v18ControlPanel,#v92ListPeoplePanel,#v408SimpleListAdmin,#adminMainGrid,#v95LotsPanel,#v95ClientsPanel{display:none!important}
+    #v94SalesTopStats.v95-show{display:grid!important}
+    #adminMainGrid.v95-show{display:grid!important;grid-template-columns:1fr!important}
+    #v95LotsPanel.v95-show,#v95ClientsPanel.v95-show{display:block!important}
+    #v94SalesFinancePanel.v95-show,#v16DashboardPanel.v95-show,#v16ManagementPanel.v95-show,#v34LivePanel.v95-show,#v92PortariaPeoplePanel.v95-show,#v92EvaluationPanel.v95-show,#eventsAdminPanel.v95-show,#v18ControlPanel.v95-show,#v92ListPeoplePanel.v95-show,#v408SimpleListAdmin.v95-show{display:block!important}
+    @media(max-width:640px){
+      body{padding:10px max(10px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))!important}
+      .v95-brand-logo{width:min(220px,66vw)}
+      .v95-home-grid{gap:10px}
+      .v95-home-card{min-height:142px;padding:16px;border-radius:18px}
+      .v95-icon{font-size:30px;margin-bottom:15px}
+      .v95-home-card b{font-size:17px}
+      .v95-home-card small{font-size:10px}
+      .v95-section-bar{top:6px}
+    }
+  </style>
   <link rel="manifest" href="manifest.webmanifest?v=42">
 </head>
 <body>
 
-<nav class="top-nav" id="adminTopNav" aria-label="Áreas do Admin">
-  <a href="cliente.html">🛒 COMPRAR</a>
-  <button class="v92-top-tab active" type="button" data-v92-tab="geral" aria-selected="true">🏠 GERAL</button>
-  <button class="v92-top-tab" type="button" data-v92-tab="vendas" aria-selected="false">💰 VENDAS</button>
-  <button class="v92-top-tab" type="button" data-v92-tab="promoter" aria-selected="false">🎯 PROMOTER</button>
-  <button class="v92-top-tab" type="button" data-v92-tab="portaria" aria-selected="false">🚪 PORTARIA</button>
-  <button class="v92-top-tab" type="button" data-v92-tab="lista" aria-selected="false">📋 LISTA</button>
-  <button class="v92-top-tab" type="button" data-v92-tab="avaliacao" aria-selected="false">⭐ AVALIAÇÃO</button>
-</nav>
 
 <div id="loginScreen">
   <div class="loginBox">
@@ -362,9 +389,31 @@ html,body{max-width:100%;overflow-x:hidden}
 </div>
 
 <div class="container">
-  <header>
-    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><img src="logo-hype.png?v=20260831-v16-2" class="brand-mini" alt="HYPE Lounge Club"><h1>PAINEL <span>HYPE</span> LOUNGE CLUB // ADMIN</h1></div>
+  <header class="v95-brand-header" id="v95BrandHeader">
+    <img src="logo-hype.png?v=20260831-v16-2" class="v95-brand-logo" alt="HYPE Lounge Club">
   </header>
+
+  <section class="v95-admin-home" id="v95AdminHome">
+    <div class="v95-home-copy">
+      <strong>ADMIN HYPE</strong>
+      <span>Escolha o que você quer gerenciar.</span>
+    </div>
+    <div class="v95-home-grid">
+      <button class="v95-home-card" type="button" data-v95-open="financeiro"><span class="v95-icon">💰</span><b>Financeiro</b><small>Vendas, caixa e valores acumulados</small></button>
+      <button class="v95-home-card" type="button" data-v95-open="promoters"><span class="v95-icon">🎯</span><b>Promoters</b><small>Equipe, links, vendas e cupons</small></button>
+      <button class="v95-home-card" type="button" data-v95-open="lista"><span class="v95-icon">📋</span><b>Lista / FREE</b><small>Fotos, aprovações e nomes liberados</small></button>
+      <button class="v95-home-card" type="button" data-v95-open="portaria"><span class="v95-icon">🚪</span><b>Portaria</b><small>Entradas e movimento da noite</small></button>
+      <button class="v95-home-card" type="button" data-v95-open="clientes"><span class="v95-icon">🎟️</span><b>Clientes</b><small>Ingressos, pagamentos e busca</small></button>
+      <button class="v95-home-card" type="button" data-v95-open="eventos"><span class="v95-icon">🎤</span><b>Eventos</b><small>Festas, lotes, preços e horários</small></button>
+      <button class="v95-home-card" type="button" data-v95-open="avaliacao"><span class="v95-icon">⭐</span><b>Avaliações</b><small>Feedbacks bons e ruins</small></button>
+      <button class="v95-home-card" type="button" data-v95-open="ferramentas"><span class="v95-icon">🎁</span><b>Sorteio & Acessos</b><small>Sorteio e dispositivos da equipe</small></button>
+    </div>
+  </section>
+
+  <div class="v95-section-bar v95-hidden" id="v95SectionBar">
+    <button id="v95BackHome" type="button">← INÍCIO</button>
+    <div><strong id="v95SectionTitle">Área</strong><small id="v95SectionSubtitle"></small></div>
+  </div>
 
   <div class="stats stats-extended" id="v94SalesTopStats">
     <div class="stat-card"><span>Total geral</span><h3 id="totalCount">0</h3></div>
@@ -377,27 +426,6 @@ html,body{max-width:100%;overflow-x:hidden}
     <div class="stat-card red"><span>Cancelados</span><h3 id="canceledCount">0</h3></div>
     <div class="stat-card blue"><span>Pendente em R$</span><h3 id="pendingValue">R$ 0,00</h3></div>
   </div>
-
-  <section class="panel-box" id="v94SalesAccumPanel">
-    <div class="v92-people-head">
-      <div>
-        <h3>💰 VALORES ACUMULADOS</h3>
-        <p>Resumo financeiro das vendas confirmadas, valores pendentes e movimentação do evento.</p>
-      </div>
-      <button class="btn-action" type="button" onclick="HypeAdminTabsV92?.refreshSales?.(true)">↻ ATUALIZAR</button>
-    </div>
-    <div class="v16-dashboard-grid">
-      <div><span>FATURAMENTO PAGO</span><b id="v94SalesPaidValue">R$ 0,00</b></div>
-      <div><span>PENDENTE EM R$</span><b id="v94SalesPendingValue">R$ 0,00</b></div>
-      <div><span>DESCONTOS</span><b id="v94SalesDiscountValue">R$ 0,00</b></div>
-      <div><span>VENDAS PAGAS</span><b id="v94SalesPaidCount">0</b></div>
-      <div><span>FREE</span><b id="v94SalesFreeCount">0</b></div>
-      <div><span>LISTA</span><b id="v94SalesListCount">0</b></div>
-      <div><span>TOTAL DE PESSOAS</span><b id="v94SalesPeopleCount">0</b></div>
-      <div><span>ENTRARAM</span><b id="v94SalesEnteredCount">0</b></div>
-    </div>
-    <div id="v94SalesMethods" class="v16-dashboard-breakdown" style="margin-top:12px"></div>
-  </section>
 
   <section class="panel-box" id="v94SalesFinancePanel">
     <div class="v92-people-head">
@@ -504,15 +532,6 @@ html,body{max-width:100%;overflow-x:hidden}
     </div>
     <div id="v59PostEvaluationList" class="v59-evaluation-list"><div class="v92-empty">Nenhuma avaliação registrada neste evento.</div></div>
   </section>
-
-  <div class="admin-toolbar panel-box" id="adminGeneralToolbar">
-    <div><strong>CONTROLE DO EVENTO</strong><span>estoque, caixa e entradas em tempo real neste navegador</span></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn-action export-btn" onclick="document.getElementById('eventsAdminPanel')?.scrollIntoView({behavior:'smooth'})">🎤 EVENTOS</button>
-      <button class="btn-action export-btn" onclick="refreshAdminOrders(true)">↻ ATUALIZAR PEDIDOS</button>
-      <button class="btn-action export-btn" onclick="exportEntriesCSV()">⬇ Exportar CSV</button>
-    </div>
-  </div>
 
   <section class="panel-box events-admin-panel admin-only" id="eventsAdminPanel">
     <div class="events-admin-head">
@@ -687,7 +706,7 @@ Bruna Santos"></textarea>
   <div id="v50PhotoPreview" class="v50-photo-modal" hidden><div><img id="v50PhotoImage" alt="Foto do cadastro"><button class="btn-action" type="button" onclick="HypeV49Registration.closePhoto()">FECHAR</button></div></div>
 
   <div class="grid-admin" id="adminMainGrid">
-    <div class="panel-box admin-only">
+    <div class="panel-box admin-only" id="v95LotsPanel">
       <h3>Gerenciar Categorias, Preços & Horários</h3>
       <p style="color:var(--muted);font-size:12px;margin-bottom:15px">
         Crie Pista, VIP, Camarote ou qualquer categoria. Cada uma pode ter preço Feminino e Masculino, quantidade, período de venda e lote automático. Para sequência automática, use quantidade maior que zero e a mesma Categoria/Setor nos lotes em sequência.
@@ -728,10 +747,10 @@ Bruna Santos"></textarea>
       <button class="btn" onclick="savePixKey()" style="background:#15151a;border:1px solid var(--line)">Salvar Chave PIX</button>
     </div>
 
-    <div class="panel-box">
+    <div class="panel-box" id="v95ClientsPanel">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
-        <h3 style="margin-bottom:0">Lista de Clientes & Pagamentos</h3>
-        <div style="display:flex;gap:6px"><button class="btn-action" onclick="refreshAdminOrders(true)">↻ ATUALIZAR</button><button id="purgeTicketsBtn" class="btn-action admin-only" onclick="clearAll()" style="color:var(--red);display:none">🗑 LIMPAR INGRESSOS</button></div>
+        <h3 style="margin-bottom:0">Clientes & Ingressos</h3>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn-action" onclick="refreshAdminOrders(true)">↻ ATUALIZAR</button><button class="btn-action" onclick="exportEntriesCSV()">⬇ CSV</button><button id="purgeTicketsBtn" class="btn-action admin-only" onclick="clearAll()" style="color:var(--red);display:none">🗑 LIMPAR INGRESSOS</button></div>
       </div>
       <div class="admin-sync-wrap"><div id="adminOrdersStatus" class="admin-sync-status">Carregando pedidos...</div></div>
 
@@ -981,10 +1000,8 @@ Bruna Santos"></textarea>
   <script src="admin-v34.js?v=20261003-v79"></script>
   <script src="hype-push-config.js?v=421"></script>
   <script src="hype-v38-chat.js?v=421"></script>
-  <script src="hype-v38-reset.js?v=20260905-v38-1"></script>
-
-<script src="hype-v39-admin-simple.js?v=20260905-v39-1"></script>
   <script src="hype-v408-lista-admin.js?v=20261003-v71"></script>
   <script src="admin-v92-tabs.js?v=20261003-v94"></script>
+  <script src="admin-v95-hub.js?v=20261003-v95"></script>
 </body>
 </html>
