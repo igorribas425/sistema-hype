@@ -300,6 +300,28 @@ html,body{max-width:100%;overflow-x:hidden}
   @media(max-width:700px){.v50-settings{grid-template-columns:1fr}.v50-review-row{grid-template-columns:1fr}.v50-review-actions{justify-content:flex-start}}
   #v43CheckupPanel{display:none!important}
 </style>
+  <style id="hype-v92-tabs-style">
+    .v92-admin-tabs{position:sticky;top:58px;z-index:900;display:flex;gap:8px;overflow-x:auto;white-space:nowrap;margin:0 0 18px;padding:10px;background:rgba(5,5,5,.94);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.12);border-radius:14px;scrollbar-width:none}
+    .v92-admin-tabs::-webkit-scrollbar{display:none}
+    .v92-admin-tab{flex:0 0 auto;min-height:42px;border:1px solid rgba(255,255,255,.16);background:#0b0b0e;color:#a8a8b0;border-radius:10px;padding:0 14px;font-size:11px;font-weight:950;letter-spacing:.7px;cursor:pointer}
+    .v92-admin-tab.active{color:#fff;border-color:#f0f0f3;background:#17171b;box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}
+    .v92-tab-hidden{display:none!important}
+    .v92-people-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+    .v92-people-head h3{margin:0}.v92-people-head p{margin:5px 0 0;color:var(--muted);font-size:11px;line-height:1.5}
+    .v92-count{min-width:86px;text-align:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#09090c}
+    .v92-count span{display:block;color:var(--muted);font-size:9px;font-weight:900}.v92-count b{font-size:24px}
+    .v92-event-line{padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:#09090c;color:var(--muted);font-size:11px;margin-bottom:10px}
+    .v92-event-line b{color:#fff}
+    .v92-person-list{display:grid;gap:8px}
+    .v92-person-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.025)}
+    .v92-person-row strong{display:block;font-size:13px}.v92-person-row small{display:block;color:var(--muted);font-size:10px;line-height:1.45;margin-top:4px}
+    .v92-person-side{text-align:right}.v92-pill{display:inline-block;border-radius:999px;padding:5px 8px;font-size:9px;font-weight:950;letter-spacing:.5px}
+    .v92-pill.entrou{color:#8ff0b7;background:rgba(40,209,124,.12);border:1px solid rgba(40,209,124,.35)}
+    .v92-pill.lista{color:#8fd8ff;background:rgba(62,169,255,.12);border:1px solid rgba(62,169,255,.35)}
+    .v92-empty{padding:18px;border:1px dashed var(--line);border-radius:11px;color:var(--muted);font-size:12px;text-align:center}
+    .v92-eval-actions{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}.v92-eval-actions button{width:auto}
+    @media(max-width:720px){.v92-admin-tabs{top:56px;margin-left:-2px;margin-right:-2px;padding:8px}.v92-admin-tab{min-height:40px;padding:0 12px}.v92-person-row{grid-template-columns:1fr}.v92-person-side{text-align:left}}
+  </style>
   <link rel="manifest" href="manifest.webmanifest?v=42">
 </head>
 <body>
@@ -336,6 +358,14 @@ html,body{max-width:100%;overflow-x:hidden}
     <div class="stat-card red"><span>Cancelados</span><h3 id="canceledCount">0</h3></div>
     <div class="stat-card blue"><span>Pendente em R$</span><h3 id="pendingValue">R$ 0,00</h3></div>
   </div>
+
+  <nav class="v92-admin-tabs" id="v92AdminTabs" role="tablist" aria-label="Áreas do Admin">
+    <button class="v92-admin-tab active" type="button" data-v92-tab="geral" aria-selected="true">🏠 GERAL</button>
+    <button class="v92-admin-tab" type="button" data-v92-tab="promoter" aria-selected="false">🎯 PROMOTER</button>
+    <button class="v92-admin-tab" type="button" data-v92-tab="portaria" aria-selected="false">🚪 PORTARIA</button>
+    <button class="v92-admin-tab" type="button" data-v92-tab="lista" aria-selected="false">📋 LISTA</button>
+    <button class="v92-admin-tab" type="button" data-v92-tab="avaliacao" aria-selected="false">⭐ AVALIAÇÃO</button>
+  </nav>
 
   <section class="panel-box v16-dashboard" id="v16DashboardPanel">
     <div class="v16-dashboard-head"><div><h3>📊 DASHBOARD DE VENDAS</h3><p>Resumo por evento, gênero, descontos, entradas e promoters.</p></div><select id="v16DashboardEvent" onchange="renderV16Dashboard()"><option value="all">TODOS OS EVENTOS</option></select></div>
@@ -389,7 +419,36 @@ html,body{max-width:100%;overflow-x:hidden}
     </div>
 </section>
 
-  <div class="admin-toolbar panel-box">
+  <section class="panel-box" id="v92PortariaPeoplePanel">
+    <div class="v92-people-head">
+      <div><h3>🚪 QUEM ENTROU NA FESTA</h3><p>Mostra ingressos e nomes da Lista que já tiveram entrada confirmada na Portaria.</p></div>
+      <div class="v92-count"><span>ENTRARAM</span><b id="v92PortariaPeopleCount">0</b></div>
+    </div>
+    <div class="v92-event-line">Evento: <b id="v92PortariaEventLabel">Carregando...</b></div>
+    <div id="v92PortariaPeopleList" class="v92-person-list"><div class="v92-empty">Carregando entradas...</div></div>
+  </section>
+
+  <section class="panel-box" id="v92EvaluationPanel">
+    <div class="v92-people-head">
+      <div><h3>⭐ AVALIAÇÃO DA NOITE</h3><p>Feedbacks deixados pelos clientes na saída, separados do painel da Portaria.</p></div>
+      <button class="btn-action" type="button" onclick="HypeV34?.refreshLive?.()">↻ ATUALIZAR</button>
+    </div>
+    <div class="v59-postevent-stats">
+      <div><span>Comentários bons</span><b id="v59PostGoodCount">0</b></div>
+      <div><span>Comentários ruins</span><b id="v59PostBadCount">0</b></div>
+      <div><span>Pico dentro</span><b id="v59PostPeakInside">0</b></div>
+      <div><span>Pico entrada / 15 min</span><b id="v59PostPeakEntry">0</b></div>
+      <div><span>Pico saída / 15 min</span><b id="v59PostPeakExit">0</b></div>
+    </div>
+    <div class="v92-eval-actions v59-evaluation-tabs">
+      <button id="v59PostFilterAll" class="active" type="button" onclick="HypeV34.setEvaluationFilter('ALL')">TODAS</button>
+      <button id="v59PostFilterGood" type="button" onclick="HypeV34.setEvaluationFilter('BOA')">COM BOM</button>
+      <button id="v59PostFilterBad" type="button" onclick="HypeV34.setEvaluationFilter('RUIM')">COM RUIM</button>
+    </div>
+    <div id="v59PostEvaluationList" class="v59-evaluation-list"><div class="v92-empty">Nenhuma avaliação registrada neste evento.</div></div>
+  </section>
+
+  <div class="admin-toolbar panel-box" id="adminGeneralToolbar">
     <div><strong>CONTROLE DO EVENTO</strong><span>estoque, caixa e entradas em tempo real neste navegador</span></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn-action export-btn" onclick="document.getElementById('eventsAdminPanel')?.scrollIntoView({behavior:'smooth'})">🎤 EVENTOS</button>
@@ -506,6 +565,15 @@ html,body{max-width:100%;overflow-x:hidden}
     </div>
   </section>
 
+  <section class="panel-box admin-only" id="v92ListPeoplePanel">
+    <div class="v92-people-head">
+      <div><h3>📋 TODOS OS NOMES NA LISTA</h3><p>Aqui ficam os nomes já aprovados/liberados para o evento. Quem já entrou aparece marcado como ENTROU.</p></div>
+      <div class="v92-count"><span>NA LISTA</span><b id="v92ListPeopleCount">0</b></div>
+    </div>
+    <div class="v92-event-line">Evento: <b id="v92ListEventLabel">Carregando...</b></div>
+    <div id="v92ListPeopleList" class="v92-person-list"><div class="v92-empty">Carregando lista...</div></div>
+  </section>
+
   <section class="panel-box admin-only" id="v408SimpleListAdmin">
     <div class="v16-management-head">
       <div>
@@ -561,7 +629,7 @@ Bruna Santos"></textarea>
 
   <div id="v50PhotoPreview" class="v50-photo-modal" hidden><div><img id="v50PhotoImage" alt="Foto do cadastro"><button class="btn-action" type="button" onclick="HypeV49Registration.closePhoto()">FECHAR</button></div></div>
 
-  <div class="grid-admin">
+  <div class="grid-admin" id="adminMainGrid">
     <div class="panel-box admin-only">
       <h3>Gerenciar Categorias, Preços & Horários</h3>
       <p style="color:var(--muted);font-size:12px;margin-bottom:15px">
@@ -860,5 +928,6 @@ Bruna Santos"></textarea>
 
 <script src="hype-v39-admin-simple.js?v=20260905-v39-1"></script>
   <script src="hype-v408-lista-admin.js?v=20261003-v71"></script>
+  <script src="admin-v92-tabs.js?v=20261003-v92"></script>
 </body>
 </html>
