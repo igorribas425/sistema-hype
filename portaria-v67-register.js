@@ -115,7 +115,6 @@
         p_event_id: eventId,
         p_name: name,
         p_phone: phone,
-        p_email: null,
         p_cpf: cpf,
         p_gender: gender,
         p_payment_method: payment
