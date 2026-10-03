@@ -60,7 +60,7 @@
   }
 
   function resetForm() {
-    ['v67RegName','v67RegPhone','v67RegEmail','v67RegCpf'].forEach(id => {
+    ['v67RegName','v67RegPhone','v67RegCpf'].forEach(id => {
       const el = $(id); if (el) el.value = '';
     });
     if ($('v67RegGender')) $('v67RegGender').value = 'Feminino';
@@ -83,7 +83,6 @@
       </div>
       <div class="v19-order-info">
         <p><b>WhatsApp:</b> ${esc(item.phone || '')}</p>
-        <p><b>E-mail:</b> ${esc(item.email || '')}</p>
         <p><b>CPF:</b> ${esc(item.cpf || '')}</p>
         <p><b>Gênero:</b> ${esc(item.gender || '')}</p>
         <p><b>Forma registrada:</b> ${esc(item.payment_method || '')}</p>
@@ -98,7 +97,6 @@
     const eventId = currentEventId();
     const name = String($('v67RegName')?.value || '').trim().replace(/\s+/g,' ');
     const phone = String($('v67RegPhone')?.value || '').replace(/\D/g,'');
-    const email = String($('v67RegEmail')?.value || '').trim().toLowerCase();
     const cpf = cpfDigits($('v67RegCpf')?.value || '');
     const gender = $('v67RegGender')?.value || 'Feminino';
     const payment = $('v67RegPayment')?.value || 'PIX';
@@ -106,7 +104,6 @@
     if (!eventId) return setStatus('Selecione o evento no topo da Portaria.', false);
     if (name.length < 2) return setStatus('Informe o nome completo.', false);
     if (phone.length < 10) return setStatus('Informe um WhatsApp válido.', false);
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setStatus('Informe um e-mail válido.', false);
     if (!validCpf(cpf)) return setStatus('Informe um CPF válido.', false);
 
     const btn = $('v67RegSubmit');
@@ -118,7 +115,7 @@
         p_event_id: eventId,
         p_name: name,
         p_phone: phone,
-        p_email: email,
+        p_email: null,
         p_cpf: cpf,
         p_gender: gender,
         p_payment_method: payment
