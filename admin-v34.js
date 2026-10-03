@@ -234,11 +234,20 @@
     if (!adminReady() || !V34.eventId || document.hidden || V34.busy) return;
     V34.busy = true;
     try {
-      const raw = await sbRpc('staff_live_checkin_v34', {
-        p_username:HYPE.user,
-        p_password:HYPE.pass,
-        p_event_id:Number(V34.eventId)
-      });
+      let raw;
+      try {
+        raw = await sbRpc('staff_live_checkin_v77', {
+          p_username:HYPE.user,
+          p_password:HYPE.pass,
+          p_event_id:Number(V34.eventId)
+        });
+      } catch (_) {
+        raw = await sbRpc('staff_live_checkin_v34', {
+          p_username:HYPE.user,
+          p_password:HYPE.pass,
+          p_event_id:Number(V34.eventId)
+        });
+      }
       const data = Array.isArray(raw) ? raw[0] : raw;
       if (data) renderLive(data);
     } catch (err) {
