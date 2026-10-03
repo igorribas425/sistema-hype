@@ -982,6 +982,27 @@ function logoutStaff() {
 let clientTicker = null;
 let clientCatalogLastRefresh = 0;
 
+function hypeClientCatalogSignatureV91() {
+  const eventSig = (HYPE.events || []).map(e => [
+    e.id,e.name,e.event_date,e.description,e.image_url,e.theme_color,e.active
+  ]);
+  const lotSig = (HYPE.lots || []).map(l => [
+    l.id,l.name,l.sector,l.price,l.price_female,l.price_male,l.active,
+    l.starts_at,l.ends_at,l.female_free_until,l.male_free_until,l.auto_locked
+  ]);
+  return JSON.stringify([HYPE.selectedEventId,eventSig,lotSig]);
+}
+
+function hypeAdminPeopleSignatureV91() {
+  const tickets = (HYPE.tickets || []).map(t => [
+    t.id,t.payment_status,t.entry_status,t.price,t.paid_at,t.entry_at,t.email_sent_at
+  ]);
+  const guests = (HYPE.guestLists || []).map(g => [
+    g.list_id,g.guest_status,g.entered_at,g.phone,g.cpf,g.email,g.source
+  ]);
+  return JSON.stringify([tickets,guests]);
+}
+
 function clientIsEditingForm() {
   const active = document.activeElement;
   if (!active || !active.closest) return false;
@@ -998,13 +1019,19 @@ async function refreshClientCatalogSafely() {
   const previousEventId = Number(HYPE.selectedEventId || 0);
   const previousLot = (HYPE.lots || []).find(l => String(l.id) === String(selectedLot));
   const currentScroll = window.scrollY;
+  const beforeSignature = hypeClientCatalogSignatureV91();
 
   await loadPublicState();
-  renderEventCarousel();
-  renderClientTickets(selectedLot);
-  hypeApplyPromoterLinkV16();
+  const afterSignature = hypeClientCatalogSignatureV91();
+  const catalogChanged = beforeSignature !== afterSignature;
+
+  if (catalogChanged) {
+    renderEventCarousel();
+    renderClientTickets(selectedLot);
+    hypeApplyPromoterLinkV16();
+    hypeV14Render();
+  }
   updateClientTicketState();
-  hypeV14Render();
 
   const newLotId = document.getElementById("ticketType")?.value || "";
   const newLot = (HYPE.lots || []).find(l => String(l.id) === String(newLotId));
@@ -2036,11 +2063,16 @@ async function initAdmin(fromLogin = false) {
     clearInterval(HYPE.refreshTimer);
     HYPE.refreshTimer = setInterval(async () => {
       try {
+        if (document.hidden || hypeAutoSyncEditing()) return;
+        const before = hypeAdminPeopleSignatureV91();
         await loadStaffTickets(document.getElementById("searchInput")?.value || "");
-        renderClientsTable();
-        renderV16Dashboard();
+        const after = hypeAdminPeopleSignatureV91();
+        if (before !== after) {
+          renderClientsTable();
+          renderV16Dashboard();
+        }
       } catch (_) {}
-    }, 5000);
+    }, 6000);
   } catch (err) {
     const status = document.getElementById("adminOrdersStatus");
     if (status) {
@@ -3421,7 +3453,7 @@ function hypeAutoSyncEditing() {
 
 async function hypeAutoSyncNow(force = false) {
   if (document.hidden) return;
-  if (!force && Date.now() - hypeAutoSyncLastAt < 2500) return;
+  if (!force && Date.now() - hypeAutoSyncLastAt < 10000) return;
   if (hypeAutoSyncEditing()) return;
   hypeAutoSyncLastAt = Date.now();
 
@@ -3435,17 +3467,28 @@ async function hypeAutoSyncNow(force = false) {
 
     // Admin: atualiza pedidos e valores sem exigir F5 quando a página volta ao foco.
     if (document.getElementById('adminPass') && HYPE.user && HYPE.pass) {
+      const peopleBefore = hypeAdminPeopleSignatureV91();
+      const catalogBefore = hypeClientCatalogSignatureV91();
+
       await loadPublicState();
       await loadStaffTickets(document.getElementById('searchInput')?.value || '');
       if (['admin','gerente'].includes(HYPE.role)) {
         await loadAdminEvents();
         if (HYPE.selectedEventId) await loadAdminLots(HYPE.selectedEventId).catch(()=>{});
       }
-      renderAdminEvents();
-      renderConfigTickets();
-      renderClientsTable();
-      await loadV16AdminData().catch(()=>{});
-      renderV16Dashboard();
+
+      const peopleChanged = peopleBefore !== hypeAdminPeopleSignatureV91();
+      const catalogChanged = catalogBefore !== hypeClientCatalogSignatureV91();
+
+      if (catalogChanged) {
+        renderAdminEvents();
+        renderConfigTickets();
+      }
+      if (peopleChanged) {
+        renderClientsTable();
+        await loadV16AdminData().catch(()=>{});
+        renderV16Dashboard();
+      }
       return;
     }
 
@@ -3462,10 +3505,10 @@ async function hypeAutoSyncNow(force = false) {
 
 // Resolve também o cache de navegação do celular (voltar/avançar), que pode
 // restaurar uma tela antiga sem disparar DOMContentLoaded novamente.
-window.addEventListener('pageshow', () => setTimeout(() => hypeAutoSyncNow(true), 120));
+window.addEventListener('pageshow', () => setTimeout(() => hypeAutoSyncNow(false), 180));
 window.addEventListener('focus', () => hypeAutoSyncNow(false));
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) hypeAutoSyncNow(true);
+  if (!document.hidden) hypeAutoSyncNow(false);
 });
 
 /* ========================= BOOT ========================= */
