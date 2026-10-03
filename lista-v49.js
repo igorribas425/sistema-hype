@@ -236,7 +236,14 @@
       const response = await fetch(edgeUrl, {method: 'POST', body: payload});
       const body = await response.json().catch(() => ({}));
       if (!response.ok || body.ok !== true) throw new Error(body.error || body.message || 'Não foi possível concluir o cadastro.');
-      status('Cadastro enviado! Agora está em análise. Se não quiser esperar, use o botão abaixo para garantir seu ingresso agora.', 'ok');
+      status('Cadastro enviado! Agora está em análise.', 'ok');
+      const cta = $('guestTicketCta');
+      const panel = $('guestForm')?.closest('.panel');
+      if (panel) panel.style.display = 'none';
+      if (cta) {
+        cta.style.display = 'block';
+        cta.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
       form.reset();
       resetCamera();
       renderSelectedEvent();
