@@ -44,7 +44,7 @@
       return;
     }
     if (hidden) hidden.value = String(row.event_id);
-    if (event) event.innerHTML = `<strong>Festa selecionada</strong>${esc(eventLabel(row))}${row.venue ? ` • ${esc(row.venue)}` : ''}`;
+    if (event) event.innerHTML = `<strong>${esc(row.event_name || 'HYPE • SÁBADO')}</strong>${row.event_date ? `${esc(row.event_date)}` : ''}${row.venue ? ` • ${esc(row.venue)}` : ''}${row.description ? `<br><br>${esc(row.description)}` : ''}`;
     document.querySelectorAll('.event-choice').forEach(button => {
       button.classList.toggle('active', Number(button.dataset.eventId) === Number(selectedEventId));
       button.setAttribute('aria-checked', Number(button.dataset.eventId) === Number(selectedEventId) ? 'true' : 'false');
@@ -73,23 +73,25 @@
     document.querySelector(`.event-choice[data-event-id="${selectedEventId}"]`)?.scrollIntoView({behavior: 'smooth', inline: 'center', block: 'nearest'});
   }
   function renderEvents() {
-    const list = $('guestEvents');
     const submit = $('guestSubmit');
-    if (!list) return;
-    if (!events.length) {
-      list.innerHTML = '';
-      if (submit) submit.disabled = true;
-      renderSelectedEvent();
-      return;
-    }
-    if (!selectedEventId || !events.some(item => Number(item.event_id) === Number(selectedEventId))) selectedEventId = Number(events[0].event_id);
-    list.innerHTML = events.map(row => `<button class="event-choice" type="button" role="radio" aria-checked="false" data-event-id="${Number(row.event_id)}"><span class="event-choice-art">${row.cover_image ? `<img src="${esc(row.cover_image)}" alt="" loading="lazy">` : 'HYPE'}</span><span class="event-choice-copy"><strong>${esc(row.event_name || 'Evento HYPE')}</strong><span>${row.event_date ? esc(row.event_date) : 'Data a confirmar'}${row.venue ? ` • ${esc(row.venue)}` : ''}</span><small>ABERTO PARA CADASTRO</small></span></button>`).join('');
-    list.querySelectorAll('.event-choice').forEach(button => button.addEventListener('click', () => {
-      selectedEventId = Number(button.dataset.eventId || 0);
-      renderSelectedEvent();
-    }));
-    if (submit) submit.disabled = false;
+    // V82: a página pública da lista trabalha somente com a festa de sábado atual.
+    const saturday = events
+      .filter(row => Number(row.event_id) === 17 || String(row.event_date || '') === '2026-10-03')
+      .sort((a,b) => Number(b.event_id || 0) - Number(a.event_id || 0))[0] || null;
+    events = saturday ? [saturday] : [];
+    selectedEventId = saturday ? Number(saturday.event_id) : 0;
+    if (submit) submit.disabled = !saturday;
     renderSelectedEvent();
+    const cover = $('guestEventCover');
+    if (cover) {
+      if (saturday?.cover_image) {
+        cover.src = saturday.cover_image;
+        cover.hidden = false;
+      } else {
+        cover.hidden = true;
+        cover.removeAttribute('src');
+      }
+    }
   }
   async function loadContext() {
     if (!client) return status('Não foi possível conectar ao cadastro HYPE.', 'error');
@@ -234,7 +236,7 @@
       const response = await fetch(edgeUrl, {method: 'POST', body: payload});
       const body = await response.json().catch(() => ({}));
       if (!response.ok || body.ok !== true) throw new Error(body.error || body.message || 'Não foi possível concluir o cadastro.');
-      status('Cadastro enviado e está em análise. O Gmail só será enviado se o Admin aprovar.', 'ok');
+      status('Cadastro enviado! Agora está em análise. Se não quiser esperar, use o botão abaixo para garantir seu ingresso agora.', 'ok');
       form.reset();
       resetCamera();
       renderSelectedEvent();
@@ -247,8 +249,7 @@
   }
   $('guestCpf')?.addEventListener('input', event => formatCpf(event.currentTarget));
   $('guestPhone')?.addEventListener('input', event => formatPhone(event.currentTarget));
-  $('guestEventPrev')?.addEventListener('click', () => moveEvent(-1));
-  $('guestEventNext')?.addEventListener('click', () => moveEvent(1));
+  // V82: sem carrossel e sem seleção de festa.
   setupCamera();
   $('guestForm')?.addEventListener('submit', submit);
   loadContext();
