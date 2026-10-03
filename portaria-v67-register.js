@@ -2,7 +2,7 @@
    - Não vende ingresso
    - Não gera PIX
    - Não usa Stone
-   - Salva somente nome + CPF
+   - Salva nome + CPF + número / WhatsApp
    - Registra a entrada imediatamente e envia o registro ao Admin
 */
 (() => {
@@ -60,7 +60,7 @@
   }
 
   function resetForm() {
-    ['v67RegName','v67RegCpf'].forEach(id => {
+    ['v67RegName','v67RegCpf','v67RegPhone'].forEach(id => {
       const el = $(id); if (el) el.value = '';
     });
     setTimeout(() => $('v67RegName')?.focus(), 80);
@@ -72,20 +72,23 @@
     const eventId = currentEventId();
     const name = String($('v67RegName')?.value || '').trim().replace(/\s+/g,' ');
     const cpf = cpfDigits($('v67RegCpf')?.value || '');
+    const phone = String($('v67RegPhone')?.value || '').replace(/\D/g,'').slice(0,13);
 
     if (!eventId) return setStatus('Selecione o evento no topo da Portaria.', false);
     if (name.length < 2) return setStatus('Informe o nome completo.', false);
     if (!validCpf(cpf)) return setStatus('Informe um CPF válido.', false);
+    if (phone.length < 10) return setStatus('Informe o número / WhatsApp com DDD.', false);
 
     const btn = $('v67RegSubmit');
     if (btn) { btn.disabled = true; btn.textContent = 'SALVANDO CADASTRO...'; }
 
     try {
-      const item = rows(await rpc('portaria_device_register_entry_v78', {
+      const item = rows(await rpc('portaria_device_register_entry_v84', {
         p_device_key: deviceKey(),
         p_event_id: eventId,
         p_name: name,
-        p_cpf: cpf
+        p_cpf: cpf,
+        p_phone: phone
       }))[0];
 
       if (!item?.list_id) throw new Error('O cadastro não foi salvo.');
