@@ -2223,7 +2223,10 @@ async function renderClientsTable() {
   const tbody = document.getElementById("adminTableBody");
   if (!tbody) return;
   const term = (document.getElementById("searchInput")?.value || "").toLowerCase();
-  const records = [...(HYPE.tickets || []), ...(HYPE.guestLists || [])];
+  const records = [...(HYPE.tickets || []), ...(HYPE.guestLists || [])].sort((a,b)=>{
+    const time = item => new Date(item.entered_at || item.paid_at || item.purchased_at || item.created_at || 0).getTime() || 0;
+    return time(b) - time(a);
+  });
   const list = records.filter(item => String(item.customer_name || '').toLowerCase().includes(term) || String(item.lot_name || '').toLowerCase().includes(term) || String(item.ticket_code || '').toLowerCase().includes(term) || String(item.phone || '').toLowerCase().includes(term) || String(item.email || '').toLowerCase().includes(term) || String(item.event_name || '').toLowerCase().includes(term) || String(item.promoter_code || '').toLowerCase().includes(term) || String(item.coupon_code || '').toLowerCase().includes(term) || String(item.cpf || '').toLowerCase().includes(term));
   if (!list.length) tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">Nenhum cliente encontrado.</td></tr>`;
   else tbody.innerHTML = list.map(item => {
@@ -2235,8 +2238,10 @@ async function renderClientsTable() {
       const deleteGuest = HYPE.role === "admin" && item.list_id && window.HypeV49Registration?.deleteGuest
         ? `<button class="btn-action btn-del" onclick="HypeV49Registration.deleteGuest(${Number(item.list_id)})">🗑 EXCLUIR</button>`
         : "";
-      const fromPortaria = String(item.source || "").toLowerCase().includes("portaria");
-      const sourceLabel = fromPortaria ? "CADASTRO PORTARIA" : "LISTA HYPE";
+      const source = String(item.source || "").toLowerCase();
+      const fromPortaria = source.includes("portaria");
+      const fromAdminList = source === "admin";
+      const sourceLabel = fromPortaria ? "CADASTRO PORTARIA" : fromAdminList ? "LISTA MANUAL" : "LISTA HYPE";
       const paymentInfo = item.payment_method ? `<br>Forma registrada: ${hypeEscape(item.payment_method)}` : "";
       return `<tr><td><strong>${hypeEscape(item.customer_name || "SEM NOME")}</strong><br><span class="badge gender">${hypeEscape(item.gender || "N/I")}</span><small style="display:block;color:var(--muted);line-height:1.55">👤 ${sourceLabel}${item.cpf ? `<br>CPF: ${hypeEscape(item.cpf)}` : ""}${item.phone ? `<br>📱 ${hypeEscape(item.phone)}` : ""}${item.email ? `<br>📧 ${hypeEscape(item.email)}` : ""}${paymentInfo}</small></td><td>${fromPortaria ? "CADASTRO" : "LISTA"}<br><small style="color:var(--muted)">Sem cobrança no cadastro</small><small style="display:block;color:var(--muted)">🎤 ${hypeEscape(item.event_name || "Evento HYPE")}</small>${savedAt ? `<small style="display:block;color:var(--muted)">${hypeEscape(savedAt)}</small>` : ""}</td><td><span class="badge lista">${fromPortaria ? "CADASTRO" : "LISTA"}</span><br><small style="color:${guestStateColor}">${guestState}</small></td><td><div class="actions-cell"><small style="color:var(--muted)">${entered ? "Entrada já registrada" : "Consultar e confirmar na Portaria"}</small>${deleteGuest}</div></td></tr>`;
     }
