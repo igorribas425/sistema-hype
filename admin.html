@@ -322,6 +322,19 @@ html,body{max-width:100%;overflow-x:hidden}
     .v92-pill.lista{color:#8fd8ff;background:rgba(62,169,255,.12);border:1px solid rgba(62,169,255,.35)}
     .v92-empty{padding:18px;border:1px dashed var(--line);border-radius:11px;color:var(--muted);font-size:12px;text-align:center}
     .v92-eval-actions{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}.v92-eval-actions button{width:auto}
+    .v94-sales-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+    .v94-sales-card{padding:16px;border:1px solid var(--line);border-radius:14px;background:#09090c;min-height:112px;display:flex;flex-direction:column;justify-content:center}
+    .v94-sales-card.main{grid-column:span 2}
+    .v94-sales-card span{font-size:9px;color:var(--muted);font-weight:950;letter-spacing:.6px}
+    .v94-sales-card b{font-size:25px;margin:7px 0;color:#fff}
+    .v94-sales-card small{font-size:9px;color:var(--muted)}
+    .v94-sales-event-head{display:grid;grid-template-columns:160px minmax(0,1fr);align-items:center;gap:10px;margin:16px 0 10px}
+    .v94-sales-event-head label{font-size:9px;color:var(--muted);font-weight:950}
+    .v94-sales-by-event{display:grid;gap:8px}
+    .v94-sales-event-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.025)}
+    .v94-sales-event-row strong{font-size:12px}.v94-sales-event-row small{display:block;color:var(--muted);font-size:9px;margin-top:3px}
+    .v94-sales-event-row b{font-size:13px;white-space:nowrap}
+    @media(max-width:720px){.v94-sales-grid{grid-template-columns:1fr 1fr}.v94-sales-card.main{grid-column:span 2}.v94-sales-event-head{grid-template-columns:1fr}.v94-sales-event-row{grid-template-columns:1fr 1fr}.v94-sales-event-row strong{grid-column:1/-1}}
     @media(max-width:720px){.v92-admin-tabs{top:56px;margin-left:-2px;margin-right:-2px;padding:8px}.v92-admin-tab{min-height:40px;padding:0 12px}.v92-person-row{grid-template-columns:1fr}.v92-person-side{text-align:left}}
   </style>
   <link rel="manifest" href="manifest.webmanifest?v=42">
@@ -353,7 +366,7 @@ html,body{max-width:100%;overflow-x:hidden}
     <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><img src="logo-hype.png?v=20260831-v16-2" class="brand-mini" alt="HYPE Lounge Club"><h1>PAINEL <span>HYPE</span> LOUNGE CLUB // ADMIN</h1></div>
   </header>
 
-  <div class="stats stats-extended">
+  <div class="stats stats-extended" id="v94SalesTopStats">
     <div class="stat-card"><span>Total geral</span><h3 id="totalCount">0</h3></div>
     <div class="stat-card green"><span>PAGO</span><h3 id="paidCount">0</h3></div>
     <div class="stat-card blue"><span>FREE</span><h3 id="freeCount">0</h3></div>
@@ -384,6 +397,31 @@ html,body{max-width:100%;overflow-x:hidden}
       <div><span>ENTRARAM</span><b id="v94SalesEnteredCount">0</b></div>
     </div>
     <div id="v94SalesMethods" class="v16-dashboard-breakdown" style="margin-top:12px"></div>
+  </section>
+
+  <section class="panel-box" id="v94SalesFinancePanel">
+    <div class="v92-people-head">
+      <div>
+        <h3>💰 VENDAS & VALORES ACUMULADOS</h3>
+        <p>Resumo financeiro dos ingressos confirmados. O seletor abaixo permite conferir todos os eventos ou um evento específico.</p>
+      </div>
+      <button class="btn-action" type="button" onclick="HypeAdminTabsV92?.refreshSales?.()">↻ ATUALIZAR</button>
+    </div>
+    <div class="v94-sales-grid">
+      <div class="v94-sales-card main"><span>FATURAMENTO RECEBIDO</span><b id="v94Revenue">R$ 0,00</b><small>Somente ingressos pagos</small></div>
+      <div class="v94-sales-card"><span>VALOR PENDENTE</span><b id="v94PendingValue">R$ 0,00</b><small>Pedidos ainda não pagos</small></div>
+      <div class="v94-sales-card"><span>DESCONTOS CONCEDIDOS</span><b id="v94Discounts">R$ 0,00</b><small>Cupons aplicados</small></div>
+      <div class="v94-sales-card"><span>TICKET MÉDIO</span><b id="v94AverageTicket">R$ 0,00</b><small>Média dos ingressos pagos</small></div>
+      <div class="v94-sales-card"><span>INGRESSOS PAGOS</span><b id="v94PaidCount">0</b><small>Valor maior que zero</small></div>
+      <div class="v94-sales-card"><span>FREE</span><b id="v94FreeCount">0</b><small>Ingressos liberados sem cobrança</small></div>
+      <div class="v94-sales-card"><span>LISTA</span><b id="v94ListCount">0</b><small>Nomes aprovados na lista</small></div>
+      <div class="v94-sales-card"><span>TOTAL DE PESSOAS</span><b id="v94PeopleCount">0</b><small>Pago + FREE + Lista</small></div>
+    </div>
+    <div class="v94-sales-event-head">
+      <label for="v94SalesEvent">FILTRAR VALORES</label>
+      <select id="v94SalesEvent" onchange="HypeAdminTabsV92?.renderSales?.()"><option value="all">TODOS OS EVENTOS</option></select>
+    </div>
+    <div id="v94SalesByEvent" class="v94-sales-by-event"></div>
   </section>
 
   <section class="panel-box v16-dashboard" id="v16DashboardPanel">
