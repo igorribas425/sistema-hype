@@ -331,6 +331,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <nav class="top-nav" id="adminTopNav" aria-label="Áreas do Admin">
   <a href="cliente.html">🛒 COMPRAR</a>
   <button class="v92-top-tab active" type="button" data-v92-tab="geral" aria-selected="true">🏠 GERAL</button>
+  <button class="v92-top-tab" type="button" data-v92-tab="vendas" aria-selected="false">💰 VENDAS</button>
   <button class="v92-top-tab" type="button" data-v92-tab="promoter" aria-selected="false">🎯 PROMOTER</button>
   <button class="v92-top-tab" type="button" data-v92-tab="portaria" aria-selected="false">🚪 PORTARIA</button>
   <button class="v92-top-tab" type="button" data-v92-tab="lista" aria-selected="false">📋 LISTA</button>
@@ -363,6 +364,27 @@ html,body{max-width:100%;overflow-x:hidden}
     <div class="stat-card red"><span>Cancelados</span><h3 id="canceledCount">0</h3></div>
     <div class="stat-card blue"><span>Pendente em R$</span><h3 id="pendingValue">R$ 0,00</h3></div>
   </div>
+
+  <section class="panel-box" id="v94SalesAccumPanel">
+    <div class="v92-people-head">
+      <div>
+        <h3>💰 VALORES ACUMULADOS</h3>
+        <p>Resumo financeiro das vendas confirmadas, valores pendentes e movimentação do evento.</p>
+      </div>
+      <button class="btn-action" type="button" onclick="HypeAdminTabsV92?.refreshSales?.(true)">↻ ATUALIZAR</button>
+    </div>
+    <div class="v16-dashboard-grid">
+      <div><span>FATURAMENTO PAGO</span><b id="v94SalesPaidValue">R$ 0,00</b></div>
+      <div><span>PENDENTE EM R$</span><b id="v94SalesPendingValue">R$ 0,00</b></div>
+      <div><span>DESCONTOS</span><b id="v94SalesDiscountValue">R$ 0,00</b></div>
+      <div><span>VENDAS PAGAS</span><b id="v94SalesPaidCount">0</b></div>
+      <div><span>FREE</span><b id="v94SalesFreeCount">0</b></div>
+      <div><span>LISTA</span><b id="v94SalesListCount">0</b></div>
+      <div><span>TOTAL DE PESSOAS</span><b id="v94SalesPeopleCount">0</b></div>
+      <div><span>ENTRARAM</span><b id="v94SalesEnteredCount">0</b></div>
+    </div>
+    <div id="v94SalesMethods" class="v16-dashboard-breakdown" style="margin-top:12px"></div>
+  </section>
 
   <section class="panel-box v16-dashboard" id="v16DashboardPanel">
     <div class="v16-dashboard-head"><div><h3>📊 DASHBOARD DE VENDAS</h3><p>Resumo por evento, gênero, descontos, entradas e promoters.</p></div><select id="v16DashboardEvent" onchange="renderV16Dashboard()"><option value="all">TODOS OS EVENTOS</option></select></div>
@@ -925,6 +947,6 @@ Bruna Santos"></textarea>
 
 <script src="hype-v39-admin-simple.js?v=20260905-v39-1"></script>
   <script src="hype-v408-lista-admin.js?v=20261003-v71"></script>
-  <script src="admin-v92-tabs.js?v=20261003-v93"></script>
+  <script src="admin-v92-tabs.js?v=20261003-v94"></script>
 </body>
 </html>
