@@ -142,28 +142,17 @@ html,body{max-width:100%;overflow-x:hidden}
         <strong style="font-size:11px">PORTARIA</strong>
       </div>
 
-      <div class="v63-step-note">Os dados ficam salvos na lista de clientes do Admin, junto com contato, evento, horário da entrada e forma registrada.</div>
+      <div class="v63-step-note">Cadastro rápido: informe somente nome e CPF. A pessoa entra automaticamente na lista do evento e a entrada já fica registrada.</div>
 
       <div class="v19-door-form v39-door-simple">
         <div class="full"><label>Nome completo *</label><input id="v67RegName" placeholder="Nome no documento" autocomplete="name"></div>
-        <div><label>Telefone / WhatsApp *</label><input id="v67RegPhone" placeholder="(54) 99999-9999" inputmode="tel" autocomplete="tel"></div>
-        <div><label>CPF *</label><input id="v67RegCpf" placeholder="Somente números" inputmode="numeric" maxlength="14" autocomplete="off"></div>
-        <div><label>Gênero *</label><select id="v67RegGender"><option value="Feminino">Feminino</option><option value="Masculino">Masculino</option></select></div>
-        <div class="full">
-          <label>Forma registrada (somente controle)</label>
-          <select id="v67RegPayment">
-            <option value="PIX">PIX</option>
-            <option value="FREE">FREE / CORTESIA</option>
-            <option value="LISTA">LISTA / CONVITE</option>
-            <option value="OUTRO">OUTRO</option>
-          </select>
-        </div>
+        <div class="full"><label>CPF *</label><input id="v67RegCpf" placeholder="Somente números" inputmode="numeric" maxlength="14" autocomplete="off"></div>
       </div>
 
       <button id="v67RegSubmit" class="btn primary" type="button" style="width:100%;margin-top:12px;min-height:54px" onclick="HypeV67Register.submit()">✅ CADASTRAR E REGISTRAR ENTRADA</button>
       <div id="v67RegStatus" class="v19-notice ok">Somente cadastro. As vendas continuam pelo site com PIX.</div>
       <div id="v67RegResult" class="v19-door-result"></div>
-    </section>>
+    </section>
 
   </main>
 </div>
@@ -230,13 +219,13 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="supabase-config.js?v=20261001-v48"></script>
 <script src="hype-qrcode.js?v=20260902-v21"></script>
 <script src="portaria-v18.js?v=20261003-v74"></script>
-<script src="hype-v406-lista-simples.js?v=20261003-v74"></script>
+<script src="hype-v406-lista-simples.js?v=20261003-v78"></script>
 <script src="portaria-v20.js?v=20261003-v68"></script>
-<script src="portaria-v67-register.js?v=20261003-v76"></script>
+<script src="portaria-v67-register.js?v=20261003-v78"></script>
 <script src="hype-push-config.js?v=44"></script>
   <script src="hype-v38-chat.js?v=44"></script>
   <script src="hype-v38-reset.js?v=20260905-v38-1"></script>
   <script src="hype-v43-auto-checkup.js?v=20260905-v43-2"></script>
-  <script src="portaria-v60-exit-feedback.js?v=20261002-v60"></script>
+  <script src="portaria-v60-exit-feedback.js?v=20261003-v78"></script>
 </body>
 </html>
