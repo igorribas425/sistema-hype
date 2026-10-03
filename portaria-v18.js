@@ -491,14 +491,22 @@
 
   async function search() {
     const q=$('searchInput')?.value.trim()||'';
-    if(!q)return;
+    const box=$('results');
+    if(!q){
+      if(box) box.innerHTML='';
+      return;
+    }
     if(looksLikeCode(q))return processCode(q,false);
+
     if(!online()){
       const snap=readJSON(SNAPSHOT_KEY,null);
       const needle=q.toLowerCase();
       const rows=(snap?.tickets||[]).filter(t=>Number(t.event_id)===Number(state.eventId)&&[t.customer_name,t.phone,t.cpf,t.ticket_code].some(v=>String(v||'').toLowerCase().includes(needle))).slice(0,25);
-      return renderResults(rows);
+      if(rows.length) renderResults(rows);
+      else if(box) box.innerHTML='';
+      return;
     }
+
     try{
       let rows=[];
       try{
@@ -511,15 +519,19 @@
           rows=normalizeRows(await rpc('portaria_device_search_v18',{p_device_key:state.deviceKey,p_event_id:state.eventId,p_query:q}));
         }
       }
-      // V60: defesa extra no navegador. Mesmo que uma função antiga do banco
-      // devolva registros a mais, a Portaria NUNCA mostra ingresso de outro evento.
+
       const scoped=rows.filter(item=>Number(item.event_id)===Number(state.eventId));
-      renderResults(scoped);
-      const guestCount=window.HypeListaSimples
-        ? await window.HypeListaSimples.search(q,'results',scoped.length>0)
-        : 0;
-      if(!scoped.length&&!guestCount) flash(false,'NÃO ENCONTRADO','Nenhuma pessoa encontrada neste evento.');
-    }catch(err){flash(false,'ERRO',err.message||'Falha na busca.');}
+      if(scoped.length) renderResults(scoped);
+      else if(box) box.innerHTML='';
+
+      if(window.HypeListaSimples){
+        await window.HypeListaSimples.search(q,'results',scoped.length>0,true);
+      }
+      // Busca manual V81: sem popup vermelho/verde. A tela mostra somente os nomes encontrados.
+    }catch(err){
+      console.warn('[HYPE V81][busca portaria]',err);
+      if(box) box.innerHTML='';
+    }
   }
 
   function offlineFind(code) {
@@ -649,7 +661,7 @@
     const box=$('results');
     // V26: último bloqueio de segurança visual. A tela jamais mistura eventos.
     const scoped=(Array.isArray(rows)?rows:[]).filter(r=>Number(r.event_id)===Number(state.eventId));
-    if(!scoped.length){box.innerHTML='<div class="empty error">Nenhum ingresso encontrado neste evento.</div>';return;}
+    if(!scoped.length){box.innerHTML='';return;}
     scoped.forEach(r=>state.items.set(Number(r.ticket_id),r));
     box.innerHTML=scoped.map(renderTicket).join('');
   }
