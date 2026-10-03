@@ -2,7 +2,7 @@
    - Não vende ingresso
    - Não gera PIX
    - Não usa Stone
-   - Salva contato + CPF + gênero + forma registrada
+   - Salva WhatsApp + CPF + gênero + forma registrada
    - Registra a entrada imediatamente e envia o registro ao Admin
 */
 (() => {
@@ -110,7 +110,7 @@
     if (btn) { btn.disabled = true; btn.textContent = 'SALVANDO CADASTRO...'; }
 
     try {
-      const item = rows(await rpc('portaria_device_register_entry_v67', {
+      const item = rows(await rpc('portaria_device_register_entry_v68', {
         p_device_key: deviceKey(),
         p_event_id: eventId,
         p_name: name,
