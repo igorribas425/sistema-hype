@@ -460,48 +460,6 @@ html,body{max-width:100%;overflow-x:hidden}
     </div>
   </section>
 
-  <section class="panel-box v36-refund-panel admin-only" id="v36RefundPanel">
-    <div class="v36-refund-head">
-      <div>
-        <h3>💸 ESTORNOS ASAAS</h3>
-        <p>Estorne qualquer ingresso pago pelo PIX do Asaas. Você escolhe se o ingresso será cancelado ou se continuará válido como cortesia/FREE.</p>
-      </div>
-      <div class="v36-refund-actions">
-        <button class="btn-action" type="button" onclick="HypeV36Refund.load(true)">↻ ATUALIZAR</button>
-        <button id="v36RefundAllBtn" class="btn-action danger" type="button" onclick="HypeV36Refund.refundAll()">💸 ESTORNAR SELECIONADOS</button>
-      </div>
-    </div>
-
-    <div class="v36-refund-filterbar">
-      <div>
-        <label>FILTRAR QUEM SERÁ ESTORNADO</label>
-        <select id="v36RefundGender" onchange="HypeV36Refund.render()">
-          <option value="all">Todos</option>
-          <option value="Feminino">Feminino</option>
-          <option value="Masculino">Masculino</option>
-        </select>
-      </div>
-      <div>
-        <label>O QUE FAZER COM O INGRESSO</label>
-        <select id="v36RefundMode">
-          <option value="cancel">Estornar + CANCELAR ingresso</option>
-          <option value="keep_valid">Estornar + MANTER válido como cortesia</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="v36-refund-stats">
-      <div class="v36-refund-stat warn"><span>Podem estornar</span><b id="v36RefundEligible">0</b></div>
-      <div class="v36-refund-stat warn"><span>Total a devolver</span><b id="v36RefundValue">R$ 0,00</b></div>
-      <div class="v36-refund-stat ok"><span>Já estornados</span><b id="v36RefundDone">0</b></div>
-      <div class="v36-refund-stat ok"><span>Total devolvido/solicitado</span><b id="v36RefundDoneValue">R$ 0,00</b></div>
-    </div>
-
-    <div class="v36-refund-note"><b>Segurança:</b> somente o Admin pode executar. Antes de qualquer estorno aparece cliente, quantidade e valor total para confirmação. O PIX é devolvido pelo Asaas. Se escolher “manter válido”, o QR continua funcionando como cortesia; se escolher “cancelar”, o QR deixa de liberar entrada.</div>
-    <div id="v36RefundProgress" class="v36-refund-progress"></div>
-    <div id="v36RefundList" class="v36-refund-list"><div class="v36-refund-empty">Carregando ingressos pagos pelo Asaas...</div></div>
-  </section>
-
   <div class="admin-toolbar panel-box">
     <div><strong>CONTROLE DO EVENTO</strong><span>estoque, caixa e entradas em tempo real neste navegador</span></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -974,6 +932,5 @@ Bruna Santos"></textarea>
 
 <script src="hype-v39-admin-simple.js?v=20260905-v39-1"></script>
   <script src="hype-v408-lista-admin.js?v=20261003-v71"></script>
-  <script src="hype-v43-auto-checkup.js?v=20260905-v43"></script>
 </body>
 </html>
