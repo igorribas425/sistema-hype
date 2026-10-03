@@ -56,8 +56,11 @@
       p_query:query
     };
     let data;
-    try{ data=await rpc('portaria_guest_simple_search_v67',args); }
-    catch(_){ data=await rpc('portaria_guest_simple_search_v406',args); }
+    try{ data=await rpc('portaria_guest_simple_search_v72',args); }
+    catch(_){
+      try{ data=await rpc('portaria_guest_simple_search_v67',args); }
+      catch(__){ data=await rpc('portaria_guest_simple_search_v406',args); }
+    }
     return arr(data).map(row=>({...row,event_id:Number(selectedEventId)}));
   }
 
