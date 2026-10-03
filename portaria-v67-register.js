@@ -2,7 +2,7 @@
    - Não vende ingresso
    - Não gera PIX
    - Não usa Stone
-   - Salva WhatsApp + CPF + gênero + forma registrada
+   - Salva somente nome + CPF
    - Registra a entrada imediatamente e envia o registro ao Admin
 */
 (() => {
@@ -60,11 +60,9 @@
   }
 
   function resetForm() {
-    ['v67RegName','v67RegPhone','v67RegCpf'].forEach(id => {
+    ['v67RegName','v67RegCpf'].forEach(id => {
       const el = $(id); if (el) el.value = '';
     });
-    if ($('v67RegGender')) $('v67RegGender').value = 'Feminino';
-    if ($('v67RegPayment')) $('v67RegPayment').value = 'PIX';
     setTimeout(() => $('v67RegName')?.focus(), 80);
   }
 
@@ -77,15 +75,12 @@
         <div>
           <small>CADASTRO PORTARIA</small>
           <strong>${esc(item.name || '')}</strong>
-          <span>Entrada registrada agora • ${esc(item.payment_method || 'PIX')}</span>
+          <span>Entrada registrada agora</span>
         </div>
         <div class="v19-order-status paid">ENTROU</div>
       </div>
       <div class="v19-order-info">
-        <p><b>WhatsApp:</b> ${esc(item.phone || '')}</p>
         <p><b>CPF:</b> ${esc(item.cpf || '')}</p>
-        <p><b>Gênero:</b> ${esc(item.gender || '')}</p>
-        <p><b>Forma registrada:</b> ${esc(item.payment_method || '')}</p>
         <p class="v19-paid-note">✅ Salvo na lista de clientes e contabilizado como entrada. Nenhuma cobrança foi feita aqui.</p>
       </div>
     `;
@@ -96,28 +91,21 @@
 
     const eventId = currentEventId();
     const name = String($('v67RegName')?.value || '').trim().replace(/\s+/g,' ');
-    const phone = String($('v67RegPhone')?.value || '').replace(/\D/g,'');
     const cpf = cpfDigits($('v67RegCpf')?.value || '');
-    const gender = $('v67RegGender')?.value || 'Feminino';
-    const payment = $('v67RegPayment')?.value || 'PIX';
 
     if (!eventId) return setStatus('Selecione o evento no topo da Portaria.', false);
     if (name.length < 2) return setStatus('Informe o nome completo.', false);
-    if (phone.length < 10) return setStatus('Informe um WhatsApp válido.', false);
     if (!validCpf(cpf)) return setStatus('Informe um CPF válido.', false);
 
     const btn = $('v67RegSubmit');
     if (btn) { btn.disabled = true; btn.textContent = 'SALVANDO CADASTRO...'; }
 
     try {
-      const item = rows(await rpc('portaria_device_register_entry_v68', {
+      const item = rows(await rpc('portaria_device_register_entry_v78', {
         p_device_key: deviceKey(),
         p_event_id: eventId,
         p_name: name,
-        p_phone: phone,
-        p_cpf: cpf,
-        p_gender: gender,
-        p_payment_method: payment
+        p_cpf: cpf
       }))[0];
 
       if (!item?.list_id) throw new Error('O cadastro não foi salvo.');
