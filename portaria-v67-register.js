@@ -66,26 +66,6 @@
     setTimeout(() => $('v67RegName')?.focus(), 80);
   }
 
-  function renderResult(item) {
-    const box = $('v67RegResult');
-    if (!box) return;
-    box.classList.add('show');
-    box.innerHTML = `
-      <div class="v19-order-head">
-        <div>
-          <small>CADASTRO PORTARIA</small>
-          <strong>${esc(item.name || '')}</strong>
-          <span>Entrada registrada agora</span>
-        </div>
-        <div class="v19-order-status paid">ENTROU</div>
-      </div>
-      <div class="v19-order-info">
-        <p><b>CPF:</b> ${esc(item.cpf || '')}</p>
-        <p class="v19-paid-note">✅ Salvo na lista de clientes e contabilizado como entrada. Nenhuma cobrança foi feita aqui.</p>
-      </div>
-    `;
-  }
-
   async function submit() {
     if (navigator.onLine === false) return setStatus('O cadastro de entrada precisa de internet para salvar no sistema.', false);
 
@@ -109,8 +89,12 @@
       }))[0];
 
       if (!item?.list_id) throw new Error('O cadastro não foi salvo.');
-      renderResult(item);
-      setStatus(item.message || 'Pessoa cadastrada e entrada registrada.', true);
+      setStatus('✅ Pessoa salva automaticamente na lista e entrada registrada. Pronto para a próxima.', true);
+      const resultBox = $('v67RegResult');
+      if (resultBox) {
+        resultBox.classList.remove('show');
+        resultBox.innerHTML = '';
+      }
       resetForm();
 
       try { await window.HypePortaria?.refresh?.(false); } catch (_) {}
