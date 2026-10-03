@@ -137,7 +137,12 @@
       const r=rows[0];
       if(!r?.ok){ flash(false,'NEGADO',r?.message || 'Não liberado.'); return window.HypePortaria?.search?.(); }
       flash(true,'ENTRADA DA LISTA',r.name || 'Liberado');
-      await window.HypePortaria?.search?.();
+      const input=$('searchInput');
+      if(input) input.value='';
+      const results=$('results');
+      if(results) results.innerHTML='<div class="empty">✅ Entrada registrada. Pronto para a próxima pessoa.</div>';
+      const listResults=$('v406ListResult');
+      if(listResults) listResults.innerHTML='<div class="empty">Nome salvo na lista. Busque a próxima pessoa.</div>';
       if(window.HypePortaria?.refresh) window.HypePortaria.refresh(false).catch(()=>{});
     }catch(err){
       flash(false,'ERRO',err.message || 'Erro ao confirmar entrada.');
