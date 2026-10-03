@@ -10,7 +10,8 @@
   const norm = v => String(v || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
 
   const groups = {
-    geral: ['v16DashboardPanel','adminGeneralToolbar','eventsAdminPanel','v18ControlPanel','adminMainGrid'],
+    geral: ['adminGeneralToolbar','eventsAdminPanel','v18ControlPanel','adminMainGrid'],
+    vendas: ['v94SalesAccumPanel','v16DashboardPanel'],
     promoter: ['v16ManagementPanel'],
     portaria: ['v34LivePanel','v92PortariaPeoplePanel'],
     lista: ['v92ListPeoplePanel','v408SimpleListAdmin'],
@@ -151,6 +152,77 @@
     }).join('');
   }
 
+  function moneyV94(value) {
+    try {
+      if (typeof hypeFormatMoney === 'function') return hypeFormatMoney(Number(value || 0));
+    } catch (_) {}
+    return Number(value || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  }
+
+  function renderSalesV94() {
+    const eventId = $('v16DashboardEvent')?.value || 'all';
+    let tickets=[], guests=[];
+    try {
+      tickets=(HYPE?.tickets || []).filter(t => eventId==='all' || Number(t.event_id)===Number(eventId));
+      guests=(HYPE?.guestLists || []).filter(g => eventId==='all' || Number(g.event_id)===Number(eventId));
+    } catch (_) {}
+
+    const confirmed=tickets.filter(t=>String(t.payment_status||'')==='Pago');
+    const paid=confirmed.filter(t=>Number(t.price||0)>0);
+    const free=confirmed.filter(t=>Number(t.price||0)<=0);
+    const pending=tickets.filter(t=>String(t.payment_status||'')==='Pendente');
+    const paidValue=paid.reduce((s,t)=>s+Number(t.price||0),0);
+    const pendingValue=pending.reduce((s,t)=>s+Number(t.price||0),0);
+    const discounts=paid.reduce((s,t)=>s+Number(t.discount_amount||0),0);
+    const entered=confirmed.filter(t=>String(t.entry_status||'')==='Entrada utilizada').length +
+      guests.filter(g=>String(g.guest_status||'')==='Entrou').length;
+
+    const set=(id,v)=>{const el=$(id);if(el)el.textContent=String(v);};
+    set('v94SalesPaidValue',moneyV94(paidValue));
+    set('v94SalesPendingValue',moneyV94(pendingValue));
+    set('v94SalesDiscountValue',moneyV94(discounts));
+    set('v94SalesPaidCount',paid.length);
+    set('v94SalesFreeCount',free.length);
+    set('v94SalesListCount',guests.length);
+    set('v94SalesPeopleCount',confirmed.length+guests.length);
+    set('v94SalesEnteredCount',entered);
+
+    const methods={};
+    paid.forEach(t=>{
+      const key=String(t.payment_method||'Pagamento').trim()||'Pagamento';
+      if(!methods[key]) methods[key]={count:0,total:0};
+      methods[key].count+=1;
+      methods[key].total+=Number(t.price||0);
+    });
+    const promoter={};
+    paid.filter(t=>t.promoter_code).forEach(t=>{
+      const key=String(t.promoter_code||'').trim();
+      if(!promoter[key]) promoter[key]={count:0,total:0};
+      promoter[key].count+=1;
+      promoter[key].total+=Number(t.price||0);
+    });
+
+    const box=$('v94SalesMethods');
+    if(box){
+      const methodText=Object.entries(methods).map(([k,v])=>`${esc(k)}: ${v.count} venda(s) • ${moneyV94(v.total)}`).join(' | ');
+      const promoterText=Object.entries(promoter).sort((a,b)=>b[1].total-a[1].total).map(([k,v],i)=>`${i+1}º ${esc(k)}: ${v.count} • ${moneyV94(v.total)}`).join(' | ');
+      box.innerHTML=`
+        <div><b>Formas de pagamento</b><span>${methodText || 'Sem vendas pagas'}</span></div>
+        <div><b>Promoters</b><span>${promoterText || 'Sem vendas pagas por promoter'}</span></div>
+        <div><b>Resumo</b><span>Pago: ${paid.length} • FREE: ${free.length} • Lista: ${guests.length} • Pendentes: ${pending.length}</span></div>`;
+    }
+  }
+
+  async function refreshSalesV94(forceFetch=false) {
+    try {
+      if(forceFetch && typeof loadStaffTickets==='function' && typeof HYPE!=='undefined' && HYPE.user && HYPE.pass){
+        await loadStaffTickets($('searchInput')?.value || '');
+      }
+      if(typeof renderV16Dashboard==='function') renderV16Dashboard();
+    } catch (_) {}
+    renderSalesV94();
+  }
+
   async function refreshPeople(forceFetch=false) {
     try {
       if (forceFetch && typeof loadStaffTickets === 'function' && typeof HYPE !== 'undefined' && HYPE.user && HYPE.pass) {
@@ -180,7 +252,9 @@
 
     try { sessionStorage.setItem('hype_admin_tab_v92',tab); } catch (_) {}
 
-    if (tab === 'portaria') {
+    if (tab === 'vendas') {
+      refreshSalesV94(true);
+    } else if (tab === 'portaria') {
       refreshPeople(true);
       try { window.HypeV34?.refreshLive?.(); } catch (_) {}
     } else if (tab === 'lista') {
@@ -201,6 +275,7 @@
       lastPeopleSignature=sig;
       if (currentTab === 'portaria') renderPortariaPeople();
       if (currentTab === 'lista') renderListPeople();
+      if (currentTab === 'vendas') renderSalesV94();
     }
   }
 
@@ -217,6 +292,10 @@
     setInterval(tick,1800);
   }
 
-  window.HypeAdminTabsV92={setTab,refreshPeople,renderPortariaPeople,renderListPeople};
+  document.addEventListener('change',(event)=>{
+    if(event.target?.id==='v16DashboardEvent') setTimeout(renderSalesV94,0);
+  });
+
+  window.HypeAdminTabsV92={setTab,refreshPeople,renderPortariaPeople,renderListPeople,refreshSales:refreshSalesV94,renderSales:renderSalesV94};
   document.addEventListener('DOMContentLoaded',()=>setTimeout(init,450));
 })();
