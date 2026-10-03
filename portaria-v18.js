@@ -149,7 +149,12 @@
       startAuthorizationPoll();
     } catch (err) {
       const msg = String(err?.message || err);
-      setAuthMessage(`${esc(msg)}<br><br>Se a atualização ainda não foi aplicada, execute <b>SUPABASE_V21_ATUALIZACAO.sql</b> no Supabase.`,true);
+      console.warn('[HYPE V85][Portaria conexão]', err);
+      if (/failed to fetch|networkerror|load failed|fetch/i.test(msg)) {
+        setAuthMessage('Não foi possível conectar ao servidor da HYPE. Verifique a internet e toque em ATUALIZAR / recarregue esta página.',true);
+      } else {
+        setAuthMessage(esc(msg),true);
+      }
     }
   }
 
