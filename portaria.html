@@ -109,7 +109,7 @@ html,body{max-width:100%;overflow-x:hidden}
 
     <section class="search-card">
       <div class="search-row">
-        <input id="searchInput" class="input" placeholder="Buscar por nome, CPF, WhatsApp ou código HYPE" autocomplete="off" oninput="clearTimeout(window.__hypePortariaSearch);window.__hypePortariaSearch=setTimeout(()=>{if(this.value.trim())HypePortaria.search()},220)" onkeydown="if(event.key==='Enter'){event.preventDefault();HypePortaria.search()}">
+        <input id="searchInput" class="input" placeholder="Buscar por nome, CPF, WhatsApp ou código HYPE" autocomplete="off" oninput="clearTimeout(window.__hypePortariaSearch);const q=this.value.trim();if(q.length<2){const r=document.getElementById('results');if(r)r.innerHTML='';}else{window.__hypePortariaSearch=setTimeout(()=>HypePortaria.search(),260)}" onkeydown="if(event.key==='Enter'){event.preventDefault();HypePortaria.search()}">
         <button class="btn primary" onclick="HypePortaria.search()">BUSCAR PESSOA</button>
       </div>
       <div id="scannerArea" class="scanner portaria-extra"><video id="cameraVideo" autoplay muted playsinline></video><div class="scanline"></div><button class="btn red" style="position:absolute;right:10px;bottom:10px" onclick="HypePortaria.stopCamera()">FECHAR</button></div>
@@ -217,8 +217,8 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
 <script src="hype-qrcode.js?v=20260902-v21"></script>
-<script src="portaria-v18.js?v=20261003-v74"></script>
-<script src="hype-v406-lista-simples.js?v=20261003-v79"></script>
+<script src="portaria-v18.js?v=20261003-v81"></script>
+<script src="hype-v406-lista-simples.js?v=20261003-v81"></script>
 <script src="portaria-v20.js?v=20261003-v68"></script>
 <script src="portaria-v67-register.js?v=20261003-v80"></script>
 <script src="hype-push-config.js?v=44"></script>
