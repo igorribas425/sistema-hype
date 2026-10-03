@@ -502,10 +502,14 @@
     try{
       let rows=[];
       try{
-        rows=normalizeRows(await rpc('portaria_device_search_v60',{p_device_key:state.deviceKey,p_event_id:state.eventId,p_query:q}));
+        rows=normalizeRows(await rpc('portaria_device_search_v72',{p_device_key:state.deviceKey,p_event_id:state.eventId,p_query:q}));
       }catch(err){
-        if(!/portaria_device_search_v60|function|schema cache|does not exist/i.test(String(err?.message||err))) throw err;
-        rows=normalizeRows(await rpc('portaria_device_search_v18',{p_device_key:state.deviceKey,p_event_id:state.eventId,p_query:q}));
+        if(!/portaria_device_search_v72|function|schema cache|does not exist/i.test(String(err?.message||err))) throw err;
+        try{
+          rows=normalizeRows(await rpc('portaria_device_search_v60',{p_device_key:state.deviceKey,p_event_id:state.eventId,p_query:q}));
+        }catch(err2){
+          rows=normalizeRows(await rpc('portaria_device_search_v18',{p_device_key:state.deviceKey,p_event_id:state.eventId,p_query:q}));
+        }
       }
       // V60: defesa extra no navegador. Mesmo que uma função antiga do banco
       // devolva registros a mais, a Portaria NUNCA mostra ingresso de outro evento.
