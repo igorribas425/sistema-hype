@@ -56,10 +56,13 @@
       p_query:query
     };
     let data;
-    try{ data=await rpc('portaria_guest_simple_search_v72',args); }
+    try{ data=await rpc('portaria_guest_simple_search_v77',args); }
     catch(_){
-      try{ data=await rpc('portaria_guest_simple_search_v67',args); }
-      catch(__){ data=await rpc('portaria_guest_simple_search_v406',args); }
+      try{ data=await rpc('portaria_guest_simple_search_v72',args); }
+      catch(__){
+        try{ data=await rpc('portaria_guest_simple_search_v67',args); }
+        catch(___){ data=await rpc('portaria_guest_simple_search_v406',args); }
+      }
     }
     return arr(data).map(row=>({...row,event_id:Number(selectedEventId)}));
   }
@@ -99,12 +102,20 @@
 
   function render(row){
     const entrou=String(row.status||'')==='Entrou';
+    const saiu=Boolean(row.final_exit_at);
     const cancelado=String(row.status||'')==='Cancelado';
     const rowEventId=Number(row.event_id || 0);
     const eventMismatch=Boolean(rowEventId && rowEventId!==eventId());
-    const cls=cancelado?'bad':(entrou?'bad':'ok');
-    const state=cancelado?'CANCELADO':(entrou?'JÁ ENTROU':(eventMismatch?'OUTRO EVENTO':'LISTA LIBERADA'));
-    const btn=(!entrou && !cancelado && !eventMismatch) ? `<button class="btn green" onclick="HypeListaSimples.enter(${Number(row.list_id)})">✅ CONFIRMAR ENTRADA</button>` : '';
+    const cls=cancelado||saiu?'bad':'ok';
+    const state=cancelado?'CANCELADO':saiu?'SAÍDA CONFIRMADA':entrou?'DENTRO':(eventMismatch?'OUTRO EVENTO':'LISTA LIBERADA');
+    let btn='';
+    if(!eventMismatch && !cancelado){
+      if(!entrou){
+        btn=`<button class="btn green" onclick="HypeListaSimples.enter(${Number(row.list_id)})">✅ CONFIRMAR ENTRADA</button>`;
+      }else if(!saiu){
+        btn=`<button class="btn red" onclick="HypeV60Exit.openGuest(${Number(row.list_id)}, '${esc(String(row.name||'Nome')).replace(/'/g,'&#039;')}')">🚪 SAÍDA + FEEDBACK</button>`;
+      }
+    }
     const mismatch=eventMismatch ? `<br><b>Selecione ${esc(row.remote_event_name||'o evento correto')}${row.remote_event_date?` • ${esc(fmt(row.remote_event_date))}`:''} acima para liberar.</b>` : '';
     const fromPortaria=String(row.source||'').toLowerCase().includes('portaria');
     const sourceLabel=fromPortaria?'CADASTRO PORTARIA':'LISTA SIMPLES';
@@ -114,7 +125,8 @@
       row.cpf?`CPF: ${esc(row.cpf)}`:'',
       row.payment_method?`Forma registrada: ${esc(row.payment_method)}`:''
     ].filter(Boolean).join('<br>');
-    return `<article class="ticket ${cls}"><div><span class="sector">${sourceLabel}</span><h2>${esc(row.name||'Nome')}</h2><div class="meta">Sem cobrança na Portaria${contact?`<br>${contact}`:''}${row.remote_event_name?`<br>Evento do cadastro: ${esc(row.remote_event_name)}`:''}<br>${row.created_at?`Adicionado ${esc(fmt(row.created_at))}`:''}${row.entered_at?`<br>Entrou ${esc(fmt(row.entered_at))}`:''}${mismatch}</div></div><div class="ticket-actions"><div class="state ${entrou||cancelado||eventMismatch?'danger':'good'}">${esc(state)}</div>${btn}</div></article>`;
+    const exitInfo=row.final_exit_at?`<br>Saiu ${esc(fmt(row.final_exit_at))}`:'';
+    return `<article class="ticket ${cls}"><div><span class="sector">${sourceLabel}</span><h2>${esc(row.name||'Nome')}</h2><div class="meta">Sem cobrança na Portaria${contact?`<br>${contact}`:''}${row.remote_event_name?`<br>Evento do cadastro: ${esc(row.remote_event_name)}`:''}<br>${row.created_at?`Adicionado ${esc(fmt(row.created_at))}`:''}${row.entered_at?`<br>Entrou ${esc(fmt(row.entered_at))}`:''}${exitInfo}${mismatch}</div></div><div class="ticket-actions"><div class="state ${cancelado||saiu||eventMismatch?'danger':'good'}">${esc(state)}</div>${btn}</div></article>`;
   }
 
   async function enter(id){
