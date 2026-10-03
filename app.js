@@ -14,7 +14,6 @@ const HYPE = {
   lots: [],
   tickets: [],
   guestLists: [],
-  stoneSales: [],
   promoters: [],
   coupons: [],
   promoterLinkCode: "",
@@ -782,21 +781,17 @@ async function loadStaffTickets(search = "") {
 
   // Carrega as duas versões da listagem. A versão manual traz e-mail/método
   // e a versão antiga funciona como segurança para nenhum pedido sumir do Admin.
-  const [v54Result, v16Result, manualResult, legacyResult, stoneResult] = await Promise.allSettled([
+  const [v54Result, v16Result, manualResult, legacyResult] = await Promise.allSettled([
     sbRpc("staff_list_tickets_v54", params),
     sbRpc("staff_list_tickets_v16", params),
     sbRpc("staff_list_tickets_manual", params),
-    sbRpc("staff_list_tickets", params),
-    sbRpc("staff_list_stone_sales_v62", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:null})
+    sbRpc("staff_list_tickets", params)
   ]);
 
   const v54 = v54Result.status === "fulfilled" && Array.isArray(v54Result.value) ? v54Result.value : [];
   const v16 = v16Result.status === "fulfilled" && Array.isArray(v16Result.value) ? v16Result.value : [];
   const manual = manualResult.status === "fulfilled" && Array.isArray(manualResult.value) ? manualResult.value : [];
   const legacy = legacyResult.status === "fulfilled" && Array.isArray(legacyResult.value) ? legacyResult.value : [];
-  HYPE.stoneSales = stoneResult.status === "fulfilled" && Array.isArray(stoneResult.value) ? stoneResult.value : [];
-  const stoneByTicket = new Map(HYPE.stoneSales.map(row => [Number(row.ticket_id), row]));
-
   if (v54Result.status === "rejected" && v16Result.status === "rejected" && manualResult.status === "rejected" && legacyResult.status === "rejected") {
     const msg = v54Result.reason?.message || v16Result.reason?.message || manualResult.reason?.message || legacyResult.reason?.message || "Não foi possível carregar os pedidos.";
     throw new Error(msg);
@@ -807,11 +802,6 @@ async function loadStaffTickets(search = "") {
   manual.forEach(row => { const old = byId.get(Number(row.id)) || {}; byId.set(Number(row.id), { ...old, ...row }); });
   v16.forEach(row => { const old = byId.get(Number(row.id)) || {}; byId.set(Number(row.id), { ...old, ...row }); });
   v54.forEach(row => { const old = byId.get(Number(row.id)) || {}; byId.set(Number(row.id), { ...old, ...row }); });
-  for (const [id,row] of byId.entries()) {
-    const stone = stoneByTicket.get(Number(id));
-    if (stone) byId.set(Number(id), { ...row, stone_nsu:stone.nsu||"", stone_payment_type:stone.payment_type||"", stone_amount:stone.amount ?? row.price });
-  }
-
   HYPE.tickets = [...byId.values()].sort((a, b) => {
     const ad = new Date(a.purchased_at || 0).getTime();
     const bd = new Date(b.purchased_at || 0).getTime();
@@ -830,11 +820,11 @@ async function loadStaffTickets(search = "") {
     ? HYPE.adminEvents
     : HYPE.events || [])
     .filter(event => event && event.id != null);
-  const guestResults = await Promise.allSettled(events.map(event => sbRpc("staff_guest_simple_list_v406", {
-    p_username: HYPE.user,
-    p_password: HYPE.pass,
-    p_event_id: Number(event.id)
-  })));
+  const guestResults = await Promise.allSettled(events.map(async event => {
+    const args = {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(event.id)};
+    try { return await sbRpc("staff_guest_simple_list_v67", args); }
+    catch (_) { return await sbRpc("staff_guest_simple_list_v406", args); }
+  }));
   HYPE.guestLists = guestResults.flatMap((result, index) => {
     if (result.status !== "fulfilled" || !Array.isArray(result.value)) return [];
     const event = events[index] || {};
@@ -845,7 +835,7 @@ async function loadStaffTickets(search = "") {
       gender: row.gender || "N/I",
       phone: row.phone || "",
       cpf: row.cpf || "",
-      email: "",
+      email: row.email || "",
       event_id: Number(event.id),
       event_name: event.name || "Evento HYPE",
       event_date: event.event_date || "",
@@ -853,11 +843,12 @@ async function loadStaffTickets(search = "") {
       created_at: row.created_at || null,
       entered_at: row.entered_at || null,
       added_by: row.added_by || "",
+      source: row.source || "Admin",
       payment_status: "Lista",
       entry_status: row.status === "Entrou" ? "Entrada utilizada" : "Lista liberada",
       lot_name: "Lista HYPE",
       sector: "Lista",
-      payment_method: "Lista",
+      payment_method: row.payment_method || "Lista",
       price: 0
     }));
   }).sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
@@ -2244,7 +2235,10 @@ async function renderClientsTable() {
       const deleteGuest = HYPE.role === "admin" && item.list_id && window.HypeV49Registration?.deleteGuest
         ? `<button class="btn-action btn-del" onclick="HypeV49Registration.deleteGuest(${Number(item.list_id)})">🗑 EXCLUIR</button>`
         : "";
-      return `<tr><td><strong>${hypeEscape(item.customer_name || "SEM NOME")}</strong><br><span class="badge gender">${hypeEscape(item.gender || "N/I")}</span><small style="display:block;color:var(--muted);line-height:1.55">📋 Lista HYPE${item.cpf ? `<br>CPF: ${hypeEscape(item.cpf)}` : ""}${item.phone ? `<br>📱 ${hypeEscape(item.phone)}` : ""}</small></td><td>LISTA<br><small style="color:var(--muted)">Sem cobrança / sem ingresso pago</small><small style="display:block;color:var(--muted)">🎤 ${hypeEscape(item.event_name || "Evento HYPE")}</small>${savedAt ? `<small style="display:block;color:var(--muted)">${hypeEscape(savedAt)}</small>` : ""}</td><td><span class="badge lista">LISTA</span><br><small style="color:${guestStateColor}">${guestState}</small></td><td><div class="actions-cell"><small style="color:var(--muted)">Consultar e confirmar na Portaria</small>${deleteGuest}</div></td></tr>`;
+      const fromPortaria = String(item.source || "").toLowerCase().includes("portaria");
+      const sourceLabel = fromPortaria ? "CADASTRO PORTARIA" : "LISTA HYPE";
+      const paymentInfo = item.payment_method ? `<br>Forma registrada: ${hypeEscape(item.payment_method)}` : "";
+      return `<tr><td><strong>${hypeEscape(item.customer_name || "SEM NOME")}</strong><br><span class="badge gender">${hypeEscape(item.gender || "N/I")}</span><small style="display:block;color:var(--muted);line-height:1.55">👤 ${sourceLabel}${item.cpf ? `<br>CPF: ${hypeEscape(item.cpf)}` : ""}${item.phone ? `<br>📱 ${hypeEscape(item.phone)}` : ""}${item.email ? `<br>📧 ${hypeEscape(item.email)}` : ""}${paymentInfo}</small></td><td>${fromPortaria ? "CADASTRO" : "LISTA"}<br><small style="color:var(--muted)">Sem cobrança no cadastro</small><small style="display:block;color:var(--muted)">🎤 ${hypeEscape(item.event_name || "Evento HYPE")}</small>${savedAt ? `<small style="display:block;color:var(--muted)">${hypeEscape(savedAt)}</small>` : ""}</td><td><span class="badge lista">${fromPortaria ? "CADASTRO" : "LISTA"}</span><br><small style="color:${guestStateColor}">${guestState}</small></td><td><div class="actions-cell"><small style="color:var(--muted)">${entered ? "Entrada já registrada" : "Consultar e confirmar na Portaria"}</small>${deleteGuest}</div></td></tr>`;
     }
     const isFree = item.payment_status === 'Pago' && Number(item.price || 0) <= 0;
     const status = isFree ? 'free' : item.payment_status === 'Pago' ? 'pago' : item.payment_status === 'Cancelado' ? 'cancelado' : 'pendente';
@@ -2258,7 +2252,7 @@ async function renderClientsTable() {
       : paymentStatus === "Pago" && item.email
         ? `<small style="display:block;color:#ffcc00;margin-top:4px">📧 E-MAIL AINDA NÃO ENVIADO</small>`
         : "";
-    return `<tr><td><strong>${hypeEscape(item.customer_name || "SEM NOME")}</strong><br><span class="badge gender">${hypeEscape(item.gender || "N/I")}</span><small style="color:var(--muted)">${hypeEscape(item.ticket_code || "")} ${entry}</small><small style="display:block;color:var(--muted);line-height:1.55">📱 ${hypeEscape(item.phone || "—")}<br>📧 ${hypeEscape(item.email || "—")}<br>CPF: ${cpf}</small>${emailState}</td><td>${isFree ? "FREE" : hypeFormatMoney(item.price)}<br><small style="color:var(--muted)">${hypeEscape(item.lot_name || "")}</small><small style="display:block;color:var(--muted)">${hypeEscape(item.sector || "")} • ${hypeEscape(item.payment_method || "Manual")}</small>${item.event_name ? `<small style="display:block;color:var(--muted)">🎤 ${hypeEscape(item.event_name)}</small>` : ""}${item.stone_nsu ? `<small style="display:block;color:#a8f3c4">💳 Stone • NSU ${hypeEscape(item.stone_nsu)}</small>` : ""}${item.promoter_code ? `<small style="display:block;color:#7dd3fc">Promoter: ${hypeEscape(item.promoter_code)}</small>` : ""}${item.coupon_code ? `<small style="display:block;color:#86efac">Cupom: ${hypeEscape(item.coupon_code)} • -${hypeFormatMoney(item.discount_amount || 0)}</small>` : ""}</td><td><span class="badge ${status}">${hypeEscape(displayStatus)}</span>${paymentStatus === "Pendente" && /asaas/i.test(String(item.payment_method || "")) ? (item.asaas_payment_id ? '<small style="display:block;color:#a8f3c4;margin-top:5px;font-weight:800">✅ PIX GERADO NO ASAAS • AGUARDANDO CLIENTE PAGAR</small>' : '<small style="display:block;color:#ff8da0;margin-top:5px;font-weight:900">⚠️ PIX NÃO GERADO NO ASAAS • NÃO HÁ COBRANÇA</small>') : ''}<br><small>${hypeEscape(item.entry_status || "Não utilizado")}</small></td><td><div class="actions-cell">${canPay && paymentStatus !== "Pago" ? `<button class="btn-action btn-confirm" onclick="setPayment(${item.id},'Pago')">✅ CONFIRMAR</button>` : ""}${canPay && paymentStatus === "Pago" && item.email ? `<button class="btn-action" onclick="sendTicketEmail(${item.id},true)">📧 REENVIAR</button>` : ""}${canPay && paymentStatus === "Pago" ? `<button class="btn-action" onclick="setPayment(${item.id},'Pendente')">PENDENTE</button>` : ""}${canPay && paymentStatus !== "Cancelado" ? `<button class="btn-action btn-del" onclick="setPayment(${item.id},'Cancelado')">CANCELAR</button>` : ""}${HYPE.role === "admin" ? `<button class="btn-action btn-del" style="border-color:#ff4d67;background:rgba(255,22,61,.18)" onclick="purgeSingleTicketV25(${item.id})">🧪 EXCLUIR TESTE</button>` : ""}</div></td></tr>`;
+    return `<tr><td><strong>${hypeEscape(item.customer_name || "SEM NOME")}</strong><br><span class="badge gender">${hypeEscape(item.gender || "N/I")}</span><small style="color:var(--muted)">${hypeEscape(item.ticket_code || "")} ${entry}</small><small style="display:block;color:var(--muted);line-height:1.55">📱 ${hypeEscape(item.phone || "—")}<br>📧 ${hypeEscape(item.email || "—")}<br>CPF: ${cpf}</small>${emailState}</td><td>${isFree ? "FREE" : hypeFormatMoney(item.price)}<br><small style="color:var(--muted)">${hypeEscape(item.lot_name || "")}</small><small style="display:block;color:var(--muted)">${hypeEscape(item.sector || "")} • ${hypeEscape(item.payment_method || "Manual")}</small>${item.event_name ? `<small style="display:block;color:var(--muted)">🎤 ${hypeEscape(item.event_name)}</small>` : ""}${item.promoter_code ? `<small style="display:block;color:#7dd3fc">Promoter: ${hypeEscape(item.promoter_code)}</small>` : ""}${item.coupon_code ? `<small style="display:block;color:#86efac">Cupom: ${hypeEscape(item.coupon_code)} • -${hypeFormatMoney(item.discount_amount || 0)}</small>` : ""}</td><td><span class="badge ${status}">${hypeEscape(displayStatus)}</span>${paymentStatus === "Pendente" && /asaas/i.test(String(item.payment_method || "")) ? (item.asaas_payment_id ? '<small style="display:block;color:#a8f3c4;margin-top:5px;font-weight:800">✅ PIX GERADO NO ASAAS • AGUARDANDO CLIENTE PAGAR</small>' : '<small style="display:block;color:#ff8da0;margin-top:5px;font-weight:900">⚠️ PIX NÃO GERADO NO ASAAS • NÃO HÁ COBRANÇA</small>') : ''}<br><small>${hypeEscape(item.entry_status || "Não utilizado")}</small></td><td><div class="actions-cell">${canPay && paymentStatus !== "Pago" ? `<button class="btn-action btn-confirm" onclick="setPayment(${item.id},'Pago')">✅ CONFIRMAR</button>` : ""}${canPay && paymentStatus === "Pago" && item.email ? `<button class="btn-action" onclick="sendTicketEmail(${item.id},true)">📧 REENVIAR</button>` : ""}${canPay && paymentStatus === "Pago" ? `<button class="btn-action" onclick="setPayment(${item.id},'Pendente')">PENDENTE</button>` : ""}${canPay && paymentStatus !== "Cancelado" ? `<button class="btn-action btn-del" onclick="setPayment(${item.id},'Cancelado')">CANCELAR</button>` : ""}${HYPE.role === "admin" ? `<button class="btn-action btn-del" style="border-color:#ff4d67;background:rgba(255,22,61,.18)" onclick="purgeSingleTicketV25(${item.id})">🧪 EXCLUIR TESTE</button>` : ""}</div></td></tr>`;
   }).join('');
 
   const total = HYPE.tickets.length + (HYPE.guestLists || []).length;
@@ -3401,11 +3395,13 @@ function renderV16Dashboard() {
   set("v16DashSold",paid.length); set("v16DashFree",free.length); set("v16DashList",guestList.length); set("v16DashRevenue",hypeFormatMoney(revenue)); set("v16DashFemale",female); set("v16DashMale",male); set("v16DashDiscount",hypeFormatMoney(discounts)); set("v16DashEntered",entered);
   const sectors={}; confirmed.forEach(t=>{const k=t.sector||t.lot_name||"Outro"; sectors[k]=(sectors[k]||0)+1;}); if(guestList.length) sectors["Lista"]=(sectors["Lista"]||0)+guestList.length;
   const methods={}; paid.forEach(t=>{const k=String(t.payment_method||"Manual").trim()||"Manual"; if(!methods[k]) methods[k]={count:0,total:0}; methods[k].count++; methods[k].total+=Number(t.price||0);});
+  const portariaMethods={}; guestList.filter(t=>String(t.source||"").toLowerCase().includes("portaria")).forEach(t=>{const k=String(t.payment_method||"Não informado").trim()||"Não informado";portariaMethods[k]=(portariaMethods[k]||0)+1;});
   const promoters={}; paid.filter(t=>t.promoter_code).forEach(t=>{promoters[t.promoter_code]=(promoters[t.promoter_code]||0)+1;});
   const breakdown=document.getElementById("v16DashboardBreakdown");
   const promoterRanking = Object.entries(promoters).sort((a,b)=>b[1]-a[1]);
   const methodText=Object.entries(methods).map(([k,v])=>`${hypeEscape(k)}: ${v.count} • ${hypeFormatMoney(v.total)}`).join(" | ");
-  if(breakdown) breakdown.innerHTML=`<div><b>Por tipo</b><span>PAGO: ${paid.length} • FREE: ${free.length} • LISTA: ${guestList.length}</span></div><div><b>Formas de pagamento</b><span>${methodText||"Sem vendas pagas"}</span></div><div><b>Por setor</b><span>${Object.entries(sectors).map(([k,v])=>`${hypeEscape(k)}: ${v}`).join(" • ")||"Sem movimentação"}</span></div><div><b>Ranking de promoters (pagos)</b><span>${promoterRanking.map(([k,v],i)=>`${i+1}º ${hypeEscape(k)}: ${v}`).join(" • ")||"Sem vendas pagas por promoter"}</span></div>`;
+  const portariaMethodText=Object.entries(portariaMethods).map(([k,v])=>`${hypeEscape(k)}: ${v}`).join(" | ");
+  if(breakdown) breakdown.innerHTML=`<div><b>Por tipo</b><span>PAGO: ${paid.length} • FREE: ${free.length} • LISTA/CADASTRO: ${guestList.length}</span></div><div><b>Formas de pagamento das vendas</b><span>${methodText||"Sem vendas pagas"}</span></div><div><b>Cadastros da Portaria</b><span>${portariaMethodText||"Sem cadastro na Portaria"}</span></div><div><b>Por setor</b><span>${Object.entries(sectors).map(([k,v])=>`${hypeEscape(k)}: ${v}`).join(" • ")||"Sem movimentação"}</span></div><div><b>Ranking de promoters (pagos)</b><span>${promoterRanking.map(([k,v],i)=>`${i+1}º ${hypeEscape(k)}: ${v}`).join(" • ")||"Sem vendas pagas por promoter"}</span></div>`;
 }
 
 /* ========================= AUTO SYNC V16.10 ========================= */
