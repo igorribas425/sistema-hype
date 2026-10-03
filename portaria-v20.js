@@ -723,26 +723,33 @@
 
   function init() {
     const salePanel = $('v19DoorSale');
-    if (salePanel) salePanel.style.display = 'block';
-    setDoorTab('cadastro');
     clearInterval(state.readersTimer);
     clearInterval(state.contextTimer);
+
+    // Leitores continuam funcionando. A venda na Portaria foi desativada na V67.
     state.readersTimer = setInterval(() => {
       if (!$('portariaApp')?.classList.contains('hidden')) loadReaders().catch(()=>{});
     }, 2500);
-    state.contextTimer = setInterval(() => {
-      if ($('portariaApp')?.classList.contains('hidden')) return;
-      const id = currentEventId();
-      if (!id) return;
-      // V43: atualiza a venda rápida sozinha. Assim, se der 00:00 e acabar o FREE
-      // masculino/feminino, o preço muda na Portaria sem F5.
-      if (id !== state.lastEventId || Date.now() - (state.lastSalesContextAt || 0) > 7000) {
-        state.lastEventId = id;
-        state.lastSalesContextAt = Date.now();
-        loadSalesContext().catch(()=>{});
-      }
-    }, 1200);
-    setTimeout(()=>{loadReaders().catch(()=>{});loadSalesContext().catch(()=>{});},1600);
+
+    if (salePanel) {
+      salePanel.style.display = 'block';
+      setDoorTab('cadastro');
+      state.contextTimer = setInterval(() => {
+        if ($('portariaApp')?.classList.contains('hidden')) return;
+        const id = currentEventId();
+        if (!id) return;
+        if (id !== state.lastEventId || Date.now() - (state.lastSalesContextAt || 0) > 7000) {
+          state.lastEventId = id;
+          state.lastSalesContextAt = Date.now();
+          loadSalesContext().catch(()=>{});
+        }
+      }, 1200);
+    }
+
+    setTimeout(()=>{
+      loadReaders().catch(()=>{});
+      if (salePanel) loadSalesContext().catch(()=>{});
+    },1600);
   }
 
   window.HypeV20 = {
