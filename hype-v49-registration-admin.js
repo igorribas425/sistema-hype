@@ -247,6 +247,10 @@
     try {
       const row = rows(await sbRpc('staff_guest_registration_review_v50', {p_username:hype.user,p_password:hype.pass,p_list_id:Number(listId),p_decision:decision}))[0] || {};
       await loadReview();
+      if (row.status === 'Ingresso existente') {
+        if (typeof hypeNotify === 'function') hypeNotify('✅ Esta pessoa já possui ingresso. A lista foi consolidada sem duplicar.');
+        return;
+      }
       if (row.status === 'Liberado' && row.email) await sendApprovedGuestEmail(Number(listId), false);
     } catch (error) { alert(error?.message || 'Não foi possível revisar o cadastro.'); }
   }
