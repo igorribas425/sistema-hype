@@ -8,6 +8,8 @@
   const DEVICE_KEY = 'hype_portaria_device_key_v18';
   let sb = null;
   let currentTicketId = 0;
+  let currentGuestListId = 0;
+  let currentMode = 'ticket';
 
   const $ = id => document.getElementById(id);
 
@@ -29,6 +31,8 @@
   }
 
   function open(ticketId) {
+    currentMode = 'ticket';
+    currentGuestListId = 0;
     const item = window.HypePortaria?.getItem?.(Number(ticketId));
     if (!item) return;
     if (item.final_exit_at) {
@@ -48,14 +52,31 @@
     setTimeout(()=>$('v60GoodComment')?.focus(), 80);
   }
 
+  function openGuest(listId, name) {
+    currentMode = 'guest';
+    currentTicketId = 0;
+    currentGuestListId = Number(listId || 0);
+    if (!currentGuestListId) return;
+    if ($('v60ExitPerson')) $('v60ExitPerson').textContent = name || 'Cliente';
+    if ($('v60GoodComment')) $('v60GoodComment').value = '';
+    if ($('v60BadComment')) $('v60BadComment').value = '';
+    setStatus('Os dois comentários são opcionais e podem ser preenchidos juntos.');
+    $('v60ExitFeedbackModal')?.classList.add('show');
+    setTimeout(()=>$('v60GoodComment')?.focus(), 80);
+  }
+
   function close() {
     $('v60ExitFeedbackModal')?.classList.remove('show');
     currentTicketId = 0;
+    currentGuestListId = 0;
+    currentMode = 'ticket';
   }
 
   async function confirmExit() {
-    const item = window.HypePortaria?.getItem?.(currentTicketId);
-    if (!item) return setStatus('Pessoa não encontrada na tela. Busque novamente.', 'bad');
+    const isGuest = currentMode === 'guest';
+    const item = isGuest ? null : window.HypePortaria?.getItem?.(currentTicketId);
+    if (!isGuest && !item) return setStatus('Pessoa não encontrada na tela. Busque novamente.', 'bad');
+    if (isGuest && !currentGuestListId) return setStatus('Pessoa da lista não encontrada. Busque novamente.', 'bad');
 
     const deviceKey = localStorage.getItem(DEVICE_KEY) || '';
     if (!deviceKey) return setStatus('Este computador ainda não está autorizado na Portaria.', 'bad');
@@ -72,23 +93,40 @@
     setStatus('Salvando saída e feedback...', '');
 
     try {
-      const {data, error} = await client().rpc('portaria_device_final_exit_v60', {
-        p_device_key: deviceKey,
-        p_ticket_id: Number(currentTicketId),
-        p_good_comment: good,
-        p_bad_comment: bad
-      });
+      let data, error;
+      if (isGuest) {
+        ({data, error} = await client().rpc('portaria_guest_final_exit_v77', {
+          p_device_key: deviceKey,
+          p_list_id: Number(currentGuestListId),
+          p_good_comment: good,
+          p_bad_comment: bad
+        }));
+      } else {
+        ({data, error} = await client().rpc('portaria_device_final_exit_v60', {
+          p_device_key: deviceKey,
+          p_ticket_id: Number(currentTicketId),
+          p_good_comment: good,
+          p_bad_comment: bad
+        }));
+      }
       if (error) throw error;
 
       const row = Array.isArray(data) ? data[0] : data;
       setStatus(`✅ Saída confirmada • ${Number(row?.inside_after || 0)} pessoa(s) dentro agora.`, 'ok');
 
-      const code = item.ticket_code;
+      const code = item?.ticket_code || '';
       setTimeout(async () => {
         close();
         try {
           await window.HypePortaria?.refresh?.(false);
-          if (code) await window.HypePortaria?.processCode?.(code, false);
+          if (isGuest) {
+            const input = $('searchInput');
+            if (input) input.value = '';
+            const results = $('results');
+            if (results) results.innerHTML = '<div class="empty">Saída registrada. Busque a próxima pessoa.</div>';
+          } else if (code) {
+            await window.HypePortaria?.processCode?.(code, false);
+          }
         } catch (_) {}
       }, 650);
     } catch (err) {
@@ -101,5 +139,5 @@
     }
   }
 
-  window.HypeV60Exit = {open, close, confirm:confirmExit};
+  window.HypeV60Exit = {open, openGuest, close, confirm:confirmExit};
 })();
