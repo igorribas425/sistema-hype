@@ -131,6 +131,17 @@
     }
 
     await load();
+
+    // V71: a LISTA também é um registro de cliente do evento.
+    // Atualiza imediatamente a aba de clientes para os nomes não ficarem
+    // somente no painel inferior da lista.
+    try{
+      if(typeof loadStaffTickets==='function'){
+        await loadStaffTickets(document.getElementById('searchInput')?.value || '');
+      }
+      if(typeof renderClientsTable==='function') renderClientsTable();
+    }catch(e){}
+
     try{ if(typeof loadRaffleV18==='function') await loadRaffleV18(false); }catch(e){}
     try{ if(typeof loadRaffleParticipantsV18==='function') await loadRaffleParticipantsV18(true); }catch(e){}
 
@@ -153,6 +164,12 @@
       await rpc('staff_guest_simple_delete_v423',auth({p_list_id:Number(listId)}));
       if(typeof hypeNotify==='function') hypeNotify('Nome excluído da lista.');
       await load();
+      try{
+        if(typeof loadStaffTickets==='function'){
+          await loadStaffTickets(document.getElementById('searchInput')?.value || '');
+        }
+        if(typeof renderClientsTable==='function') renderClientsTable();
+      }catch(e){}
       try{ if(typeof loadRaffleV18==='function') await loadRaffleV18(false); }catch(e){}
       try{ if(typeof loadRaffleParticipantsV18==='function') await loadRaffleParticipantsV18(true); }catch(e){}
     }catch(err){ alert(err.message || 'Erro ao excluir nome da lista.'); }
