@@ -128,7 +128,11 @@
       try { await window.HypePortaria?.refresh?.(false); } catch (_) {}
       try {
         const search = $('searchInput');
-        if (search) search.value = item.name || '';
+        if (search) search.value = '';
+        const results = $('results');
+        if (results) results.innerHTML = '<div class="empty">✅ Cadastro salvo na lista e entrada registrada. Pronto para a próxima pessoa.</div>';
+        const listResults = $('v406ListResult');
+        if (listResults) listResults.innerHTML = '<div class="empty">Os cadastros ficam salvos automaticamente na lista do evento.</div>';
       } catch (_) {}
     } catch (err) {
       setStatus(err?.message || 'Não foi possível cadastrar a pessoa.', false);
