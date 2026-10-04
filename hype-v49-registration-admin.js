@@ -15,6 +15,7 @@
   let listSettings = [];
   let settingsLoadPromise = null;
   const autoEmailRetryV98 = new Set();
+  let latestReviewRows = [];
 
   function fmt(value) {
     if (!value) return '';
@@ -104,10 +105,22 @@
     if (quota) quota.textContent = `Limite masculino: ${rows.map(row => Number(row.male_limit ?? 10)).join(' / ') || '10'} por festa.`;
   }
 
+  function syncApproveAllButton(reviewRows = latestReviewRows) {
+    const button = $('v100ApproveAll');
+    if (!button) return;
+    const pending = rows(reviewRows).filter(row => row.status === 'Pendente');
+    button.disabled = pending.length === 0;
+    button.textContent = pending.length
+      ? `✓ APROVAR TODOS (${pending.length})`
+      : '✓ NENHUM PENDENTE';
+  }
+
   function renderReviewRows(data) {
     const target = $('v50GuestReviewList');
     if (!target) return;
     const reviewRows = rows(data);
+    latestReviewRows = reviewRows;
+    syncApproveAllButton(reviewRows);
     if (!reviewRows.length) {
       target.innerHTML = '<div class="v18-empty">Nenhum cadastro enviado para as festas abertas ainda.</div>';
       const quota = $('v50ListQuota');
@@ -246,7 +259,7 @@
     finally { if (button) { button.disabled = false; button.textContent = 'SALVAR LIMITE'; } }
   }
 
-  async function sendApprovedGuestEmail(listId, force = false) {
+  async function sendApprovedGuestEmailRaw(listId, force = false) {
     const hype = state();
     const cfg = window.HYPE_SUPABASE_CONFIG || {};
     if (!hype?.user || !hype.pass || !cfg.url) throw new Error('Entre no Admin primeiro.');
@@ -256,13 +269,96 @@
       body: JSON.stringify({action:'guest_list_approved',username:hype.user,password:hype.pass,list_id:Number(listId),force:Boolean(force)})
     });
     const body = await response.json().catch(() => ({}));
-    if (!response.ok || body.ok !== true) {
-      await loadReview();
-      throw new Error(body.error || 'Não foi possível enviar o Gmail.');
-    }
-    await loadReview();
-    if (typeof hypeNotify === 'function') hypeNotify(body.already_sent ? 'Este Gmail já foi enviado.' : 'Gmail da aprovação enviado.');
+    if (!response.ok || body.ok !== true) throw new Error(body.error || 'Não foi possível enviar o Gmail.');
     return body;
+  }
+
+  async function sendApprovedGuestEmail(listId, force = false) {
+    try {
+      const body = await sendApprovedGuestEmailRaw(listId, force);
+      await loadReview();
+      if (typeof hypeNotify === 'function') hypeNotify(body.already_sent ? 'Este Gmail já foi enviado.' : 'Gmail da aprovação enviado.');
+      return body;
+    } catch (error) {
+      await loadReview();
+      throw error;
+    }
+  }
+
+  async function approveAllPending() {
+    const hype = state();
+    if (!hype?.user || !hype.pass) return alert('Entre no Admin primeiro.');
+
+    const pending = latestReviewRows.filter(row => row.status === 'Pendente' && Number(row.list_id));
+    if (!pending.length) {
+      if (typeof hypeNotify === 'function') hypeNotify('Não há cadastros pendentes para aprovar.');
+      return;
+    }
+
+    if (!confirm(`Aprovar todos os ${pending.length} cadastros pendentes da Lista/FREE?\n\nO sistema vai respeitar as regras e limites da lista e enviar o Gmail de aprovação quando houver e-mail válido.`)) return;
+
+    const button = $('v100ApproveAll');
+    if (button) {
+      button.disabled = true;
+      button.textContent = `APROVANDO 0/${pending.length}...`;
+    }
+
+    let approved = 0;
+    let existingTicket = 0;
+    let failed = 0;
+    let emailFailed = 0;
+
+    for (let index = 0; index < pending.length; index += 1) {
+      const item = pending[index];
+      if (button) button.textContent = `APROVANDO ${index + 1}/${pending.length}...`;
+
+      try {
+        const row = rows(await sbRpc('staff_guest_registration_review_v50', {
+          p_username: hype.user,
+          p_password: hype.pass,
+          p_list_id: Number(item.list_id),
+          p_decision: 'aprovar'
+        }))[0] || {};
+
+        if (row.status === 'Ingresso existente') {
+          existingTicket += 1;
+          continue;
+        }
+
+        if (row.status === 'Liberado' || row.status === 'Entrou') {
+          approved += 1;
+          if (row.email) {
+            try {
+              await sendApprovedGuestEmailRaw(Number(item.list_id), false);
+            } catch (mailError) {
+              emailFailed += 1;
+              console.warn('[HYPE V100][aprovar todos][e-mail]', item.list_id, mailError);
+            }
+          }
+        }
+      } catch (error) {
+        failed += 1;
+        console.warn('[HYPE V100][aprovar todos]', item.list_id, error);
+      }
+    }
+
+    try {
+      await loadReview();
+      if (typeof loadStaffTickets === 'function') {
+        await loadStaffTickets(document.getElementById('searchInput')?.value || '');
+      }
+      if (typeof renderClientsTable === 'function') renderClientsTable();
+      if (typeof renderV16Dashboard === 'function') renderV16Dashboard();
+    } catch (_) {}
+
+    if (button) button.disabled = false;
+    syncApproveAllButton();
+
+    const parts = [`${approved} aprovado(s)`];
+    if (existingTicket) parts.push(`${existingTicket} já tinha(m) ingresso`);
+    if (emailFailed) parts.push(`${emailFailed} Gmail(s) com falha`);
+    if (failed) parts.push(`${failed} não aprovado(s)`);
+    if (typeof hypeNotify === 'function') hypeNotify(`✅ Aprovação em massa concluída: ${parts.join(' • ')}.`);
   }
 
   async function deleteGuest(listId) {
@@ -392,6 +488,7 @@
     shareListRegistrationLink: () => share('Lista HYPE', listUrl),
     loadListSettings,
     saveGuestListSettings,
+    approveAllPending,
     reviewGuest,
     openPhoto,
     closePhoto,
