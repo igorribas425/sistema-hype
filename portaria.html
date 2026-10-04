@@ -117,7 +117,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <span id="cameraStatus" class="pill">CÂMERA DESLIGADA</span>
         <small style="color:var(--muted)">A câmera fica aberta e valida cada QR automaticamente. Depois é só apontar o próximo ingresso.</small>
       </div>
-      <div id="scannerArea" class="scanner portaria-extra"><video id="cameraVideo" autoplay muted playsinline></video><div class="scanline"></div><button class="btn red" style="position:absolute;right:10px;bottom:10px" onclick="HypePortaria.stopCamera()">FECHAR CÂMERA</button></div>
+      <div id="scannerArea" class="scanner"><video id="cameraVideo" autoplay muted playsinline></video><div class="scanline"></div><button class="btn red" style="position:absolute;right:10px;bottom:10px" onclick="HypePortaria.stopCamera()">FECHAR CÂMERA</button></div>
     </section>
 
 
@@ -221,10 +221,11 @@ html,body{max-width:100%;overflow-x:hidden}
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="supabase-config.js?v=20261003-v85"></script>
 <script src="hype-qrcode.js?v=20260902-v21"></script>
-<script src="portaria-v18.js?v=20261004-v101"></script>
-<script src="hype-v406-lista-simples.js?v=20261003-v81"></script>
+<script src="portaria-v18.js?v=20261004-v102"></script>
+<script src="hype-v406-lista-simples.js?v=20261004-v102"></script>
 <script src="portaria-v20.js?v=20261003-v68"></script>
 <script src="portaria-v67-register.js?v=20261003-v84"></script>
 <script src="hype-push-config.js?v=44"></script>
