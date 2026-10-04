@@ -698,6 +698,10 @@ Bruna Santos"></textarea>
       <div id="v50GuestReviewPanel" class="v50-review">
         <h4>📸 CONFERIR FOTOS E CONFIRMAR NOMES</h4>
         <p>Confira a foto e os dados enviados pela pessoa. Aprove ou recuse o cadastro aqui. Depois de aprovado, o nome entra na lista oficial e fica disponível na Portaria.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 16px">
+          <button id="v100ApproveAll" class="btn-action btn-confirm" type="button" onclick="HypeV49Registration.approveAllPending()">✓ APROVAR TODOS</button>
+          <small style="align-self:center;color:var(--muted)">Aprova todos os pendentes respeitando as regras da lista e envia o Gmail de confirmação.</small>
+        </div>
         <div id="v50GuestReviewList" class="v18-empty">Carregando cadastros para análise...</div>
       </div>
     </div>
@@ -779,7 +783,7 @@ Bruna Santos"></textarea>
 <script src="app.js?v=20261003-v91"></script>
 <script src="promoter-global-v16-8.js?v=20261002-v57-global"></script>
 <script src="hype-qrcode.js?v=20261001-v49"></script>
-<script src="hype-v49-registration-admin.js?v=20261003-v98"></script>
+<script src="hype-v49-registration-admin.js?v=20261003-v100"></script>
 <script>
 /* HYPE V24 // correção da sessão do Admin
    - JavaScript incorporado no próprio admin.html: não depende de v21-admin.js.
