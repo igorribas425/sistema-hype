@@ -10,6 +10,7 @@
   const arr = (d) => Array.isArray(d) ? d : (d ? [d] : []);
 
   let sb = null;
+  let searchSerial = 0;
   function client(){
     if(sb) return sb;
     const cfg = window.HYPE_SUPABASE_CONFIG || {};
@@ -56,12 +57,15 @@
       p_query:query
     };
     let data;
-    try{ data=await rpc('portaria_guest_simple_search_v77',args); }
+    try{ data=await rpc('portaria_guest_simple_search_v102',args); }
     catch(_){
-      try{ data=await rpc('portaria_guest_simple_search_v72',args); }
+      try{ data=await rpc('portaria_guest_simple_search_v77',args); }
       catch(__){
-        try{ data=await rpc('portaria_guest_simple_search_v67',args); }
-        catch(___){ data=await rpc('portaria_guest_simple_search_v406',args); }
+        try{ data=await rpc('portaria_guest_simple_search_v72',args); }
+        catch(___){
+          try{ data=await rpc('portaria_guest_simple_search_v67',args); }
+          catch(____){ data=await rpc('portaria_guest_simple_search_v406',args); }
+        }
       }
     }
     return arr(data).map(row=>({...row,event_id:Number(selectedEventId)}));
@@ -76,6 +80,7 @@
   }
 
   async function search(query,targetId='v406ListResult',append=false,silent=false){
+    const seq=++searchSerial;
     const q=String(query || $('v406ListSearch')?.value || $('searchInput')?.value || '').trim();
     if(!q){ if(!append && !silent) out('<div class="empty">Digite um nome para buscar.</div>',targetId); return 0; }
     if(!deviceKey()){ if(!append && !silent) out('<div class="empty">Portaria não autorizada neste computador.</div>',targetId); return 0; }
@@ -84,6 +89,9 @@
     try{
       // V81: busca somente no evento selecionado. Não puxa nomes de outro evento.
       const rows=await searchRowsForEvent(q,eventId());
+      if(seq!==searchSerial) return 0;
+      const liveMain=targetId==='results' ? String($('searchInput')?.value || '').trim() : q;
+      if(targetId==='results' && liveMain!==q) return 0;
       if(!rows.length){
         if(!append && !silent) out('',targetId);
         return 0;
@@ -91,7 +99,8 @@
       out(rows.map(render).join(''),targetId,append);
       return rows.length;
     }catch(err){
-      console.warn('[HYPE V81][busca lista]',err);
+      if(seq!==searchSerial) return 0;
+      console.warn('[HYPE V102][busca lista]',err);
       if(!append && !silent) out('',targetId);
       return 0;
     }
