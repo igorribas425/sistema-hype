@@ -31,6 +31,9 @@
     autoEventMeta: null,
     cameraStream: null,
     cameraTimer: null,
+    cameraBusy: false,
+    cameraLastCode: '',
+    cameraLastAt: 0,
     pairToken: '',
     pairExpiresAt: null,
     lastRemoteScanAt: 0,
@@ -508,10 +511,14 @@
       const needle=q.toLowerCase();
       const rows=(snap?.tickets||[]).filter(t=>Number(t.event_id)===Number(state.eventId)&&[t.customer_name,t.phone,t.cpf,t.ticket_code].some(v=>String(v||'').toLowerCase().includes(needle))).slice(0,25);
       if(rows.length) renderResults(rows);
-      else if(box) box.innerHTML='';
+      else if(box) box.innerHTML='<div class="empty">Nenhum ingresso encontrado no pacote offline. Para nomes da Lista/FREE, conecte a internet.</div>';
       return;
     }
 
+    if(box) box.innerHTML='<div class="empty">Buscando em ingressos e Lista/FREE...</div>';
+
+    let scoped=[];
+    let ticketError=null;
     try{
       let rows=[];
       try{
@@ -524,18 +531,28 @@
           rows=normalizeRows(await rpc('portaria_device_search_v18',{p_device_key:state.deviceKey,p_event_id:state.eventId,p_query:q}));
         }
       }
-
-      const scoped=rows.filter(item=>Number(item.event_id)===Number(state.eventId));
-      if(scoped.length) renderResults(scoped);
-      else if(box) box.innerHTML='';
-
-      if(window.HypeListaSimples){
-        await window.HypeListaSimples.search(q,'results',scoped.length>0,true);
-      }
-      // Busca manual V81: sem popup vermelho/verde. A tela mostra somente os nomes encontrados.
+      scoped=rows.filter(item=>Number(item.event_id)===Number(state.eventId));
     }catch(err){
-      console.warn('[HYPE V81][busca portaria]',err);
-      if(box) box.innerHTML='';
+      ticketError=err;
+      console.warn('[HYPE V101][busca ingressos]',err);
+    }
+
+    if(scoped.length) renderResults(scoped);
+    else if(box) box.innerHTML='';
+
+    let guestCount=0;
+    try{
+      if(window.HypeListaSimples){
+        guestCount=Number(await window.HypeListaSimples.search(q,'results',scoped.length>0,true) || 0);
+      }
+    }catch(err){
+      console.warn('[HYPE V101][busca Lista/FREE]',err);
+    }
+
+    if(!scoped.length && !guestCount && box){
+      box.innerHTML=ticketError
+        ? '<div class="empty error">Não consegui consultar os ingressos agora. Confira a internet e toque em ATUALIZAR.</div>'
+        : '<div class="empty">Nenhum nome encontrado neste evento. Tente só o primeiro nome, sobrenome, CPF ou WhatsApp e confira o evento selecionado.</div>';
     }
   }
 
@@ -812,16 +829,79 @@
     if(changed){updateOfflineBadge();await refresh(false);if(!q.length)await prepareOffline(true);}
   }
 
-  async function startCamera(){
-    if(!('BarcodeDetector' in window)||!navigator.mediaDevices?.getUserMedia)return alert('Este navegador não suporta leitura automática pela câmera. Use o celular pareado ou a busca.');
-    try{
-      state.cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});
-      const video=$('cameraVideo');video.srcObject=state.cameraStream;$('scannerArea').classList.add('show');
-      const detector=new BarcodeDetector({formats:['qr_code']});clearInterval(state.cameraTimer);
-      state.cameraTimer=setInterval(async()=>{if(video.readyState<2)return;try{const codes=await detector.detect(video);if(codes?.[0]?.rawValue){const raw=codes[0].rawValue;stopCamera();await processCode(raw,true);}}catch(_){}},450);
-    }catch(err){alert('Não foi possível abrir a câmera: '+err.message);}
+  function setCameraStatus(active,message=''){
+    const badge=$('cameraStatus');
+    const button=$('cameraStartBtn');
+    if(badge){
+      badge.textContent=message || (active?'CÂMERA QR ATIVA':'CÂMERA DESLIGADA');
+      badge.className=`pill ${active?'on':''}`.trim();
+    }
+    if(button) button.textContent=active?'⏹ PARAR CÂMERA QR':'📷 ABRIR CÂMERA QR';
   }
-  function stopCamera(){clearInterval(state.cameraTimer);state.cameraTimer=null;if(state.cameraStream)state.cameraStream.getTracks().forEach(t=>t.stop());state.cameraStream=null;$('scannerArea')?.classList.remove('show');}
+
+  async function startCamera(){
+    if(state.cameraStream){
+      stopCamera();
+      return;
+    }
+    if(!('BarcodeDetector' in window)||!navigator.mediaDevices?.getUserMedia){
+      alert('Este navegador não suporta leitura automática de QR pela câmera. Use Chrome/Edge atualizado no computador ou o celular leitor.');
+      return;
+    }
+    try{
+      state.cameraStream=await navigator.mediaDevices.getUserMedia({
+        video:{
+          facingMode:{ideal:'environment'},
+          width:{ideal:1280},
+          height:{ideal:720}
+        },
+        audio:false
+      });
+      const video=$('cameraVideo');
+      if(!video) throw new Error('Área da câmera não encontrada.');
+      video.srcObject=state.cameraStream;
+      await video.play().catch(()=>{});
+      $('scannerArea')?.classList.add('show');
+      setCameraStatus(true,'CÂMERA QR ATIVA • APONTE PARA O INGRESSO');
+
+      const detector=new BarcodeDetector({formats:['qr_code']});
+      clearInterval(state.cameraTimer);
+      state.cameraTimer=setInterval(async()=>{
+        if(state.cameraBusy || !state.cameraStream || video.readyState<2) return;
+        try{
+          const codes=await detector.detect(video);
+          const raw=String(codes?.[0]?.rawValue||'').trim();
+          if(!raw) return;
+          const now=Date.now();
+          if(raw===state.cameraLastCode && now-state.cameraLastAt<4500) return;
+          state.cameraLastCode=raw;
+          state.cameraLastAt=now;
+          state.cameraBusy=true;
+          setCameraStatus(true,'QR LIDO • VALIDANDO...');
+          tone('scan');
+          await processCode(raw,true);
+          setCameraStatus(true,'PRONTO • APONTE O PRÓXIMO QR');
+        }catch(err){
+          console.warn('[HYPE V101][camera QR]',err);
+        }finally{
+          state.cameraBusy=false;
+        }
+      },300);
+    }catch(err){
+      stopCamera();
+      alert('Não foi possível abrir a câmera. Autorize o acesso à câmera do navegador e tente de novo.\n\n'+(err?.message||err));
+    }
+  }
+
+  function stopCamera(){
+    clearInterval(state.cameraTimer);
+    state.cameraTimer=null;
+    state.cameraBusy=false;
+    if(state.cameraStream) state.cameraStream.getTracks().forEach(t=>t.stop());
+    state.cameraStream=null;
+    $('scannerArea')?.classList.remove('show');
+    setCameraStatus(false);
+  }
 
   function flash(ok,title,message){
     const el=$('flash');if(!el)return;el.className=`flash show ${ok?'ok':'bad'}`;el.innerHTML=`<div class="flash-box"><b>${esc(title)}</b><span>${esc(message||'')}</span></div>`;tone(ok?'ok':'bad');setTimeout(()=>{el.className='flash';el.innerHTML='';},1300);
