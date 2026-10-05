@@ -370,16 +370,26 @@
     clearInterval(state.syncTimer);
     clearInterval(state.eventTimer);
 
-    // V31: somente a aba VISÍVEL da Portaria pode consumir a fila do celular.
-    // Isso evita que uma aba antiga/oculta roube o QR antes da tela usada no evento.
-    state.scanTimer=setInterval(()=>{
-      if(document.visibilityState==='visible') pullRemoteScan().catch(showRemoteReaderError);
-    },420);
-    state.refreshTimer=setInterval(()=>refresh(false).catch(()=>{}),5000);
-    state.syncTimer=setInterval(()=>syncQueue().catch(()=>{}),4000);
-    // V32: a cada 30 s confere a janela do evento. Às 08:00 do dia seguinte
-    // o evento anterior deixa de ser o atual e o próximo é escolhido sozinho.
-    state.eventTimer=setInterval(()=>syncAutoEventV32(false).catch(()=>{}),30000);
+    // V105: a operação real usa a própria câmera da Portaria no celular.
+    // O antigo canal "celular leitor -> computador" fica disponível no código,
+    // mas não faz polling em segundo plano.
+    state.scanTimer=null;
+
+    state.refreshTimer=setInterval(()=>{
+      if(document.visibilityState!=='visible') return;
+      refresh(false).catch(()=>{});
+    },6000);
+
+    state.syncTimer=setInterval(()=>{
+      if(document.visibilityState!=='visible') return;
+      syncQueue().catch(()=>{});
+    },6000);
+
+    // Confere a troca automática de evento apenas enquanto a Portaria está visível.
+    state.eventTimer=setInterval(()=>{
+      if(document.visibilityState!=='visible') return;
+      syncAutoEventV32(false).catch(()=>{});
+    },30000);
   }
 
   function showRemoteReaderError(err){
@@ -1060,7 +1070,8 @@
 
     window.addEventListener('online',async()=>{
       setNetworkBadge();
-      if(state.cameraWanted && !state.cameraStream && document.visibilityState==='visible'){
+      if(document.visibilityState!=='visible') return;
+      if(state.cameraWanted && !state.cameraStream){
         startCamera(true).catch(()=>{});
       }
       await syncQueue();
@@ -1080,11 +1091,15 @@
     document.addEventListener('visibilitychange',()=>{
       const b=$('readerBadge');
       if(document.visibilityState==='visible'){
-        if(b && !/ERRO/.test(b.textContent||'')){b.textContent='LEITOR ATIVO';b.className='pill on';}
-        pullRemoteScan().catch(showRemoteReaderError);
+        if(b && !/ERRO/.test(b.textContent||'')){b.textContent='PORTARIA ATIVA';b.className='pill on';}
         if(state.cameraWanted && !state.cameraStream){
           startCamera(true).catch(()=>{});
         }
+        // V105: ao voltar para a Portaria, sincroniza uma vez em vez de manter
+        // timers trabalhando enquanto o porteiro está no WhatsApp/tela bloqueada.
+        syncQueue().catch(()=>{});
+        syncAutoEventV32(false).catch(()=>{});
+        refresh(false).catch(()=>{});
       }else{
         if(b){b.textContent='PAUSADO NESTA ABA';b.className='pill';}
         if(state.cameraStream){
