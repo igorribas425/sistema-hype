@@ -31,6 +31,11 @@
       subtitle: 'Pagamentos, status, busca e ingressos',
       ids: ['adminMainGrid','v95ClientsPanel']
     },
+    cadastros: {
+      title: 'Cadastros de Clientes',
+      subtitle: 'Histórico permanente, frequência e bloqueios',
+      ids: ['v103CustomerRegistryPanel']
+    },
     eventos: {
       title: 'Eventos & Lotes',
       subtitle: 'Festas, preços, horários e categorias',
@@ -76,6 +81,8 @@
         await window.HypeV34?.refreshLive?.();
       } else if (key === 'clientes') {
         if (typeof refreshAdminOrders === 'function') await refreshAdminOrders(false);
+      } else if (key === 'cadastros') {
+        await window.HypeCustomerRegistryV103?.load?.();
       } else if (key === 'eventos') {
         if (typeof loadAdminEvents === 'function') await loadAdminEvents();
         if (typeof renderAdminEvents === 'function') renderAdminEvents();
