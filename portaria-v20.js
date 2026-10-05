@@ -726,29 +726,27 @@
     clearInterval(state.readersTimer);
     clearInterval(state.contextTimer);
 
-    // Leitores continuam funcionando. A venda na Portaria foi desativada na V67.
-    state.readersTimer = setInterval(() => {
-      if (!$('portariaApp')?.classList.contains('hidden')) loadReaders().catch(()=>{});
-    }, 2500);
+    // V105: o leitor remoto (celular -> computador) não é usado na operação atual.
+    // Mantemos as funções disponíveis, mas sem consulta automática a cada 2,5 s.
+    state.readersTimer = null;
 
     if (salePanel) {
       salePanel.style.display = 'block';
       setDoorTab('cadastro');
       state.contextTimer = setInterval(() => {
-        if ($('portariaApp')?.classList.contains('hidden')) return;
+        if (document.hidden || $('portariaApp')?.classList.contains('hidden')) return;
         const id = currentEventId();
         if (!id) return;
-        if (id !== state.lastEventId || Date.now() - (state.lastSalesContextAt || 0) > 7000) {
+        if (id !== state.lastEventId || Date.now() - (state.lastSalesContextAt || 0) > 9000) {
           state.lastEventId = id;
           state.lastSalesContextAt = Date.now();
           loadSalesContext().catch(()=>{});
         }
-      }, 1200);
+      }, 3000);
     }
 
     setTimeout(()=>{
-      loadReaders().catch(()=>{});
-      if (salePanel) loadSalesContext().catch(()=>{});
+      if (salePanel && !document.hidden) loadSalesContext().catch(()=>{});
     },1600);
   }
 
