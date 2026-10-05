@@ -31,6 +31,7 @@
   let pushReady = false;
   let pushWorking = false;
   let audioTested = false;
+  let chatPollTimer = null;
 
   const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
@@ -356,6 +357,7 @@
       load(true).catch(() => {});
       setTimeout(() => document.getElementById('hypeChatV38Input')?.focus(), 80);
     }
+    if (role === 'portaria') scheduleChatPoll(true);
   }
 
   function toggle() { setOpen(!open); }
@@ -509,9 +511,38 @@
     });
   }
 
+  function scheduleChatPoll(immediate = false) {
+    if (role !== 'portaria') return;
+    clearTimeout(chatPollTimer);
+    const delay = immediate ? 50 : (document.hidden ? 0 : (open ? 1800 : 9000));
+    if (document.hidden) return;
+    chatPollTimer = setTimeout(async () => {
+      if (!document.hidden) {
+        await load(false).catch(() => {});
+      }
+      scheduleChatPoll(false);
+    }, delay);
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     mount();
     setTimeout(() => load(true).catch(() => {}), 700);
-    setInterval(() => load(false).catch(() => {}), 1500);
+
+    if (role === 'portaria') {
+      // V105: na Portaria, chat fechado consulta bem menos e para totalmente
+      // quando a aba vai para segundo plano. Ao voltar, sincroniza imediatamente.
+      scheduleChatPoll(false);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          clearTimeout(chatPollTimer);
+          chatPollTimer = null;
+        } else {
+          scheduleChatPoll(true);
+        }
+      });
+    } else {
+      // Admin mantém o comportamento anterior.
+      setInterval(() => load(false).catch(() => {}), 1500);
+    }
   });
 })();
