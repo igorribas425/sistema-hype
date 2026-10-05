@@ -357,11 +357,11 @@ html,body{max-width:100%;overflow-x:hidden}
     .v95-section-bar button{flex:0 0 auto;min-height:38px;border:1px solid rgba(255,255,255,.16);border-radius:10px;background:#151519;color:#fff;padding:0 12px;font-weight:900;font-size:10px;cursor:pointer}
     .v95-section-bar strong{display:block;font-size:13px}.v95-section-bar small{display:block;color:var(--muted);font-size:9px;margin-top:3px}
     .v95-hidden{display:none!important}
-    #v94SalesTopStats,#v94SalesFinancePanel,#v16DashboardPanel,#v16ManagementPanel,#v34LivePanel,#v92PortariaPeoplePanel,#v92EvaluationPanel,#eventsAdminPanel,#v18ControlPanel,#v92ListPeoplePanel,#v408SimpleListAdmin,#adminMainGrid,#v95LotsPanel,#v95ClientsPanel{display:none!important}
+    #v94SalesTopStats,#v94SalesFinancePanel,#v16DashboardPanel,#v16ManagementPanel,#v34LivePanel,#v92PortariaPeoplePanel,#v92EvaluationPanel,#eventsAdminPanel,#v18ControlPanel,#v92ListPeoplePanel,#v408SimpleListAdmin,#adminMainGrid,#v95LotsPanel,#v95ClientsPanel,#v103CustomerRegistryPanel{display:none!important}
     #v94SalesTopStats.v95-show{display:grid!important}
     #adminMainGrid.v95-show{display:grid!important;grid-template-columns:1fr!important}
     #v95LotsPanel.v95-show,#v95ClientsPanel.v95-show{display:block!important}
-    #v94SalesFinancePanel.v95-show,#v16DashboardPanel.v95-show,#v16ManagementPanel.v95-show,#v34LivePanel.v95-show,#v92PortariaPeoplePanel.v95-show,#v92EvaluationPanel.v95-show,#eventsAdminPanel.v95-show,#v18ControlPanel.v95-show,#v92ListPeoplePanel.v95-show,#v408SimpleListAdmin.v95-show{display:block!important}
+    #v94SalesFinancePanel.v95-show,#v16DashboardPanel.v95-show,#v16ManagementPanel.v95-show,#v34LivePanel.v95-show,#v92PortariaPeoplePanel.v95-show,#v92EvaluationPanel.v95-show,#eventsAdminPanel.v95-show,#v18ControlPanel.v95-show,#v92ListPeoplePanel.v95-show,#v408SimpleListAdmin.v95-show,#v103CustomerRegistryPanel.v95-show{display:block!important}
     @media(max-width:640px){
       body{padding:10px max(10px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))!important}
       .v95-brand-logo{width:min(220px,66vw)}
@@ -404,6 +404,7 @@ html,body{max-width:100%;overflow-x:hidden}
       <button class="v95-home-card" type="button" data-v95-open="lista"><span class="v95-icon">📋</span><b>Lista / FREE</b><small>Fotos, aprovações e nomes liberados</small></button>
       <button class="v95-home-card" type="button" data-v95-open="portaria"><span class="v95-icon">🚪</span><b>Portaria</b><small>Entradas e movimento da noite</small></button>
       <button class="v95-home-card" type="button" data-v95-open="clientes"><span class="v95-icon">🎟️</span><b>Clientes</b><small>Ingressos, pagamentos e busca</small></button>
+      <button class="v95-home-card" type="button" data-v95-open="cadastros"><span class="v95-icon">👥</span><b>Cadastros</b><small>Histórico permanente, frequência e bloqueios</small></button>
       <button class="v95-home-card" type="button" data-v95-open="eventos"><span class="v95-icon">🎤</span><b>Eventos</b><small>Festas, lotes, preços e horários</small></button>
       <button class="v95-home-card" type="button" data-v95-open="avaliacao"><span class="v95-icon">⭐</span><b>Avaliações</b><small>Feedbacks bons e ruins</small></button>
       <button class="v95-home-card" type="button" data-v95-open="ferramentas"><span class="v95-icon">🎁</span><b>Sorteio & Acessos</b><small>Sorteio e dispositivos da equipe</small></button>
@@ -414,6 +415,56 @@ html,body{max-width:100%;overflow-x:hidden}
     <button id="v95BackHome" type="button">← INÍCIO</button>
     <div><strong id="v95SectionTitle">Área</strong><small id="v95SectionSubtitle"></small></div>
   </div>
+
+
+  <style id="hype-v103-customer-style">
+    #v103CustomerRegistryPanel{max-width:1050px;margin:0 auto 22px}
+    .v103-headbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+    .v103-headbar p{margin:5px 0 0;color:var(--muted);font-size:11px}
+    .v103-search{display:grid;grid-template-columns:1fr auto;gap:8px;margin:16px 0}
+    .v103-search input{width:100%;min-height:46px;background:#08080b;border:1px solid var(--line);border-radius:11px;color:#fff;padding:0 13px}
+    .v103-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+    .v103-summary>div{background:#0b0b0f;border:1px solid var(--line);border-radius:12px;padding:14px}
+    .v103-summary b{display:block;font-size:24px}.v103-summary span{display:block;color:var(--muted);font-size:9px;font-weight:900;margin-top:4px}
+    .v103-card{border:1px solid var(--line);border-radius:15px;background:#0a0a0d;padding:15px;margin-bottom:10px}
+    .v103-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .v103-head h4{font-size:16px;margin:0}.v103-contact{font-size:10px;color:var(--muted);margin-top:5px;line-height:1.55}
+    .v103-badge{display:inline-flex;padding:6px 9px;border-radius:999px;font-size:8px;font-weight:950;white-space:nowrap}
+    .v103-badge.ok{color:#a8f3c4;background:rgba(40,209,124,.11);border:1px solid rgba(40,209,124,.3)}
+    .v103-badge.temp{color:#ffe097;background:rgba(255,178,46,.1);border:1px solid rgba(255,178,46,.3)}
+    .v103-badge.block{color:#ff9bab;background:rgba(255,22,61,.1);border:1px solid rgba(255,22,61,.3)}
+    .v103-reason{margin-top:9px;padding:9px 11px;border-radius:9px;background:#15151a;color:#c9c9d0;font-size:10px}
+    .v103-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+    .v103-stats>div{border:1px solid var(--line);border-radius:10px;padding:10px;background:#08080b}
+    .v103-stats b{display:block;font-size:20px}.v103-stats span{display:block;font-size:8px;color:var(--muted);font-weight:900;margin-top:3px}
+    .v103-last{margin-top:10px;font-size:10px;color:var(--muted)}
+    .v103-history{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+    .v103-history summary{cursor:pointer;font-size:9px;font-weight:950;color:#d8d8df}
+    .v103-history-row{display:grid;gap:3px;margin-top:8px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#08080b}
+    .v103-history-row b{font-size:9px}.v103-history-row span{font-size:10px;color:#ddd}.v103-history-row small{font-size:9px;color:var(--muted)}
+    .v103-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .v103-btn{min-height:38px;border-radius:9px;border:1px solid var(--line);background:#151519;color:#fff;padding:0 12px;font-size:9px;font-weight:950;cursor:pointer}
+    .v103-btn.warn{border-color:rgba(255,178,46,.35)}.v103-btn.danger{border-color:rgba(255,22,61,.4)}.v103-btn.good{border-color:rgba(40,209,124,.4)}
+    .v103-empty{padding:16px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:11px}.v103-empty.error{color:#ff9bab}
+    @media(max-width:700px){.v103-summary,.v103-stats{grid-template-columns:1fr}.v103-head{flex-direction:column}.v103-search{grid-template-columns:1fr}}
+  </style>
+
+  <section class="panel-box" id="v103CustomerRegistryPanel">
+    <div class="v103-headbar">
+      <div><h3>👥 CADASTRO PERMANENTE DE CLIENTES</h3><p>Uma pessoa fica cadastrada uma única vez. Compras e Lista/FREE entram no histórico sem duplicar o cliente.</p></div>
+      <button class="btn-action" type="button" onclick="HypeCustomerRegistryV103.load()">↻ ATUALIZAR</button>
+    </div>
+    <div class="v103-summary">
+      <div><b id="v103CustomerCount">0</b><span>CLIENTES CADASTRADOS</span></div>
+      <div><b id="v103BlockedCount">0</b><span>BLOQUEADOS AGORA</span></div>
+      <div><b id="v103AttendanceTotal">0</b><span>TOTAL DE IDAS ÀS FESTAS</span></div>
+    </div>
+    <div class="v103-search">
+      <input id="v103CustomerSearch" placeholder="Buscar por nome, CPF, WhatsApp ou e-mail" oninput="HypeCustomerRegistryV103.search()">
+      <button class="btn-action" type="button" onclick="HypeCustomerRegistryV103.load()">BUSCAR</button>
+    </div>
+    <div id="v103CustomerRegistryList"><div class="v103-empty">Abra esta aba para carregar os cadastros.</div></div>
+  </section>
 
   <div class="stats stats-extended" id="v94SalesTopStats">
     <div class="stat-card"><span>Total geral</span><h3 id="totalCount">0</h3></div>
@@ -1006,6 +1057,7 @@ Bruna Santos"></textarea>
   <script src="hype-v38-chat.js?v=421"></script>
   <script src="hype-v408-lista-admin.js?v=20261003-v71"></script>
   <script src="admin-v92-tabs.js?v=20261003-v94"></script>
-  <script src="admin-v95-hub.js?v=20261003-v95"></script>
+  <script src="admin-v103-customers.js?v=20261004-v103"></script>
+  <script src="admin-v95-hub.js?v=20261004-v103"></script>
 </body>
 </html>
