@@ -168,18 +168,10 @@
 
   async function syncPortaria(force=false){
     if(!pageVisible()) return;
-    const now=Date.now();
-    if(!force && now-state.lastPortariaAt<5000) return;
-    if(state.portariaBusy) return;
-    state.portariaBusy=true;
-    state.lastPortariaAt=now;
-    try{
-      await safeCall('HypeV20.loadSalesContext',()=>window.HypeV20?.loadSalesContext?.());
-      // O painel principal da Portaria já atualiza sozinho no V18, mas este reforço mantém a tela viva.
-      await safeCall('HypePortaria.refresh',()=>window.HypePortaria?.refresh?.(false));
-      const n=$('v19DoorNotice');
-      if(n && !window.HypeV20?.currentOrder) n.title=`V43 ao vivo: atualizado ${nowTime()}`;
-    }finally{state.portariaBusy=false;}
+    // V105: a Portaria V18/V20 já possui suas próprias rotinas.
+    // Não repete refresh/dashboard aqui para evitar consultas duplicadas.
+    const n=$('v19DoorNotice');
+    if(n && !window.HypeV20?.currentOrder) n.title=`Portaria ativa • ${nowTime()}`;
   }
 
   function boot(){
@@ -194,8 +186,9 @@
       setTimeout(()=>syncAdmin(true),1200);
     }
     if(isPortaria){
+      // V105: sem timer duplicado na Portaria. V18/V20 cuidam da atualização.
       clearInterval(state.portariaTimer);
-      state.portariaTimer=setInterval(()=>syncPortaria(false),4000);
+      state.portariaTimer=null;
       setTimeout(()=>syncPortaria(true),1800);
     }
   }
