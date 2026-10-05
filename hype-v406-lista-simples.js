@@ -100,8 +100,14 @@
       return rows.length;
     }catch(err){
       if(seq!==searchSerial) return 0;
-      console.warn('[HYPE V102][busca lista]',err);
-      if(!append && !silent) out('',targetId);
+      console.warn('[HYPE V104][busca lista]',err);
+      if(!append && !silent){
+        const msg=String(err?.message||err||'');
+        const networkFail=navigator.onLine===false || /failed to fetch|fetch failed|network|connection|timeout|offline/i.test(msg);
+        out(networkFail
+          ? '<div class="empty">⚠️ Sem internet. Reconecte e tente a busca novamente.</div>'
+          : '<div class="empty">⚠️ Não foi possível consultar a Lista HYPE. Tente novamente.</div>',targetId);
+      }
       return 0;
     }
   }
@@ -177,8 +183,17 @@
       if(window.HypePortaria?.refresh) window.HypePortaria.refresh(false).catch(()=>{});
       return true;
     }catch(err){
-      console.warn('[HYPE V103][QR Lista]',err);
-      return false;
+      console.warn('[HYPE V104][QR Lista]',err);
+      const msg=String(err?.message||err||'');
+      const networkFail=navigator.onLine===false || /failed to fetch|fetch failed|network|connection|timeout|offline/i.test(msg);
+      if(networkFail){
+        flash(false,'SEM INTERNET','A conexão caiu ao consultar a Lista HYPE. Reconecte e leia este QR novamente.');
+      }else{
+        flash(false,'ERRO NA LISTA HYPE',msg || 'Não foi possível consultar este QR. Tente novamente.');
+      }
+      // true = o QR já foi tratado; impede a Portaria de continuar e mostrar
+      // "QR não encontrado" para uma falha real de conexão/servidor.
+      return true;
     }
   }
 
