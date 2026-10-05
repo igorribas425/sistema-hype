@@ -1576,7 +1576,7 @@ async function createPixOrder(e) {
         const emailResult = await autoSendFreeTicketEmail(entry);
         const emailNotice = document.getElementById("paymentSuccessEmail");
         if (emailNotice && (emailResult?.email_sent || emailResult?.already_sent)) {
-          emailNotice.textContent = "📧 Ingresso enviado automaticamente para o e-mail informado.";
+          emailNotice.textContent = "📧 Ingresso enviado para o Gmail. Se não aparecer, confira Spam/Lixo eletrônico. Na Portaria, apresente o QR Code.";
         }
         hypeNotify(`Ingresso ${entry.gender || gender || "FREE"} FREE ${entry.ticket_code} liberado e enviado por e-mail.`);
       } catch (emailErr) {
@@ -1681,10 +1681,10 @@ async function refreshCurrentOrderStatus(showMessage = true) {
       if (successEmail) {
         const isFreeConfirmed = Number(entry.price || 0) <= 0;
         successEmail.textContent = entry.email_sent
-          ? "📧 Uma cópia do ingresso já foi enviada para o e-mail informado na compra."
+          ? "📧 Seu ingresso já foi enviado para o Gmail. Confira também Spam/Lixo eletrônico e apresente o QR Code na Portaria."
           : isFreeConfirmed
-            ? "📧 Ingresso FREE liberado. O envio por e-mail está sendo processado automaticamente."
-            : "📧 Pagamento confirmado. O envio do ingresso por e-mail está sendo processado automaticamente.";
+            ? "📧 Ingresso FREE liberado. Normalmente o Gmail chega em menos de 1 minuto. Confira também Spam/Lixo eletrônico e apresente o QR Code na Portaria."
+            : "📧 Pagamento confirmado. Normalmente o ingresso chega no Gmail em menos de 1 minuto. Confira também Spam/Lixo eletrônico e apresente o QR Code na Portaria.";
       }
 
       if (showMessage) hypeNotify(Number(entry.price || 0) <= 0 ? "Ingresso FREE liberado!" : "Pagamento confirmado. Seu ingresso está liberado!");
@@ -1713,8 +1713,8 @@ function fillTicketCard(entry) {
   const emailNotice = document.getElementById("ticketEmailNotice");
   if (emailNotice) {
     emailNotice.textContent = entry.email_sent
-      ? "📧 Cópia enviada automaticamente para o e-mail informado na compra."
-      : "📧 O envio do ingresso por e-mail está sendo processado automaticamente.";
+      ? "📧 Cópia enviada para o Gmail. Confira também Spam/Lixo eletrônico e apresente o QR Code na Portaria."
+      : "📧 O ingresso normalmente chega no Gmail em menos de 1 minuto. Confira também Spam/Lixo eletrônico e apresente o QR Code na Portaria.";
   }
 
   const qr = document.getElementById("ticketQrImg");
