@@ -236,7 +236,7 @@
       const response = await fetch(edgeUrl, {method: 'POST', body: payload});
       const body = await response.json().catch(() => ({}));
       if (!response.ok || body.ok !== true) throw new Error(body.error || body.message || 'Não foi possível concluir o cadastro.');
-      status('Cadastro enviado! Agora está em análise.', 'ok');
+      status('Cadastro enviado! Agora está em análise. Depois de aprovado, o QR da Lista HYPE normalmente chega no Gmail em menos de 1 minuto. Confira também Spam/Lixo eletrônico e apresente o QR Code na Portaria.', 'ok');
       const cta = $('guestTicketCta');
       const panel = $('guestForm')?.closest('.panel');
       if (panel) panel.style.display = 'none';
