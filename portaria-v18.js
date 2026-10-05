@@ -619,6 +619,12 @@
         }
       }
       if(!rows.length){
+        // V103: antes de considerar o QR inválido, tenta como QR da Lista HYPE.
+        if(window.HypeListaSimples?.processQr){
+          const handled=await window.HypeListaSimples.processQr(String(code||'').trim());
+          if(handled) return;
+        }
+
         // V30: descobre se o QR existe em OUTRO evento sem liberar entrada.
         // Assim a Portaria explica exatamente de qual show e data é o ingresso.
         let actual=null;
