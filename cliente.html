@@ -453,6 +453,10 @@ html,body{max-width:100%;overflow-x:hidden}
     <div class="box">
       <h4 class="box-kicker">PAGAMENTO PIX</h4>
       <h2 class="box-title">Garanta o seu ingresso antecipado</h2>
+      <div style="margin:12px 0 16px;padding:13px 14px;border:1px solid rgba(40,209,124,.32);background:rgba(40,209,124,.08);border-radius:14px;font-size:12px;line-height:1.6;color:#d9f8e6">
+        <strong style="display:block;color:#a8f3c4;margin-bottom:4px">📧 INGRESSO NO GMAIL + QR CODE</strong>
+        Depois que o PIX for confirmado, o ingresso normalmente chega no seu e-mail em <strong>menos de 1 minuto</strong>. Se não aparecer na caixa de entrada, confira <strong>Spam</strong> e <strong>Lixo eletrônico</strong>. Na Portaria, apresente o <strong>QR Code do e-mail</strong> junto com seu documento.
+      </div>
 
       <form id="ticketForm" onsubmit="createPixOrder(event)">
         <div class="group">
@@ -543,7 +547,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <div class="success-icon">✅</div>
         <h3>PAGAMENTO CONFIRMADO</h3>
         <p>Seu ingresso HYPE está liberado.</p>
-        <small id="paymentSuccessEmail">📧 O ingresso também será enviado automaticamente para o e-mail informado na compra.</small>
+        <small id="paymentSuccessEmail">📧 Seu ingresso normalmente chega no Gmail em menos de 1 minuto. Confira também Spam/Lixo eletrônico e apresente o QR Code na Portaria.</small>
         <button class="btn" onclick="openPaidTicket()">ACESSAR MEU INGRESSO</button>
       </div>
 
@@ -573,7 +577,7 @@ html,body{max-width:100%;overflow-x:hidden}
           <p><span>Código ID:</span> <strong id="tTicketId" style="color:#aaa"></strong></p>
         </div>
         <div class="ticket-qr"><img id="ticketQrImg" src="" alt="QR Code do ingresso"></div>
-        <div class="ticket-email-notice" id="ticketEmailNotice">📧 O ingresso também será enviado automaticamente para o e-mail informado na compra.</div>
+        <div class="ticket-email-notice" id="ticketEmailNotice">📧 Confira seu Gmail e também Spam/Lixo eletrônico. Na Portaria, apresente este QR Code junto com seu documento.</div>
         <p style="font-size:11px;color:var(--muted);line-height:1.4;margin-top:10px">Apresente o QR Code, seu ID ou seu nome na portaria com documento.</p>
         <button class="btn ghost-btn" onclick="location.reload()">Comprar Outro</button>
       </div>
@@ -595,7 +599,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
-<script src="app.js?v=20261002-v67"></script>
+<script src="app.js?v=20261004-v103"></script>
 <script src="promoter-global-v16-8.js?v=20261002-v57-global"></script>
 <script src="v18-client.js?v=20260902-v20"></script>
 </body>
