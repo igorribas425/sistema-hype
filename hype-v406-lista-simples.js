@@ -135,6 +135,53 @@
     return `<article class="ticket ${cls}"><div><span class="sector">${sourceLabel}</span><h2>${esc(row.name||'Nome')}</h2><div class="meta">Sem cobrança na Portaria${contact?`<br>${contact}`:''}${row.remote_event_name?`<br>Evento do cadastro: ${esc(row.remote_event_name)}`:''}<br>${row.created_at?`Adicionado ${esc(fmt(row.created_at))}`:''}${row.entered_at?`<br>Entrou ${esc(fmt(row.entered_at))}`:''}${exitInfo}${mismatch}</div></div><div class="ticket-actions"><div class="state ${cancelado||saiu||eventMismatch?'danger':'good'}">${esc(state)}</div>${btn}</div></article>`;
   }
 
+  async function processQr(rawCode){
+    const token=String(rawCode||'').trim().replace(/^#/,'');
+    if(!token || !deviceKey()) return false;
+    try{
+      const rows=arr(await rpc('portaria_guest_qr_lookup_v103',{
+        p_device_key:deviceKey(),
+        p_qr_token:token
+      }));
+      const row=rows[0]||null;
+      if(!row) return false;
+
+      if(Number(row.event_id)!==eventId()){
+        out(render(row),'results',false);
+        flash(false,'QR DA LISTA DE OUTRO EVENTO',row.event_name||'Selecione o evento correto.');
+        return true;
+      }
+
+      out(render(row),'results',false);
+
+      if(String(row.status||'')==='Entrou'){
+        flash(false,'QR JÁ UTILIZADO',`${row.name||'Nome'} já teve a entrada confirmada.`);
+        return true;
+      }
+
+      const entered=arr(await rpc('portaria_guest_simple_enter_v406',{
+        p_device_key:deviceKey(),
+        p_list_id:Number(row.list_id)
+      }))[0]||{};
+
+      if(!entered.ok){
+        flash(false,'NEGADO',entered.message||'Lista não liberada.');
+        return true;
+      }
+
+      flash(true,'LISTA HYPE LIBERADA',entered.name||row.name||'Entrada confirmada');
+      const input=$('searchInput');
+      if(input) input.value='';
+      const results=$('results');
+      if(results) results.innerHTML=`<div class="empty">✅ ${esc(entered.name||row.name||'Nome')} entrou pela Lista HYPE. Pronto para o próximo QR.</div>`;
+      if(window.HypePortaria?.refresh) window.HypePortaria.refresh(false).catch(()=>{});
+      return true;
+    }catch(err){
+      console.warn('[HYPE V103][QR Lista]',err);
+      return false;
+    }
+  }
+
   async function enter(id){
     if(!id) return;
     if(!confirm('Confirmar entrada deste nome da lista?')) return;
@@ -155,5 +202,5 @@
     }
   }
 
-  window.HypeListaSimples={add,search,enter};
+  window.HypeListaSimples={add,search,enter,processQr};
 })();
