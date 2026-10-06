@@ -77,7 +77,9 @@
     // Lista pública: trabalha somente com o BAILE DA JESSY (sábado 10/10).
     const saturday = events
       .filter(row => Number(row.event_id) === 19 || String(row.event_date || '') === '2026-10-10')
-      .sort((a,b) => Number(b.event_id || 0) - Number(a.event_id || 0))[0] || null;
+      .sort((a,b) => Number(b.event_id || 0) - Number(a.event_id || 0))[0]
+      || events[0]
+      || null;
     events = saturday ? [saturday] : [];
     selectedEventId = saturday ? Number(saturday.event_id) : 0;
     if (submit) submit.disabled = !saturday;
