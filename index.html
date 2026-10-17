@@ -458,15 +458,7 @@ body{overflow-x:hidden}
         </div>
         
 
-        <div class="group two-col v16-sales-fields">
-          <div>
-            <label>Cupom de desconto <small>(opcional)</small></label>
-            <div class="v16-coupon-row">
-              <input type="text" id="clientCoupon" placeholder="Ex.: HYPE10" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
-              <button type="button" class="v16-mini-btn" onclick="applyCouponV16()">APLICAR</button>
-            </div>
-            <div id="couponStatus" class="v16-coupon-status"></div>
-          </div>
+        <div class="group v16-sales-fields">
           <div>
             <label>Promoter</label>
             <input type="hidden" id="clientPromoter" value="">
@@ -563,7 +555,7 @@ body{overflow-x:hidden}
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
-<script src="app.js?v=20261002-v67"></script>
+<script src="app.js?v=20261017-sem-cupons"></script>
 <script src="promoter-global-v16-8.js?v=20261002-v57-global"></script>
 <script src="v18-client.js?v=20260902-v20"></script>
 </body>
