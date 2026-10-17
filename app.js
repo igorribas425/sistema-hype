@@ -15,7 +15,6 @@ const HYPE = {
   tickets: [],
   guestLists: [],
   promoters: [],
-  coupons: [],
   promoterLinkCode: "",
   promoterLinkEventId: null,
   promoterLinkInvalid: false,
@@ -1122,12 +1121,10 @@ function renderClientTickets(keepId = null) {
 async function updatePrice() {
   const select = document.getElementById("ticketType");
   const display = document.getElementById("ticketPriceDisplay");
-  const status = document.getElementById("couponStatus");
   const lot = (HYPE.lots || []).find(t => String(t.id) === String(select?.value));
   HYPE.currentQuote = null;
   if (!lot) {
     if (display) display.value = "NENHUMA CATEGORIA DISPONÍVEL";
-    if (status) status.textContent = "";
     updateServiceFeeInfo(0);
     updateClientTicketState();
     return;
@@ -1136,39 +1133,8 @@ async function updatePrice() {
   const basePrice = getLotGenderPrice(lot);
   if (display) display.value = basePrice <= 0 ? "FREE" : hypeFormatMoney(hypeTotalWithServiceFee(basePrice));
   updateServiceFeeInfo(basePrice);
-  const coupon = (document.getElementById("clientCoupon")?.value || "").trim().toUpperCase();
-  if (status) { status.textContent = ""; status.className = "v16-coupon-status"; }
-
-  if (coupon) {
-    try {
-      const rows = await sbRpc("public_quote_v16", {
-        p_lot_id: Number(lot.id),
-        p_gender: document.getElementById("clientGender")?.value || "Feminino",
-        p_coupon_code: coupon
-      });
-      const quote = Array.isArray(rows) ? rows[0] : rows;
-      HYPE.currentQuote = quote || null;
-      if (quote?.ok) {
-        if (display) display.value = Number(quote.final_price || 0) <= 0 ? "FREE" : hypeFormatMoney(hypeTotalWithServiceFee(quote.final_price));
-        updateServiceFeeInfo(quote.final_price);
-        if (status) { status.textContent = `✅ ${quote.message} • desconto ${hypeFormatMoney(quote.discount_amount)}`; status.className = "v16-coupon-status ok"; }
-      } else if (status) {
-        status.textContent = `⚠️ ${quote?.message || "Cupom inválido"}`;
-        status.className = "v16-coupon-status error";
-      }
-    } catch (err) {
-      if (status) { status.textContent = `⚠️ ${err.message || "Não foi possível validar o cupom"}`; status.className = "v16-coupon-status error"; }
-    }
-  }
-
   updateClientTicketState();
   hypeV14RenderLots();
-}
-
-function applyCouponV16() {
-  const input = document.getElementById("clientCoupon");
-  if (input) input.value = input.value.trim().toUpperCase();
-  updatePrice();
 }
 
 function updateClientTicketState() {
@@ -1380,7 +1346,7 @@ async function createManualOrder(e) {
       p_cpf: cpf,
       p_gender: gender,
       p_lot_id: Number(lot.id),
-      p_coupon_code: (document.getElementById("clientCoupon")?.value || "").trim().toUpperCase(),
+      p_coupon_code: null,
       p_promoter_code: (document.getElementById("clientPromoter")?.value || "").trim().toUpperCase()
     });
 
@@ -1559,7 +1525,7 @@ async function createPixOrder(e) {
       p_cpf: cpf,
       p_gender: gender,
       p_lot_id: Number(lot.id),
-      p_coupon_code: (document.getElementById("clientCoupon")?.value || "").trim().toUpperCase(),
+      p_coupon_code: null,
       p_promoter_code: (document.getElementById("clientPromoter")?.value || "").trim().toUpperCase()
     });
 
@@ -3309,24 +3275,26 @@ function hypeV14InitInteractions() {
 /* ========================= V16: VENDAS / GESTAO ========================= */
 
 async function loadV16AdminData() {
-  if (HYPE.role !== "admin" || !HYPE.selectedEventId) { HYPE.promoters = []; HYPE.coupons = []; renderV16Management(); return; }
+  if (HYPE.role !== "admin" || !HYPE.selectedEventId) {
+    HYPE.promoters = [];
+    renderV16Management();
+    return;
+  }
   const params = { p_username:HYPE.user, p_password:HYPE.pass, p_event_id:Number(HYPE.selectedEventId) };
-  const [promoterResult, coupons] = await Promise.all([
-    (async()=>{ try { return await sbRpc("staff_list_promoters_v61", params); } catch(_) { return await sbRpc("staff_list_promoters_v16", params); } })(),
-    sbRpc("staff_list_coupons_v16", params)
-  ]);
-  HYPE.promoters = Array.isArray(promoterResult) ? promoterResult : [];
-  HYPE.coupons = Array.isArray(coupons) ? coupons : [];
+  try {
+    const promoterResult = await sbRpc("staff_list_promoters_v61", params);
+    HYPE.promoters = Array.isArray(promoterResult) ? promoterResult : [];
+  } catch (_) {
+    const promoterResult = await sbRpc("staff_list_promoters_v16", params);
+    HYPE.promoters = Array.isArray(promoterResult) ? promoterResult : [];
+  }
   renderV16Management();
 }
 
 function renderV16Management() {
   const pList = document.getElementById("v16PromoterList");
-  const cList = document.getElementById("v16CouponList");
   if (pList) pList.innerHTML = (HYPE.promoters || []).length ? HYPE.promoters.map(p => `
     <div class="v16-manage-row"><div><b>${hypeEscape(p.name)}</b><small>Código: ${hypeEscape(p.code)} • ${Number(p.paid_count||0)} PAGO • ${Number(p.free_count||0)} FREE • ${hypeFormatMoney(p.revenue||0)}</small><small style="color:#7dd3fc">Faturamento e ranking consideram somente PAGO.</small></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn-action" onclick="copyPromoterLinkV16(${Number(p.id)})">🔗 COPIAR LINK</button><button class="btn-action" onclick="togglePromoterV16(${Number(p.id)})">${p.active ? "DESATIVAR" : "ATIVAR"}</button></div></div>`).join("") : '<div class="info-note">Nenhum promoter cadastrado neste evento.</div>';
-  if (cList) cList.innerHTML = (HYPE.coupons || []).length ? HYPE.coupons.map(c => `
-    <div class="v16-manage-row"><div><b>${hypeEscape(c.code)}</b><small>${c.discount_type === "percent" ? `${Number(c.discount_value)}%` : hypeFormatMoney(c.discount_value)} • usos ${Number(c.uses_count||0)}${Number(c.usage_limit||0)>0 ? `/${Number(c.usage_limit)}` : "/∞"}</small></div><button class="btn-action" onclick="toggleCouponV16(${Number(c.id)})">${c.active ? "DESATIVAR" : "ATIVAR"}</button></div>`).join("") : '<div class="info-note">Nenhum cupom cadastrado neste evento.</div>';
 }
 
 function hypePromoterSlugV16(name) {
@@ -3384,28 +3352,6 @@ async function copyPromoterLinkV16(id) {
 async function togglePromoterV16(id) {
   const p=(HYPE.promoters||[]).find(x=>Number(x.id)===Number(id)); if(!p)return;
   try { await sbRpc("staff_upsert_promoter_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:Number(p.id),p_name:p.name,p_code:p.code,p_active:!p.active}); await loadV16AdminData(); } catch(err){ alert(hypeUserMessage(err, "Não foi possível atualizar o promoter.")); }
-}
-
-async function createCouponV16() {
-  if (HYPE.role !== "admin") return alert("Somente o Admin pode gerenciar cupons.");
-  if (!HYPE.selectedEventId) return alert("Selecione um evento.");
-  const code=document.getElementById("v16CouponCode")?.value.trim().toUpperCase()||"";
-  const type=document.getElementById("v16CouponType")?.value||"percent";
-  const value=Number(document.getElementById("v16CouponValue")?.value||0);
-  const limit=Number(document.getElementById("v16CouponLimit")?.value||0);
-  const starts=fromDateTimeLocal(document.getElementById("v16CouponStart")?.value||"");
-  const ends=fromDateTimeLocal(document.getElementById("v16CouponEnd")?.value||"");
-  if(!code)return alert("Informe o código do cupom.");
-  try {
-    await sbRpc("staff_upsert_coupon_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:0,p_code:code,p_discount_type:type,p_discount_value:value,p_usage_limit:limit,p_starts_at:starts,p_ends_at:ends,p_active:true});
-    ["v16CouponCode","v16CouponValue","v16CouponLimit","v16CouponStart","v16CouponEnd"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
-    await loadV16AdminData(); hypeNotify("Cupom criado.");
-  } catch(err){ alert(hypeUserMessage(err, "Não foi possível salvar o cupom.")); }
-}
-
-async function toggleCouponV16(id) {
-  const c=(HYPE.coupons||[]).find(x=>Number(x.id)===Number(id)); if(!c)return;
-  try { await sbRpc("staff_upsert_coupon_v16", {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(HYPE.selectedEventId),p_id:Number(c.id),p_code:c.code,p_discount_type:c.discount_type,p_discount_value:Number(c.discount_value),p_usage_limit:Number(c.usage_limit),p_starts_at:c.starts_at,p_ends_at:c.ends_at,p_active:!c.active}); await loadV16AdminData(); } catch(err){ alert(hypeUserMessage(err, "Não foi possível atualizar o cupom.")); }
 }
 
 function renderV16Dashboard() {
