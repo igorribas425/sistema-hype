@@ -37,6 +37,9 @@
     cameraDetector: null,
     cameraCanvas: null,
     cameraWanted: false,
+    cameraOpening: false,
+    cameraFallbackMisses: 0,
+    cameraLastHintAt: 0,
     searchSeq: 0,
     pairToken: '',
     pairExpiresAt: null,
@@ -885,12 +888,21 @@
       badge.className=`pill ${active?'on':''}`.trim();
     }
     if(button) button.textContent=active?'⏹ PARAR CÂMERA QR':'📷 ABRIR CÂMERA QR';
+    const restart=$('cameraRestartBtn');
+    if(restart)restart.disabled=!active;
   }
 
   async function detectQrFromVideo(video){
     if(state.cameraDetector){
-      const codes=await state.cameraDetector.detect(video);
-      return String(codes?.[0]?.rawValue||'').trim();
+      try{
+        const codes=await state.cameraDetector.detect(video);
+        const nativeCode=String(codes?.[0]?.rawValue||'').trim();
+        if(nativeCode){state.cameraFallbackMisses=0;return nativeCode;}
+      }catch(_){ /* leitor nativo pode falhar em alguns frames */ }
+      state.cameraFallbackMisses++;
+      // Alterna com o jsQR quando a câmera nativa não reconhece,
+      // sem processar duas vezes o mesmo ingresso.
+      if(state.cameraFallbackMisses%3!==0)return '';
     }
     if(typeof window.jsQR!=='function') return '';
     if(!state.cameraCanvas) state.cameraCanvas=document.createElement('canvas');
@@ -913,7 +925,9 @@
     ctx.drawImage(video,0,0,w,h);
     const frame=ctx.getImageData(0,0,w,h);
     const hit=window.jsQR(frame.data,w,h,{inversionAttempts:'attemptBoth'});
-    return String(hit?.data||'').trim();
+    const code=String(hit?.data||'').trim();
+    if(code)state.cameraFallbackMisses=0;
+    return code;
   }
 
   async function openMobileCamera(){
@@ -939,6 +953,7 @@
   }
 
   async function startCamera(resume=false){
+    if(state.cameraOpening)return;
     if(state.cameraStream){
       if(!resume) stopCamera();
       return;
@@ -952,6 +967,7 @@
       return;
     }
 
+    state.cameraOpening=true;
     try{
       state.cameraDetector=null;
       if('BarcodeDetector' in window){
@@ -996,6 +1012,8 @@
       clearInterval(state.cameraTimer);
       state.cameraLastCode='';
       state.cameraLastAt=0;
+      state.cameraLastHintAt=Date.now();
+      state.cameraFallbackMisses=0;
       state.cameraTimer=setInterval(async()=>{
         if(state.cameraBusy || !state.cameraStream || video.readyState<2) return;
 
@@ -1005,11 +1023,16 @@
           const raw=await detectQrFromVideo(video);
           if(!raw){
             if(state.cameraLastCode && Date.now()-state.cameraLastAt>1200) state.cameraLastCode='';
+            if(Date.now()-state.cameraLastHintAt>7500){
+              state.cameraLastHintAt=Date.now();
+              setCameraStatus(true,'QR DIFÍCIL? AUMENTE O BRILHO DA TELA E AJUSTE A DISTÂNCIA');
+            }
             return;
           }
 
           const now=Date.now();
           state.cameraLastAt=now;
+          state.cameraLastHintAt=now;
           if(raw===state.cameraLastCode) return;
 
           state.cameraLastCode=raw;
@@ -1036,7 +1059,20 @@
         msg='A câmera está sendo usada por outro aplicativo. Feche Câmera, WhatsApp ou Instagram e tente novamente.';
       }
       alert('Não foi possível abrir a câmera.\n\n'+msg);
+    }finally{
+      state.cameraOpening=false;
     }
+  }
+
+  async function restartCamera(){
+    if(state.cameraOpening)return;
+    if(state.cameraBusy){
+      setCameraStatus(true,'AGUARDE FINALIZAR ESTA LEITURA');
+      return;
+    }
+    state.cameraWanted=true;
+    stopCamera(true);
+    await startCamera(true); // reinicia apenas a câmera, sem alterar credenciais ou check-in
   }
 
   function stopCamera(keepWanted=false){
@@ -1047,6 +1083,8 @@
     state.cameraDetector=null;
     state.cameraLastCode='';
     state.cameraLastAt=0;
+    state.cameraFallbackMisses=0;
+    state.cameraLastHintAt=0;
     if(state.cameraStream) state.cameraStream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});
     state.cameraStream=null;
     const video=$('cameraVideo');
@@ -1125,6 +1163,6 @@
     await ensureDevice();
   }
 
-  window.HypePortaria={changeEvent,enableAutoEvent,refresh,search,processCode,toggleDocument,validate,temporaryExit,authorizeReentry,openPair,closePair,endReaders,prepareOffline,startCamera,stopCamera,getItem};
+  window.HypePortaria={changeEvent,enableAutoEvent,refresh,search,processCode,toggleDocument,validate,temporaryExit,authorizeReentry,openPair,closePair,endReaders,prepareOffline,startCamera,restartCamera,stopCamera,getItem};
   document.addEventListener('DOMContentLoaded',init);
 })();
