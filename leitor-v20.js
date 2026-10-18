@@ -17,7 +17,7 @@
   const READER_KEY='hype_reader_secret_v20';
   const LABEL_KEY='hype_reader_label_v20';
   const CHECK_MS=2000;
-  const state={sb:null,secret:'',label:'',stream:null,timer:null,busy:false,connected:false,heartbeat:null,wantsCamera:false,checking:false};
+  const state={sb:null,secret:'',label:'',stream:null,timer:null,busy:false,connected:false,heartbeat:null,wantsCamera:false,checking:false,cameraStarting:false,lastDecodedAt:0,lastHintAt:0};
   const $=id=>document.getElementById(id);
 
   function client(){
@@ -108,6 +108,7 @@
     localStorage.removeItem(READER_KEY);
     state.secret='';
     const btn=$('startBtn');if(btn)btn.disabled=true;
+    const restart=$('restartBtn');if(restart)restart.disabled=true;
     setStatus(message,'bad');
     try{navigator.vibrate?.([180,80,180]);}catch(_){ }
   }
@@ -129,6 +130,7 @@
         const name=$('readerName');if(name)name.textContent=state.label;
       }
       const btn=$('startBtn');if(btn)btn.disabled=false;
+      const restart=$('restartBtn');if(restart)restart.disabled=false;
       if(!silent && !state.stream)setStatus(`${state.label} • LEITOR AUTORIZADO`,'ok');
       return true;
     }catch(err){
@@ -230,91 +232,116 @@
   }
 
   async function makeDecoder(video){
-    // 1) Chrome/Android e navegadores com BarcodeDetector nativo.
-    if ('BarcodeDetector' in window) {
-      try {
-        if (typeof BarcodeDetector.getSupportedFormats === 'function') {
-          const formats = await BarcodeDetector.getSupportedFormats();
-          if (Array.isArray(formats) && !formats.includes('qr_code')) throw new Error('qr_code não suportado');
+    // O detector nativo continua sendo a primeira opção. Se falhar em alguns
+    // quadros, tentamos o jsQR já carregado, sem alterar o envio/validação.
+    const canvas=$('qrCanvas') || document.createElement('canvas');
+    const ctx=typeof window.jsQR==='function' ? canvas.getContext('2d',{willReadFrequently:true}) : null;
+    function readWithJsQr(){
+      if(!ctx)return '';
+      const vw=video.videoWidth||0, vh=video.videoHeight||0;
+      if(vw<2||vh<2)return '';
+      const maxSide=720;
+      const scale=Math.min(1,maxSide/Math.max(vw,vh));
+      const w=Math.max(2,Math.round(vw*scale));
+      const h=Math.max(2,Math.round(vh*scale));
+      if(canvas.width!==w)canvas.width=w;
+      if(canvas.height!==h)canvas.height=h;
+      ctx.drawImage(video,0,0,w,h);
+      const image=ctx.getImageData(0,0,w,h);
+      return window.jsQR(image.data,w,h,{inversionAttempts:'attemptBoth'})?.data || '';
+    }
+
+    // Android e navegadores com BarcodeDetector nativo.
+    if('BarcodeDetector' in window){
+      try{
+        if(typeof BarcodeDetector.getSupportedFormats==='function'){
+          const formats=await BarcodeDetector.getSupportedFormats();
+          if(Array.isArray(formats) && !formats.includes('qr_code'))throw new Error('qr_code não suportado');
         }
-        const detector = new BarcodeDetector({formats:['qr_code']});
+        const detector=new BarcodeDetector({formats:['qr_code']});
+        let missedFrames=0;
         return {
           name:'NATIVO',
           async read(){
-            const found=await detector.detect(video);
-            return found?.[0]?.rawValue || '';
+            let raw='';
+            try{raw=(await detector.detect(video))?.[0]?.rawValue || '';}catch(_){ /* tenta alternativa sem interromper a câmera */ }
+            if(raw){missedFrames=0;return raw;}
+            missedFrames++;
+            if(ctx && missedFrames%3===0){
+              try{return readWithJsQr();}catch(_){ /* mantém a leitura nativa ativa */ }
+            }
+            return '';
           }
         };
-      } catch (_) {}
+      }catch(_){}
     }
 
-    // 2) Fallback para Safari/iPhone/iPad usando jsQR + Canvas.
-    if (typeof window.jsQR === 'function') {
-      const canvas=$('qrCanvas') || document.createElement('canvas');
-      const ctx=canvas.getContext('2d',{willReadFrequently:true});
-      if(!ctx) throw new Error('Não foi possível preparar o leitor compatível com iPhone.');
-      return {
-        name:'IOS',
-        async read(){
-          const vw=video.videoWidth||0, vh=video.videoHeight||0;
-          if(vw<2||vh<2)return '';
-          const maxSide=720;
-          const scale=Math.min(1,maxSide/Math.max(vw,vh));
-          const w=Math.max(2,Math.round(vw*scale));
-          const h=Math.max(2,Math.round(vh*scale));
-          if(canvas.width!==w)canvas.width=w;
-          if(canvas.height!==h)canvas.height=h;
-          ctx.drawImage(video,0,0,w,h);
-          const image=ctx.getImageData(0,0,w,h);
-          const result=window.jsQR(image.data,w,h,{inversionAttempts:'attemptBoth'});
-          return result?.data || '';
-        }
-      };
-    }
-
+    // iPhone/Safari: mantém o jsQR como leitor principal.
+    if(ctx)return {name:'IOS',async read(){return readWithJsQr();}};
     throw new Error('O leitor QR compatível não carregou. Verifique a internet e atualize a página.');
   }
 
   async function start(fromHeartbeat=false){
-    state.wantsCamera=true;
-    if(!state.connected)return;
-    if(!fromHeartbeat){
-      const valid=await statusCheck();
-      if(valid!==true)return;
-    }
-    if(state.stream)return;
-    if(!navigator.mediaDevices?.getUserMedia){setStatus('Este navegador não permite abrir a câmera.','bad');return;}
+    if(state.cameraStarting)return;
+    state.cameraStarting=true;
     try{
-      stopCameraOnly();
-      state.stream=await openCameraStream();
-      const video=await attachAndPlay(state.stream);
-      const decoder=await makeDecoder(video);
-      state.timer=setInterval(async()=>{
-        if(state.busy||video.readyState<2)return;
-        try{
-          const raw=await decoder.read();
-          if(raw){
-            const ok=await submit(raw);
-            if(ok){
-              stopCameraOnly();
-              setTimeout(()=>{if(state.connected&&state.wantsCamera)start(true);},850);
-            }
-          }
-        }catch(_){ }
-      },decoder.name==='IOS'?180:300);
-      const deviceMode=decoder.name==='IOS'?'LEITOR iPhone/iOS ATIVO':'LEITOR QR ATIVO';
-      setStatus(`${state.label} • ${deviceMode} — APONTE PARA O QR`,'ok');
-    }catch(err){
-      stopCameraOnly();
-      const name=String(err?.name||'');
-      let msg=String(err?.message||'Erro desconhecido');
-      if(name==='NotAllowedError' || /permission|permiss/i.test(msg)){
-        msg='Permissão da câmera bloqueada. No iPhone/Safari: toque em aA → Ajustes do Site → Câmera → Permitir. No Android/Chrome: toque no cadeado/ícone do endereço → Câmera → Permitir.';
-      }else if(name==='NotReadableError' || /could not start|not readable|in use/i.test(msg)){
-        msg='A câmera está sendo usada por outro aplicativo. Feche Câmera/WhatsApp/Instagram e tente novamente.';
+      state.wantsCamera=true;
+      if(!state.connected)return;
+      if(!fromHeartbeat){
+        const valid=await statusCheck();
+        if(valid!==true)return;
       }
-      setStatus('Não foi possível abrir a câmera: '+msg,'bad');
+      if(state.stream)return;
+      if(!navigator.mediaDevices?.getUserMedia){setStatus('Este navegador não permite abrir a câmera.','bad');return;}
+      try{
+        stopCameraOnly();
+        state.stream=await openCameraStream();
+        const video=await attachAndPlay(state.stream);
+        const decoder=await makeDecoder(video);
+        state.lastDecodedAt=Date.now();
+        state.lastHintAt=0;
+        state.timer=setInterval(async()=>{
+          if(state.busy||video.readyState<2)return;
+          try{
+            const raw=await decoder.read();
+            if(raw){
+              state.lastDecodedAt=Date.now();
+              const ok=await submit(raw);
+              if(ok){
+                stopCameraOnly();
+                setTimeout(()=>{if(state.connected&&state.wantsCamera)start(true);},850);
+              }
+            }else if(Date.now()-state.lastDecodedAt>6500 && Date.now()-state.lastHintAt>12000){
+              state.lastHintAt=Date.now();
+              setStatus('QR difícil de ler? Aumente o brilho do ingresso, mantenha o código inteiro na tela e aproxime ou afaste devagar.','');
+            }
+          }catch(_){ /* continua tentando ler */ }
+        },decoder.name==='IOS'?180:300);
+        const deviceMode=decoder.name==='IOS'?'LEITOR iPhone/iOS ATIVO':'LEITOR QR ATIVO';
+        setStatus(`${state.label} • ${deviceMode} — APONTE PARA O QR`,'ok');
+      }catch(err){
+        stopCameraOnly();
+        const name=String(err?.name||'');
+        let msg=String(err?.message||'Erro desconhecido');
+        if(name==='NotAllowedError' || /permission|permiss/i.test(msg)){
+          msg='Permissão da câmera bloqueada. No iPhone/Safari: toque em aA → Ajustes do Site → Câmera → Permitir. No Android/Chrome: toque no cadeado/ícone do endereço → Câmera → Permitir.';
+        }else if(name==='NotReadableError' || /could not start|not readable|in use/i.test(msg)){
+          msg='A câmera está sendo usada por outro aplicativo. Feche Câmera/WhatsApp/Instagram e tente novamente.';
+        }
+        setStatus('Não foi possível abrir a câmera: '+msg,'bad');
+      }
+    }finally{state.cameraStarting=false;}
+  }
+
+  async function restart(){
+    if(!state.connected || !state.secret || state.cameraStarting)return;
+    if(state.busy){
+      setStatus('Aguarde terminar a leitura antes de reiniciar a câmera.','');
+      return;
     }
+    state.wantsCamera=true;
+    stopCameraOnly();
+    await start(); // revalida o acesso; não altera credencial nem entrada
   }
 
   function stop(){state.wantsCamera=false;stopCameraOnly();}
@@ -326,6 +353,6 @@
     else if(state.connected&&state.wantsCamera)statusCheck().then(ok=>{if(ok===true)start(true);});
   });
 
-  window.HypeReader={start,stop,forget};
+  window.HypeReader={start,stop,restart,forget};
   document.addEventListener('DOMContentLoaded',claim);
 })();
