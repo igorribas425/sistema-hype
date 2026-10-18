@@ -25,7 +25,9 @@ body{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env
     <p>Este celular foi aberto por um link exclusivo e funciona somente como câmera/leitor em Android ou iPhone. Ele não mostra clientes, vendas, pagamentos, Admin ou senhas. Se o Admin desconectar a Portaria ou este leitor, a câmera é encerrada automaticamente.</p><div style="margin-top:10px;font-size:10px;color:#777">DISPOSITIVO REGISTRADO: <b id="readerName" style="color:#fff">Celular leitor</b></div>
     <div id="readerStatus" class="status">Conectando ao computador...</div>
     <button id="startBtn" class="btn" onclick="HypeReader.start()" disabled>📷 ABRIR LEITOR</button>
+    <button id="restartBtn" class="btn secondary" onclick="HypeReader.restart()" disabled>↻ REINICIAR CÂMERA</button>
     <div id="cameraBox" class="camera"><video id="video" autoplay muted playsinline webkit-playsinline></video><canvas id="qrCanvas" style="display:none"></canvas><div class="scanline"></div></div>
+    <p class="note" style="margin-top:10px">QR difícil de ler? Aumente o brilho da tela do ingresso, mantenha o código completo à vista e aproxime ou afaste o celular devagar. Reiniciar a câmera não desconecta o leitor.</p>
     <div id="lastScan" class="last"><b>QR ENVIADO ✅</b><span id="lastCode"></span></div>
     <button class="btn secondary" onclick="HypeReader.stop()">FECHAR CÂMERA</button><button class="btn secondary" onclick="HypeReader.forget()">DESCONECTAR ESTE CELULAR</button>
     <p class="note">A leitura aparece em tempo real no computador autorizado da Portaria. No iPhone, o mesmo link pode ser reaberto quando quiser. Ele só deixa de funcionar quando o Admin/Portaria desconectar o leitor. A confirmação da entrada continua sendo feita no computador.</p>
@@ -34,6 +36,6 @@ body{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-<script src="leitor-v20.js?v=20260905-v37-ios"></script>
+<script src="leitor-v20.js?v=20261018-camera-segura"></script>
 </body>
 </html>
