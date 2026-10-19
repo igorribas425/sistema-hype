@@ -489,6 +489,10 @@ body{overflow-x:hidden}
           <div style="font-size:10px;color:var(--muted);font-weight:900;letter-spacing:1px">CÓDIGO DO PEDIDO</div>
           <div class="manual-order-code" id="pixOrderCode"></div>
           <div class="qrcode"><img id="qrImg" src="" alt="QR Code PIX"></div>
+          <div style="margin:12px 0 14px;text-align:center">
+            <button type="button" class="btn whatsapp-btn" onclick="hypeOpenPixSupportWhatsApp()">💬 FALAR COM A HYPE NO WHATSAPP</button>
+            <small style="display:block;margin-top:7px;color:var(--muted);font-size:11px">Dúvidas sobre o PIX? Fale com a Hype pelo WhatsApp.</small>
+          </div>
           <div class="pix-key" id="pixKeyText"></div>
           <div id="pixOfficialRecipientInfo" style="margin:10px 0 14px;padding:13px 14px;border:1px solid rgba(40,209,124,.32);background:rgba(40,209,124,.08);border-radius:14px;font-size:12px;line-height:1.6;color:#d9f8e6;text-align:left">
             <strong style="display:block;color:#a8f3c4;margin-bottom:4px">✅ PIX OFICIAL HYPE</strong>
@@ -555,7 +559,7 @@ body{overflow-x:hidden}
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
-<script src="app.js?v=20261017-sem-cupons"></script>
+<script src="app.js?v=20261019-whatsapp-qr"></script>
 <script src="promoter-global-v16-8.js?v=20261002-v57-global"></script>
 <script src="v18-client.js?v=20260902-v20"></script>
 </body>
