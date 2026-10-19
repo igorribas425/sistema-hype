@@ -1194,6 +1194,22 @@ function openOrderWhatsApp(entry) {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
+/* Atendimento após gerar o QR Code PIX. Não altera confirmação do Asaas. */
+const HYPE_PIX_SUPPORT_WHATSAPP = "5554996776514";
+
+function hypeOpenPixSupportWhatsApp() {
+  const entry = window.__hypeCurrentManualEntry || {};
+  const code = String(HYPE.currentEntryCode || entry.ticket_code ||
+    document.getElementById("pixOrderCode")?.textContent || "").trim();
+  const event = (HYPE.events || []).find(e => Number(e.id) === Number(entry.event_id)) || HYPE.event || {};
+  const message = [
+    "Olá! Gerei um QR Code PIX no site da Hype Lounge Club e preciso de atendimento.",
+    code ? `Pedido: ${code}` : "",
+    event.name ? `Evento: ${event.name}` : ""
+  ].filter(Boolean).join("\n");
+  window.open(`https://wa.me/${HYPE_PIX_SUPPORT_WHATSAPP}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+}
+
 // HYPE V26 - PIX estático gerado no navegador usando a chave salva no Admin.
 // O pagamento permanece manual: cliente paga, envia o comprovante e o Admin confirma.
 function hypePixField(id, value) {
