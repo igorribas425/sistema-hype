@@ -227,6 +227,33 @@
     return Number(value || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
   }
 
+  // Painel Financeiro: bruto = price do Supabase (a taxa cobrada do cliente
+  // ja esta incluida). Taxas do Asaas sao estimativas do extrato observado:
+  // R$ 0,99 por PIX + R$ 0,99 por mensageria, por pagamento Asaas.
+  // Nunca abater a taxa cobrada no site uma segunda vez.
+  function financeTotalsHypeV106(paid) {
+    const cents = v => Math.round((Number(v) || 0) * 100);
+    const grossCents = paid.reduce((sum,t) => sum + cents(t.price),0);
+    const serviceCents = paid.reduce((sum,t) => {
+      if (t.original_price != null && Number.isFinite(Number(t.original_price))) {
+        return sum + Math.max(0,cents(t.price) - cents(t.original_price) + cents(t.discount_amount));
+      }
+      return sum + Math.max(0,cents(t.service_fee));
+    },0);
+    const asaasCount = paid.filter(t =>
+      /asaas/i.test(String(t.payment_method || '')) || Boolean(t.asaas_payment_id)
+    ).length;
+    const pixCents = asaasCount * 99;
+    const messagesCents = asaasCount * 99;
+    return {
+      gross: grossCents/100,
+      service: serviceCents/100,
+      pix: pixCents/100,
+      messages: messagesCents/100,
+      netEstimated: (grossCents-pixCents-messagesCents)/100
+    };
+  }
+
   function getSalesRows() {
     let tickets=[], guests=[];
     try {
@@ -264,15 +291,18 @@
     const free=confirmed.filter(t=>Number(t.price||0)<=0);
     const pending=scopedTickets.filter(t=>String(t.payment_status||'')==='Pendente');
 
-    const revenue=paid.reduce((s,t)=>s+Number(t.price||0),0);
+    const totals=financeTotalsHypeV106(paid);
+    const revenue=totals.gross;
     const pendingValue=pending.reduce((s,t)=>s+Number(t.price||0),0);
-    const discounts=paid.reduce((s,t)=>s+Number(t.discount_amount||0),0);
     const avg=paid.length?revenue/paid.length:0;
 
     const set=(id,val)=>{const el=$(id);if(el)el.textContent=val;};
     set('v94Revenue',brl(revenue));
+    set('v106ServiceFee',brl(totals.service));
+    set('v106AsaasPixFee',brl(totals.pix));
+    set('v106AsaasMessagesFee',brl(totals.messages));
+    set('v106NetEstimated',brl(totals.netEstimated));
     set('v94PendingValue',brl(pendingValue));
-    set('v94Discounts',brl(discounts));
     set('v94AverageTicket',brl(avg));
     set('v94PaidCount',String(paid.length));
     set('v94FreeCount',String(free.length));
@@ -288,7 +318,7 @@
       const ep=et.filter(t=>String(t.payment_status||'')==='Pago'&&Number(t.price||0)>0);
       const ef=et.filter(t=>String(t.payment_status||'')==='Pago'&&Number(t.price||0)<=0);
       const rev=ep.reduce((s,t)=>s+Number(t.price||0),0);
-      return {id,name:eventName(id),paid:ep.length,free:ef.length,list:eg.length,revenue:rev};
+      return {id,name:eventName(id),paid:ep.length,free:ef.length,list:eg.length,revenue:rev,netEstimated:financeTotalsHypeV106(ep).netEstimated};
     }).sort((a,b)=>b.revenue-a.revenue);
 
     byEvent.innerHTML=rows.length?rows.map(r=>`
@@ -296,7 +326,7 @@
         <div><strong>${esc(r.name)}</strong><small>${r.paid+r.free+r.list} pessoa(s) contabilizada(s)</small></div>
         <b>Pago ${r.paid}</b>
         <b>FREE ${r.free} • Lista ${r.list}</b>
-        <b>${esc(brl(r.revenue))}</b>
+        <b>Bruto: ${esc(brl(r.revenue))}<small>Líquido est.: ${esc(brl(r.netEstimated))}</small></b>
       </div>`).join(''):'<div class="v92-empty">Nenhuma venda registrada neste filtro.</div>';
   }
 
@@ -362,7 +392,7 @@
       lastPeopleSignature=sig;
       if (currentTab === 'portaria') renderPortariaPeople();
       if (currentTab === 'lista') renderListPeople();
-      if (currentTab === 'vendas') renderSalesV94();
+      if (currentTab === 'vendas') renderSales();
     }
   }
 
@@ -383,6 +413,6 @@
     if(event.target?.id==='v16DashboardEvent') setTimeout(renderSalesV94,0);
   });
 
-  window.HypeAdminTabsV92={setTab,refreshPeople,renderPortariaPeople,renderListPeople,refreshSales:refreshSalesV94,renderSales:renderSalesV94};
+  window.HypeAdminTabsV92={setTab,refreshPeople,renderPortariaPeople,renderListPeople,refreshSales,renderSales};
   document.addEventListener('DOMContentLoaded',()=>setTimeout(init,450));
 })();
