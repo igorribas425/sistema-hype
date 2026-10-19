@@ -481,13 +481,17 @@ html,body{max-width:100%;overflow-x:hidden}
   <section class="panel-box" id="v94SalesFinancePanel">
     <div class="v92-people-head">
       <div>
-        <h3>💰 VENDAS & VALORES ACUMULADOS</h3>
-        <p>Resumo financeiro dos ingressos confirmados. O seletor abaixo permite conferir todos os eventos ou um evento específico.</p>
+        <h3>💰 FINANCEIRO — BRUTO E TAXAS</h3>
+        <p>Bruto conforme o valor registrado no Supabase. Taxa de serviço incluída no preço e descontos estimados do Asaas exibidos separadamente.</p>
       </div>
       <button class="btn-action" type="button" onclick="HypeAdminTabsV92?.refreshSales?.()">↻ ATUALIZAR</button>
     </div>
     <div class="v94-sales-grid">
-      <div class="v94-sales-card main"><span>FATURAMENTO RECEBIDO</span><b id="v94Revenue">R$ 0,00</b><small>Somente ingressos pagos</small></div>
+      <div class="v94-sales-card main"><span>BRUTO DOS INGRESSOS PAGOS (BANCO)</span><b id="v94Revenue">R$ 0,00</b><small>Somatório de tickets.price no Supabase; já inclui a taxa do checkout</small></div>
+      <div class="v94-sales-card"><span>TAXA DE SERVIÇO NO SITE</span><b id="v106ServiceFee">R$ 0,00</b><small>Incluída no bruto, não é outro desconto</small></div>
+      <div class="v94-sales-card"><span>TAXA PIX ASAAS (ESTIMADA)</span><b id="v106AsaasPixFee">R$ 0,00</b><small>R$ 0,99 por ingresso pago via Asaas</small></div>
+      <div class="v94-sales-card"><span>TAXA MENSAGERIA (ESTIMADA)</span><b id="v106AsaasMessagesFee">R$ 0,00</b><small>R$ 0,99 por ingresso pago via Asaas</small></div>
+      <div class="v94-sales-card main"><span>LÍQUIDO ESTIMADO (APÓS ASAAS)</span><b id="v106NetEstimated">R$ 0,00</b><small>Bruto menos taxas estimadas de PIX e mensageria</small></div>
       <div class="v94-sales-card"><span>VALOR PENDENTE</span><b id="v94PendingValue">R$ 0,00</b><small>Pedidos ainda não pagos</small></div>
       <div class="v94-sales-card"><span>TICKET MÉDIO</span><b id="v94AverageTicket">R$ 0,00</b><small>Média dos ingressos pagos</small></div>
       <div class="v94-sales-card"><span>INGRESSOS PAGOS</span><b id="v94PaidCount">0</b><small>Valor maior que zero</small></div>
@@ -495,6 +499,7 @@ html,body{max-width:100%;overflow-x:hidden}
       <div class="v94-sales-card"><span>LISTA</span><b id="v94ListCount">0</b><small>Nomes aprovados na lista</small></div>
       <div class="v94-sales-card"><span>TOTAL DE PESSOAS</span><b id="v94PeopleCount">0</b><small>Pago + FREE + Lista</small></div>
     </div>
+    <p style="font-size:11px;color:var(--muted);line-height:1.65;margin:6px 0 14px">* Taxas do Asaas estimadas com base no extrato informado (R$ 0,99 de PIX + R$ 0,99 de mensageria por cobrança paga). Confira os descontos reais no extrato do Asaas. Este painel mostra somente os ingressos ainda existentes no Supabase, e não o saldo acumulado da conta Asaas.</p>
     <div class="v94-sales-event-head">
       <label for="v94SalesEvent">FILTRAR VALORES</label>
       <select id="v94SalesEvent" onchange="HypeAdminTabsV92?.renderSales?.()"><option value="all">TODOS OS EVENTOS</option></select>
@@ -1049,7 +1054,7 @@ Bruna Santos"></textarea>
   <script src="hype-push-config.js?v=421"></script>
   <script src="hype-v38-chat.js?v=421"></script>
   <script src="hype-v408-lista-admin.js?v=20261003-v71"></script>
-  <script src="admin-v92-tabs.js?v=20261003-v94"></script>
+  <script src="admin-v92-tabs.js?v=20261019-v106-financeiro"></script>
   <script src="admin-v103-customers.js?v=20261004-v103"></script>
   <script src="admin-v95-hub.js?v=20261004-v103"></script>
 </body>
