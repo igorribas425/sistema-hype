@@ -353,6 +353,34 @@ html,body{max-width:100%;overflow-x:hidden}
 }
 </style>
   <link rel="stylesheet" href="hype-v38-responsive.css?v=20260905-v40-7">
+
+<style id="hype-v106-flyer-proporcao-mobile">
+/* No celular a arte ocupa toda a largura, usando sua proporção real.
+   Evita as faixas pretas causadas por object-fit:contain em um frame fixo. */
+@media (max-width:720px) {
+  .event-card-image:has(> img) {
+    min-height:0;
+    height:auto;
+    aspect-ratio:auto;
+    background:#09090b;
+  }
+  .event-card-image > img {
+    position:relative;
+    inset:auto;
+    display:block;
+    width:100%;
+    height:auto;
+    max-width:100%;
+    object-fit:contain;
+    object-position:center;
+  }
+  /* Informações já aparecem no próprio flyer e abaixo do cartão. */
+  .event-card-image > img ~ .event-card-day,
+  .event-card-image > img ~ .event-card-overlay {
+    display:none;
+  }
+}
+</style>
 </head>
 <body>
 <div class="event-ambient" id="eventAmbient" aria-hidden="true"></div>
