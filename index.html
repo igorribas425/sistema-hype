@@ -326,6 +326,34 @@ body{overflow-x:hidden}
 <style id="hype-v16-sales-style">
 .v16-sales-fields small{font-size:9px;color:var(--muted);font-weight:700}.v16-coupon-row{display:grid;grid-template-columns:1fr auto;gap:8px}.v16-mini-btn{border:1px solid rgba(var(--event-rgb,216,216,220),.45);background:rgba(var(--event-rgb,216,216,220),.12);color:#fff;border-radius:10px;padding:0 14px;font-weight:900;cursor:pointer}.v16-coupon-status{font-size:10px;min-height:15px;margin-top:6px;color:var(--muted);font-weight:800}.v16-coupon-status.ok{color:#28d17c}.v16-coupon-status.error{color:#ff7676}@media(max-width:700px){.v16-sales-fields{grid-template-columns:1fr!important}.v16-mini-btn{min-height:46px}}
 </style>
+
+<style id="hype-v106-flyer-proporcao-mobile">
+/* No celular a arte ocupa toda a largura, usando sua proporção real.
+   Evita as faixas pretas causadas por object-fit:contain em um frame fixo. */
+@media (max-width:720px) {
+  .event-card-image:has(> img) {
+    min-height:0;
+    height:auto;
+    aspect-ratio:auto;
+    background:#09090b;
+  }
+  .event-card-image > img {
+    position:relative;
+    inset:auto;
+    display:block;
+    width:100%;
+    height:auto;
+    max-width:100%;
+    object-fit:contain;
+    object-position:center;
+  }
+  /* Informações já aparecem no próprio flyer e abaixo do cartão. */
+  .event-card-image > img ~ .event-card-day,
+  .event-card-image > img ~ .event-card-overlay {
+    display:none;
+  }
+}
+</style>
 </head>
 <body>
 <div class="event-ambient" id="eventAmbient" aria-hidden="true"></div>
