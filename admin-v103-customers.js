@@ -9,6 +9,10 @@
   const arr = d => Array.isArray(d) ? d : (d ? [d] : []);
 
   let timer = null;
+  let allRows = [];
+  let hasLoaded = false;
+  let loading = false;
+  let loadSeq = 0;
 
   function ready(){
     try { return typeof HYPE !== 'undefined' && HYPE?.user && HYPE?.pass && typeof sbRpc === 'function'; }
@@ -52,18 +56,43 @@
     return `<div class="v103-history-row"><b>${src}</b><span>${esc(a.event_name||'Evento HYPE')} • ${esc(fmtDate(a.event_date))}${lot}${price}</span><small>${esc(status)}${attended}${a.ticket_code?` • ${esc(a.ticket_code)}`:''}</small></div>`;
   }
 
-  function render(rows){
+  const fold = v => String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  const digits = v => String(v ?? '').replace(/\D/g,'');
+
+  function matchesSearch(row,q,mode){
+    if(!q)return true;
+    if(mode==='nome')return fold(row.name).includes(fold(q));
+    if(mode==='cpf')return digits(q).length>0 && digits(row.cpf).includes(digits(q));
+    if(mode==='telefone')return digits(q).length>0 && digits(row.phone).includes(digits(q));
+    return fold(row.name).includes(fold(q))
+      || (digits(q).length>0 && (digits(row.cpf).includes(digits(q)) || digits(row.phone).includes(digits(q))))
+      || fold(row.email).includes(fold(q));
+  }
+
+  function applySearch(){
+    if(!hasLoaded)return;
+    const q=($('v103CustomerSearch')?.value||'').trim();
+    const mode=$('v103CustomerSearchType')?.value||'todos';
+    const visible=allRows.filter(row=>matchesSearch(row,q,mode));
+    render(visible,allRows);
+    const count=$('v103SearchResultInfo');
+    if(count)count.textContent=q
+      ? `${visible.length} cliente(s) encontrado(s) entre ${allRows.length} cadastrados.`
+      : `Mostrando ${allRows.length} cliente(s) cadastrados. Busque por nome, CPF ou número de WhatsApp.`;
+  }
+
+  function render(rows, totals=rows){
     const list=$('v103CustomerRegistryList');
     const total=$('v103CustomerCount');
     const blocked=$('v103BlockedCount');
     const attended=$('v103AttendanceTotal');
-    if(total) total.textContent=String(rows.length);
-    if(blocked) blocked.textContent=String(rows.filter(r=>r.block_type!=='none' && (r.block_type==='permanent' || !r.blocked_until || new Date(r.blocked_until)>new Date())).length);
-    if(attended) attended.textContent=String(rows.reduce((s,r)=>s+Number(r.attendance_count||0),0));
+    if(total) total.textContent=String(totals.length);
+    if(blocked) blocked.textContent=String(totals.filter(r=>r.block_type!=='none' && (r.block_type==='permanent' || !r.blocked_until || new Date(r.blocked_until)>new Date())).length);
+    if(attended) attended.textContent=String(totals.reduce((s,r)=>s+Number(r.attendance_count||0),0));
 
     if(!list) return;
     if(!rows.length){
-      list.innerHTML='<div class="v103-empty">Nenhum cliente cadastrado ainda.</div>';
+      list.innerHTML='<div class="v103-empty">'+(totals.length ? 'Nenhum cliente encontrado com este filtro.' : 'Nenhum cliente cadastrado ainda.')+'</div>';
       return;
     }
 
@@ -112,26 +141,54 @@
   }
 
   async function load(){
-    if(!ready()) return;
-    const q=($('v103CustomerSearch')?.value||'').trim();
+    if(!ready())return;
+    const seq=++loadSeq;
     const box=$('v103CustomerRegistryList');
-    if(box) box.innerHTML='<div class="v103-empty">Carregando cadastros...</div>';
+    loading=true;
+    if(box)box.innerHTML='<div class="v103-empty">Atualizando cadastros...</div>';
     try{
+      // Consulta autorizada pelo login ADM; a pesquisa no campo filtra localmente
+      // para não solicitar dados ao servidor a cada tecla digitada.
       const rows=arr(await sbRpc('staff_customer_registry_list_v103',{
         p_username:HYPE.user,
         p_password:HYPE.pass,
-        p_search:q
+        p_search:''
       }));
-      render(rows);
+      if(seq!==loadSeq)return;
+      allRows=rows;
+      hasLoaded=true;
+      applySearch();
     }catch(err){
+      if(seq!==loadSeq)return;
       console.warn('[HYPE V103][cadastros]',err);
-      if(box) box.innerHTML=`<div class="v103-empty error">${esc(err.message||'Erro ao carregar cadastros.')}</div>`;
+      if(box)box.innerHTML=`<div class="v103-empty error">${esc(err.message||'Erro ao carregar cadastros.')}</div>`;
+    }finally{
+      if(seq===loadSeq)loading=false;
     }
   }
 
   function search(){
     clearTimeout(timer);
-    timer=setTimeout(load,250);
+    timer=setTimeout(()=>{
+      if(hasLoaded)applySearch();
+      else if(!loading)load();
+    },180);
+  }
+
+  function searchNow(){
+    clearTimeout(timer);
+    if(hasLoaded)applySearch();
+    else if(!loading)load();
+  }
+
+  function clearSearch(){
+    clearTimeout(timer);
+    const input=$('v103CustomerSearch');
+    const type=$('v103CustomerSearchType');
+    if(input)input.value='';
+    if(type)type.value='todos';
+    searchNow();
+    input?.focus();
   }
 
   async function setBlock(id,mode,days=null,reason=''){
@@ -169,5 +226,5 @@
     catch(err){ alert(err.message||'Não foi possível desbloquear.'); }
   }
 
-  window.HypeCustomerRegistryV103={load,search,tempBlock,permanentBlock,unblock};
+  window.HypeCustomerRegistryV103={load,search,searchNow,clearSearch,tempBlock,permanentBlock,unblock};
 })();
