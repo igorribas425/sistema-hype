@@ -8,7 +8,18 @@
   const key = () => String(localStorage.getItem('hype_portaria_device_key_v18') || '');
   const cfg = () => window.HYPE_SUPABASE_CONFIG || {};
   let sb = null, currentId = Number(localStorage.getItem('hype_v108_pending_call') || 0);
-  let busy = false, checking = false;
+  let busy = false, checking = false, realtimeChannel=null;
+  const SIGNAL_TOPIC='hype-portaria-admin-v110';
+  function startRealtime(){
+    if(realtimeChannel)return;
+    try{
+      realtimeChannel=client().channel(SIGNAL_TOPIC)
+        .on('broadcast',{event:'refresh'},()=>{if(currentId)check();})
+        .subscribe((status)=>{
+          if(status==='SUBSCRIBED'&&currentId)check();
+        });
+    }catch(e){console.warn('[HYPE V110 portaria realtime]',e);realtimeChannel=null;}
+  }
   const choices = ['Preciso de atendimento','Problema no QR Code','Pagamento / ingresso','Segurança / ocorrência','Cliente precisa do ADM','Outro assunto'];
   const client = () => {
     if (sb) return sb;
@@ -43,11 +54,14 @@
     const hdr={'Content-Type':'application/json',apikey:cfg().anonKey,Authorization:'Bearer '+cfg().anonKey};
     const ctrl=new AbortController(), timeout=setTimeout(()=>ctrl.abort(),7000);
     try {
-      await fetch(endpoint+'/send',{method:'POST',headers:hdr,signal:ctrl.signal,body:JSON.stringify({
+      const response=await fetch(endpoint+'/send',{method:'POST',headers:hdr,signal:ctrl.signal,body:JSON.stringify({
         senderRole:'portaria',senderName:'🆘 Portaria / Chamar ADM',
         message:'🆘 CHAMADO URGENTE PARA O ADM: '+reason+'. Abra o painel HYPE e toque em ATENDER.',
         device_key:key(),endpoint:String(localStorage.getItem('hypePushEndpointV42')||'')
       })});
+      if(!response.ok)throw new Error('Push não entregue: HTTP '+response.status);
+      const result=await response.json().catch(()=>({}));
+      if(result.ok===false)throw new Error(result.error||'Falha no serviço push');
     } finally {clearTimeout(timeout);}
   }
   async function call() {
@@ -106,8 +120,9 @@
     $('hype108CallBtn').addEventListener('click',call);
     $('hype108CancelBtn').addEventListener('click',cancel);
     update();
+    startRealtime();
     if(currentId)check();
-    setInterval(check,4000);
+    setInterval(check,2500);
     window.addEventListener('pageshow',check);
     document.addEventListener('visibilitychange',()=>{if(!document.hidden)check();});
   }
