@@ -9,6 +9,12 @@
  let client=null, polling=false, answering=false, active=[], seen=new Set(), audio=null, enabled=false, ringing=null;
  let signalClient=null, signalChannel=null, retryPoll=false;
  let mobilePanelOpen=false;
+ let pushStatus='🔔 Push ainda não verificado neste celular.';
+ function setPushStatus(str,error=false){
+   pushStatus=str;
+   const el=$('hype108PushStatus');
+   if(el){el.textContent=str;el.style.color=error?'#ff9bac':'#b9eed3';}
+ }
  const isMobile=()=>window.matchMedia?.('(max-width: 700px)').matches===true;
  function syncMobilePanel(){
    const panel=$('hype108AdminWidget'),fab=$('hype108MobileToggle'),num=$('hype108MobileCount');
@@ -286,20 +292,56 @@
  async function enablePush(){
    const c=creds(),cfg=window.HYPE_SUPABASE_CONFIG||{};
    const publicKey=window.HYPE_PUSH_PUBLIC_KEY;
-   if(!c||!publicKey||!('serviceWorker'in navigator)||!('PushManager'in window)||!('Notification'in window))return;
+   if(!c||!publicKey||!('serviceWorker'in navigator)||!('PushManager'in window)||!('Notification'in window)){
+      setPushStatus('⚠️ Push indisponível. Use Chrome atualizado no Android.',true);
+      return false;
+   }
    try {
      if(Notification.permission==='default')await Notification.requestPermission();
-     if(Notification.permission!=='granted')return;
-     const reg=await navigator.serviceWorker.register('./service-worker.js?v=45',{scope:'./'});
+     if(Notification.permission!=='granted'){
+       setPushStatus('⚠️ Notificações bloqueadas nas permissões do navegador.',true);
+       return false;
+     }
+     const reg=await navigator.serviceWorker.register('./service-worker.js?v=46',{scope:'./'});
      const ready=await navigator.serviceWorker.ready;
      let sub=await ready.pushManager.getSubscription();
      if(!sub)sub=await ready.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:base64ToU8(publicKey)});
      const json=sub.toJSON(),fn=String(window.HYPE_CHAT_PUSH_FUNCTION_URL||cfg.url+'/functions/v1/hype-chat-push').replace(/\/$/,'');
      const res=await fetch(fn+'/subscribe',{method:'POST',headers:{'Content-Type':'application/json',apikey:cfg.anonKey,Authorization:'Bearer '+cfg.anonKey},
        body:JSON.stringify({endpoint:json.endpoint,keys:json.keys||{},role:'admin',userAgent:navigator.userAgent||'',username:c.p_username,password:c.p_password})});
-     if(!res.ok)throw Error('Push não pôde ser ativado');
+     const answer=await res.json().catch(()=>({}));
+     if(!res.ok||answer.ok!==true)throw Error(answer.error||'Push não pôde ser ativado');
      localStorage.setItem('hypePushEndpointV42',json.endpoint||'');
-   } catch(e){console.warn('[HYPE chamado push opcional]',e);}
+     setPushStatus('✅ Push cadastrado. Faça o teste com a tela bloqueada.');
+     return true;
+   } catch(e){
+     console.warn('[HYPE chamado push]',e);
+     setPushStatus('⚠️ Falha no push: '+(e.message||e),true);
+     return false;
+   }
+ }
+ async function testLockedPush(){
+    const btn=$('hype108PushTestBtn'), auth=creds(), cfg=window.HYPE_SUPABASE_CONFIG||{};
+    if(!auth)return setPushStatus('⚠️ Entre no ADM para testar',true);
+    if(btn)btn.disabled=true;
+    try{
+       const registered=await enablePush();
+       if(!registered)throw new Error('Notificações não foram ativadas');
+       const endpoint=String(localStorage.getItem('hypePushEndpointV42')||'');
+       if(!endpoint)throw new Error('Assinatura push não encontrada');
+       const url=String(cfg.url||'').replace(/[/]$/,'')+'/functions/v1/hype-admin-call-push';
+       setPushStatus('📱 BLOQUEIE A TELA AGORA! O servidor enviará o teste em 8 segundos.');
+       const response=await fetch(url,{
+         method:'POST',
+         headers:{'Content-Type':'application/json',apikey:cfg.anonKey,Authorization:'Bearer '+cfg.anonKey},
+         body:JSON.stringify({action:'test',username:auth.p_username,password:auth.p_password,endpoint})
+       });
+       const result=await response.json().catch(()=>({}));
+       if(!response.ok||!result.ok)throw new Error(result.error||'Push não aceito pelo servidor');
+       setPushStatus('✅ Envio push aceito ('+result.sent+'). Confira a tela bloqueada.');
+    }catch(e){
+       setPushStatus('❌ Teste falhou: '+(e.message||e),true);
+    }finally{if(btn)btn.disabled=false;}
  }
  async function unlock(){
    // Os gestos de clique liberam áudio/vibração nos navegadores compatíveis.
@@ -399,7 +441,7 @@
    overlay.setAttribute('aria-hidden','true');document.body.appendChild(overlay);
    const w=document.createElement('aside');w.id='hype108AdminWidget';w.hidden=true;
    w.style.cssText='position:fixed;z-index:10005;right:12px;bottom:75px;width:min(350px,calc(100vw - 24px));max-height:60vh;overflow:auto;background:#110d11;border:2px solid #af2444;border-radius:16px;box-shadow:0 14px 46px #000b;color:white;padding:13px;font-family:system-ui,Arial,sans-serif;';
-   w.innerHTML='<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong style="font-size:14px">🆘 CHAMADOS DA PORTARIA <b id="hype108AdminCount" style="color:#ff4870">0</b></strong><button type="button" id="hype108SoundBtn" style="font-size:11px;font-weight:bold;background:#a51b3b;color:white;padding:10px;border:0;border-radius:8px;cursor:pointer">🔔 ATIVAR ALERTAS</button></div><p id="hype108AdminInfo" style="font-size:11px;color:#d6f1df;margin:10px 0">Aguardando chamados...</p><div style="margin:0 0 9px;display:flex;gap:6px;flex-wrap:wrap"><button id="hype108VibrateTest" type="button" style="min-height:36px;padding:8px 10px;border-radius:8px;border:1px solid #7e3e51;background:#201017;color:#fff;font-size:11px;cursor:pointer">📳 TESTAR VIBRAÇÃO</button><button id="hype108SoundTest" type="button" style="min-height:36px;padding:8px 10px;border-radius:8px;border:1px solid #7e3e51;background:#201017;color:#fff;font-size:11px;cursor:pointer">🔊 TESTAR SOM</button><button id="hype108FlashBtn" type="button" style="min-height:36px;padding:8px 10px;border-radius:8px;border:1px solid #7e3e51;background:#a51b3b;color:#fff;font-size:11px;font-weight:800;cursor:pointer">💡 ATIVAR FLASH</button></div><label for="hype108AlarmVolume" style="display:flex;align-items:center;gap:8px;margin:8px 0 13px;font-size:12px;color:#eee">🔊 Volume do alerta <input id="hype108AlarmVolume" type="range" min="20" max="100" step="10" value="100" style="flex:1;min-width:75px;accent-color:#ff3159"><b id="hype108AlarmVolumeLabel">100%</b></label><div id="hype108AdminList" aria-live="polite"></div><small style="display:block;font-size:10px;line-height:1.35;color:#aaa">A tela pisca quando há chamado. Flash traseiro, som e vibração exigem permissão e o ADM visível. O navegador não consegue piscar o flash físico com a tela bloqueada.</small>';
+   w.innerHTML='<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong style="font-size:14px">🆘 CHAMADOS DA PORTARIA <b id="hype108AdminCount" style="color:#ff4870">0</b></strong><button type="button" id="hype108SoundBtn" style="font-size:11px;font-weight:bold;background:#a51b3b;color:white;padding:10px;border:0;border-radius:8px;cursor:pointer">🔔 ATIVAR ALERTAS</button></div><p id="hype108AdminInfo" style="font-size:11px;color:#d6f1df;margin:10px 0">Aguardando chamados...</p><div style="margin:0 0 9px;display:flex;gap:6px;flex-wrap:wrap"><button id="hype108VibrateTest" type="button" style="min-height:36px;padding:8px 10px;border-radius:8px;border:1px solid #7e3e51;background:#201017;color:#fff;font-size:11px;cursor:pointer">📳 TESTAR VIBRAÇÃO</button><button id="hype108SoundTest" type="button" style="min-height:36px;padding:8px 10px;border-radius:8px;border:1px solid #7e3e51;background:#201017;color:#fff;font-size:11px;cursor:pointer">🔊 TESTAR SOM</button><button id="hype108FlashBtn" type="button" style="min-height:36px;padding:8px 10px;border-radius:8px;border:1px solid #7e3e51;background:#a51b3b;color:#fff;font-size:11px;font-weight:800;cursor:pointer">💡 ATIVAR FLASH</button></div><label for="hype108AlarmVolume" style="display:flex;align-items:center;gap:8px;margin:8px 0 13px;font-size:12px;color:#eee">🔊 Volume do alerta <input id="hype108AlarmVolume" type="range" min="20" max="100" step="10" value="100" style="flex:1;min-width:75px;accent-color:#ff3159"><b id="hype108AlarmVolumeLabel">100%</b></label><div style="margin:8px 0 10px;border:1px solid #42313a;border-radius:10px;padding:9px;background:#1a1016"><button type="button" id="hype108PushTestBtn" style="min-height:43px;width:100%;border:1px solid #a93d60;border-radius:9px;background:#7b1838;color:white;font-weight:800;font-size:11px">🔔 TESTAR PUSH COM TELA BLOQUEADA</button><div id="hype108PushStatus" role="status" style="font-size:11px;line-height:1.45;color:#bbb;margin-top:7px">🔔 Push ainda não verificado neste celular.</div></div><div id="hype108AdminList" aria-live="polite"></div><small style="display:block;font-size:10px;line-height:1.35;color:#aaa">A tela pisca quando há chamado. Flash traseiro, som e vibração exigem permissão e o ADM visível. O navegador não consegue piscar o flash físico com a tela bloqueada.</small>';
    document.body.appendChild(w);
    const header=w.querySelector('div');
    if(header){
@@ -425,6 +467,8 @@
    $('hype108VibrateTest').addEventListener('click',testVibration);
    $('hype108SoundTest').addEventListener('click',testSound);
    $('hype108FlashBtn').addEventListener('click',toggleFlash);
+   $('hype108PushTestBtn').addEventListener('click',testLockedPush);
+   setPushStatus(pushStatus);
    const slider=$('hype108AlarmVolume');
    slider.value=String(volumeLevel);
    $('hype108AlarmVolumeLabel').textContent=volumeLevel+'%';
@@ -443,6 +487,16 @@
    window.addEventListener('pagehide',()=>{flashOffWhenHidden();closeSignal();});
    window.addEventListener('pageshow',poll);
    window.addEventListener('resize',syncMobilePanel);
+   const openCallsFromPush=()=>{
+     setMobilePanel(true);poll();
+   };
+   navigator.serviceWorker?.addEventListener('message',event=>{
+     if(event.data?.type==='HYPE_OPEN_CALLS')openCallsFromPush();
+   });
+   window.addEventListener('message',event=>{
+     if(event.data?.type==='HYPE_OPEN_CALLS')openCallsFromPush();
+   });
+   if(location.hash==='#chamados')setTimeout(openCallsFromPush,750);
    document.addEventListener('keydown',event=>{
       if(event.key==='Escape'&&mobilePanelOpen)setMobilePanel(false);
    });
