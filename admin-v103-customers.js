@@ -58,6 +58,18 @@
 
   const fold = v => String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
   const digits = v => String(v ?? '').replace(/\D/g,'');
+  const genderOf = row => {
+    const raw=fold(row?.gender || '');
+    if(raw==='feminino'||raw==='f'||raw==='mulher')return 'feminino';
+    if(raw==='masculino'||raw==='m'||raw==='homem')return 'masculino';
+    return 'nao_informado';
+  };
+  function genderBadge(row){
+    const g=genderOf(row);
+    if(g==='feminino')return '<span class="v103-gender-tag female">♀ FEMININO</span>';
+    if(g==='masculino')return '<span class="v103-gender-tag male">♂ MASCULINO</span>';
+    return '<span class="v103-gender-tag missing">GÊNERO NÃO INFORMADO</span>';
+  }
 
   function matchesSearch(row,q,mode){
     if(!q)return true;
@@ -73,12 +85,14 @@
     if(!hasLoaded)return;
     const q=($('v103CustomerSearch')?.value||'').trim();
     const mode=$('v103CustomerSearchType')?.value||'todos';
-    const visible=allRows.filter(row=>matchesSearch(row,q,mode));
+    const gender=$('v103CustomerGenderFilter')?.value||'todos';
+    const visible=allRows.filter(row=>matchesSearch(row,q,mode) && (gender==='todos'||genderOf(row)===gender));
     render(visible,allRows);
     const count=$('v103SearchResultInfo');
-    if(count)count.textContent=q
-      ? `${visible.length} cliente(s) encontrado(s) entre ${allRows.length} cadastrados.`
-      : `Mostrando ${allRows.length} cliente(s) cadastrados. Busque por nome, CPF ou número de WhatsApp.`;
+    if(count){
+      const label=gender==='feminino'?'Feminino':gender==='masculino'?'Masculino':gender==='nao_informado'?'Não informado':'todos os gêneros';
+      count.textContent=`Exibindo ${visible.length} de ${allRows.length} cliente(s) • ${label}${q?' • busca: '+q:''}. Dados vinculados ao cadastro permanente no Supabase.`;
+    }
   }
 
   function render(rows, totals=rows){
@@ -86,6 +100,9 @@
     const total=$('v103CustomerCount');
     const blocked=$('v103BlockedCount');
     const attended=$('v103AttendanceTotal');
+    const female=$('v103FemaleCount'), male=$('v103MaleCount');
+    if(female)female.textContent=String(totals.filter(r=>genderOf(r)==='feminino').length);
+    if(male)male.textContent=String(totals.filter(r=>genderOf(r)==='masculino').length);
     if(total) total.textContent=String(totals.length);
     if(blocked) blocked.textContent=String(totals.filter(r=>r.block_type!=='none' && (r.block_type==='permanent' || !r.blocked_until || new Date(r.blocked_until)>new Date())).length);
     if(attended) attended.textContent=String(totals.reduce((s,r)=>s+Number(r.attendance_count||0),0));
@@ -109,6 +126,7 @@
         <div class="v103-head">
           <div>
             <h4>${esc(row.name||'Sem nome')}</h4>
+            <div class="v103-gender-line">${genderBadge(row)}</div>
             <div class="v103-contact">
               ${row.cpf?`CPF: ${esc(row.cpf)} • `:''}
               ${row.phone?`📱 ${esc(row.phone)} • `:''}
@@ -185,8 +203,10 @@
     clearTimeout(timer);
     const input=$('v103CustomerSearch');
     const type=$('v103CustomerSearchType');
+    const gender=$('v103CustomerGenderFilter');
     if(input)input.value='';
     if(type)type.value='todos';
+    if(gender)gender.value='todos';
     searchNow();
     input?.focus();
   }
