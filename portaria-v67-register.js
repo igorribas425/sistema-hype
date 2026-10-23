@@ -2,7 +2,7 @@
    - Não vende ingresso
    - Não gera PIX
    - Não usa Stone
-   - Salva nome + CPF + número / WhatsApp
+   - Salva nome + CPF + gênero + número / WhatsApp no cadastro permanente
    - Registra a entrada imediatamente e envia o registro ao Admin
 */
 (() => {
@@ -60,7 +60,7 @@
   }
 
   function resetForm() {
-    ['v67RegName','v67RegCpf','v67RegPhone'].forEach(id => {
+    ['v67RegName','v67RegCpf','v67RegPhone','v67RegGender'].forEach(id => {
       const el = $(id); if (el) el.value = '';
     });
     setTimeout(() => $('v67RegName')?.focus(), 80);
@@ -73,26 +73,30 @@
     const name = String($('v67RegName')?.value || '').trim().replace(/\s+/g,' ');
     const cpf = cpfDigits($('v67RegCpf')?.value || '');
     const phone = String($('v67RegPhone')?.value || '').replace(/\D/g,'').slice(0,13);
+    const gender = String($('v67RegGender')?.value || '');
 
     if (!eventId) return setStatus('Selecione o evento no topo da Portaria.', false);
     if (name.length < 2) return setStatus('Informe o nome completo.', false);
     if (!validCpf(cpf)) return setStatus('Informe um CPF válido.', false);
+    if (!['Feminino','Masculino'].includes(gender)) return setStatus('Selecione Feminino ou Masculino.', false);
     if (phone.length < 10) return setStatus('Informe o número / WhatsApp com DDD.', false);
 
     const btn = $('v67RegSubmit');
     if (btn) { btn.disabled = true; btn.textContent = 'SALVANDO CADASTRO...'; }
 
     try {
-      const item = rows(await rpc('portaria_device_register_entry_v84', {
+      const item = rows(await rpc('portaria_device_register_entry_v119', {
         p_device_key: deviceKey(),
         p_event_id: eventId,
         p_name: name,
         p_cpf: cpf,
-        p_phone: phone
+        p_phone: phone,
+        p_gender: gender
       }))[0];
 
       if (!item?.list_id) throw new Error('O cadastro não foi salvo.');
-      setStatus('✅ Pessoa salva automaticamente na lista e entrada registrada. Pronto para a próxima.', true);
+      if (item.gender !== gender) throw new Error('O gênero não foi confirmado pelo servidor. Verifique o cadastro.');
+      setStatus('✅ Entrada registrada: '+gender+'. Cliente vinculado à lista e ao cadastro permanente.', true);
       const resultBox = $('v67RegResult');
       if (resultBox) {
         resultBox.classList.remove('show');
