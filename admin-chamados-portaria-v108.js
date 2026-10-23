@@ -128,6 +128,9 @@
    } catch(e){console.warn('[HYPE chamado push opcional]',e);}
  }
  async function unlock(){
+   // Solicita push no clique do usuário, antes de perder a ativação por await.
+   // O toque da aba continua funcionando mesmo se o push não for permitido.
+   enablePush().catch(()=>{});
    try {
      const AC=window.AudioContext||window.webkitAudioContext;
      if(!AC)throw new Error('Este aparelho não suporta áudio do navegador');
@@ -137,7 +140,6 @@
      if(!enabled)throw new Error('Toque bloqueado pelo navegador');
      note(784,0,.17);
      render();say('🔊 Toque ativado. Deixe o ADM aberto para receber som contínuo.');
-     enablePush().catch(()=>{});
    }catch(e){say(e.message,true);}
  }
  function init(){
