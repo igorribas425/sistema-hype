@@ -214,10 +214,18 @@
       const reg = await navigator.serviceWorker.register('./service-worker.js?v=46', {scope:'./'});
       await navigator.serviceWorker.ready;
       let sub = await reg.pushManager.getSubscription();
+      const newKey = urlBase64ToUint8Array(publicKey);
+      if (sub) {
+        const oldKey = new Uint8Array(sub.options?.applicationServerKey || []);
+        if (oldKey.length !== newKey.length || oldKey.some((v,i)=>v!==newKey[i])) {
+          await sub.unsubscribe();
+          sub = null;
+        }
+      }
       if (!sub) {
         sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(publicKey)
+          applicationServerKey: newKey
         });
       }
 
