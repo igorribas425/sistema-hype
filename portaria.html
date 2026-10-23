@@ -149,11 +149,12 @@ html,body{max-width:100%;overflow-x:hidden}
         <strong style="font-size:11px">PORTARIA</strong>
       </div>
 
-      <div class="v63-step-note">Cadastro rápido: informe nome, CPF e número / WhatsApp. A pessoa entra automaticamente na lista do evento e a entrada já fica registrada.</div>
+      <div class="v63-step-note">Cadastro rápido: informe nome, CPF, gênero e WhatsApp. O gênero fica vinculado à lista do evento e ao cadastro permanente. A entrada é registrada imediatamente.</div>
 
       <div class="v19-door-form v39-door-simple">
         <div class="full"><label>Nome completo *</label><input id="v67RegName" placeholder="Nome no documento" autocomplete="name"></div>
         <div class="full"><label>CPF *</label><input id="v67RegCpf" placeholder="Somente números" inputmode="numeric" maxlength="14" autocomplete="off"></div>
+        <div class="full"><label>Gênero *</label><select id="v67RegGender" required aria-label="Selecione feminino ou masculino" style="width:100%;min-height:48px;border-radius:10px;border:1px solid #56545f;background:#111115;color:#fff;padding:0 12px;font-size:15px"><option value="">Selecione o gênero</option><option value="Feminino">♀ Feminino</option><option value="Masculino">♂ Masculino</option></select></div>
         <div class="full"><label>Número / WhatsApp *</label><input id="v67RegPhone" placeholder="Ex.: 54999999999" inputmode="tel" maxlength="15" autocomplete="tel"></div>
       </div>
 
@@ -229,7 +230,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="portaria-v18.js?v=20261023-acesso-unico-v109"></script>
 <script src="hype-v406-lista-simples.js?v=20261005-v106"></script>
 <script src="portaria-v20.js?v=20261005-v105"></script>
-<script src="portaria-v67-register.js?v=20261003-v84"></script>
+<script src="portaria-v67-register.js?v=20261023-genero-v119"></script>
 <script src="hype-push-config.js?v=116"></script>
   <script src="hype-v38-chat.js?v=117"></script>
   <script src="hype-v38-reset.js?v=20260905-v38-1"></script>
