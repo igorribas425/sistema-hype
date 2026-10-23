@@ -1,4 +1,4 @@
-/* HYPE V46: notificação Web Push para chat e chamados urgentes ADM. */
+/* HYPE V117: notificação Web Push para chat e chamados urgentes ADM. */
 const HYPE_ADMIN_URL='./admin.html#chamados';
 
 self.addEventListener('install',event=>self.skipWaiting());
@@ -12,7 +12,18 @@ self.addEventListener('push',event=>{
  const body=String(data.body||(urgent?'A portaria precisa do ADM.':'Nova mensagem no chat da equipe.'));
  const url=urgent?HYPE_ADMIN_URL:(data.url||'./admin.html');
  const tag=urgent?String(data.tag||'hype-admin-call'): 'hype-chat-v421';
- event.waitUntil(self.registration.showNotification(title,{
+ const receivedAt=Date.now();
+ event.waitUntil((async()=>{
+   // Guarda apenas horário/tipo para diferenciar atraso do Android vs servidor.
+   // Não armazena dados de clientes nem informações do chamado.
+   try{
+     const cache=await caches.open('hype-push-diag-v117');
+     const key=new URL('./hype-push-last-received-v117',self.location.href).href;
+     await cache.put(key,new Response(JSON.stringify({receivedAt,kind:urgent?'admin_call':'chat'}),{
+       headers:{'Content-Type':'application/json'}
+     }));
+   }catch(err){console.warn('[HYPE push diagnostic]',err);}
+   await self.registration.showNotification(title,{
    body,
    tag,
    renotify:true,
@@ -22,8 +33,9 @@ self.addEventListener('push',event=>{
    icon:'./apple-touch-icon.png',
    badge:'./apple-touch-icon.png',
    data:{url,kind:urgent?'admin_call':'chat'},
-   timestamp:Date.now()
- }));
+   timestamp:receivedAt
+   });
+ })());
 });
 
 self.addEventListener('notificationclick',event=>{
