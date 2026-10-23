@@ -211,7 +211,7 @@
         return false;
       }
 
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=45', {scope:'./'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=46', {scope:'./'});
       await navigator.serviceWorker.ready;
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
