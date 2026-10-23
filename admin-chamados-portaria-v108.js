@@ -131,7 +131,7 @@
    try {
      if(Notification.permission==='default')await Notification.requestPermission();
      if(Notification.permission!=='granted')return;
-     const reg=await navigator.serviceWorker.register('./service-worker.js?v=44',{scope:'./'});
+     const reg=await navigator.serviceWorker.register('./service-worker.js?v=45',{scope:'./'});
      const ready=await navigator.serviceWorker.ready;
      let sub=await ready.pushManager.getSubscription();
      if(!sub)sub=await ready.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:base64ToU8(publicKey)});
