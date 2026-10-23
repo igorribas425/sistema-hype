@@ -422,17 +422,22 @@ html,body{max-width:100%;overflow-x:hidden}
     .v103-headbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
     .v103-headbar p{margin:5px 0 0;color:var(--muted);font-size:11px}
     .v103-search-heading{margin:16px 0 7px;font-weight:950;font-size:12px;color:#fff}
-    .v103-search{display:grid;grid-template-columns:145px minmax(0,1fr) auto auto;gap:8px;margin:6px 0 9px}
+    .v103-search{display:grid;grid-template-columns:145px 158px minmax(0,1fr) auto auto;gap:8px;margin:6px 0 9px}
     .v103-search input,.v103-search select{width:100%;min-height:46px;background:#08080b;border:1px solid var(--line);border-radius:11px;color:#fff;padding:0 13px;font-size:14px;min-width:0}
     .v103-search button{white-space:nowrap}
     .v103-search-info{color:var(--muted);font-size:11px;margin:0 0 15px;line-height:1.5}
     .v103-history-safe{color:#a8f3c4;font-size:11px;line-height:1.5;margin-top:9px}
-    .v103-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+    .v103-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px}
     .v103-summary>div{background:#0b0b0f;border:1px solid var(--line);border-radius:12px;padding:14px}
     .v103-summary b{display:block;font-size:24px}.v103-summary span{display:block;color:var(--muted);font-size:9px;font-weight:900;margin-top:4px}
     .v103-card{border:1px solid var(--line);border-radius:15px;background:#0a0a0d;padding:15px;margin-bottom:10px}
     .v103-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
     .v103-head h4{font-size:16px;margin:0}.v103-contact{font-size:10px;color:var(--muted);margin-top:5px;line-height:1.55}
+    .v103-gender-line{margin-top:7px;display:flex;gap:6px;flex-wrap:wrap}
+    .v103-gender-tag{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;font-size:10px;font-weight:900;letter-spacing:.15px;border:1px solid #48404a;background:#17151c;color:#ddd}
+    .v103-gender-tag.female{border-color:rgba(255,102,174,.42);background:rgba(255,102,174,.1);color:#ffaad2}
+    .v103-gender-tag.male{border-color:rgba(80,181,255,.42);background:rgba(80,181,255,.1);color:#9ddcff}
+    .v103-gender-tag.missing{color:#bbb}
     .v103-badge{display:inline-flex;padding:6px 9px;border-radius:999px;font-size:8px;font-weight:950;white-space:nowrap}
     .v103-badge.ok{color:#a8f3c4;background:rgba(40,209,124,.11);border:1px solid rgba(40,209,124,.3)}
     .v103-badge.temp{color:#ffe097;background:rgba(255,178,46,.1);border:1px solid rgba(255,178,46,.3)}
@@ -450,7 +455,8 @@ html,body{max-width:100%;overflow-x:hidden}
     .v103-btn{min-height:38px;border-radius:9px;border:1px solid var(--line);background:#151519;color:#fff;padding:0 12px;font-size:9px;font-weight:950;cursor:pointer}
     .v103-btn.warn{border-color:rgba(255,178,46,.35)}.v103-btn.danger{border-color:rgba(255,22,61,.4)}.v103-btn.good{border-color:rgba(40,209,124,.4)}
     .v103-empty{padding:16px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:11px}.v103-empty.error{color:#ff9bab}
-    @media(max-width:700px){.v103-summary,.v103-stats{grid-template-columns:1fr}.v103-head{flex-direction:column}.v103-search{grid-template-columns:1fr 1fr}.v103-search input{grid-column:1/-1}.v103-search button{width:100%}}
+    @media(max-width:1000px){.v103-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.v103-summary>div:last-child{grid-column:span 2}}
+    @media(max-width:700px){.v103-stats{grid-template-columns:1fr}.v103-head{flex-direction:column}.v103-search{grid-template-columns:1fr 1fr}.v103-search input{grid-column:1/-1}.v103-search button{width:100%}}
   </style>
 
   <section class="panel-box" id="v103CustomerRegistryPanel">
@@ -460,6 +466,8 @@ html,body{max-width:100%;overflow-x:hidden}
     </div>
     <div class="v103-summary">
       <div><b id="v103CustomerCount">0</b><span>CLIENTES CADASTRADOS</span></div>
+      <div><b id="v103FemaleCount">0</b><span>♀ FEMININO</span></div>
+      <div><b id="v103MaleCount">0</b><span>♂ MASCULINO</span></div>
       <div><b id="v103BlockedCount">0</b><span>BLOQUEADOS AGORA</span></div>
       <div><b id="v103AttendanceTotal">0</b><span>TOTAL DE IDAS ÀS FESTAS</span></div>
     </div>
@@ -471,6 +479,12 @@ html,body{max-width:100%;overflow-x:hidden}
         <option value="nome">Nome</option>
         <option value="cpf">CPF</option>
         <option value="telefone">Telefone / WhatsApp</option>
+      </select>
+      <select id="v103CustomerGenderFilter" aria-label="Filtrar cadastros por gênero" onchange="HypeCustomerRegistryV103.searchNow()">
+        <option value="todos">Todos os gêneros</option>
+        <option value="feminino">♀ Feminino</option>
+        <option value="masculino">♂ Masculino</option>
+        <option value="nao_informado">Não informado</option>
       </select>
       <input id="v103CustomerSearch" type="search" autocomplete="off" placeholder="Digite nome, CPF ou número de WhatsApp" aria-label="Buscar cliente" oninput="HypeCustomerRegistryV103.search()" onkeydown="if(event.key==='Enter'){event.preventDefault();HypeCustomerRegistryV103.searchNow()}">
       <button class="btn-action" type="button" onclick="HypeCustomerRegistryV103.searchNow()">🔎 PESQUISAR</button>
@@ -1077,7 +1091,7 @@ Bruna Santos"></textarea>
   <script src="hype-v38-chat.js?v=117"></script>
   <script src="hype-v408-lista-admin.js?v=20261003-v71"></script>
   <script src="admin-v92-tabs.js?v=20261019-v106-financeiro"></script>
-  <script src="admin-v103-customers.js?v=20261020-busca-presencas"></script>
+  <script src="admin-v103-customers.js?v=20261023-genero-feminino-masculino-v118"></script>
   <script src="admin-v95-hub.js?v=20261004-v103"></script>
   <script src="admin-chamados-portaria-v108.js?v=20261023-push-diagnostico-v117"></script>
 </body>
