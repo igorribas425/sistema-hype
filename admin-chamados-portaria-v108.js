@@ -305,7 +305,14 @@
      const reg=await navigator.serviceWorker.register('./service-worker.js?v=46',{scope:'./'});
      const ready=await navigator.serviceWorker.ready;
      let sub=await ready.pushManager.getSubscription();
-     if(!sub)sub=await ready.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:base64ToU8(publicKey)});
+     const desiredKey=base64ToU8(publicKey);
+     if(sub){
+       const oldKey=new Uint8Array(sub.options?.applicationServerKey||[]);
+       if(oldKey.length!==desiredKey.length||oldKey.some((v,i)=>v!==desiredKey[i])){
+         await sub.unsubscribe();sub=null;
+       }
+     }
+     if(!sub)sub=await ready.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:desiredKey});
      const json=sub.toJSON(),fn=String(window.HYPE_CHAT_PUSH_FUNCTION_URL||cfg.url+'/functions/v1/hype-chat-push').replace(/\/$/,'');
      const res=await fetch(fn+'/subscribe',{method:'POST',headers:{'Content-Type':'application/json',apikey:cfg.anonKey,Authorization:'Bearer '+cfg.anonKey},
        body:JSON.stringify({endpoint:json.endpoint,keys:json.keys||{},role:'admin',userAgent:navigator.userAgent||'',username:c.p_username,password:c.p_password})});
