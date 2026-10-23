@@ -21,7 +21,7 @@ self.addEventListener('push', event => {
       tag: 'hype-chat-v421',
       renotify: true,
       silent: false,
-      vibrate: [120, 70, 120],
+      vibrate: [280, 120, 280, 150, 450],
       icon: './apple-touch-icon.png',
       badge: './apple-touch-icon.png',
       data: { url }
