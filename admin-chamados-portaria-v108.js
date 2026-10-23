@@ -7,6 +7,102 @@
  const $=id=>document.getElementById(id);
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
  let client=null, polling=false, answering=false, active=[], seen=new Set(), audio=null, enabled=false, ringing=null;
+ let volumeLevel=Math.max(20,Math.min(100,Number(localStorage.getItem('hype108AlarmVolume')||100)||100));
+ let visualEnabled=false, torchStream=null, torchTrack=null, torchMode=false, ledTimer=null, ledOffTimer=null, ledBusy=false;
+ const reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
+ const canAlert=()=>!!creds()&&active.length>0&&!document.hidden;
+ function torchLabel(){
+   const b=$('hype108FlashBtn');
+   if(b)b.textContent=visualEnabled?(torchMode?'💡 FLASH ATIVO • DESLIGAR':'🚨 ALERTA VISUAL • DESLIGAR'):'💡 ATIVAR FLASH';
+ }
+ function stopLedCycle(){
+   if(ledTimer!==null){clearInterval(ledTimer);ledTimer=null;}
+   if(ledOffTimer!==null){clearTimeout(ledOffTimer);ledOffTimer=null;}
+   if(torchTrack?.readyState==='live'){
+     torchTrack.applyConstraints({advanced:[{torch:false}]}).catch(()=>{});
+   }
+ }
+ async function setTorch(on){
+   const track=torchTrack;
+   if(!track||track.readyState!=='live'||ledBusy)return false;
+   ledBusy=true;
+   try{await track.applyConstraints({advanced:[{torch:Boolean(on)}]});return true;}
+   catch(err){console.warn('[HYPE V108 flash]',err);return false;}
+   finally{ledBusy=false;}
+ }
+ function pulseLed(){
+   if(!visualEnabled||!torchMode||!canAlert()||reducedMotion()||ledBusy)return;
+   setTorch(true).then(ok=>{
+     if(!ok)return;
+     ledOffTimer=setTimeout(()=>{
+       ledOffTimer=null;
+       setTorch(false).catch(()=>{});
+     },550);
+   }).catch(()=>{});
+ }
+ function syncVisual(){
+   const should=visualEnabled&&canAlert();
+   const overlay=$('hype108ScreenAlert');
+   if(overlay){
+     overlay.hidden=!should;
+     overlay.classList.toggle('hype108-reduced',reducedMotion());
+   }
+   if(!should||reducedMotion()||!torchMode){
+     stopLedCycle();
+   }else if(ledTimer===null){
+     pulseLed();
+     ledTimer=setInterval(pulseLed,2600);
+   }
+   torchLabel();
+ }
+ async function stopTorch(){
+   stopLedCycle();
+   const stream=torchStream;
+   torchStream=null;torchTrack=null;torchMode=false;
+   try{stream?.getTracks().forEach(t=>t.stop());}catch(_){}
+ }
+ async function toggleFlash(){
+   if(visualEnabled){
+     visualEnabled=false;
+     syncVisual();
+     await stopTorch();
+     torchLabel();
+     say('💡 Flash e alerta visual desligados.');
+     return;
+   }
+   if(!creds()){say('Entre no ADM antes de ativar o flash.',true);return;}
+   visualEnabled=true;
+   const btn=$('hype108FlashBtn');
+   if(btn)btn.disabled=true;
+   try{
+     // A lanterna traseira somente funciona em alguns navegadores Android e
+     // exige acesso à câmera em primeiro plano, após clique explícito.
+     if(!navigator.mediaDevices?.getUserMedia)throw new Error('Câmera não disponível');
+     torchStream=await navigator.mediaDevices.getUserMedia({
+       audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:320},height:{ideal:240}}
+     });
+     torchTrack=torchStream.getVideoTracks()[0]||null;
+     if(!torchTrack)throw new Error('Câmera não disponível');
+     const capabilities=torchTrack.getCapabilities?.()||{};
+     if(capabilities.torch!==true)throw new Error('Este aparelho/navegador não libera o flash ao site');
+     await torchTrack.applyConstraints({advanced:[{torch:false}]});
+     torchMode=true;
+     say('💡 Flash traseiro preparado. Vai piscar devagar enquanto houver chamado e a página estiver aberta.');
+   }catch(e){
+     await stopTorch();
+     say('🚨 Flash traseiro indisponível: ativado alerta vermelho na tela. '+e.message,true);
+   }finally{
+     if(btn)btn.disabled=false;
+     syncVisual();
+   }
+ }
+ function flashOffWhenHidden(){
+   // Libera a câmera ao bloquear o celular, trocar de aba ou fechar o navegador.
+   visualEnabled=false;
+   syncVisual();
+   stopTorch().catch(()=>{});
+ }
+
  const vibrationSupported = typeof navigator.vibrate === 'function';
  const VIBRATION_PATTERN = [320,140,320,140,600];
  function vibrate(pattern=VIBRATION_PATTERN){
@@ -31,9 +127,9 @@
  function note(freq,delay,duration=0.12){
    if(!audio||audio.state!=='running')return;
    const osc=audio.createOscillator(),gain=audio.createGain(),now=audio.currentTime+delay;
-   osc.type='sine';osc.frequency.value=freq;
+   osc.type='triangle';osc.frequency.value=freq;
    gain.gain.setValueAtTime(0.001,now);
-   gain.gain.exponentialRampToValueAtTime(0.14,now+0.014);
+   gain.gain.exponentialRampToValueAtTime(Math.min(.46,.46*(volumeLevel/100)),now+0.014);
    gain.gain.exponentialRampToValueAtTime(0.001,now+duration);
    osc.connect(gain).connect(audio.destination);osc.start(now);osc.stop(now+duration+0.03);
  }
@@ -49,6 +145,7 @@
    const want=enabled&&active.length>0&&!!creds();
    if(want&&!ringing){ping();ringing=setInterval(ping,3000);}
    if(!want){if(ringing){clearInterval(ringing);ringing=null;}stopVibration();}
+   syncVisual();
  }
  function render(){
    const widget=$('hype108AdminWidget'),list=$('hype108AdminList'),count=$('hype108AdminCount'),sound=$('hype108SoundBtn');
@@ -157,7 +254,7 @@
      note(784,0,.17);
      render();
      say(vibrationSupported
-       ? '🔊📳 Alertas ativos! O celular irá vibrar e tocar enquanto houver chamado (com ADM aberto).'
+       ? '🔊📳 Alertas ativos com volume reforçado. Aumente também o volume de mídia do celular.'
        : '🔊 Som ativo. Este aparelho/navegador não oferece vibração pela página.');
    }catch(e){
      // Não bloquear a vibração apenas por falta de suporte ao áudio.
@@ -168,6 +265,13 @@
        : 'Este navegador bloqueou o áudio e/ou não permite vibração. '+e.message,true);
    }
  }
+ function testSound(){
+   if(!enabled||!audio||audio.state!=='running'){
+     say('Primeiro toque em ATIVAR ALERTAS para liberar o som.',true);return;
+   }
+   note(784,0,.20);note(987,.27,.22);note(784,.59,.28);
+   say('🔊 Teste de som enviado. Se estiver baixo, aumente o volume de MÍDIA do celular.');
+ }
  function testVibration(){
    if(!vibrationSupported){say('⚠️ Este aparelho/navegador não suporta vibração via site. No iPhone, normalmente não funciona.',true);return;}
    const ok=vibrate();
@@ -175,14 +279,43 @@
  }
  function init(){
    if($('hype108AdminWidget'))return;
+   const css=document.createElement('style');
+   css.id='hype108FlashStyle';
+   css.textContent=`
+      #hype108ScreenAlert[hidden]{display:none!important}
+      #hype108ScreenAlert{position:fixed;inset:0;z-index:10004;pointer-events:none;box-sizing:border-box;
+        background:rgba(245,30,64,.13);border:12px solid rgba(255,52,90,.75);
+        animation:hype108GentleBlink 2.6s steps(1,end) infinite}
+      #hype108ScreenAlert.hype108-reduced{animation:none;background:transparent;border:10px solid #fa4167}
+      @keyframes hype108GentleBlink{0%,29%{opacity:1}30%,100%{opacity:0}}
+      @media (prefers-reduced-motion:reduce){#hype108ScreenAlert{animation:none;background:transparent;border:10px solid #fa4167}}
+    `;
+   document.head.appendChild(css);
+   const overlay=document.createElement('div');
+   overlay.id='hype108ScreenAlert';overlay.hidden=true;
+   overlay.setAttribute('aria-hidden','true');document.body.appendChild(overlay);
    const w=document.createElement('aside');w.id='hype108AdminWidget';w.hidden=true;
    w.style.cssText='position:fixed;z-index:10005;right:12px;bottom:75px;width:min(350px,calc(100vw - 24px));max-height:60vh;overflow:auto;background:#110d11;border:2px solid #af2444;border-radius:16px;box-shadow:0 14px 46px #000b;color:white;padding:13px;font-family:system-ui,Arial,sans-serif;';
-   w.innerHTML='<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong style="font-size:14px">🆘 CHAMADOS DA PORTARIA <b id="hype108AdminCount" style="color:#ff4870">0</b></strong><button type="button" id="hype108SoundBtn" style="font-size:11px;font-weight:bold;background:#a51b3b;color:white;padding:10px;border:0;border-radius:8px;cursor:pointer">🔔 ATIVAR ALERTAS</button></div><p id="hype108AdminInfo" style="font-size:11px;color:#d6f1df;margin:10px 0">Aguardando chamados...</p><div style="margin:0 0 9px"><button id="hype108VibrateTest" type="button" style="min-height:36px;padding:8px 12px;border-radius:8px;border:1px solid #7e3e51;background:#201017;color:#fff;font-size:11px;cursor:pointer">📳 TESTAR VIBRAÇÃO</button></div><div id="hype108AdminList" aria-live="polite"></div><small style="display:block;font-size:10px;line-height:1.35;color:#aaa">O toque contínuo funciona com a página ADM ativa. Para avisos com tela bloqueada, permita notificações push; o som depende do celular.</small>';
+   w.innerHTML='<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong style="font-size:14px">🆘 CHAMADOS DA PORTARIA <b id="hype108AdminCount" style="color:#ff4870">0</b></strong><button type="button" id="hype108SoundBtn" style="font-size:11px;font-weight:bold;background:#a51b3b;color:white;padding:10px;border:0;border-radius:8px;cursor:pointer">🔔 ATIVAR ALERTAS</button></div><p id="hype108AdminInfo" style="font-size:11px;color:#d6f1df;margin:10px 0">Aguardando chamados...</p><div style="margin:0 0 9px;display:flex;gap:6px;flex-wrap:wrap"><button id="hype108VibrateTest" type="button" style="min-height:36px;padding:8px 10px;border-radius:8px;border:1px solid #7e3e51;background:#201017;color:#fff;font-size:11px;cursor:pointer">📳 TESTAR VIBRAÇÃO</button><button id="hype108SoundTest" type="button" style="min-height:36px;padding:8px 10px;border-radius:8px;border:1px solid #7e3e51;background:#201017;color:#fff;font-size:11px;cursor:pointer">🔊 TESTAR SOM</button><button id="hype108FlashBtn" type="button" style="min-height:36px;padding:8px 10px;border-radius:8px;border:1px solid #7e3e51;background:#a51b3b;color:#fff;font-size:11px;font-weight:800;cursor:pointer">💡 ATIVAR FLASH</button></div><label for="hype108AlarmVolume" style="display:flex;align-items:center;gap:8px;margin:8px 0 13px;font-size:12px;color:#eee">🔊 Volume do alerta <input id="hype108AlarmVolume" type="range" min="20" max="100" step="10" value="100" style="flex:1;min-width:75px;accent-color:#ff3159"><b id="hype108AlarmVolumeLabel">100%</b></label><div id="hype108AdminList" aria-live="polite"></div><small style="display:block;font-size:10px;line-height:1.35;color:#aaa">Som, vibração e flash traseiro precisam do ADM aberto e ativo. O flash usa a câmera do aparelho e pede permissão. Tela bloqueada: depende das notificações do celular; não garante flash, som ou vibração contínuos.</small>';
    document.body.appendChild(w);
    $('hype108SoundBtn').addEventListener('click',unlock);
    $('hype108VibrateTest').addEventListener('click',testVibration);
+   $('hype108SoundTest').addEventListener('click',testSound);
+   $('hype108FlashBtn').addEventListener('click',toggleFlash);
+   const slider=$('hype108AlarmVolume');
+   slider.value=String(volumeLevel);
+   $('hype108AlarmVolumeLabel').textContent=volumeLevel+'%';
+   slider.addEventListener('input',()=>{
+     volumeLevel=Math.max(20,Math.min(100,Number(slider.value)||100));
+     $('hype108AlarmVolumeLabel').textContent=volumeLevel+'%';
+     localStorage.setItem('hype108AlarmVolume',String(volumeLevel));
+   });
    render();setTimeout(poll,1500);setInterval(poll,4000);
-   document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});
+   document.addEventListener('visibilitychange',()=>{
+     if(document.hidden)flashOffWhenHidden();
+     else {poll();syncVisual();}
+   });
+   window.addEventListener('pagehide',flashOffWhenHidden);
    window.addEventListener('pageshow',poll);
  }
  document.addEventListener('DOMContentLoaded',init);
