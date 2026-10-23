@@ -7,6 +7,29 @@
  const $=id=>document.getElementById(id);
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
  let client=null, polling=false, answering=false, active=[], seen=new Set(), audio=null, enabled=false, ringing=null;
+ let signalClient=null, signalChannel=null, retryPoll=false;
+ const SIGNAL_TOPIC='hype-portaria-admin-v110';
+ function openSignal(){
+   if(signalChannel||!creds())return;
+   try {
+     const cfg=window.HYPE_SUPABASE_CONFIG||{};
+     if(!cfg.url||!cfg.anonKey||!window.supabase?.createClient)return;
+     signalClient=window.supabase.createClient(cfg.url,cfg.anonKey,{auth:{persistSession:false}});
+     signalChannel=signalClient.channel(SIGNAL_TOPIC)
+       .on('broadcast',{event:'refresh'},()=>{
+          // Mensagem sem dados privados: somente o RPC autenticado confirma o chamado.
+          poll();
+       })
+       .subscribe(status=>{
+         if(status==='SUBSCRIBED')poll();
+         if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')console.warn('[HYPE V110] Realtime temporariamente indisponível; usando verificação periódica.');
+       });
+   }catch(err){console.warn('[HYPE V110 Realtime]',err);signalChannel=null;}
+ }
+ function closeSignal(){
+   if(signalChannel){signalClient?.removeChannel(signalChannel).catch(()=>{});signalChannel=null;}
+   signalClient=null;
+ }
  let volumeLevel=Math.max(20,Math.min(100,Number(localStorage.getItem('hype108AlarmVolume')||100)||100));
  let visualEnabled=false, torchStream=null, torchTrack=null, torchMode=false, ledTimer=null, ledOffTimer=null, ledBusy=false;
  const reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
@@ -41,13 +64,15 @@
    }).catch(()=>{});
  }
  function syncVisual(){
-   const should=visualEnabled&&canAlert();
+   // A tela pisca automaticamente em qualquer ADM ativo. Flash físico é opcional.
+   const should=canAlert();
+   const shouldTorch=visualEnabled&&should;
    const overlay=$('hype108ScreenAlert');
    if(overlay){
      overlay.hidden=!should;
      overlay.classList.toggle('hype108-reduced',reducedMotion());
    }
-   if(!should||reducedMotion()||!torchMode){
+   if(!shouldTorch||reducedMotion()||!torchMode){
      stopLedCycle();
    }else if(ledTimer===null){
      pulseLed();
@@ -84,10 +109,14 @@
      torchTrack=torchStream.getVideoTracks()[0]||null;
      if(!torchTrack)throw new Error('Câmera não disponível');
      const capabilities=torchTrack.getCapabilities?.()||{};
-     if(capabilities.torch!==true)throw new Error('Este aparelho/navegador não libera o flash ao site');
+     if(capabilities.torch===false)throw new Error('Este aparelho não disponibiliza a lanterna ao navegador');
+     // Testa o LED agora, para detectar a falha antes de esperar outro chamado.
+     await torchTrack.applyConstraints({advanced:[{torch:true}]});
+     if(torchTrack.getSettings?.().torch===false)throw new Error('O celular bloqueou o acionamento do flash');
+     await new Promise(resolve=>setTimeout(resolve,320));
      await torchTrack.applyConstraints({advanced:[{torch:false}]});
      torchMode=true;
-     say('💡 Flash traseiro preparado. Vai piscar devagar enquanto houver chamado e a página estiver aberta.');
+     say('💡 Flash testado! Ele piscará quando chegar um chamado com ADM aberto e tela acesa.');
    }catch(e){
      await stopTorch();
      say('🚨 Flash traseiro indisponível: ativado alerta vermelho na tela. '+e.message,true);
@@ -188,9 +217,11 @@
  }
  async function poll(){
    const credentials=creds();
-   if(!credentials){active=[];render();return;}
-   if(polling||navigator.onLine===false)return;
+   if(!credentials){active=[];closeSignal();render();return;}
+   if(polling){retryPoll=true;return;}
+   if(navigator.onLine===false||document.hidden)return;
    polling=true;
+   openSignal();
    try {
      const data=await rpc('staff_admin_calls_v108',credentials);
      const rows=Array.isArray(data)?data:(data?[data]:[]);
@@ -198,10 +229,13 @@
      const fresh=active.filter(c=>!seen.has(String(c.call_id)));
      fresh.forEach(c=>seen.add(String(c.call_id)));
      render();
-     if(fresh.length){notifyNew();if(enabled)ping();}
+     if(fresh.length)notifyNew(); // ringMode() já iniciou o som e a vibração.
      say(active.length?active.length+' chamado(s) aguardando o ADM.':'Tudo certo. Aguardando chamados.');
    }catch(e){say('Sem conexão com os chamados: '+e.message,true);}
-   finally{polling=false;}
+   finally{
+     polling=false;
+     if(retryPoll){retryPoll=false;setTimeout(poll,0);}
+   }
  }
  async function answer(id){
    const credentials=creds();
@@ -296,7 +330,7 @@
    overlay.setAttribute('aria-hidden','true');document.body.appendChild(overlay);
    const w=document.createElement('aside');w.id='hype108AdminWidget';w.hidden=true;
    w.style.cssText='position:fixed;z-index:10005;right:12px;bottom:75px;width:min(350px,calc(100vw - 24px));max-height:60vh;overflow:auto;background:#110d11;border:2px solid #af2444;border-radius:16px;box-shadow:0 14px 46px #000b;color:white;padding:13px;font-family:system-ui,Arial,sans-serif;';
-   w.innerHTML='<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong style="font-size:14px">🆘 CHAMADOS DA PORTARIA <b id="hype108AdminCount" style="color:#ff4870">0</b></strong><button type="button" id="hype108SoundBtn" style="font-size:11px;font-weight:bold;background:#a51b3b;color:white;padding:10px;border:0;border-radius:8px;cursor:pointer">🔔 ATIVAR ALERTAS</button></div><p id="hype108AdminInfo" style="font-size:11px;color:#d6f1df;margin:10px 0">Aguardando chamados...</p><div style="margin:0 0 9px;display:flex;gap:6px;flex-wrap:wrap"><button id="hype108VibrateTest" type="button" style="min-height:36px;padding:8px 10px;border-radius:8px;border:1px solid #7e3e51;background:#201017;color:#fff;font-size:11px;cursor:pointer">📳 TESTAR VIBRAÇÃO</button><button id="hype108SoundTest" type="button" style="min-height:36px;padding:8px 10px;border-radius:8px;border:1px solid #7e3e51;background:#201017;color:#fff;font-size:11px;cursor:pointer">🔊 TESTAR SOM</button><button id="hype108FlashBtn" type="button" style="min-height:36px;padding:8px 10px;border-radius:8px;border:1px solid #7e3e51;background:#a51b3b;color:#fff;font-size:11px;font-weight:800;cursor:pointer">💡 ATIVAR FLASH</button></div><label for="hype108AlarmVolume" style="display:flex;align-items:center;gap:8px;margin:8px 0 13px;font-size:12px;color:#eee">🔊 Volume do alerta <input id="hype108AlarmVolume" type="range" min="20" max="100" step="10" value="100" style="flex:1;min-width:75px;accent-color:#ff3159"><b id="hype108AlarmVolumeLabel">100%</b></label><div id="hype108AdminList" aria-live="polite"></div><small style="display:block;font-size:10px;line-height:1.35;color:#aaa">Som, vibração e flash traseiro precisam do ADM aberto e ativo. O flash usa a câmera do aparelho e pede permissão. Tela bloqueada: depende das notificações do celular; não garante flash, som ou vibração contínuos.</small>';
+   w.innerHTML='<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong style="font-size:14px">🆘 CHAMADOS DA PORTARIA <b id="hype108AdminCount" style="color:#ff4870">0</b></strong><button type="button" id="hype108SoundBtn" style="font-size:11px;font-weight:bold;background:#a51b3b;color:white;padding:10px;border:0;border-radius:8px;cursor:pointer">🔔 ATIVAR ALERTAS</button></div><p id="hype108AdminInfo" style="font-size:11px;color:#d6f1df;margin:10px 0">Aguardando chamados...</p><div style="margin:0 0 9px;display:flex;gap:6px;flex-wrap:wrap"><button id="hype108VibrateTest" type="button" style="min-height:36px;padding:8px 10px;border-radius:8px;border:1px solid #7e3e51;background:#201017;color:#fff;font-size:11px;cursor:pointer">📳 TESTAR VIBRAÇÃO</button><button id="hype108SoundTest" type="button" style="min-height:36px;padding:8px 10px;border-radius:8px;border:1px solid #7e3e51;background:#201017;color:#fff;font-size:11px;cursor:pointer">🔊 TESTAR SOM</button><button id="hype108FlashBtn" type="button" style="min-height:36px;padding:8px 10px;border-radius:8px;border:1px solid #7e3e51;background:#a51b3b;color:#fff;font-size:11px;font-weight:800;cursor:pointer">💡 ATIVAR FLASH</button></div><label for="hype108AlarmVolume" style="display:flex;align-items:center;gap:8px;margin:8px 0 13px;font-size:12px;color:#eee">🔊 Volume do alerta <input id="hype108AlarmVolume" type="range" min="20" max="100" step="10" value="100" style="flex:1;min-width:75px;accent-color:#ff3159"><b id="hype108AlarmVolumeLabel">100%</b></label><div id="hype108AdminList" aria-live="polite"></div><small style="display:block;font-size:10px;line-height:1.35;color:#aaa">A tela pisca quando há chamado. Flash traseiro, som e vibração exigem permissão e o ADM visível. O navegador não consegue piscar o flash físico com a tela bloqueada.</small>';
    document.body.appendChild(w);
    $('hype108SoundBtn').addEventListener('click',unlock);
    $('hype108VibrateTest').addEventListener('click',testVibration);
@@ -310,12 +344,14 @@
      $('hype108AlarmVolumeLabel').textContent=volumeLevel+'%';
      localStorage.setItem('hype108AlarmVolume',String(volumeLevel));
    });
-   render();setTimeout(poll,1500);setInterval(poll,4000);
+   render();setTimeout(poll,250);
+   // Canal Realtime dispara aviso imediato; 2,5s é apenas a reserva em caso de falha.
+   setInterval(poll,2500);
    document.addEventListener('visibilitychange',()=>{
      if(document.hidden)flashOffWhenHidden();
      else {poll();syncVisual();}
    });
-   window.addEventListener('pagehide',flashOffWhenHidden);
+   window.addEventListener('pagehide',()=>{flashOffWhenHidden();closeSignal();});
    window.addEventListener('pageshow',poll);
  }
  document.addEventListener('DOMContentLoaded',init);
