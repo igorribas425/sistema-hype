@@ -15,6 +15,7 @@
    if(!panel||!fab)return;
    const logged=Boolean(creds()),urgent=active.length>0,compact=isMobile();
    fab.hidden=!logged||!compact;
+   if(!logged){mobilePanelOpen=false;panel.hidden=true;}
    panel.classList.toggle('hype108-mobile-open',mobilePanelOpen&&compact);
    panel.classList.toggle('hype108-mobile-collapsed',!mobilePanelOpen&&compact);
    fab.classList.toggle('hype108-has-pending',urgent);
@@ -203,7 +204,7 @@
    const widget=$('hype108AdminWidget'),list=$('hype108AdminList'),count=$('hype108AdminCount'),sound=$('hype108SoundBtn');
    if(!widget||!list)return;
    widget.hidden=!creds();
-   if(!creds()){active=[];ringMode();syncMobilePanel();return;}
+   if(!creds()){active=[];list.innerHTML='';ringMode();syncMobilePanel();return;}
    if(count)count.textContent=String(active.length);
    if(sound)sound.textContent=enabled
      ? (vibrationSupported?'🔊📳 ALERTAS ATIVOS':'🔊 SOM ATIVO')
@@ -352,6 +353,7 @@
       @media (prefers-reduced-motion:reduce){#hype108ScreenAlert{animation:none;background:transparent;border:10px solid #fa4167}}
       #hype108MobileToggle{display:none}
       #hype108ClosePanel{display:none}
+      #hype108AdminWidget[hidden]{display:none!important}
       #hype108MobileToggle[hidden]{display:none!important}
       @media (max-width:700px){
         #hype108MobileToggle{
