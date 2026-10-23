@@ -697,6 +697,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <button class="btn-action" style="width:100%;margin-top:2px" onclick="loadDevicesV21()">↻ ATUALIZAR DISPOSITIVOS</button>
         <div class="v42-access-actions">
           <button class="btn-action" onclick="clearAccessV425('inactive')">🧹 LIMPAR DESCONECTADOS</button>
+          <button class="btn-action" onclick="clearAccessV425('old_unused')">🕓 LIMPAR PORTARIAS SEM USO (72H)</button>
           <button class="btn-action btn-del" onclick="clearAccessV425('all_readers')">🗑️ EXCLUIR TODOS CELULARES</button>
         </div>
         <div id="v21AccessList"><div class="v18-empty">Carregando dispositivos...</div></div>
@@ -1009,8 +1010,9 @@ Bruna Santos"></textarea>
       const data=await fetchAccessV23();
       const computers=data.filter(x=>String(x.item_type)==='computer');
       const readers=data.filter(x=>String(x.item_type)==='reader');
-      let html='<div class="v18-participants-head" style="margin-top:10px">💻 COMPUTADOR DA PORTARIA</div>';
-      html+=computers.length?computers.map(d=>`<div class="v18-device ${d.active?'active':'pending'}"><div><strong>${esc(d.label||'Portaria Principal')}</strong><small>${d.active?'ATIVO':'DESCONECTADO'}${d.last_seen?` • último acesso ${esc(fmt(d.last_seen))}`:''}</small></div><div class="v18-device-actions">${d.active?`<button class="btn-action btn-del" onclick="revokeDeviceV21('${esc(d.item_id)}')">DESCONECTAR</button>`:(d.request_code?`<button class="btn-action btn-confirm" onclick="reactivateDeviceV21('${esc(d.request_code)}')">REATIVAR</button>`:'')}<button class="btn-action btn-del" onclick="deleteAccessItemV425('computer','${esc(d.item_id)}')">EXCLUIR</button></div></div>`).join(''):'<div class="v18-empty">Nenhum computador registrado ainda. Abra portaria.html no computador fixo.</div>';
+      let html='<div class="v18-participants-head" style="margin-top:10px">💻 PORTARIAS CADASTRADAS • '+computers.length+' registro(s), '+computers.filter(d=>d.active).length+' ativo(s)</div>';
+      if(readers.length===0)html+='<div class="v18-empty">Nenhum celular leitor separado está cadastrado. Acessos "Portaria Principal" são dispositivos da portaria, não leitores do QR.</div>';
+      html+=computers.length?computers.map(d=>`<div class="v18-device ${d.active?'active':'pending'}"><div><strong>${esc(d.label||'Portaria Principal')}</strong><small>${d.active?'ATIVO':'DESCONECTADO'} • ID ${esc(String(d.item_id||'').slice(0,8))}${d.last_seen?` • último acesso ${esc(fmt(d.last_seen))}`:' • sem leitura recente'}${d.connected_at?` • autorizado ${esc(fmt(d.connected_at))}`:''}</small></div><div class="v18-device-actions">${d.active?`<button class="btn-action btn-del" onclick="revokeDeviceV21('${esc(d.item_id)}')">DESCONECTAR</button>`:(d.request_code?`<button class="btn-action btn-confirm" onclick="reactivateDeviceV21('${esc(d.request_code)}')">REATIVAR</button>`:'')}<button class="btn-action btn-del" onclick="deleteAccessItemV425('computer','${esc(d.item_id)}')">EXCLUIR</button></div></div>`).join(''):'<div class="v18-empty">Nenhum computador registrado ainda. Abra portaria.html no computador fixo.</div>';
       html+='<div class="v18-participants-head" style="margin-top:16px">📱 CELULARES LEITORES</div>';
       html+=readers.length?readers.map(r=>`<div class="v18-device ${r.active?'active':'pending'}"><div><strong>${esc(r.label||'Celular leitor')}</strong><small>${r.active?'ATIVO':'DESCONECTADO/ENCERRADO'}${r.device_label?` • ${esc(r.device_label)}`:''}${r.connected_at?` • conectado ${esc(fmt(r.connected_at))}`:''}${r.last_seen?` • última leitura ${esc(fmt(r.last_seen))}`:''}${r.expires_at?` • expira ${esc(fmt(r.expires_at))}`:''}</small></div><div class="v18-device-actions">${r.active?`<button class="btn-action btn-del" onclick="revokeReaderV21('${esc(r.item_id)}')">DESCONECTAR</button>`:''}<button class="btn-action btn-del" onclick="deleteAccessItemV425('reader','${esc(r.item_id)}')">EXCLUIR</button></div></div>`).join(''):'<div class="v18-empty">Nenhum celular leitor cadastrado.</div>';
       box.innerHTML=html;
@@ -1026,17 +1028,23 @@ Bruna Santos"></textarea>
     if(!confirm('Excluir este '+label+' da lista de acessos? Se ele estiver em uso, vai precisar autorizar de novo.'))return;
     try{
       const res=arr(await sbRpc('staff_delete_access_item_v42_5',{p_username:HYPE.user,p_password:HYPE.pass,p_item_type:type,p_item_id:id}))[0];
-      hypeNotify((res&&res.message)||'Dispositivo excluído.');
+      if(!res?.ok)throw new Error(res?.message||'Exclusão não confirmada pelo servidor.');
+      hypeNotify(res.message||'Dispositivo excluído.');
       await loadDevicesV21();
     }catch(err){alert(err.message||'Não foi possível excluir o dispositivo. Rode o Supabase V42.5 primeiro.');}
   }
   async function clearAccessV425(mode){
     if(!adminReady())return;
-    const msg=mode==='all_readers'?'Excluir TODOS os celulares leitores? Eles precisarão ser conectados novamente.':'Limpar dispositivos desconectados/expirados?';
+    const msg=mode==='all_readers'
+      ?'Excluir TODOS os celulares leitores? Isso não exclui os computadores da Portaria.'
+      :mode==='old_unused'
+        ?'Excluir APENAS dispositivos da Portaria sem utilização nem autorização nos últimos 3 dias? Os acessos recentes serão mantidos. Dispositivos removidos precisarão ser autorizados novamente.'
+        :'Limpar SOMENTE acessos desconectados ou expirados? Dispositivos ativos não serão afetados.';
     if(!confirm(msg))return;
     try{
       const res=arr(await sbRpc('staff_clear_access_devices_v42_5',{p_username:HYPE.user,p_password:HYPE.pass,p_mode:mode}))[0];
-      hypeNotify((res&&res.message)||'Acessos limpos.');
+      if(!res?.ok)throw new Error(res?.message||'A limpeza não foi confirmada pelo servidor.');
+      hypeNotify(res.message||'Limpeza concluída.');
       await loadDevicesV21();
     }catch(err){alert(err.message||'Não foi possível limpar os acessos. Rode o Supabase V42.5 primeiro.');}
   }
