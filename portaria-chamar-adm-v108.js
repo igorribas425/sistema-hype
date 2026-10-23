@@ -48,21 +48,24 @@
     localStorage.removeItem('hype_v108_pending_call');
     update();
   }
-  async function pushToAdmin(reason) {
-    // O push é opcional: o chamado continua registrado mesmo sem notificação.
-    const endpoint=String(window.HYPE_CHAT_PUSH_FUNCTION_URL||cfg().url+'/functions/v1/hype-chat-push').replace(/\/$/,'');
-    const hdr={'Content-Type':'application/json',apikey:cfg().anonKey,Authorization:'Bearer '+cfg().anonKey};
-    const ctrl=new AbortController(), timeout=setTimeout(()=>ctrl.abort(),7000);
-    try {
-      const response=await fetch(endpoint+'/send',{method:'POST',headers:hdr,signal:ctrl.signal,body:JSON.stringify({
-        senderRole:'portaria',senderName:'🆘 Portaria / Chamar ADM',
-        message:'🆘 CHAMADO URGENTE PARA O ADM: '+reason+'. Abra o painel HYPE e toque em ATENDER.',
-        device_key:key(),endpoint:String(localStorage.getItem('hypePushEndpointV42')||'')
-      })});
-      if(!response.ok)throw new Error('Push não entregue: HTTP '+response.status);
+  async function pushToAdmin(callId) {
+    // Envio exclusivo do chamado urgente para os aparelhos inscritos como ADM.
+    // O serviço autentica o dispositivo e valida o chamado pendente no banco.
+    const cfgObj=cfg();
+    const url=(cfgObj.url||'').replace(/\/$/,'')+'/functions/v1/hype-admin-call-push';
+    if(!cfgObj.url||!cfgObj.anonKey)throw new Error('Push não configurado');
+    const ctrl=new AbortController();
+    const timeout=setTimeout(()=>ctrl.abort(),17000);
+    try{
+      const response=await fetch(url,{
+        method:'POST',signal:ctrl.signal,
+        headers:{'Content-Type':'application/json',apikey:cfgObj.anonKey,Authorization:'Bearer '+cfgObj.anonKey},
+        body:JSON.stringify({action:'call',call_id:Number(callId),device_key:key()})
+      });
       const result=await response.json().catch(()=>({}));
-      if(result.ok===false)throw new Error(result.error||'Falha no serviço push');
-    } finally {clearTimeout(timeout);}
+      if(!response.ok||!result.ok)throw new Error(result.error||'Notificação não entregue');
+      return result;
+    }finally{clearTimeout(timeout);}
   }
   async function call() {
     if(busy||currentId)return;
@@ -78,7 +81,13 @@
       currentId=Number(row.call_id);
       localStorage.setItem('hype_v108_pending_call',String(currentId));
       message('✅ Chamado enviado! Aguarde o ADM atender.');
-      pushToAdmin(reason).catch(e=>console.warn('[HYPE chamado push opcional]',e));
+      // O chamado já está salvo: o envio de push falhar não apaga o pedido.
+      pushToAdmin(currentId).then(result=>{
+        message('✅ ADM chamado! Notificação enviada a '+result.sent+' aparelho(s).');
+      }).catch(err=>{
+        console.warn('[HYPE chamado urgente push]',err);
+        message('⚠️ Chamado registrado, mas o push falhou: '+(err?.message||err)+'. Mantenha contato direto com o ADM.',true);
+      });
     } catch(e){message('Não foi possível chamar o ADM: '+e.message,true);}
     finally {busy=false;update();}
   }
