@@ -126,12 +126,51 @@
     return Boolean(auth?.approved && auth.expires_at && new Date(auth.expires_at).getTime() > Date.now() && snap?.tickets);
   }
 
+  let registeringNewDevice = false;
+  async function requestNewDevice() {
+    if (registeringNewDevice) return;
+    if (!online()) return setAuthMessage('Conecte à internet para solicitar um novo acesso.',true);
+    registeringNewDevice=true;
+    const btn=$('hypeV109RegisterDevice');
+    if(btn){btn.disabled=true;btn.textContent='SOLICITANDO...';}
+    try {
+      // Mesmo com duas abas abertas, utiliza a primeira chave persistida.
+      let key=localStorage.getItem(DEVICE_KEY)||'';
+      if(!key){
+        key=randomSecret(32);
+        localStorage.setItem(DEVICE_KEY,key);
+      }
+      await ensureDevice();
+    }catch(err){
+      setAuthMessage(esc(String(err?.message||err)),true);
+    }finally{
+      registeringNewDevice=false;
+      if(btn){btn.disabled=false;btn.textContent='SOLICITAR ACESSO DESTE APARELHO';}
+    }
+  }
+
   async function ensureDevice() {
     state.deviceKey = localStorage.getItem(DEVICE_KEY) || '';
     if (!state.deviceKey) {
-      state.deviceKey = randomSecret(32);
-      localStorage.setItem(DEVICE_KEY,state.deviceKey);
+      // Não cria mais outro dispositivo automaticamente ao abrir a mesma URL
+      // em aba anônima, outro navegador ou após apagar o armazenamento.
+      setAuthMessage('🔒 Este navegador ainda não possui acesso. Reabrir o mesmo link não autoriza automaticamente outro aparelho. Clique abaixo somente se quiser cadastrar um NOVO dispositivo. Depois aprove no ADM.',true);
+      let btn=$('hypeV109RegisterDevice');
+      if(!btn){
+        btn=document.createElement('button');
+        btn.id='hypeV109RegisterDevice';
+        btn.type='button';
+        btn.className='btn primary';
+        btn.style.cssText='margin-top:14px;min-height:52px;width:100%';
+        btn.textContent='SOLICITAR ACESSO DESTE APARELHO';
+        btn.addEventListener('click',requestNewDevice);
+        $('deviceAuth')?.appendChild(btn);
+      }
+      btn.hidden=false;
+      return;
     }
+    const registerButton=$('hypeV109RegisterDevice');
+    if(registerButton)registerButton.hidden=true;
 
     if (!online()) {
       if (offlineAuthAvailable()) {
