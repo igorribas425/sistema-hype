@@ -15,6 +15,25 @@
    const el=$('hype108PushStatus');
    if(el){el.textContent=str;el.style.color=error?'#ff9bac':'#b9eed3';}
  }
+ async function checkReceivedPush(){
+   const target=$('hype108PushReceivedStatus');
+   if(!target||!('caches' in window))return;
+   try{
+     const url=new URL('./hype-push-last-received-v117',location.href).href;
+     const record=await caches.match(url);
+     if(!record){
+       target.textContent='📋 Nenhum push registrado pelo navegador nesta versão. Faça um teste.';
+       return;
+     }
+     const item=await record.json();
+     const at=new Date(Number(item.receivedAt)||0);
+     if(Number.isNaN(at.getTime()))return;
+     const kind=item.kind==='admin_call'?'chamado/teste ADM':'chat';
+     target.textContent='📋 Último push recebido no navegador: '+at.toLocaleTimeString('pt-BR')+' ('+kind+').';
+   }catch(e){
+     target.textContent='📋 Diagnóstico de recebimento indisponível.';
+   }
+ }
  const isMobile=()=>window.matchMedia?.('(max-width: 700px)').matches===true;
  function syncMobilePanel(){
    const panel=$('hype108AdminWidget'),fab=$('hype108MobileToggle'),num=$('hype108MobileCount');
@@ -302,7 +321,7 @@
        setPushStatus('⚠️ Notificações bloqueadas nas permissões do navegador.',true);
        return false;
      }
-     const reg=await navigator.serviceWorker.register('./service-worker.js?v=46',{scope:'./'});
+     const reg=await navigator.serviceWorker.register('./service-worker.js?v=47',{scope:'./'});
      const ready=await navigator.serviceWorker.ready;
      let sub=await ready.pushManager.getSubscription();
      const desiredKey=base64ToU8(publicKey);
@@ -475,6 +494,15 @@
    $('hype108SoundTest').addEventListener('click',testSound);
    $('hype108FlashBtn').addEventListener('click',toggleFlash);
    $('hype108PushTestBtn').addEventListener('click',testLockedPush);
+   const pushStatusElement=$('hype108PushStatus');
+   if(pushStatusElement&&!$('hype108PushReceivedStatus')){
+     const el=document.createElement('div');
+     el.id='hype108PushReceivedStatus';
+     el.style.cssText='font-size:11px;color:#b6c2c9;line-height:1.5;margin-top:6px';
+     el.textContent='📋 Conferindo recebimento de push...';
+     pushStatusElement.after(el);
+   }
+   setTimeout(checkReceivedPush,1500);
    setPushStatus(pushStatus);
    const slider=$('hype108AlarmVolume');
    slider.value=String(volumeLevel);
@@ -489,10 +517,10 @@
    setInterval(poll,2500);
    document.addEventListener('visibilitychange',()=>{
      if(document.hidden)flashOffWhenHidden();
-     else {poll();syncVisual();}
+     else {poll();syncVisual();checkReceivedPush();}
    });
    window.addEventListener('pagehide',()=>{flashOffWhenHidden();closeSignal();});
-   window.addEventListener('pageshow',poll);
+   window.addEventListener('pageshow',()=>{poll();checkReceivedPush();});
    window.addEventListener('resize',syncMobilePanel);
    const openCallsFromPush=()=>{
      setMobilePanel(true);poll();
