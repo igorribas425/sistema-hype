@@ -1,11 +1,11 @@
-/* HYPE Menores V120. Foto do responsável para conferência humana, sem biometria. */
+/* HYPE Menores V122. Selfie, RG/CNH e assinatura para conferência humana, sem reconhecimento facial. */
 (() => {
  'use strict';
  const $=id=>document.getElementById(id);
  const ENDPOINT='https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minors-authorization';
  const wantedId=Number(new URLSearchParams(location.search).get('evento')||0);
  const canvas=$('signature'),ctx=canvas.getContext('2d',{willReadFrequently:true});
- let drawing=false,signed=false,photoUrl='';
+ let drawing=false,signed=false,photoUrl='',documentUrl='';
  function message(text,ok=false){
    const el=$('feedback');el.textContent=text;el.className=ok?'ok':'bad';el.scrollIntoView({behavior:'smooth',block:'center'});
  }
@@ -36,21 +36,29 @@
  ['pointerup','pointercancel','lostpointercapture'].forEach(name=>canvas.addEventListener(name,()=>{drawing=false;}));
  $('clearSign').addEventListener('click',setupCanvas);setupCanvas();
 
- async function compressPhoto(file){
-   if(!file||!file.type.startsWith('image/'))throw new Error('Selecione uma foto do responsável.');
-   if(file.size>12*1024*1024)throw new Error('Foto muito grande. Escolha uma imagem de até 12 MB.');
+ async function compressPhoto(file,kind='selfie'){
+   if(!file||!file.type.startsWith('image/'))throw new Error('Selecione uma foto do responsável ou do documento.');
+   if(file.size>12*1024*1024)throw new Error('Imagem muito grande. Escolha uma foto de até 12 MB.');
    const url=URL.createObjectURL(file);
    try{
      const img=new Image();img.src=url;await img.decode();
      const w=img.naturalWidth,h=img.naturalHeight;
-     if(!w||!h)throw new Error('Foto não reconhecida.');
-     const max=720,scale=Math.min(1,max/Math.max(w,h));
-     const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*scale));c.height=Math.max(1,Math.round(h*scale));
-     const context=c.getContext('2d');context.drawImage(img,0,0,c.width,c.height);
-     let result=c.toDataURL('image/jpeg',.73);
-     if(result.length>530000)result=c.toDataURL('image/jpeg',.48);
-     if(result.length>530000)throw new Error('Foto ainda está grande. Tire outra foto.');
-     return result;
+     if(!w||!h)throw new Error('Imagem não reconhecida. Tente outra foto.');
+     const doc=kind==='documento';
+     // Documento mantém mais detalhes para permitir a leitura humana dos dados.
+     const sizes=doc?[1450,1250,1050,900]:[720,600];
+     const qualities=doc?[.85,.75,.65,.53]:[.73,.60,.48];
+     for(const max of sizes){
+       const scale=Math.min(1,max/Math.max(w,h));
+       const c=document.createElement('canvas');
+       c.width=Math.max(1,Math.round(w*scale));c.height=Math.max(1,Math.round(h*scale));
+       c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+       for(const quality of qualities){
+         const result=c.toDataURL('image/jpeg',quality);
+         if(result.length<=530000)return result;
+       }
+     }
+     throw new Error('Imagem ainda grande. Tire outra foto mais próxima do documento.');
    }finally{URL.revokeObjectURL(url);}
  }
  $('guardianPhoto').addEventListener('change',async()=>{
@@ -58,6 +66,15 @@
      photoUrl=await compressPhoto($('guardianPhoto').files[0]);
      $('photoPreview').src=photoUrl;$('photoPreview').style.display='block';
    }catch(err){photoUrl='';$('photoPreview').style.display='none';message(err.message);}
+ });
+ $('guardianDocument').addEventListener('change',async()=>{
+   documentUrl='';
+   $('documentPreview').style.display='none';
+   try{
+     documentUrl=await compressPhoto($('guardianDocument').files[0],'documento');
+     $('documentPreview').src=documentUrl;
+     $('documentPreview').style.display='block';
+   }catch(err){message(err.message||'Não foi possível ler o documento.');}
  });
  async function loadEvents(){
    try{
@@ -83,12 +100,14 @@
    const btn=$('sendForm');
    if(!signed)return message('O responsável precisa assinar no quadro branco.');
    if(!photoUrl)return message('Inclua a selfie do responsável antes de continuar.');
+   if(!documentUrl)return message('Inclua uma foto nítida do RG ou CNH do responsável antes de continuar.');
    const form={
      action:'submit',eventId:Number($('minorEvent').value),
      minorName:$('minorName').value,minorCpf:$('minorCpf').value,minorBirth:$('minorBirth').value,
      guardianName:$('guardianName').value,guardianCpf:$('guardianCpf').value,
      guardianBirth:$('guardianBirth').value,guardianPhone:$('guardianPhone').value,
-     relation:$('minorRelation').value,photo:photoUrl,
+     guardianEmail:$('guardianEmail').value,
+     relation:$('minorRelation').value,photo:photoUrl,documentPhoto:documentUrl,
      signature:canvas.toDataURL('image/png'),
      attend:$('checkAttend').checked,noAlcohol:$('checkAlcohol').checked,
      privacy:$('checkPrivacy').checked,guardianConfirmed:$('checkGuardian').checked
@@ -101,7 +120,7 @@
      box.className='ok';box.replaceChildren();
      const top=document.createElement('strong');top.textContent='✅ Declaração recebida. Protocolo: '+response.protocol;
      const sub=document.createElement('p');sub.textContent='Aguarde a conferência do ADM. Esta declaração não garante entrada, não substitui a documentação original e NÃO autoriza bebidas alcoólicas para menores.';
-     const back=document.createElement('a');back.href='./index.html';back.textContent='← Voltar para ingressos';
+     const back=document.createElement('a');back.href='./cliente.html';back.textContent='← Voltar para ingressos';
      box.append(top,sub,back);box.scrollIntoView({behavior:'smooth',block:'start'});
    }catch(err){message('❌ '+(err.message||err));}
    finally{btn.disabled=false;btn.textContent='ENVIAR DECLARAÇÃO PARA CONFERÊNCIA';}
