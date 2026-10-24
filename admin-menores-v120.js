@@ -176,8 +176,10 @@ async function detail(id){
   correction.style.cssText='margin:16px 0;padding:16px;border:1px solid #76485a;border-radius:13px;background:#1b1420';
   correction.append(text('h4','📧 Conferir ou corrigir endereço de Gmail'));
   correction.append(text('p','Peça ao responsável para confirmar o endereço correto diretamente pelo WhatsApp antes de trocar. Esta alteração não mexe nas fotos, na aprovação nem no ingresso.'));
-  const returnedAddress=/endereço inexistente|550 5\.1\.1/i.test(r.email_notification_error||'')
-    ?String(r.guardian_email||'').trim().toLowerCase():null;
+  const bounceInfo=String(r.email_notification_error||'');
+  const matchedAddress=bounceInfo.match(/Gmail devolvido a ([^\s()]+@[^\s()]+) \(550 5\.1\.1/i);
+  const returnedAddress=matchedAddress?matchedAddress[1].toLowerCase():
+    (/endereço inexistente|550 5\.1\.1/i.test(bounceInfo)?String(r.guardian_email||'').trim().toLowerCase():null);
   const choices=[['Gmail do responsável','guardian_email',r.guardian_email],['Gmail do menor','minor_email',r.minor_email]];
   const verifiedLabel=document.createElement('label');
   verifiedLabel.style.cssText='display:flex;align-items:start;gap:9px;margin:10px 0';
