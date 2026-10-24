@@ -56,7 +56,7 @@ function render(){
   const line=document.createElement('div');line.className='m120-title';line.append(h,st);
   const sub=text('small',eventName(row.event_id)+' • Responsável: '+row.guardian_name+' • '+showDate(row.created_at));
   content.append(line,sub);
-  const b=document.createElement('button');b.type='button';b.className='m120-btn';b.textContent='VER SELFIE, DOCUMENTO E ASSINATURA';b.addEventListener('click',()=>detail(row.id));
+  const b=document.createElement('button');b.type='button';b.className='m120-btn';b.textContent='VER FOTOS DO MENOR, RESPONSÁVEL E ASSINATURA';b.addEventListener('click',()=>detail(row.id));
   card.append(content,b);container.appendChild(card);
  }
 }
@@ -83,6 +83,8 @@ async function detail(id){
   el.appendChild(list);
   const docs=document.createElement('div');docs.className='m120-image-grid';
   for(const [label,url] of [
+    ['📷 Selfie facial do menor (16-17 anos)',data.minorFaceUrl],
+    ['🪪 Documento do menor',data.minorDocumentUrl],
     ['📷 Selfie enviada pelo responsável',data.photoUrl],
     ['🪪 RG/CNH do responsável (foto)',data.documentUrl],
     ['✍️ Assinatura do responsável',data.signatureUrl]
@@ -103,16 +105,22 @@ async function detail(id){
   labelB.append(checkedRules,text('span','Verifiquei as regras de admissão do evento e a legislação aplicável. O menor não terá acesso a bebidas alcoólicas.'));
   el.append(labelA,labelB);
   const hasGuardianDocument=Boolean(r.guardian_document_path&&data.documentUrl);
-  if(!hasGuardianDocument)el.appendChild(text('p','⚠️ Este cadastro não possui foto do documento. Solicite nova declaração antes de marcá-lo como conferido.','m120-warning'));
+  const hasMinorFace=Boolean(r.minor_face_photo_path&&data.minorFaceUrl);
+  const hasMinorDocument=Boolean(r.minor_document_path&&data.minorDocumentUrl);
+  const eventDate=events.find(e=>Number(e.id)===Number(r.event_id))?.event_date;
+  const years=eventDate?new Date(eventDate+'T12:00:00Z').getUTCFullYear()-new Date(r.minor_birth_date+'T12:00:00Z').getUTCFullYear()-((eventDate.slice(5,10)<r.minor_birth_date.slice(5,10))?1:0):-1;
+  const eligibleAge=years===16||years===17;
+  const docsReady=hasGuardianDocument&&hasMinorFace&&hasMinorDocument&&eligibleAge;
+  if(!docsReady)el.appendChild(text('p','⚠️ Só é possível conferir adolescentes de 16 ou 17 anos na data do evento, com selfie e documento do menor e documento do responsável. Solicite uma nova declaração se faltar algo.','m120-warning'));
   const note=document.createElement('textarea');note.placeholder='Observações da conferência (opcional)';note.maxLength=400;note.rows=3;note.value=r.review_note||'';note.className='m120-note';el.append(note);
   const buttons=document.createElement('div');buttons.className='m120-actions';
   const accept=document.createElement('button');accept.type='button';accept.className='m120-btn m120-green';accept.textContent='✅ MARCAR CONFERIDO';
   const reject=document.createElement('button');reject.type='button';reject.className='m120-btn m120-red';reject.textContent='⛔ RECUSAR';
-  if(!hasGuardianDocument){accept.disabled=true;accept.title='Foto do documento obrigatória para concluir a conferência';}
+  if(!docsReady){accept.disabled=true;accept.title='Exige idade 16–17 anos, selfie e documento do menor, e documento do responsável';}
   const close=document.createElement('button');close.type='button';close.className='m120-btn m120-ghost';close.textContent='FECHAR';
   close.addEventListener('click',()=>{openedId=null;el.hidden=true;el.replaceChildren();});
   async function decide(next){
-    if(next==='conferido'&&!hasGuardianDocument){status('Não é possível conferir sem foto do documento do responsável. Solicite um novo cadastro.',true);return;}
+    if(next==='conferido'&&!docsReady){status('É necessário ter 16–17 anos na data do evento e selfie e documento do menor e do responsável.',true);return;}
     if(!checkedDoc.checked||!checkedRules.checked){status('Marque as duas conferências antes de salvar a decisão.',true);el.scrollIntoView({block:'center'});return;}
     if(!confirm('Confirmar a decisão "'+next+'"? Isto não libera a entrada automaticamente.'))return;
     accept.disabled=true;reject.disabled=true;
@@ -121,7 +129,7 @@ async function detail(id){
       status('Análise preliminar salva. A portaria deverá verificar documentos originais antes da entrada.');
       await load();
       if(openedId===id)await detail(id);
-    }catch(e){status('Falha ao salvar: '+e.message,true);}finally{accept.disabled=!hasGuardianDocument;reject.disabled=false;}
+    }catch(e){status('Falha ao salvar: '+e.message,true);}finally{accept.disabled=!docsReady;reject.disabled=false;}
   }
   accept.addEventListener('click',()=>decide('conferido'));
   reject.addEventListener('click',()=>decide('recusado'));
@@ -148,7 +156,7 @@ async function detail(id){
       try{
         const d=await rpc('issue_checkout',{id:r.id});
         const link=d.purchaseLink;
-        body='Olá, '+r.guardian_name+'!\n\nA autorização para '+r.minor_name+' no evento '+eventName(r.event_id)+' foi conferida pela HYPE.\n\nA compra está disponível exclusivamente neste link:\n'+link+'\n\nO nome e CPF do menor já estão vinculados ao ingresso. Escolha a categoria, realize o pagamento e aguarde o QR Code no e-mail do responsável.\n\nA conferência não garante entrada: documentos originais e regras legais de admissão serão verificados na portaria. É proibido fornecer bebidas alcoólicas a menores de 18 anos.\n\nHYPE Lounge Club';
+        body='Olá, '+r.guardian_name+'!\n\nA autorização para '+r.minor_name+' no evento '+eventName(r.event_id)+' foi conferida pela HYPE.\n\nA compra está disponível exclusivamente neste link:\n'+link+'\n\nO ingresso Pista para a noite toda custa R$ 30, em nome e CPF do menor autorizado. Realize o PIX e aguarde o QR Code no e-mail do responsável.\n\nA conferência não garante entrada: documentos originais e regras legais de admissão serão verificados na portaria. É proibido fornecer bebidas alcoólicas a menores de 18 anos.\n\nHYPE Lounge Club';
         const box=document.createElement('div');box.className='m120-warning';
         const explanation=text('p','LINK PRIVADO GERADO. O e-mail será aberto para você apertar Enviar. Se preferir, copie o link abaixo:');
         const field=document.createElement('input');field.value=link;field.readOnly=true;field.style.cssText='width:100%;padding:12px;border-radius:8px;color:#fff;background:#100c11;border:1px solid #9c6a83';
