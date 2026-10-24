@@ -32,6 +32,16 @@ button:disabled{opacity:.55;cursor:wait}.ghost{background:#29232d;border:1px sol
 <h1>Ingresso menor 16–17 anos • R$ 30</h1>
 <p class="sub">Compra exclusiva de Pista, válida durante toda a noite, pelo valor final de R$ 30,00. Somente adolescentes de 16 ou 17 anos na data do evento, com autorização conferida pela HYPE, podem usar este link. O PIX e o envio do ingresso com QR Code seguem o sistema normal.</p>
 <div id="message" class="notice" role="status">Conferindo o link de autorização...</div>
+<section id="demoBanner" class="box" hidden>
+ <h2>🧪 TESTE FICTÍCIO VINCULADO</h2>
+ <p>O e-mail abriu um cadastro de demonstração, <strong>não uma compra normal</strong>. Veja abaixo os dados fictícios e o preço que aparecerá na compra exclusiva.</p>
+ <p><strong>Ingresso Pista — Menor de 16 e 17 anos — R$ 30,00, noite toda.</strong></p>
+ <p class="sub" id="demoProtocol"></p>
+ <button id="previewPay" type="button" class="ghost">VER COMO FUNCIONA O PAGAMENTO (SIMULAÇÃO)</button>
+ <div id="demoPayment" class="notice" hidden>
+ <strong>Prévia da próxima etapa:</strong> depois da aprovação verdadeira, o responsável escolhe o gênero, confirma o pedido e recebe o PIX de R$ 30,00 pelo Asaas. Após o pagamento confirmado, o ingresso e o QR Code são enviados pelo sistema normal da HYPE. <strong>Nesta simulação nenhum PIX, cobrança ou ingresso é criado.</strong>
+ </div>
+</section>
 <section id="checkout" class="box" hidden>
 <h2>🎟️ Dados do ingresso</h2>
 <div class="info">
@@ -140,12 +150,14 @@ $("copyPix").addEventListener("click",async()=>{
  try{await navigator.clipboard.writeText($("pixCode").textContent);alertBox("Código PIX copiado.",false);}catch(e){alertBox("Selecione e copie o código manualmente.",true);}
 });
 $("refresh").addEventListener("click",async()=>{await load();});
+$("previewPay").addEventListener("click",()=>{$("demoPayment").hidden=!$("demoPayment").hidden;});
 if(/^[0-9a-f-]{36}$/i.test(new URLSearchParams(location.search).get("demo")||"")){
-  $("checkout").hidden=false;$("selectArea").hidden=true;$("payment").hidden=true;
+  $("checkout").hidden=false;$("selectArea").hidden=true;$("payment").hidden=true;$("demoBanner").hidden=false;
+  $("demoProtocol").textContent="Protocolo do teste: "+new URLSearchParams(location.search).get("demo");
   $("eventLabel").textContent="Evento fictício de demonstração";
   $("minorName").textContent="Lucas Exemplo (fictício)";
   $("minorCpf").textContent="TESTE • "+(new URLSearchParams(location.search).get("demo")||"").slice(0,8);
-  $("guardianEmail").textContent="Gmails de teste cadastrados na área fictícia";
+  $("guardianEmail").textContent="igorribas425@gmail.com (responsável) e matheusanjosb@gmail.com (menor)";
   alertBox("🧪 TESTE FICTÍCIO • Autorização de menor conferida • Pista, noite toda, R$ 30,00. Este link NÃO cria PIX nem ingresso verdadeiro.",false);
 }else load();
 })();
