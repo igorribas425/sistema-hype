@@ -1,20 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
-<script>
-/* Compatibilidade com convites já publicados no WhatsApp.
-   O mesmo link antigo pode continuar compartilhado. Se o navegador carregar
-   o HTML atual, usa uma única navegação até a versão geral atualizada e
-   descarta o evento antigo (autorização agora válida para todas as festas). */
-(function(){
-  try{
-    var p=new URLSearchParams(location.search);
-    if(p.get('v')==='20261023-documento-v122'){
-      location.replace('./menores.html?v=20261024-iphone-link-compat-v158');
-    }
-  }catch(e){}
-})();
-</script>
+<!-- O link antigo enviado no WhatsApp continua nesta mesma página.
+     Parâmetros v e evento são ignorados pelo cadastro geral.
+     Sem redirecionamento em cadeia, para evitar tela branca no navegador interno do iPhone. -->
 <title>Autorização de Menores • HYPE Lounge Club</title><meta name="theme-color" content="#08080b"><link rel="icon" href="favicon.png">
 <style>
 :root{color-scheme:dark;--bg:#09090d;--surface:#141219;--border:#39242d;--red:#ea2451;--muted:#b5a7b0}*{box-sizing:border-box}
