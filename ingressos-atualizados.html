@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>HYPE LOUNGE CLUB // Ingressos</title>
+<style>
+
+:root{--bg:#050505;--panel:#0d0d10;--line:#222228;--red:#f5f5f5;--green:#28d17c;--text:#f7f7f8;--muted:#96969e;--silver:#d8d8dc;--event-accent:#d8d8dc;--event-accent-rgb:216,216,220;--event-accent-soft:rgba(216,216,220,.18);--event-accent-glow:rgba(216,216,220,.32)}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,sans-serif}
+html{scroll-behavior:smooth}
+body{background:radial-gradient(circle at 80% 0%,rgba(255,255,255,.055),transparent 28%),radial-gradient(circle at 10% 30%,rgba(255,255,255,.025),transparent 25%),#050505;color:var(--text);min-height:100vh;padding:20px;display:block}
+.top-nav{position:fixed;top:0;left:0;width:100%;background:rgba(5,5,5,.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.13);padding:12px 20px;display:flex;justify-content:center;gap:15px;z-index:1000}
+.top-nav a{color:var(--muted);text-decoration:none;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.17);transition:.2s}
+.top-nav a:hover{color:#fff;border-color:#fff;background:rgba(255,255,255,.07)}
+.page-shell{width:min(1240px,100%);margin:24px auto 28px;display:grid;gap:24px}
+.page-brand{margin:0 auto -6px}
+.brand-logo-wrap{display:flex;justify-content:center;align-items:center}
+.brand-logo{display:block;width:min(320px,80vw);height:auto;object-fit:contain;filter:drop-shadow(0 16px 34px rgba(255,255,255,.08))}
+.event-showcase{display:none;grid-template-columns:minmax(0,1.2fr) minmax(340px,.8fr);gap:0;background:linear-gradient(180deg,#0f0f12,#09090b);border:1px solid rgba(255,255,255,.16);border-radius:28px;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.45)}
+.event-showcase.show{display:grid}
+.event-visual{position:relative;min-height:520px;background:linear-gradient(135deg,#111,#060606)}
+.event-visual img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.event-visual-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.18),rgba(0,0,0,.48) 48%,rgba(0,0,0,.7));}
+.event-badge{position:absolute;left:26px;top:24px;z-index:2;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);backdrop-filter:blur(8px);padding:8px 12px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:1.4px;color:#f3f3f4}
+.event-panel{padding:34px 30px 30px;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(180deg,#131317,#09090b)}
+.eyebrow{display:inline-block;margin-bottom:8px;font-size:11px;font-weight:900;letter-spacing:2px;color:#d8d8dc;text-transform:uppercase}
+.event-panel h2{font-size:clamp(34px,4.6vw,62px);line-height:.95;text-transform:uppercase;letter-spacing:-1.5px;margin:0 0 10px;color:#fff}
+.event-panel h3{font-size:22px;line-height:1.15;color:#d9d9de;margin-bottom:14px}
+.event-panel p{color:#c9c9ce;line-height:1.78;font-size:15px;margin-top:18px}
+.event-meta{display:flex;flex-wrap:wrap;gap:10px;color:#fff;font-weight:800;font-size:12px}
+.event-highlights{display:grid;grid-template-columns:1fr;gap:10px;margin-top:22px}
+.highlight-card{padding:14px 15px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.035)}
+.highlight-card span{display:block;font-size:10px;letter-spacing:1.3px;font-weight:900;color:#9f9fa7;margin-bottom:4px}
+.highlight-card strong{font-size:14px;color:#fff}
+.cta-link{display:inline-flex;align-items:center;justify-content:center;margin-top:24px;min-height:50px;padding:0 18px;border-radius:14px;background:linear-gradient(135deg,#f7f7f7,#babac0);color:#060606;text-decoration:none;font-weight:950;font-size:13px;letter-spacing:1px;border:1px solid rgba(255,255,255,.35);box-shadow:0 10px 30px rgba(255,255,255,.06);width:fit-content}
+
+.events-wrap{overflow:hidden}
+.events-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:14px}
+.events-head small{font-size:11px;font-weight:900;letter-spacing:2px;color:#bdbdc3;text-transform:uppercase}
+.events-head h2{font-size:clamp(26px,3vw,40px);margin-top:5px}
+.event-carousel{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 8vw 14px 0;overscroll-behavior-inline:contain;scrollbar-width:none}
+.event-carousel::-webkit-scrollbar{display:none}
+.event-card{flex:0 0 min(820px,88%);scroll-snap-align:start;background:linear-gradient(180deg,#111216,#08080a);border:1px solid rgba(255,255,255,.13);border-radius:28px;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);min-height:430px;opacity:.82;transform:scale(.985);transition:.25s}
+.event-card.selected{opacity:1;transform:scale(1);border-color:rgba(255,255,255,.38);box-shadow:0 24px 60px rgba(0,0,0,.48)}
+.event-card-image{position:relative;min-height:430px;background:#0a0a0c}
+.event-card-image img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center}
+.event-card-placeholder{position:absolute;inset:0;display:grid;place-items:center;font-size:52px;font-weight:950;letter-spacing:5px;color:#777;background:radial-gradient(circle at 40% 35%,#25252a,#09090b 58%)}
+.event-card-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.08),rgba(0,0,0,.48))}
+.event-card-day{position:absolute;left:20px;top:20px;z-index:2;padding:8px 11px;border-radius:999px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18);font-size:11px;font-weight:950;text-transform:uppercase}
+.event-card-body{padding:30px 26px;display:flex;flex-direction:column;justify-content:center}
+.event-card-body small{color:#bdbdc3;font-size:10px;font-weight:900;letter-spacing:1.6px}
+.event-card-body h2{font-size:clamp(30px,4vw,54px);line-height:.95;text-transform:uppercase;margin:9px 0 8px}
+.event-card-body h3{font-size:20px;color:#d7d7dc}
+.event-card-meta{font-size:12px;font-weight:800;color:#fff;margin-top:12px;line-height:1.6}
+.event-card-body p{font-size:13px;color:#aaaab2;line-height:1.65;margin-top:13px}
+.event-select-btn{margin-top:20px;min-height:48px;border-radius:13px;border:1px solid rgba(255,255,255,.25);background:linear-gradient(135deg,#f7f7f7,#bcbcc2);color:#080808;font-weight:950;letter-spacing:.8px;cursor:pointer}
+.event-card.selected .event-select-btn{background:#15151a;color:#fff}
+.event-dots{display:flex;justify-content:center;gap:7px;margin-top:3px}
+.event-dot{width:8px;height:8px;border-radius:50%;border:0;background:#3c3c43;cursor:pointer}
+.event-dot.active{width:24px;border-radius:999px;background:#f2f2f3}
+.event-empty{padding:34px;border:1px solid rgba(255,255,255,.12);border-radius:20px;color:var(--muted)}
+.manual-area,.pix-area{display:none;text-align:center;margin-top:22px;border-top:1px solid rgba(255,255,255,.1);padding-top:22px}
+.manual-status-card{background:#08080a;border:1px solid rgba(255,255,255,.12);padding:18px;border-radius:16px;margin:14px 0;text-align:left;line-height:1.65}
+.manual-order-code{font-size:18px;font-weight:950;letter-spacing:1px;color:#fff}
+.manual-status{display:inline-block;margin-top:8px;padding:7px 10px;border-radius:999px;background:rgba(255,204,0,.09);border:1px solid rgba(255,204,0,.25);color:#ffcc00;font-size:10px;font-weight:950;letter-spacing:.8px}
+.whatsapp-btn{background:linear-gradient(135deg,#dcffe7,#73e69c)!important;color:#041108!important}
+
+.purchase-layout{display:grid;grid-template-columns:minmax(0,.88fr) minmax(380px,.74fr);gap:24px;align-items:start}
+.purchase-copy{background:linear-gradient(180deg,#0f1013,#09090b);border:1px solid rgba(255,255,255,.12);border-radius:28px;padding:34px;box-shadow:0 20px 40px rgba(0,0,0,.34)}
+.section-head small{display:inline-block;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#bdbdc3;margin-bottom:12px}
+.section-head h1{text-align:left;font-size:clamp(34px,4.4vw,58px);font-weight:950;letter-spacing:-1.5px;margin-bottom:12px;line-height:.95}
+.brand-name{color:#fff;text-shadow:0 0 22px rgba(255,255,255,.16)}
+.brand-subline{display:block;color:#b8b8bd;font-size:.5em;letter-spacing:7px;font-weight:600;margin-top:6px}
+p.sub{text-align:left;color:var(--muted);font-size:15px;line-height:1.75;margin-bottom:25px;text-transform:none;letter-spacing:0}
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.info-box{padding:18px;border-radius:20px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1)}
+.info-box span{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.18);margin-bottom:12px;font-size:13px;font-weight:900;color:#fff}
+.info-box strong{display:block;font-size:15px;margin-bottom:7px;color:#fff}
+.info-box p{font-size:13px;line-height:1.65;color:#a5a5ae}
+.box{width:100%;background:linear-gradient(180deg,#111216,#09090b);border:1px solid rgba(255,255,255,.13);border-radius:28px;padding:32px;box-shadow:0 20px 46px rgba(0,0,0,.42)}
+.box-kicker{font-size:11px;letter-spacing:2px;color:#c9c9ce;font-weight:900;margin-bottom:8px}
+.box-title{font-size:26px;line-height:1.1;margin-bottom:22px;color:#fff}
+.group{margin-bottom:18px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:7px;letter-spacing:1px}
+input, select{width:100%;height:50px;background:#060608;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:0 15px;color:#fff;font-size:15px;outline:none}
+input:focus, select:focus{border-color:#d9d9de}
+.price-display{color:var(--green)!important;font-weight:900;background:#040405}
+.service-fee-card{margin-top:10px;padding:14px 15px;border-radius:16px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.045);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.service-fee-card .fee-title{font-size:10px;font-weight:900;letter-spacing:1.1px;color:var(--muted);margin-bottom:9px;text-transform:uppercase}
+.service-fee-card .fee-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:5px 0;font-size:13px;color:#d7d9df}
+.service-fee-card .fee-row b{color:#fff;font-size:14px}
+.service-fee-card .fee-row.fee-service{color:#c3c7d0}
+.service-fee-card .fee-row.fee-total{margin-top:6px;padding-top:11px;border-top:1px solid rgba(255,255,255,.12);font-size:14px;font-weight:900;color:#fff}
+.service-fee-card .fee-row.fee-total b{font-size:19px;color:var(--green)}
+.service-fee-card .fee-note{margin-top:8px;font-size:10px;line-height:1.45;color:var(--muted)}
+.btn{width:100%;height:52px;background:linear-gradient(135deg,#f7f7f7,#bcbcc2);color:#080808;border:1px solid rgba(255,255,255,.35);border-radius:14px;font-weight:950;font-size:14px;cursor:pointer;margin-top:10px;letter-spacing:1px;transition:.2s;box-shadow:0 10px 30px rgba(255,255,255,.06)}
+.btn:hover{filter:brightness(1.07)}
+.success-btn{background:linear-gradient(135deg,#dfffe8,#7ef0a6)!important;color:#041108!important;border-color:rgba(126,240,166,.35)!important}
+.ghost-btn{margin-top:15px;background:#15151a!important;border:1px solid rgba(255,255,255,.12)!important;color:#fff!important;box-shadow:none}
+.pix-area{display:none;text-align:center;margin-top:22px;border-top:1px solid rgba(255,255,255,.1);padding-top:22px}
+.qrcode{background:#fff;padding:15px;border-radius:12px;display:inline-block;margin:15px 0}
+.qrcode img{width:160px;height:160px;display:block}
+.pix-key{background:#060608;border:1px solid rgba(255,255,255,.12);padding:12px;border-radius:12px;font-size:12px;word-break:break-all;color:var(--green);margin-bottom:12px}
+.ticket-card{display:none;background:linear-gradient(135deg,#111,#060606);border:2px dashed #dedee2;border-radius:20px;padding:24px;text-align:center;margin-top:22px;position:relative}
+.ticket-card h2{color:#fff;font-size:22px;letter-spacing:2px;margin-bottom:15px}
+.ticket-info{text-align:left;background:#060608;padding:14px;border-radius:12px;margin-bottom:15px;font-size:13px;line-height:1.65}
+.ticket-info span{color:var(--muted)}
+.ticket-qr{background:#fff;padding:10px;border-radius:12px;width:max-content;margin:15px auto}.ticket-qr img{width:210px;height:210px;display:block}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#151518;border:1px solid #3b3b41;padding:12px 20px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:1500}.toast.show{opacity:1;transform:translateX(-50%) translateY(-10px)}
+.ticket-schedule{margin-top:8px;padding:13px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);font-size:12px;line-height:1.55;background:#08080a}
+.ticket-schedule small{display:block;color:var(--muted);margin-top:6px;line-height:1.55}
+.ticket-schedule.active{border-color:rgba(40,209,124,.35);background:rgba(40,209,124,.06);color:var(--green)}
+.ticket-schedule.upcoming{border-color:rgba(56,189,248,.35);background:rgba(56,189,248,.06);color:#38bdf8}
+.ticket-schedule.expired{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.04);color:#d8d8dc}
+#ticketForm button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(1)}
+@media(max-width:1080px){.event-showcase{grid-template-columns:1fr}.event-visual{min-height:390px}.purchase-layout{grid-template-columns:1fr}.info-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){.event-card{flex-basis:92%;grid-template-columns:1fr;min-height:0}.event-card-image{min-height:300px}.event-card-body{padding:22px 20px}.events-head{align-items:start}.event-carousel{padding-right:8%}body{padding:14px}.page-shell{margin-top:18px}.event-panel{padding:24px 20px 22px}.event-visual{min-height:280px}.event-badge{left:16px;top:16px;font-size:10px}.purchase-copy,.box{padding:24px}.section-head h1{font-size:34px}.two-col,.info-grid{grid-template-columns:1fr}.brand-logo{width:min(240px,74vw)}.box-title{font-size:22px}}
+
+
+/* V13 — atmosfera dinâmica por evento */
+body{transition:background-color .55s ease}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-3;pointer-events:none;
+  background:
+    radial-gradient(circle at 12% 18%,rgba(var(--event-accent-rgb),.22),transparent 30%),
+    radial-gradient(circle at 88% 8%,rgba(var(--event-accent-rgb),.13),transparent 28%),
+    radial-gradient(circle at 50% 92%,rgba(var(--event-accent-rgb),.08),transparent 36%),
+    #050505;
+  transition:background .65s ease;
+}
+.event-ambient{position:fixed;inset:-8%;z-index:-2;pointer-events:none;background-size:cover;background-position:center;filter:blur(74px) saturate(1.55) contrast(1.05);transform:scale(1.10);opacity:0;transition:opacity .48s ease;mix-blend-mode:screen}
+.events-head small:first-child,.section-head small,.box-kicker{color:var(--event-accent)!important;transition:color .45s ease}
+.event-card{transition:border-color .45s ease,box-shadow .45s ease,transform .25s ease}
+.event-card.selected{border-color:rgba(var(--event-accent-rgb),.68)!important;box-shadow:0 18px 56px rgba(0,0,0,.46),0 0 34px rgba(var(--event-accent-rgb),.16)!important}
+.event-card.selected .event-card-day{border-color:rgba(var(--event-accent-rgb),.72)!important;background:rgba(var(--event-accent-rgb),.18)!important;box-shadow:0 0 22px rgba(var(--event-accent-rgb),.16)}
+.event-card.selected .event-card-body small{color:var(--event-accent)!important}
+.event-card .event-select-btn{transition:all .35s ease}
+.event-card.selected .event-select-btn{background:linear-gradient(135deg,var(--event-accent),#f3f3f5)!important;color:#050505!important;border-color:rgba(var(--event-accent-rgb),.75)!important;box-shadow:0 10px 30px rgba(var(--event-accent-rgb),.16)}
+.event-dot.active{background:var(--event-accent)!important;box-shadow:0 0 16px rgba(var(--event-accent-rgb),.55)!important}
+.purchase-copy,.box{transition:border-color .5s ease,box-shadow .5s ease;background-color .5s ease}
+.purchase-copy{border-color:rgba(var(--event-accent-rgb),.22)!important;box-shadow:0 20px 40px rgba(0,0,0,.34),0 0 48px rgba(var(--event-accent-rgb),.06)!important}
+.box{border-color:rgba(var(--event-accent-rgb),.25)!important;box-shadow:0 20px 46px rgba(0,0,0,.42),0 0 56px rgba(var(--event-accent-rgb),.07)!important}
+input:focus,select:focus{border-color:var(--event-accent)!important;box-shadow:0 0 0 3px rgba(var(--event-accent-rgb),.08)}
+.btn:not(.success-btn):not(.ghost-btn):not(.whatsapp-btn){background:linear-gradient(135deg,var(--event-accent),#ededf0)!important;color:#070707!important;box-shadow:0 10px 30px rgba(var(--event-accent-rgb),.12)!important}
+.brand-name{text-shadow:0 0 28px rgba(var(--event-accent-rgb),.18)!important}
+@media(max-width:720px){.event-ambient{filter:blur(54px) saturate(1.45);opacity:.14!important}}
+
+
+
+.payment-success{
+  display:none;
+  margin-top:22px;
+  padding:22px;
+  border-radius:18px;
+  text-align:center;
+  background:linear-gradient(180deg,rgba(40,209,124,.15),rgba(40,209,124,.05));
+  border:1px solid rgba(40,209,124,.45);
+}
+.payment-success .success-icon{font-size:42px;line-height:1;margin-bottom:10px}
+.payment-success h3{font-size:22px;color:var(--green);margin-bottom:7px}
+.payment-success p{font-size:13px;color:#f4f4f5;line-height:1.5}
+.payment-success small{display:block;color:var(--muted);margin:9px 0 14px;line-height:1.5}
+.ticket-email-notice{
+  margin:12px 0 0;
+  padding:10px 12px;
+  border-radius:10px;
+  background:rgba(40,209,124,.08);
+  border:1px solid rgba(40,209,124,.25);
+  color:#b9f6d4;
+  font-size:11px;
+  line-height:1.45;
+}
+
+
+/* V13.1 — correção: tema visível no fundo */
+body{
+  background:
+    radial-gradient(circle at 12% 12%, rgba(var(--event-accent-rgb),.32), transparent 34%),
+    radial-gradient(circle at 88% 18%, rgba(var(--event-accent-rgb),.20), transparent 32%),
+    radial-gradient(circle at 50% 88%, rgba(var(--event-accent-rgb),.10), transparent 40%),
+    linear-gradient(180deg, rgba(var(--event-accent-rgb),.08) 0%, rgba(5,5,5,.97) 48%, #050505 100%) !important;
+  background-attachment:fixed !important;
+}
+body::before{z-index:0 !important;opacity:.78}
+.event-ambient{z-index:0 !important;mix-blend-mode:screen}
+.page-shell{position:relative;z-index:1}
+
+
+/* =========================================================
+   HYPE V14 — EXPERIENCE / VISUAL PREMIUM SEM VÍDEOS
+   Apenas front-end: não altera PIX, Asaas, Supabase ou Portaria
+   ========================================================= */
+body{overflow-x:hidden}
+.v14-spotlight{
+  position:relative;overflow:hidden;border-radius:30px;min-height:560px;
+  border:1px solid rgba(var(--event-accent-rgb),.32);
+  background:linear-gradient(135deg,rgba(10,10,12,.96),rgba(5,5,6,.93));
+  box-shadow:0 34px 90px rgba(0,0,0,.48),0 0 72px rgba(var(--event-accent-rgb),.10);
+  isolation:isolate;
+}
+.v14-spotlight::before,.v14-spotlight::after{
+  content:"";position:absolute;border-radius:50%;pointer-events:none;filter:blur(28px);opacity:.65;z-index:-1;
+  animation:v14FloatGlow 9s ease-in-out infinite alternate;
+}
+.v14-spotlight::before{width:420px;height:420px;left:-130px;top:-150px;background:rgba(var(--event-accent-rgb),.24)}
+.v14-spotlight::after{width:360px;height:360px;right:-120px;bottom:-150px;background:rgba(var(--event-accent-rgb),.18);animation-delay:-3s}
+@keyframes v14FloatGlow{from{transform:translate3d(-18px,-8px,0) scale(.96)}to{transform:translate3d(24px,18px,0) scale(1.08)}}
+.v14-spotlight-bg{
+  position:absolute;inset:-8%;z-index:-3;background-position:center;background-size:cover;
+  filter:blur(42px) saturate(1.45);opacity:.30;transform:scale(1.12);
+  transition:background-image .5s ease,opacity .5s ease;
+}
+.v14-spotlight-shade{position:absolute;inset:0;z-index:-2;background:linear-gradient(100deg,rgba(4,4,5,.28),rgba(4,4,5,.82) 48%,rgba(4,4,5,.97))}
+.v14-hero-grid{display:grid;grid-template-columns:minmax(310px,.92fr) minmax(0,1.08fr);gap:0;min-height:560px}
+.v14-art-wrap{position:relative;min-height:560px;display:grid;place-items:center;padding:34px;perspective:1200px}
+.v14-art-glow{position:absolute;width:70%;aspect-ratio:1;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;background:rgba(var(--event-accent-rgb),.28);filter:blur(55px);opacity:.75}
+.v14-event-art{
+  position:relative;z-index:2;width:min(430px,92%);height:auto;max-height:none;object-fit:contain;border-radius:24px;
+  border:1px solid rgba(255,255,255,.20);box-shadow:0 35px 75px rgba(0,0,0,.55),0 0 42px rgba(var(--event-accent-rgb),.18);
+  transform:none;transition:box-shadow .35s ease;
+}
+.v14-art-wrap:hover .v14-event-art{box-shadow:0 40px 90px rgba(0,0,0,.60),0 0 55px rgba(var(--event-accent-rgb),.25)}
+.v14-art-placeholder{display:none;position:relative;z-index:2;width:min(430px,92%);aspect-ratio:4/5;border-radius:24px;border:1px solid rgba(255,255,255,.15);place-items:center;font-size:54px;font-weight:950;letter-spacing:6px;background:linear-gradient(145deg,rgba(var(--event-accent-rgb),.14),#070708);color:#fff}
+.v14-content{padding:42px 38px 38px;display:flex;flex-direction:column;justify-content:center}
+.v14-kicker{display:flex;align-items:center;gap:9px;color:var(--event-accent);font-size:11px;font-weight:950;letter-spacing:2.2px;text-transform:uppercase;margin-bottom:12px}
+.v14-kicker::before{content:"";width:28px;height:2px;background:var(--event-accent);box-shadow:0 0 12px rgba(var(--event-accent-rgb),.6)}
+.v14-content h1{font-size:clamp(38px,5vw,72px);line-height:.91;letter-spacing:-2px;text-transform:uppercase;max-width:760px}
+.v14-event-name{display:block;color:#c9c9ce;font-size:clamp(17px,2vw,25px);line-height:1.15;margin-top:14px;font-weight:800}
+.v14-event-desc{margin-top:16px;color:#b8b8c0;line-height:1.72;font-size:14px;max-width:720px}
+.v14-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:19px}
+.v14-meta-chip{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 12px;border-radius:999px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.13);font-size:11px;font-weight:850;color:#efeff1}
+.v14-countdown-wrap{margin-top:24px}
+.v14-countdown-label{font-size:10px;font-weight:950;letter-spacing:1.8px;color:#9b9ba4;text-transform:uppercase;margin-bottom:9px}
+.v14-countdown{display:grid;grid-template-columns:repeat(4,minmax(70px,1fr));gap:8px;max-width:520px}
+.v14-time{padding:13px 8px 11px;text-align:center;border-radius:15px;background:linear-gradient(180deg,rgba(var(--event-accent-rgb),.12),rgba(255,255,255,.025));border:1px solid rgba(var(--event-accent-rgb),.23)}
+.v14-time b{display:block;font-size:clamp(24px,3.2vw,39px);line-height:1;color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 0 20px rgba(var(--event-accent-rgb),.18)}
+.v14-time span{display:block;margin-top:5px;font-size:9px;letter-spacing:1.3px;color:#9d9da6;font-weight:900}
+.v14-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:22px}
+.v14-action{min-height:46px;padding:0 16px;border-radius:13px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.055);color:#fff;font-weight:900;font-size:11px;letter-spacing:.65px;cursor:pointer;transition:.25s}
+.v14-action.primary{background:linear-gradient(135deg,var(--event-accent),#efeff2);color:#050505;border-color:rgba(var(--event-accent-rgb),.72);box-shadow:0 12px 34px rgba(var(--event-accent-rgb),.16)}
+.v14-action:hover{transform:translateY(-2px);border-color:rgba(var(--event-accent-rgb),.55)}
+.v14-lineup{margin-top:25px}
+.v14-lineup-title{font-size:10px;font-weight:950;letter-spacing:1.8px;color:#a0a0a8;text-transform:uppercase;margin-bottom:11px}
+.v14-lineup-track{display:flex;gap:8px;flex-wrap:wrap}
+.v14-lineup-item{position:relative;padding:10px 13px 10px 27px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(5,5,7,.42);font-size:12px;font-weight:850;color:#f4f4f5}
+.v14-lineup-item::before{content:"";position:absolute;left:11px;top:50%;width:7px;height:7px;border-radius:50%;transform:translateY(-50%);background:var(--event-accent);box-shadow:0 0 12px rgba(var(--event-accent-rgb),.65)}
+.v14-lots-section{grid-column:1/-1;padding:0 34px 34px}
+.v14-lots-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}
+.v14-lots-head small{font-size:10px;color:var(--event-accent);letter-spacing:1.6px;font-weight:950}
+.v14-lots-head h3{font-size:24px;margin-top:4px}
+.v14-lots-head span{font-size:11px;color:#8f8f98}
+.v14-lot-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.v14-lot-card{
+  position:relative;overflow:hidden;text-align:left;padding:17px;border-radius:18px;min-height:146px;
+  background:linear-gradient(145deg,rgba(var(--event-accent-rgb),.09),rgba(255,255,255,.025));
+  border:1px solid rgba(255,255,255,.12);color:#fff;cursor:pointer;transform-style:preserve-3d;
+  transition:transform .24s ease,border-color .24s ease,box-shadow .24s ease,opacity .24s ease;
+}
+.v14-lot-card::after{content:"";position:absolute;width:120px;height:120px;border-radius:50%;right:-55px;bottom:-65px;background:rgba(var(--event-accent-rgb),.13);filter:blur(10px)}
+.v14-lot-card:hover{transform:translateY(-5px) rotateX(2deg);border-color:rgba(var(--event-accent-rgb),.50);box-shadow:0 18px 38px rgba(0,0,0,.34),0 0 28px rgba(var(--event-accent-rgb),.10)}
+.v14-lot-card.active{border-color:var(--event-accent);box-shadow:0 0 0 1px rgba(var(--event-accent-rgb),.30),0 18px 42px rgba(0,0,0,.38),0 0 34px rgba(var(--event-accent-rgb),.15)}
+.v14-lot-card.disabled{opacity:.46;cursor:not-allowed;filter:grayscale(.4)}
+.v14-lot-card small{display:block;color:#9c9ca5;font-size:9px;font-weight:950;letter-spacing:1.25px;text-transform:uppercase}
+.v14-lot-card strong{display:block;font-size:18px;margin:7px 0 2px}
+.v14-lot-price{font-size:24px;font-weight:950;color:var(--event-accent);margin-top:9px}
+.v15-gender-prices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+.v15-gender-price{display:flex;flex-direction:column;gap:3px;padding:10px 11px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.035);text-align:left}
+.v15-gender-price span{font-size:8px;font-weight:950;letter-spacing:.8px;color:#9d9da6}
+.v15-gender-price b{font-size:18px;line-height:1.1;color:#fff}
+.v15-gender-price.selected{border-color:rgba(var(--event-accent-rgb),.62);background:rgba(var(--event-accent-rgb),.11);box-shadow:0 0 18px rgba(var(--event-accent-rgb),.08)}
+.v15-gender-price.selected span,.v15-gender-price.selected b{color:var(--event-accent)}
+.v14-action small{display:block;font-size:8px;line-height:1.15;margin-top:2px;opacity:.82;letter-spacing:.3px}
+.v14-lot-stock{margin-top:6px;font-size:10px;font-weight:850;color:#babac1}
+.v14-lot-stock.hot{color:#ffce58}
+.v14-lot-status{position:absolute;right:12px;top:12px;padding:5px 8px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);font-size:8px;font-weight:950;letter-spacing:.7px}
+.v14-sticky-buy{display:none}
+.v14-reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+.v14-reveal.visible{opacity:1;transform:none}
+@media(max-width:980px){
+  .v14-hero-grid{grid-template-columns:1fr}
+  .v14-art-wrap{min-height:430px;padding-bottom:10px}
+  .v14-event-art{width:min(390px,82%);height:auto;max-height:none}
+  .v14-content{padding:26px 26px 32px}
+  .v14-lots-section{padding:0 24px 28px}
+  .v14-lot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:720px){
+  body{padding:14px 14px 92px!important}
+  .v14-spotlight{border-radius:24px}
+  .v14-art-wrap{min-height:355px;padding:22px 16px 4px}
+  .v14-event-art{width:min(330px,88%);height:auto;max-height:none;border-radius:20px;transform:none!important}
+  .v14-content{padding:23px 20px 26px}
+  .v14-content h1{letter-spacing:-1px}
+  .v14-countdown{grid-template-columns:repeat(4,1fr);gap:6px}
+  .v14-time{padding:11px 4px 9px}
+  .v14-time b{font-size:25px}
+  .v14-actions{display:grid;grid-template-columns:1fr 1fr}
+  .v14-action.primary{grid-column:1/-1}
+  .v14-lots-section{padding:0 18px 22px}
+  .v14-lots-head{align-items:start;flex-direction:column}
+  .v14-lot-grid{grid-template-columns:1fr}
+  .v14-lot-card{min-height:128px}
+  .v14-sticky-buy{
+    position:fixed;display:flex;left:10px;right:10px;bottom:10px;z-index:1200;align-items:center;gap:10px;
+    padding:9px 9px 9px 13px;border-radius:18px;background:rgba(7,7,9,.93);backdrop-filter:blur(18px);
+    border:1px solid rgba(var(--event-accent-rgb),.38);box-shadow:0 18px 60px rgba(0,0,0,.55),0 0 28px rgba(var(--event-accent-rgb),.12)
+  }
+  .v14-sticky-copy{min-width:0;flex:1}
+  .v14-sticky-copy small{display:block;color:#8f8f98;font-size:8px;font-weight:950;letter-spacing:1px}
+  .v14-sticky-copy strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;margin-top:2px}
+  .v14-sticky-buy button{min-width:130px;height:46px;border:0;border-radius:13px;background:linear-gradient(135deg,var(--event-accent),#f0f0f2);color:#050505;font-weight:950;font-size:10px;letter-spacing:.5px}
+}
+@media(prefers-reduced-motion:reduce){
+  .v14-spotlight::before,.v14-spotlight::after{animation:none}
+  .v14-reveal{opacity:1;transform:none;transition:none}
+  .v14-event-art,.v14-lot-card{transition:none}
+}
+
+</style>
+
+<style id="hype-v16-sales-style">
+.v16-sales-fields small{font-size:9px;color:var(--muted);font-weight:700}.v16-coupon-row{display:grid;grid-template-columns:1fr auto;gap:8px}.v16-mini-btn{border:1px solid rgba(var(--event-rgb,216,216,220),.45);background:rgba(var(--event-rgb,216,216,220),.12);color:#fff;border-radius:10px;padding:0 14px;font-weight:900;cursor:pointer}.v16-coupon-status{font-size:10px;min-height:15px;margin-top:6px;color:var(--muted);font-weight:800}.v16-coupon-status.ok{color:#28d17c}.v16-coupon-status.error{color:#ff7676}@media(max-width:700px){.v16-sales-fields{grid-template-columns:1fr!important}.v16-mini-btn{min-height:46px}}
+</style>
+
+<style id="hype-v106-flyer-proporcao-mobile">
+/* No celular a arte ocupa toda a largura, usando sua proporção real.
+   Evita as faixas pretas causadas por object-fit:contain em um frame fixo. */
+@media (max-width:720px) {
+  .event-card-image:has(> img) {
+    min-height:0;
+    height:auto;
+    aspect-ratio:auto;
+    background:#09090b;
+  }
+  .event-card-image > img {
+    position:relative;
+    inset:auto;
+    display:block;
+    width:100%;
+    height:auto;
+    max-width:100%;
+    object-fit:contain;
+    object-position:center;
+  }
+  /* Informações já aparecem no próprio flyer e abaixo do cartão. */
+  .event-card-image > img ~ .event-card-day,
+  .event-card-image > img ~ .event-card-overlay {
+    display:none;
+  }
+}
+</style>
+</head>
+<body>
+<div class="event-ambient" id="eventAmbient" aria-hidden="true"></div>
+
+<div class="page-shell">
+  <div class="brand-logo-wrap page-brand"><img src="logo-hype.png?v=20260831-v16-2" class="brand-logo" alt="HYPE Lounge Club"></div>
+
+  <section class="events-wrap">
+    <div class="events-head">
+      <div>
+        <small>PRÓXIMOS EVENTOS</small>
+        <h2>Escolha sua noite na HYPE</h2>
+      </div>
+      <small>Arraste para o lado →</small>
+    </div>
+    <div class="event-carousel" id="eventCarousel"></div>
+    <div class="event-dots" id="eventDots"></div>
+  </section>
+
+
+  <section class="v14-spotlight v14-reveal" id="v14Spotlight">
+    <div class="v14-spotlight-bg" id="v14SpotlightBg" aria-hidden="true"></div>
+    <div class="v14-spotlight-shade" aria-hidden="true"></div>
+    <div class="v14-hero-grid">
+      <div class="v14-art-wrap" id="v14ArtWrap">
+        <div class="v14-art-glow" aria-hidden="true"></div>
+        <img class="v14-event-art" id="v14HeroImage" alt="Arte do evento selecionado">
+        <div class="v14-art-placeholder" id="v14HeroPlaceholder">HYPE</div>
+      </div>
+      <div class="v14-content">
+        <div class="v14-kicker">EXPERIÊNCIA HYPE</div>
+        <h1 id="v14Artist">HYPE LOUNGE CLUB</h1>
+        <span class="v14-event-name" id="v14EventName">Evento selecionado</span>
+        <div class="v14-meta" id="v14EventMeta"></div>
+        <p class="v14-event-desc" id="v14EventDescription"></p>
+
+        <div class="v14-countdown-wrap">
+          <div class="v14-countdown-label" id="v14CountdownLabel">CONTAGEM REGRESSIVA</div>
+          <div class="v14-countdown" aria-live="polite">
+            <div class="v14-time"><b id="v14Days">00</b><span>DIAS</span></div>
+            <div class="v14-time"><b id="v14Hours">00</b><span>HORAS</span></div>
+            <div class="v14-time"><b id="v14Minutes">00</b><span>MIN</span></div>
+            <div class="v14-time"><b id="v14Seconds">00</b><span>SEG</span></div>
+          </div>
+        </div>
+
+        <div class="v14-actions">
+          <button type="button" class="v14-action primary" onclick="hypeV14ScrollToTickets()">🎟 GARANTIR INGRESSO</button>
+          <button type="button" class="v14-action" onclick="hypeV14OpenWhatsAppContact()">💬 WHATSAPP<small>(54) 9695-6070</small></button>
+          <button type="button" class="v14-action" onclick="hypeV14ShareEvent()">COMPARTILHAR</button>
+          <button type="button" class="v14-action" id="v14MapButton" onclick="hypeV14OpenMap()">📍 LOCALIZAÇÃO<small>ABRIR NO MAPS</small></button>
+        </div>
+
+        <div class="v14-lineup" id="v14Lineup">
+          <div class="v14-lineup-title">LINE-UP</div>
+          <div class="v14-lineup-track" id="v14LineupTrack"></div>
+        </div>
+      </div>
+
+      <div class="v14-lots-section">
+        <div class="v14-lots-head">
+          <div><small>ESCOLHA SUA EXPERIÊNCIA</small><h3>Ingressos disponíveis</h3></div>
+          <span>O valor muda conforme o gênero selecionado na compra.</span>
+        </div>
+        <div class="v14-lot-grid" id="v14LotGrid"></div>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="purchase-layout" id="ticketBox">
+    <div class="purchase-copy">
+      <div class="section-head">
+        <small>HYPE LOUNGE CLUB</small>
+        <h1><span class="brand-name">INGRESSOS</span> <span class="brand-subline">OFICIAIS</span></h1>
+        <p class="sub">Escolha o evento e o ingresso. O pedido abre no WhatsApp da HYPE e o ingresso é liberado depois que o Admin confirmar o pagamento.</p>
+      </div>
+
+      <div class="hype-minor-buyer-card" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:16px 0 20px;padding:16px;border:1px solid #ec4674;border-radius:15px;background:linear-gradient(115deg,#36111f,#130e14);color:#fff">
+        <div style="flex:1 1 195px"><strong style="font-size:15px">🛡️ Vai comprar ingresso para menor de idade?</strong><p style="font-size:12px;line-height:1.5;color:#f3d6df;margin:6px 0 0">Na HYPE, a declaração de idade aparece <b>antes dos dados da compra</b>. Os responsáveis enviam a autorização para análise antes do pagamento.</p></div>
+        <a href="#hypeMinorPurchaseDeclaration" style="background:#d92c59;border-radius:12px;padding:12px 16px;min-height:45px;display:flex;align-items:center;color:#fff;text-decoration:none;font-size:12px;font-weight:900;white-space:nowrap">CONFERIR IDADE ↓</a>
+      </div>
+      <div class="info-grid">
+        <div class="info-box">
+          <span>1</span>
+          <strong>Escolha o lote</strong>
+          <p>Selecione o setor e veja o valor atualizado no momento da compra.</p>
+        </div>
+        <div class="info-box">
+          <span>2</span>
+          <strong>Finalize no WhatsApp</strong>
+          <p>O pedido cai direto no WhatsApp da HYPE para pagamento e envio do comprovante.</p>
+        </div>
+        <div class="info-box">
+          <span>3</span>
+          <strong>Confirmação do Admin</strong>
+          <p>Depois da conferência manual, o ingresso com QR Code é liberado e enviado ao e-mail.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="box">
+      <h4 class="box-kicker">PAGAMENTO MANUAL PELO WHATSAPP</h4>
+      <h2 class="box-title">Garanta o seu ingresso antecipado</h2>
+
+      <form id="ticketForm" onsubmit="createManualOrder(event)">
+        <div class="group" id="hypeMinorPurchaseDeclaration" style="padding:20px;border:2px solid #fa3e77;border-radius:17px;background:linear-gradient(125deg,#37121f,#141015);margin:0 0 22px;box-shadow:0 8px 26px #0006">
+          <label for="clientAgeDeclaration" style="font-size:17px;font-weight:950;color:#fff;display:block;margin-bottom:10px">🛡️ PRIMEIRO: CONFIRME SUA IDADE</label>
+          <p style="font-size:12px;color:#e4ccd5;margin:7px 0">Quem vai usar este ingresso? Selecione uma opção antes de preencher os dados.</p>
+          <select id="clientAgeDeclaration" required style="min-height:55px;font-size:15px;font-weight:800;background:#170b13;border:2px solid #db5578;color:#fff;border-radius:11px;padding:12px;width:100%">
+            <option value="">👇 SELECIONE SUA IDADE</option>
+            <option value="adulto">Não. Tenho 18 anos ou mais.</option>
+            <option value="menor">Sim. Sou menor de 18 anos.</option>
+          </select>
+          <div id="hypeMinorPurchaseWarning" hidden style="border:1px solid #c64c65;padding:13px;background:#411521;color:#ffe6ec;border-radius:12px;margin-top:12px;font-size:12px;line-height:1.55">
+            <strong style="font-size:13px">⚠️ Entrada de menor sujeita à aprovação</strong>
+            <p style="color:#ffe6ec;margin:6px 0 9px">Antes de qualquer pagamento, seu pai, mãe ou responsável legal deverá enviar a autorização, selfie e assinatura. O ADM precisa analisar as regras de entrada. Após a análise, entre em contato com a HYPE para concluir a compra com a equipe. A autorização não garante a entrada.</p>
+            <a id="hypeMinorParentLink" href="./menores.html" target="_blank" rel="noopener" style="display:inline-block;padding:10px 14px;background:#cb2551;color:#fff;text-decoration:none;border-radius:10px;font-weight:900">📷 ABRIR AUTORIZAÇÃO DOS PAIS</a>
+            <p style="color:#ffd9e2;margin:9px 0 0">🚫 É proibido fornecer bebidas alcoólicas a menores de 18 anos, mesmo com autorização dos responsáveis.</p>
+          </div>
+        </div>
+
+
+        <div class="group">
+          <label>Nome Completo</label>
+          <input type="text" id="clientName" placeholder="O seu nome no documento" required autocomplete="off">
+        </div>
+
+        <div class="group">
+          <label>Telefone / WhatsApp</label>
+          <input type="tel" id="clientPhone" placeholder="(54) 99999-9999" autocomplete="tel">
+        </div>
+
+        <div class="group">
+          <label>E-mail para receber o ingresso</label>
+          <input type="email" id="clientEmail" placeholder="seunome@gmail.com" required autocomplete="email">
+        </div>
+
+        <div class="group two-col">
+          <div>
+            <label>CPF</label>
+            <input type="text" id="clientCpf" placeholder="Somente para identificação" inputmode="numeric" autocomplete="off">
+          </div>
+          <div>
+            <label>Género</label>
+            <select id="clientGender" required onchange="renderClientTickets(document.getElementById('ticketType')?.value); updatePrice()">
+              <option value="Feminino">Feminino</option>
+              <option value="Masculino">Masculino</option>
+            </select>
+          </div>
+        </div>
+        
+
+        <div class="group v16-sales-fields">
+          <div>
+            <label>Promoter</label>
+            <input type="hidden" id="clientPromoter" value="">
+            <div id="clientPromoterStatus" class="v16-coupon-status">Compra direta: nenhum promoter vinculado.</div>
+            <small style="display:block;margin-top:6px;color:var(--muted)">O promoter é identificado automaticamente quando você entra pelo link oficial dele.</small>
+          </div>
+        </div>
+
+        <div class="group">
+          <label>Escolha a Categoria / Lote</label>
+          <select id="ticketType" onchange="updatePrice()" required></select>
+          <div id="ticketScheduleInfo" class="ticket-schedule active"></div>
+        </div>
+
+        <div class="group">
+          <label>Total do pedido</label>
+          <input type="text" id="ticketPriceDisplay" readonly class="price-display">
+          <div id="serviceFeeInfo" class="service-fee-card"></div>
+        </div>
+
+        <button type="submit" class="btn">CRIAR PEDIDO E ABRIR WHATSAPP</button>
+      </form>
+
+      <div class="pix-area" id="pixArea">
+        <h3 style="font-size:20px">PIX GERADO ✅</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:7px">Pague pelo QR Code ou use o PIX Copia e Cola. A liberação acontece quando o Asaas confirmar o pagamento.</p>
+        <div class="manual-status-card">
+          <div style="font-size:10px;color:var(--muted);font-weight:900;letter-spacing:1px">CÓDIGO DO PEDIDO</div>
+          <div class="manual-order-code" id="pixOrderCode"></div>
+          <div class="qrcode"><img id="qrImg" src="" alt="QR Code PIX"></div>
+          <div style="margin:12px 0 14px;text-align:center">
+            <button type="button" class="btn whatsapp-btn" onclick="hypeOpenPixSupportWhatsApp()">💬 FALAR COM A HYPE NO WHATSAPP</button>
+            <small style="display:block;margin-top:7px;color:var(--muted);font-size:11px">Dúvidas sobre o PIX? Fale com a Hype pelo WhatsApp.</small>
+          </div>
+          <div class="pix-key" id="pixKeyText"></div>
+          <div id="pixOfficialRecipientInfo" style="margin:10px 0 14px;padding:13px 14px;border:1px solid rgba(40,209,124,.32);background:rgba(40,209,124,.08);border-radius:14px;font-size:12px;line-height:1.6;color:#d9f8e6;text-align:left">
+            <strong style="display:block;color:#a8f3c4;margin-bottom:4px">✅ PIX OFICIAL HYPE</strong>
+            O recebedor poderá aparecer como <strong>IGOR ANDRIEL GARCIA RIBAS DE OLIVEIRA</strong>. Ele é responsável pelo <strong>financeiro</strong> e também é o <strong>desenvolvedor</strong> da HYPE Lounge Club.
+          </div>
+          <div class="manual-status" id="pixPaymentStatus">AGUARDANDO PAGAMENTO</div>
+        </div>
+        <button class="btn" onclick="copyPixCode()">COPIAR PIX COPIA E COLA</button>
+        <button class="btn ghost-btn" onclick="refreshCurrentOrderStatus(true)">VERIFICAR PAGAMENTO</button>
+      </div>
+
+      <div class="payment-success" id="paymentSuccessArea">
+        <div class="success-icon">✅</div>
+        <h3>PAGAMENTO CONFIRMADO</h3>
+        <p>Seu ingresso HYPE está liberado.</p>
+        <small id="paymentSuccessEmail">📧 O ingresso também será enviado automaticamente para o e-mail informado na compra.</small>
+        <button class="btn" onclick="openPaidTicket()">ACESSAR MEU INGRESSO</button>
+      </div>
+
+      <div class="manual-area" id="manualArea">
+        <h3 style="font-size:20px">PEDIDO CRIADO ✅</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:7px">Seu ingresso ainda não está liberado. Finalize o pagamento pelo WhatsApp e aguarde a confirmação do Admin.</p>
+        <div class="manual-status-card">
+          <div style="font-size:10px;color:var(--muted);font-weight:900;letter-spacing:1px">CÓDIGO DO PEDIDO</div>
+          <div class="manual-order-code" id="manualOrderCode"></div>
+          <div id="manualOrderSummary" style="font-size:13px;margin-top:10px"></div>
+          <div class="manual-status" id="manualPaymentStatus">AGUARDANDO CONFIRMAÇÃO</div>
+        </div>
+        <button class="btn whatsapp-btn" onclick="reopenOrderWhatsApp()">ABRIR WHATSAPP NOVAMENTE</button>
+        <button class="btn ghost-btn" onclick="refreshCurrentOrderStatus(true)">VERIFICAR SE O PAGAMENTO FOI CONFIRMADO</button>
+      </div>
+
+      <div class="ticket-card" id="ticketCard">
+        <h2>🎟️ INGRESSO OFICIAL</h2>
+        <div class="ticket-info">
+          <p><span>Titular:</span> <strong id="tClientName" style="color:#fff"></strong></p>
+          <p><span>WhatsApp:</span> <strong id="tClientPhone" style="color:#fff"></strong></p>
+          <p><span>E-mail:</span> <strong id="tClientEmail" style="color:#fff"></strong></p>
+          <p><span>Género:</span> <strong id="tClientGender" style="color:#fff"></strong></p>
+          <p><span>Setor:</span> <strong id="tTicketName" style="color:#fff"></strong></p>
+          <p><span>Valor:</span> <strong id="tTicketPrice" style="color:var(--green)"></strong></p>
+          <p><span>Estado:</span> <strong id="tTicketStatus" style="color:#ffcc00">Pendente de Confirmação ADM</strong></p>
+          <p><span>Código ID:</span> <strong id="tTicketId" style="color:#aaa"></strong></p>
+        </div>
+        <div class="ticket-qr"><img id="ticketQrImg" src="" alt="QR Code do ingresso"></div>
+        <div class="ticket-email-notice" id="ticketEmailNotice">📧 O ingresso também será enviado automaticamente para o e-mail informado na compra.</div>
+        <p style="font-size:11px;color:var(--muted);line-height:1.4;margin-top:10px">Apresente o QR Code, seu ID ou seu nome na portaria com documento.</p>
+        <button class="btn ghost-btn" onclick="location.reload()">Comprar Outro</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<div class="v14-sticky-buy" id="v14StickyBuy">
+  <div class="v14-sticky-copy">
+    <small>INGRESSO SELECIONADO</small>
+    <strong id="v14StickyText">Escolha seu ingresso</strong>
+  </div>
+  <button type="button" onclick="hypeV14ScrollToTickets()">COMPRAR AGORA</button>
+</div>
+
+
+<div class="toast" id="toast">Ação efetuada com sucesso!</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=20261001-v48"></script>
+<script src="app.js?v=20261023-menores-gate-v120"></script>
+<script src="cliente-menor-v120.js?v=20261023"></script>
+<script src="promoter-global-v16-8.js?v=20261002-v57-global"></script>
+<script src="v18-client.js?v=20260902-v20"></script>
+</body>
+</html>
