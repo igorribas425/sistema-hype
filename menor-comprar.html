@@ -49,6 +49,8 @@ button:disabled{opacity:.55;cursor:wait}.ghost{background:#29232d;border:1px sol
 <div><small>INGRESSO EM NOME DE</small><strong id="minorName">—</strong></div>
 <div><small>CPF VINCULADO</small><strong id="minorCpf">—</strong></div>
 <div><small>E-MAIL QUE RECEBE O QR CODE</small><strong id="guardianEmail">—</strong></div>
+<div id="demoGuardianRow" hidden><small>RESPONSÁVEL FICTÍCIO</small><strong id="demoGuardian">—</strong></div>
+<div id="demoMinorEmailRow" hidden><small>GMAIL DO MENOR (TESTE)</small><strong id="demoMinorEmail">—</strong></div>
 </div>
 <div class="notice">🛡️ Os dados do menor são preenchidos automaticamente pela autorização. Não podem ser trocados nesta compra. Apresente os documentos originais na portaria. A entrada segue as regras do evento e a legislação.</div>
 <div id="selectArea">
@@ -68,7 +70,7 @@ button:disabled{opacity:.55;cursor:wait}.ghost{background:#29232d;border:1px sol
 <button id="refresh" class="ghost" type="button">ATUALIZAR SITUAÇÃO DO INGRESSO</button>
 <p class="sub">O comprovante do Asaas não é o ingresso. Após o pagamento confirmado, a HYPE envia o ingresso com QR Code ao e-mail cadastrado. Confira também o Spam.</p>
 </section>
-<a class="button ghost" style="display:block;text-decoration:none" href="cliente.html">VOLTAR AO SITE DA HYPE</a>
+<a class="button ghost" style="display:block;text-decoration:none" href="cliente.html">SAIR DA AUTORIZAÇÃO E IR PARA A COMPRA NORMAL DA HYPE</a>
 </main>
 <script src="supabase-config.js?v=20261001-v48"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js" referrerpolicy="no-referrer"></script>
@@ -151,14 +153,28 @@ $("copyPix").addEventListener("click",async()=>{
 });
 $("refresh").addEventListener("click",async()=>{await load();});
 $("previewPay").addEventListener("click",()=>{$("demoPayment").hidden=!$("demoPayment").hidden;});
-if(/^[0-9a-f-]{36}$/i.test(new URLSearchParams(location.search).get("demo")||"")){
-  $("checkout").hidden=false;$("selectArea").hidden=true;$("payment").hidden=true;$("demoBanner").hidden=false;
-  $("demoProtocol").textContent="Protocolo do teste: "+new URLSearchParams(location.search).get("demo");
-  $("eventLabel").textContent="Evento fictício de demonstração";
-  $("minorName").textContent="Lucas Exemplo (fictício)";
-  $("minorCpf").textContent="TESTE • "+(new URLSearchParams(location.search).get("demo")||"").slice(0,8);
-  $("guardianEmail").textContent="igorribas425@gmail.com (responsável) e matheusanjosb@gmail.com (menor)";
-  alertBox("🧪 TESTE FICTÍCIO • Autorização de menor conferida • Pista, noite toda, R$ 30,00. Este link NÃO cria PIX nem ingresso verdadeiro.",false);
+const demoId=(new URLSearchParams(location.search).get("demo")||"");
+if(/^[0-9a-f-]{36}$/i.test(demoId)){
+  $("demoBanner").hidden=false;
+  $("checkout").hidden=true;$("selectArea").hidden=true;$("payment").hidden=true;
+  $("demoProtocol").textContent="Consultando protocolo de demonstração: "+demoId;
+  alertBox("Consultando o cadastro fictício vinculado ao protocolo...",false);
+  api("hype-minors-demo",{action:"preview",id:demoId}).then(d=>{
+    if(d.status!=="conferido"||d.mode!=="demo")throw Error("Este teste não está conferido.");
+    $("checkout").hidden=false;
+    $("eventLabel").textContent=d.eventName+" • Teste fictício";
+    $("minorName").textContent=d.minorName+" (fictício)";
+    $("minorCpf").textContent=d.minorCpf+" • SEM VALIDADE";
+    $("guardianEmail").textContent=d.guardianEmail;
+    $("demoGuardianRow").hidden=false;$("demoMinorEmailRow").hidden=false;
+    $("demoGuardian").textContent=d.guardianName;
+    $("demoMinorEmail").textContent=d.minorEmail;
+    $("demoProtocol").textContent="Protocolo vinculado: "+d.id;
+    alertBox("🧪 AUTORIZAÇÃO FICTÍCIA CONFERIDA • Dados vinculados ao protocolo • Pista noite toda R$ 30,00. NÃO gera PIX ou ingresso real.",false);
+  }).catch(err=>{
+    $("checkout").hidden=true;$("demoBanner").hidden=true;
+    alertBox("Não foi possível validar o teste fictício: "+err.message,true);
+  });
 }else load();
 })();
 </script>
