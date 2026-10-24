@@ -119,7 +119,7 @@ async function detail(id){
    ['Nascimento do menor',r.minor_birth_date],['Nome do responsável',r.guardian_name],
    ['CPF do responsável',r.guardian_cpf],['Nascimento do responsável',r.guardian_birth_date],
    ['WhatsApp',r.guardian_phone],['E-mail do responsável',r.guardian_email||'Não informado (cadastro antigo)'],['Gmail do menor',r.minor_email||'Não informado (cadastro antigo)'],['Vínculo declarado',r.relation],
-   ['Conferido por',r.reviewed_by||'Pendente'],['Ingresso vinculado',r.checkout_ticket_id?'ID '+r.checkout_ticket_id+' • origem: menor autorizado':'Ainda não comprado'],['Observação',r.review_note||'—']
+   ['Validade',r.event_id==null?'Todas as festas HYPE, até 18 anos ou revogação':'Somente a festa original'],['Conferido por',r.reviewed_by||'Pendente'],['Ingresso vinculado',r.checkout_ticket_id?'ID '+r.checkout_ticket_id+' • origem: menor autorizado':'Ainda não comprado'],['Observação',r.review_note||'—']
   ];
   fields.forEach(([k,v])=>{list.append(text('dt',k),text('dd',String(v||'—')));});
   el.appendChild(list);
@@ -144,7 +144,7 @@ async function detail(id){
   labelA.append(checkedDoc,text('span','Analisei os dados da declaração e os documentos informados; a conferência dos originais acontecerá na portaria.'));
   const labelB=document.createElement('label');labelB.className='m120-check';
   const checkedRules=document.createElement('input');checkedRules.type='checkbox';
-  labelB.append(checkedRules,text('span','Verifiquei as regras de admissão do evento e a legislação aplicável. O menor não terá acesso a bebidas alcoólicas.'));
+  labelB.append(checkedRules,text('span','Estou ciente de que cada evento pode ter regras próprias de admissão, que devem ser conferidas na portaria. O menor não terá acesso a bebidas alcoólicas.'));
   el.append(labelA,labelB);
   const hasGuardianDocument=Boolean(r.guardian_document_path&&data.documentUrl);
   const hasMinorFace=Boolean(r.minor_face_photo_path&&data.minorFaceUrl);
@@ -155,7 +155,7 @@ async function detail(id){
   const years=reference?Number(reference.slice(0,4))-Number(r.minor_birth_date.slice(0,4))-(reference.slice(5)<r.minor_birth_date.slice(5)?1:0):-1;
   const eligibleAge=years===16||years===17;
   const docsReady=hasGuardianDocument&&hasMinorFace&&hasMinorDocument&&eligibleAge;
-  if(!docsReady)el.appendChild(text('p','⚠️ Só é possível conferir adolescentes de 16 ou 17 anos na data do evento, com selfie e documento do menor e documento do responsável. Solicite uma nova declaração se faltar algo.','m120-warning'));
+  if(!docsReady)el.appendChild(text('p','⚠️ Só é possível conferir adolescentes com 16 ou 17 anos, selfie e documentos de ambos. Autorização geral vence ao completar 18 anos. Solicite uma nova declaração se faltar algo.','m120-warning'));
   const note=document.createElement('textarea');note.placeholder='Observações da conferência (opcional)';note.maxLength=400;note.rows=3;note.value=r.review_note||'';note.className='m120-note';el.append(note);
   const buttons=document.createElement('div');buttons.className='m120-actions';
   const accept=document.createElement('button');accept.type='button';accept.className='m120-btn m120-green';accept.textContent='✅ MARCAR CONFERIDO';
@@ -164,7 +164,7 @@ async function detail(id){
   const close=document.createElement('button');close.type='button';close.className='m120-btn m120-ghost';close.textContent='FECHAR';
   close.addEventListener('click',()=>{openedId=null;el.hidden=true;el.replaceChildren();});
   async function decide(next){
-    if(next==='conferido'&&!docsReady){status('É necessário ter 16–17 anos na data do evento e selfie e documento do menor e do responsável.',true);return;}
+    if(next==='conferido'&&!docsReady){status('É necessário ter 16–17 anos, selfie e documento do menor e do responsável.',true);return;}
     if(!checkedDoc.checked||!checkedRules.checked){status('Marque as duas conferências antes de salvar a decisão.',true);el.scrollIntoView({block:'center'});return;}
     if(!confirm('Confirmar a decisão "'+next+'"? Isto não libera a entrada automaticamente.'))return;
     accept.disabled=true;reject.disabled=true;
