@@ -39,7 +39,6 @@
    loading=true;info("Buscando demonstrações...");
    try{
      const out=await api("list");rows=out.rows||[];sample=out.sample;
-     if(out.mailReady===false)info("⚠️ Disparo automático ainda sem provedor configurado. A confirmação permitirá abrir mensagem pronta para os dois Gmails.",true);
      const list=$("m128List");if(!list)return;
      list.replaceChildren();
      $("m128Count").textContent=String(rows.length);
@@ -56,6 +55,7 @@
        card.append(left,button);list.append(card);
      }
      info(rows.length+" teste(s) fictício(s) no ADM. Não são autorizações de verdade.");
+     if(out.mailReady===false)info("⚠️ E-mail automático não configurado. Ao confirmar, abra a mensagem preparada para os dois Gmails.",true);
    }catch(e){info("Erro ao carregar testes: "+e.message,true);}
    finally{loading=false;}
  }
