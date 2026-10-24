@@ -82,24 +82,67 @@ function showNotificationResult(data){
  }
  root.prepend(box);
 }
+let pdfObjectUrl=null;
+function pdfMessage(msg,error=false){
+ const root=$('minorAdminDetail');
+ if(!root)return null;
+ let el=$('minorPdfResult');
+ if(!el){
+  el=document.createElement('div');el.id='minorPdfResult';
+  el.setAttribute('role','status');el.setAttribute('aria-live','polite');
+  el.style.cssText='margin-top:15px;padding:15px;border:1px solid #805069;border-radius:12px;background:#21131e;color:#fff;font-size:14px';
+  const buttons=root.querySelector('.m120-actions');
+  if(buttons)buttons.after(el);else root.append(el);
+ }
+ el.replaceChildren();
+ const heading=document.createElement('strong');heading.textContent=msg;
+ heading.style.color=error?'#ffb2c4':'#b8f5d3';el.append(heading);
+ el.scrollIntoView({block:'nearest',behavior:'smooth'});
+ return el;
+}
 async function downloadAuthorizationPDF(row){
- const c=credentials();
- if(!c||row.status!=="conferido"){status("Acesso autorizado e aprovação necessários.",true);return;}
+ const creds=credentials();
+ if(!creds||row.status!=='conferido'){
+  status('Somente ADM ou gerente com autorização aprovada pode baixar o PDF.',true);
+  pdfMessage('Acesso restrito ou autorização ainda não conferida.',true);return;
+ }
+ const panel=pdfMessage('⏳ Gerando PDF completo com fotos, documentos, assinatura e QR Code...');
+ status('Gerando PDF completo com fotos, documentos e assinatura...');
  try{
-  status("Gerando PDF completo com fotos e assinatura...");
-  const r=await fetch("https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minor-pdf",{
-   method:"POST",headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({id:row.id,...c})
+  const res=await fetch('https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minor-pdf',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({id:row.id,...creds})
   });
-  const d=await r.json();
-  if(!r.ok||!d.ok)throw Error(d.error||"Erro ao gerar PDF");
-  const b=atob(d.base64),u=new Uint8Array(b.length);
-  for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);
-  const link=document.createElement("a"),obj=URL.createObjectURL(new Blob([u],{type:"application/pdf"}));
-  link.href=obj;link.download=d.filename;document.body.appendChild(link);link.click();link.remove();
-  setTimeout(()=>URL.revokeObjectURL(obj),2000);
-  status("PDF completo baixado, com fotos e assinatura.",false);
- }catch(e){status("Erro no PDF: "+e.message,true);}
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok||data.ok!==true||!data.base64)throw Error(data.error||'Falha do serviço de PDF (HTTP '+res.status+').');
+  const bytesAsText=atob(data.base64),bytes=new Uint8Array(bytesAsText.length);
+  for(let i=0;i<bytes.length;i++)bytes[i]=bytesAsText.charCodeAt(i);
+  if(bytes.length<500||String.fromCharCode(...bytes.slice(0,4))!=='%PDF')throw Error('O servidor não retornou um PDF válido.');
+  if(pdfObjectUrl)URL.revokeObjectURL(pdfObjectUrl);
+  pdfObjectUrl=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+  const target=panel||pdfMessage('PDF pronto');
+  target.replaceChildren();
+  target.append(text('strong','✅ PDF gerado! Escolha uma das opções abaixo.'));
+  const controls=document.createElement('div');
+  controls.style.cssText='display:flex;gap:10px;flex-wrap:wrap;margin-top:12px';
+  const download=document.createElement('a');
+  download.href=pdfObjectUrl;download.download=data.filename||'HYPE-AUTORIZACAO.pdf';
+  download.className='m120-btn m120-green';
+  download.style.cssText='text-decoration:none;display:inline-block;padding:12px 14px;border-radius:10px;color:white';
+  download.textContent='⬇️ BAIXAR PDF';
+  const view=document.createElement('a');
+  view.href=pdfObjectUrl;view.target='_blank';view.rel='noopener noreferrer';
+  view.className='m120-btn m120-ghost';
+  view.style.cssText='text-decoration:none;display:inline-block;padding:12px 14px;border-radius:10px;color:white';
+  view.textContent='👁️ ABRIR PDF';
+  controls.append(download,view);target.append(controls);
+  target.append(text('p','Se o navegador bloquear o download automático, toque diretamente em BAIXAR PDF ou ABRIR PDF.'));
+  status('PDF gerado. Utilize BAIXAR PDF ou ABRIR PDF na ficha.',false);
+  try{download.click();}catch(_){}
+ }catch(err){
+  const message='Não foi possível baixar o PDF: '+String(err.message||err);
+  pdfMessage(message,true);status(message,true);
+ }
 }
 
 async function detail(id){
