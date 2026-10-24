@@ -56,7 +56,7 @@ function render(){
   const line=document.createElement('div');line.className='m120-title';line.append(h,st);
   const sub=text('small',eventName(row.event_id)+' • Responsável: '+row.guardian_name+' • '+showDate(row.created_at));
   content.append(line,sub);
-  const b=document.createElement('button');b.type='button';b.className='m120-btn';b.textContent='VER FOTO E ASSINATURA';b.addEventListener('click',()=>detail(row.id));
+  const b=document.createElement('button');b.type='button';b.className='m120-btn';b.textContent='VER SELFIE, DOCUMENTO E ASSINATURA';b.addEventListener('click',()=>detail(row.id));
   card.append(content,b);container.appendChild(card);
  }
 }
@@ -76,20 +76,24 @@ async function detail(id){
    ['Nome do menor',r.minor_name],['CPF do menor',r.minor_cpf],
    ['Nascimento do menor',r.minor_birth_date],['Nome do responsável',r.guardian_name],
    ['CPF do responsável',r.guardian_cpf],['Nascimento do responsável',r.guardian_birth_date],
-   ['WhatsApp',r.guardian_phone],['Vínculo declarado',r.relation],
+   ['WhatsApp',r.guardian_phone],['E-mail',r.guardian_email||'Não informado'],['Vínculo declarado',r.relation],
    ['Conferido por',r.reviewed_by||'Pendente'],['Observação',r.review_note||'—']
   ];
   fields.forEach(([k,v])=>{list.append(text('dt',k),text('dd',String(v||'—')));});
   el.appendChild(list);
   const docs=document.createElement('div');docs.className='m120-image-grid';
-  for(const [label,url] of [['📷 Foto enviada pelo responsável',data.photoUrl],['✍️ Assinatura do responsável',data.signatureUrl]]){
+  for(const [label,url] of [
+    ['📷 Selfie enviada pelo responsável',data.photoUrl],
+    ['🪪 RG/CNH do responsável (foto)',data.documentUrl],
+    ['✍️ Assinatura do responsável',data.signatureUrl]
+  ]){
     const item=document.createElement('div');item.className='m120-image';
     item.appendChild(text('strong',label));const im=document.createElement('img');im.alt=label;im.loading='lazy';im.referrerPolicy='no-referrer';
-    if(url)im.src=url;else item.appendChild(text('p','Imagem temporariamente indisponível'));
+    if(url)im.src=url;else item.appendChild(text('p',label.includes('RG/CNH')?'Foto do documento não cadastrada nesta declaração.':'Imagem temporariamente indisponível'));
     item.appendChild(im);docs.appendChild(item);
   }
   el.appendChild(docs);
-  const warn=text('p','🚫 Álcool proibido para menores de 18 anos, sem exceções. Uma declaração do responsável não substitui a autorização exigida pela lei ou por autoridade competente. Foto e assinatura não equivalem a identidade verificada.','m120-warning');
+  const warn=text('p','🚫 Álcool proibido para menores de 18 anos, sem exceções. Uma declaração do responsável não substitui a autorização exigida pela lei ou por autoridade competente. Selfie, foto do documento e assinatura não equivalem à verificação presencial da identidade.','m120-warning');
   el.appendChild(warn);
   const labelA=document.createElement('label');labelA.className='m120-check';
   const checkedDoc=document.createElement('input');checkedDoc.type='checkbox';
@@ -98,13 +102,17 @@ async function detail(id){
   const checkedRules=document.createElement('input');checkedRules.type='checkbox';
   labelB.append(checkedRules,text('span','Verifiquei as regras de admissão do evento e a legislação aplicável. O menor não terá acesso a bebidas alcoólicas.'));
   el.append(labelA,labelB);
+  const hasGuardianDocument=Boolean(r.guardian_document_path&&data.documentUrl);
+  if(!hasGuardianDocument)el.appendChild(text('p','⚠️ Este cadastro não possui foto do documento. Solicite nova declaração antes de marcá-lo como conferido.','m120-warning'));
   const note=document.createElement('textarea');note.placeholder='Observações da conferência (opcional)';note.maxLength=400;note.rows=3;note.value=r.review_note||'';note.className='m120-note';el.append(note);
   const buttons=document.createElement('div');buttons.className='m120-actions';
   const accept=document.createElement('button');accept.type='button';accept.className='m120-btn m120-green';accept.textContent='✅ MARCAR CONFERIDO';
   const reject=document.createElement('button');reject.type='button';reject.className='m120-btn m120-red';reject.textContent='⛔ RECUSAR';
+  if(!hasGuardianDocument){accept.disabled=true;accept.title='Foto do documento obrigatória para concluir a conferência';}
   const close=document.createElement('button');close.type='button';close.className='m120-btn m120-ghost';close.textContent='FECHAR';
   close.addEventListener('click',()=>{openedId=null;el.hidden=true;el.replaceChildren();});
   async function decide(next){
+    if(next==='conferido'&&!hasGuardianDocument){status('Não é possível conferir sem foto do documento do responsável. Solicite um novo cadastro.',true);return;}
     if(!checkedDoc.checked||!checkedRules.checked){status('Marque as duas conferências antes de salvar a decisão.',true);el.scrollIntoView({block:'center'});return;}
     if(!confirm('Confirmar a decisão "'+next+'"? Isto não libera a entrada automaticamente.'))return;
     accept.disabled=true;reject.disabled=true;
@@ -113,7 +121,7 @@ async function detail(id){
       status('Análise preliminar salva. A portaria deverá verificar documentos originais antes da entrada.');
       await load();
       if(openedId===id)await detail(id);
-    }catch(e){status('Falha ao salvar: '+e.message,true);}finally{accept.disabled=false;reject.disabled=false;}
+    }catch(e){status('Falha ao salvar: '+e.message,true);}finally{accept.disabled=!hasGuardianDocument;reject.disabled=false;}
   }
   accept.addEventListener('click',()=>decide('conferido'));
   reject.addEventListener('click',()=>decide('recusado'));
