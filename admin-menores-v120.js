@@ -187,7 +187,7 @@ async function detail(id){
       if(next==='conferido'){
         await load();
         if(openedId===id)await detail(id);
-        status('✅ Autorização conferida. Baixe o PDF com QR Code e envie para os dois Gmails. Não é ingresso; compra só presencial.');
+        status('Autorização conferida. Envio do PDF aos dois Gmails: utilize o botão REENVIAR PDF no cadastro.');
       }else{
         let delivery;
         try{delivery=await sendNotification(id);}
