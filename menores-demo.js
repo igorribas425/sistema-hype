@@ -1,4 +1,4 @@
-/* HYPE Demonstração da autorização de menores: somente no navegador. Nenhuma chamada de API. */
+/* HYPE Demonstração v128: somente marcador sintético enviado ao ADM; imagens e dados ficam no navegador. */
 (()=>{
   'use strict';
   const $=id=>document.getElementById(id);
@@ -76,7 +76,8 @@
     $('demoStatus').textContent=status;
     $('demoStatus').style.color=status==='PENDENTE'?'#fcd488':status==='CONFERIDO'?'#9ce0b6':'#ff9bac';
   }
-  $('minorForm').addEventListener('submit',e=>{
+  const DEMO_ENDPOINT="https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minors-demo";
+  $('minorForm').addEventListener('submit',async e=>{
     e.preventDefault();
     const minor=$('minorCpf').value.replace(/\D/g,''),guardian=$('guardianCpf').value.replace(/\D/g,'');
     if(minor.length!==11||guardian.length!==11){
@@ -89,7 +90,23 @@
     }
     if(age($('guardianBirth').value,'2026-10-24')<18){message('O responsável deve ser maior de 18 anos.');return;}
     if(!hasSignature){message('Assine no quadro branco ou restaure a assinatura fictícia para continuar.');return;}
+    // Envia apenas um sinal fixo de teste. Nenhum dado digitado, selfie ou documento é transmitido.
+    const btn=$('sendForm');
+    btn.disabled=true;btn.textContent='ENVIANDO TESTE AO ADM...';
+    let record;
+    try{
+      const r=await fetch(DEMO_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'submit'})});
+      const response=await r.json().catch(()=>({}));
+      if(!r.ok||response.ok!==true)throw Error(response.error||'Não foi possível avisar o ADM.');
+      record=response.record;
+    }catch(error){
+      message('Falha ao registrar no ADM: '+(error.message||error)+'. Tente novamente.',false);
+      btn.disabled=false;btn.textContent='SIMULAR ENVIO E VER O ADM';
+      return;
+    }
+    btn.disabled=false;btn.textContent='SIMULAR ENVIO E VER O ADM';
     const data=[
+      ['Protocolo de teste (no ADM)',record.id],
       ['Evento',$('minorEvent').selectedOptions[0]?.textContent||'HYPE — Demonstração'],
       ['Menor',$('minorName').value],['CPF fictício',$('minorCpf').value],['Nascimento',$('minorBirth').value],
       ['Responsável',$('guardianName').value],['CPF fictício do responsável',$('guardianCpf').value],
@@ -106,7 +123,7 @@
     $('demoSignResult').src=cv.toDataURL('image/png');
     $('minorForm').hidden=true;$('demoAdmin').hidden=false;
     resultStatus('PENDENTE');
-    message('Simulação concluída! A ficha abaixo é apenas uma prévia do ADM. Nenhum registro, documento ou ingresso foi salvo.',true);
+    message('Teste '+record.id.slice(0,8)+' registrado na aba Menores de idade do ADM! Somente o marcador de teste foi salvo; nenhum CPF, imagem, assinatura ou ingresso real foi transmitido.',true);
     $('demoAdmin').scrollIntoView({behavior:'smooth',block:'start'});
   });
   $('demoApprove').addEventListener('click',()=>resultStatus('CONFERIDO'));
