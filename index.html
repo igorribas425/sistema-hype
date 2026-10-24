@@ -486,6 +486,22 @@ body{overflow-x:hidden}
         </div>
         
 
+        <div class="group" id="hypeMinorPurchaseDeclaration" style="padding:15px;border:1px solid #713245;border-radius:13px;background:linear-gradient(125deg,#24121a,#101014);margin-top:10px">
+          <label for="clientAgeDeclaration" style="font-size:14px;font-weight:900;color:#ffcbda">🛡️ Declaração de idade (obrigatória)</label>
+          <p style="font-size:12px;color:#e4ccd5;margin:7px 0">O ingresso é para uma pessoa com menos de 18 anos?</p>
+          <select id="clientAgeDeclaration" required style="min-height:46px">
+            <option value="">Selecione antes de prosseguir</option>
+            <option value="adulto">Não. Tenho 18 anos ou mais.</option>
+            <option value="menor">Sim. Sou menor de 18 anos.</option>
+          </select>
+          <div id="hypeMinorPurchaseWarning" hidden style="border:1px solid #c64c65;padding:13px;background:#411521;color:#ffe6ec;border-radius:12px;margin-top:12px;font-size:12px;line-height:1.55">
+            <strong style="font-size:13px">⚠️ Entrada de menor sujeita à aprovação</strong>
+            <p style="color:#ffe6ec;margin:6px 0 9px">Antes de qualquer pagamento, seu pai, mãe ou responsável legal deverá enviar a autorização, selfie e assinatura. O ADM precisa analisar as regras de entrada. Após a análise, entre em contato com a HYPE para concluir a compra com a equipe. A autorização não garante a entrada.</p>
+            <a id="hypeMinorParentLink" href="./menores.html" target="_blank" rel="noopener" style="display:inline-block;padding:10px 14px;background:#cb2551;color:#fff;text-decoration:none;border-radius:10px;font-weight:900">📷 ABRIR AUTORIZAÇÃO DOS PAIS</a>
+            <p style="color:#ffd9e2;margin:9px 0 0">🚫 É proibido fornecer bebidas alcoólicas a menores de 18 anos, mesmo com autorização dos responsáveis.</p>
+          </div>
+        </div>
+
         <div class="group v16-sales-fields">
           <div>
             <label>Promoter</label>
@@ -587,7 +603,8 @@ body{overflow-x:hidden}
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
-<script src="app.js?v=20261019-whatsapp-qr"></script>
+<script src="app.js?v=20261023-menores-gate-v120"></script>
+<script src="cliente-menor-v120.js?v=20261023"></script>
 <script src="promoter-global-v16-8.js?v=20261002-v57-global"></script>
 <script src="v18-client.js?v=20260902-v20"></script>
 </body>
