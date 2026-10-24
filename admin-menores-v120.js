@@ -149,8 +149,10 @@ async function detail(id){
   const hasGuardianDocument=Boolean(r.guardian_document_path&&data.documentUrl);
   const hasMinorFace=Boolean(r.minor_face_photo_path&&data.minorFaceUrl);
   const hasMinorDocument=Boolean(r.minor_document_path&&data.minorDocumentUrl);
-  const eventDate=events.find(e=>Number(e.id)===Number(r.event_id))?.event_date;
-  const years=eventDate?new Date(eventDate+'T12:00:00Z').getUTCFullYear()-new Date(r.minor_birth_date+'T12:00:00Z').getUTCFullYear()-((eventDate.slice(5,10)<r.minor_birth_date.slice(5,10))?1:0):-1;
+  const reference=r.event_id==null
+    ?new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())
+    :events.find(e=>Number(e.id)===Number(r.event_id))?.event_date;
+  const years=reference?Number(reference.slice(0,4))-Number(r.minor_birth_date.slice(0,4))-(reference.slice(5)<r.minor_birth_date.slice(5)?1:0):-1;
   const eligibleAge=years===16||years===17;
   const docsReady=hasGuardianDocument&&hasMinorFace&&hasMinorDocument&&eligibleAge;
   if(!docsReady)el.appendChild(text('p','⚠️ Só é possível conferir adolescentes de 16 ou 17 anos na data do evento, com selfie e documento do menor e documento do responsável. Solicite uma nova declaração se faltar algo.','m120-warning'));
