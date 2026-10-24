@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TESTE FICTÍCIO • Menores • HYPE Lounge Club</title><meta name="theme-color" content="#08080b"><link rel="icon" href="favicon.png">
+<style>
+:root{color-scheme:dark;--bg:#09090d;--surface:#141219;--border:#39242d;--red:#ea2451;--muted:#b5a7b0}*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#35121c,#09090d 52%);color:#fff;font-family:system-ui,-apple-system,Arial,sans-serif;padding:18px 12px 70px;line-height:1.5}
+main{max-width:780px;margin:auto}.logo{text-align:center;padding:12px 0 20px}.logo img{max-width:180px;width:48vw}.logo a{color:#f3bbc9;text-decoration:none;font-size:12px}
+h1{font-size:clamp(24px,6vw,34px);margin:5px 0}.subtitle{color:var(--muted);margin:6px 0 20px;font-size:14px}
+section{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px;margin:14px 0;box-shadow:0 8px 22px #0004}
+h2{margin:0 0 15px;font-size:17px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{margin-bottom:12px}.field label{display:block;font-weight:800;font-size:12px;margin-bottom:6px}
+input,select{background:#0a0a0e;border:1px solid #55404a;color:#fff;border-radius:10px;width:100%;font:inherit;padding:12px;min-height:48px}
+input[type=file]{font-size:12px}input:focus,select:focus{outline:2px solid #ec3e69;outline-offset:1px}
+small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
+.notice{padding:12px 15px;background:#331219;border:1px solid #943348;border-radius:13px;color:#ffe1e7;font-size:13px;margin:12px 0}
+.check{display:flex;gap:12px;align-items:start;padding:12px 0;border-bottom:1px solid #332730;font-size:13px}
+.check input{width:20px;height:20px;min-height:auto;margin:1px 0 0;accent-color:#ef2f59;flex:0 0 auto}
+#photoPreview{max-height:190px;max-width:100%;object-fit:contain;border-radius:12px;display:none;margin:10px auto}
+#signature{display:block;background:#fff;touch-action:none;border:2px solid #e9dde1;border-radius:12px;width:100%;height:155px}
+.action{border:0;border-radius:12px;background:#b81d43;color:#fff;cursor:pointer;font:inherit;font-weight:900;padding:14px 18px;min-height:48px}.action:disabled{opacity:.6;cursor:wait}.secondary{background:#27202b;border:1px solid #68505e}
+#feedback{border-radius:12px;padding:13px 16px;line-height:1.5;font-size:13px;display:none}
+#feedback.ok{display:block;color:#bff8d8;background:#103123;border:1px solid #278c56}#feedback.bad{display:block;color:#ffd4de;background:#381521;border:1px solid #d13c62}
+@media(max-width:560px){.grid{grid-template-columns:1fr}section{padding:16px}}
+ .demo-ribbon{display:flex;flex-direction:column;gap:2px;border:1px solid #ff82a6;background:#5c1731;color:#fff;padding:13px 16px;border-radius:12px;margin-bottom:15px}
+.demo-ribbon strong{font-size:13px;letter-spacing:.06em}.demo-ribbon span{font-size:12px}
+.demo-data{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.demo-data div{border:1px solid #47303b;background:#0e0b12;padding:9px 11px;border-radius:9px;min-width:0}
+.demo-data small{display:block;color:#ae9daa;font-size:11px}.demo-data strong{font-size:13px;display:block;overflow-wrap:anywhere}
+.demo-images{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:12px}
+.demo-images>div{border:1px solid #47303b;border-radius:12px;padding:9px;font-size:12px}
+.demo-images img{width:100%;max-height:230px;object-fit:contain;margin-top:10px;background:#fff;border-radius:8px}
+.demo-status{padding:11px;background:#282029;border-radius:11px}
+.demo-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
+.demo-actions button{flex:1 1 155px}
+#demoAdmin[hidden]{display:none!important}
+@media(max-width:560px){.demo-data{grid-template-columns:1fr}}
+</style></head>
+<body><main><div class="logo"><img src="logo-hype.png" alt="HYPE Lounge Club"><div><a href="./cliente.html">← Voltar para ingressos</a></div></div>
+<div class="demo-ribbon"><strong>AMBIENTE DE DEMONSTRAÇÃO</strong><span>Não gera autorização, ingresso nem cobrança</span></div>
+<h1>🧪 Teste fictício • Menores</h1>
+<p class="subtitle">Teste completo do formulário e da tela do ADM com personagens fictícios. Nenhuma informação será enviada ao Supabase ou ao Gmail. Se você escolher imagens do celular, elas aparecerão somente na prévia desta página.</p>
+<div class="notice"><b>🚫 Proibido álcool para menores de 18 anos.</b> Nenhuma autorização dos pais permite venda, fornecimento ou consumo de bebidas alcoólicas por menores. A HYPE e a portaria devem cumprir as regras de admissão do evento e a legislação aplicável. A autorização parental pode não ser suficiente para permitir a entrada.</div>
+<form id="minorForm">
+<section><h2>🎟️ Evento e menor de idade</h2>
+<div class="field"><label for="minorEvent">Evento</label><select id="minorEvent" required><option value="demo">HYPE — Evento de Demonstração (não real)</option></select></div>
+<div class="grid"><div class="field"><label for="minorName">Nome completo do menor</label><input id="minorName" maxlength="120" minlength="5" value="Lucas Exemplo" autocomplete="off" required></div>
+<div class="field"><label for="minorCpf">CPF do menor</label><input id="minorCpf" maxlength="14" inputmode="numeric" placeholder="000.000.000-00" value="000.000.000-01" required><small>CPF intencionalmente inválido: apenas demonstração, nunca cadastro real.</small></div></div>
+<div class="field"><label for="minorBirth">Data de nascimento do menor</label><input type="date" id="minorBirth" value="2010-08-15" required></div></section>
+<section><h2>👤 Identificação do responsável</h2>
+<div class="grid">
+<div class="field"><label for="guardianName">Nome completo</label><input id="guardianName" maxlength="120" minlength="5" value="Mariana Exemplo" autocomplete="off" required></div>
+<div class="field"><label for="guardianCpf">CPF do responsável</label><input id="guardianCpf" maxlength="14" inputmode="numeric" value="000.000.000-02" required><small>CPF fictício diferente do menor, sem validade real.</small></div>
+<div class="field"><label for="guardianBirth">Data de nascimento</label><input type="date" id="guardianBirth" value="1984-05-12" required></div>
+<div class="field"><label for="guardianPhone">WhatsApp do responsável</label><input id="guardianPhone" type="tel" maxlength="18" inputmode="tel" value="(54) 90000-0000" required></div>
+</div>
+<div class="field"><label for="minorRelation">Vínculo com o menor</label><select id="minorRelation" required><option value="">Selecione</option><option>Pai</option><option selected>Mãe</option><option>Responsável legal</option></select></div>
+<div class="notice">📷 Foto para conferência manual, <b>não reconhecimento facial automatizado</b>. Nesta simulação, a selfie e o documento começam como figuras fictícias. Opcionalmente, você pode escolher imagens do seu celular para conferir a prévia; elas não serão enviadas para nenhum servidor.</div>
+<div class="field"><label for="guardianPhoto">1. Selfie do rosto do responsável</label><input id="guardianPhoto" type="file" accept="image/jpeg,image/png,image/webp,image/*" capture="user"><small>Prévia fictícia já carregada. Opcional: use a câmera para testar o campo de imagem. Não utilize documentos de outras pessoas.</small><img id="photoPreview" alt="Prévia da selfie" style="display:none;max-width:100%;max-height:220px;object-fit:contain;border-radius:10px;margin:10px auto"></div>
+<div class="field" style="padding:14px;border:1px solid #66404e;border-radius:13px;background:#20151c">
+<label for="guardianDocument">2. Foto do documento do responsável (obrigatória)</label>
+<input id="guardianDocument" type="file" accept="image/jpeg,image/png,image/webp,image/*" capture="environment">
+<small>Abaixo há um desenho de documento <b>fictício e sem validade</b>. Opcional: teste a câmera traseira, sem transmitir dados para a HYPE.</small>
+<img id="documentPreview" alt="Prévia do documento de identificação" style="display:none;max-width:100%;max-height:245px;object-fit:contain;border-radius:10px;margin:12px auto">
+</div>
+</section>
+<section><h2>✍️ Assinatura do responsável</h2><p style="font-size:12px">Assine no quadro branco com o dedo ou mouse, como em um formulário físico.</p>
+<canvas id="signature"></canvas>
+<div style="display:flex;justify-content:flex-end;margin-top:10px"><div style="display:flex;gap:8px;flex-wrap:wrap"><button id="clearSign" class="action secondary" type="button">Limpar assinatura</button><button id="demoRestoreSign" class="action secondary" type="button">Usar assinatura fictícia</button></div></div></section>
+<section><h2>☑️ Termos e autorização</h2>
+<label class="check"><input type="checkbox" id="checkAttend" required checked><span>Estou simulando que sou responsável legal e autorizo a participação do menor <b>somente se o evento e a legislação permitirem</b>, sujeita à avaliação da organização e conferência de documentos.</span></label>
+<label class="check"><input type="checkbox" id="checkAlcohol" required checked><span>Estou ciente de que <b>é proibida a venda, o fornecimento e o consumo de bebidas alcoólicas pelo menor</b>, sem exceções por autorização dos pais.</span></label>
+<label class="check"><input type="checkbox" id="checkPrivacy" required checked><span>Entendi que este teste não envia imagens ou dados para o servidor. Se eu escolher imagens do celular, elas serão exibidas somente na prévia local.</span></label>
+<label class="check"><input type="checkbox" id="checkGuardian" required checked><span>Confirmo que estou simulando um caso fictício. Esta página não autoriza entrada em nenhum evento.</span></label>
+<div class="notice"><b>🔒 Somente demonstração.</b> Nada do que você preencher aqui é salvo no banco de dados ou enviado à administração. Use a página oficial para cadastros verdadeiros.</div>
+<button class="action" style="width:100%;margin-top:8px" id="sendForm" type="submit">SIMULAR ENVIO E VER O ADM</button>
+</section></form>
+<div id="feedback" role="status" aria-live="polite"></div>
+<section id="demoAdmin" hidden>
+ <div class="demo-ribbon" style="margin-top:0"><strong>PRÉVIA FICTÍCIA DO ADM</strong><span>Não aparece no painel administrativo verdadeiro</span></div>
+ <h2>🛡️ Menores de idade — Simulação</h2>
+ <p>Este painel serve para você enxergar como a ficha chegaria para análise. Os dados não foram enviados à HYPE.</p>
+ <div class="demo-status">Status: <strong id="demoStatus">PENDENTE</strong></div>
+ <div id="demoData" class="demo-data"></div>
+ <div class="demo-images">
+  <div><strong>📷 Selfie de demonstração</strong><img id="demoPhotoResult" alt="Selfie fictícia"></div>
+  <div><strong>🪪 Documento fictício</strong><img id="demoDocumentResult" alt="RG ou CNH fictício"></div>
+  <div><strong>✍️ Assinatura de demonstração</strong><img id="demoSignResult" alt="Assinatura fictícia"></div>
+ </div>
+ <p class="notice">A análise e a entrada reais dependem de documentos verdadeiros, da confirmação do responsável e das regras legais. Menores não podem consumir bebidas alcoólicas.</p>
+ <div class="demo-actions">
+  <button type="button" class="action" id="demoApprove">Simular conferido</button>
+  <button type="button" class="action secondary" id="demoReject">Simular recusado</button>
+  <button type="button" class="action secondary" id="demoRestart">Voltar ao formulário</button>
+ </div>
+</section>
+</main><script src="menores-demo.js?v=20261024-demo-v1"></script>
+</body></html>
