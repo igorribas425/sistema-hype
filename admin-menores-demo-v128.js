@@ -74,13 +74,14 @@
    return c.toDataURL("image/png");
  }
  async function demoPDF(id){
-   if(!window.jspdf?.jsPDF||!window.QRCode?.toDataURL)throw Error("Bibliotecas PDF/QR ainda não carregadas. Atualize o Admin.");
+   if(!window.jspdf?.jsPDF)throw Error("Biblioteca de PDF não carregou; utilize o PDF de demonstração disponibilizado na conversa ou tente novamente com Ctrl+F5.");
+   if(!window.HypeQRCode?.toDataUrl)throw Error("Gerador local de QR Code indisponível; atualize o Admin com Ctrl+F5.");
    const verify=await api("list");
    const row=(verify.rows||[]).find(r=>r.id===id);
    if(!row||row.status!=="conferido")throw Error("Confirme o teste fictício no Admin antes de baixar o PDF.");
    const link=demoPortal(id);
    const [qr,faceMinor,faceGuardian,docMinor,docGuardian,signature]=await Promise.all([
-     window.QRCode.toDataURL(link,{width:520,margin:3,errorCorrectionLevel:"H"}),
+     Promise.resolve(window.HypeQRCode.toDataUrl(link,520)),
      svgPng(portraitSvg(true)),svgPng(portraitSvg(false)),svgPng(documentSvg(true)),
      svgPng(documentSvg(false)),svgPng(fakeArt("assinatura"))
    ]);
