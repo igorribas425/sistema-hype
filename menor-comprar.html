@@ -140,7 +140,14 @@ $("copyPix").addEventListener("click",async()=>{
  try{await navigator.clipboard.writeText($("pixCode").textContent);alertBox("Código PIX copiado.",false);}catch(e){alertBox("Selecione e copie o código manualmente.",true);}
 });
 $("refresh").addEventListener("click",async()=>{await load();});
-load();
+if(new URLSearchParams(location.search).get("demo")==="1"){
+  $("checkout").hidden=false;$("selectArea").hidden=true;$("payment").hidden=true;
+  $("eventLabel").textContent="Evento fictício de demonstração";
+  $("minorName").textContent="Lucas Exemplo (fictício)";
+  $("minorCpf").textContent="DOCUMENTO FICTÍCIO";
+  $("guardianEmail").textContent="Gmails de teste cadastrados na área fictícia";
+  alertBox("🧪 TESTE FICTÍCIO • Autorização de menor conferida • Pista, noite toda, R$ 30,00. Este link NÃO cria PIX nem ingresso verdadeiro.",false);
+}else load();
 })();
 </script>
 </body>
