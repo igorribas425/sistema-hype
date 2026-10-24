@@ -37,13 +37,22 @@
  $('clearSign').addEventListener('click',setupCanvas);setupCanvas();
 
  async function compressPhoto(file,kind='selfie'){
-   if(!file||!file.type.startsWith('image/'))throw new Error('Selecione uma foto do responsável ou do documento.');
-   if(file.size>12*1024*1024)throw new Error('Imagem muito grande. Escolha uma foto de até 12 MB.');
-   const url=URL.createObjectURL(file);
+   if(!file)throw new Error('Toque no quadro e escolha uma foto.');
+   const supported=/^image\//.test(file.type)||/\.(jpe?g|png|webp|heic|heif)$/i.test(file.name||'');
+   if(!supported)throw new Error('Selecione uma foto da câmera ou da Biblioteca de Fotos.');
+   if(file.size>15*1024*1024)throw new Error('Foto muito grande. No iPhone, tente outra foto ou selecione uma versão menor na Biblioteca.');
+   const url=window.URL.createObjectURL(file);
    try{
-     const img=new Image();img.src=url;await img.decode();
+     const img=new Image();
+     // Compatibilidade com Safari/iPhone, inclusive versões em que img.decode() falha.
+     await new Promise((resolve,reject)=>{
+       img.onload=()=>resolve(true);
+       img.onerror=()=>reject(new Error('O iPhone não conseguiu abrir a foto. Tente Tirar Foto novamente ou use uma imagem JPG da Biblioteca.'));
+       img.src=url;
+       if(img.complete&&img.naturalWidth)resolve(true);
+     });
      const w=img.naturalWidth,h=img.naturalHeight;
-     if(!w||!h)throw new Error('Imagem não reconhecida. Tente outra foto.');
+     if(!w||!h)throw new Error('Imagem não reconhecida. Selecione uma foto JPG ou tire outra foto.');
      const doc=kind==='documento';
      // Documento mantém mais detalhes para permitir a leitura humana dos dados.
      const sizes=doc?[1450,1250,1050,900]:[720,600];
@@ -59,7 +68,7 @@
        }
      }
      throw new Error('Imagem ainda grande. Tire outra foto mais próxima do documento.');
-   }finally{URL.revokeObjectURL(url);}
+   }finally{window.URL.revokeObjectURL(url);}
  }
  $('guardianPhoto').addEventListener('change',async()=>{
    try{
