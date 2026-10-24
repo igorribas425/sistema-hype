@@ -5,8 +5,8 @@ const $=id=>document.getElementById(id);
 const URL='https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minors-authorization';
 let loading=false,rows=[],events=[],openedId=null;
 function credentials(){
- try{if(window.HYPE?.user&&window.HYPE?.pass&&['admin','gerente'].includes(window.HYPE.role))
- return {username:window.HYPE.user,password:window.HYPE.pass};}catch(_){}
+ try{if(typeof HYPE!=='undefined'&&HYPE.user&&HYPE.pass&&['admin','gerente'].includes(HYPE.role))
+ return {username:HYPE.user,password:HYPE.pass};}catch(_){}
  return null;
 }
 function status(text,bad=false){
@@ -93,10 +93,10 @@ async function detail(id){
   el.appendChild(warn);
   const labelA=document.createElement('label');labelA.className='m120-check';
   const checkedDoc=document.createElement('input');checkedDoc.type='checkbox';
-  labelA.append(checkedDoc,text('span','Conferi documento original do responsável, identificação, parentesco ou responsabilidade legal e dados do menor.'));
+  labelA.append(checkedDoc,text('span','Analisei os dados da declaração e os documentos informados; a conferência dos originais acontecerá na portaria.'));
   const labelB=document.createElement('label');labelB.className='m120-check';
   const checkedRules=document.createElement('input');checkedRules.type='checkbox';
-  labelB.append(checkedRules,text('span','Confirmei que a entrada do menor é admitida pelas regras do evento e legislação local, e que não haverá acesso a bebidas alcoólicas.'));
+  labelB.append(checkedRules,text('span','Verifiquei as regras de admissão do evento e a legislação aplicável. O menor não terá acesso a bebidas alcoólicas.'));
   el.append(labelA,labelB);
   const note=document.createElement('textarea');note.placeholder='Observações da conferência (opcional)';note.maxLength=400;note.rows=3;note.value=r.review_note||'';note.className='m120-note';el.append(note);
   const buttons=document.createElement('div');buttons.className='m120-actions';
@@ -110,7 +110,7 @@ async function detail(id){
     accept.disabled=true;reject.disabled=true;
     try{
       await rpc('review',{id,status:next,note:note.value,documentsChecked:true,eventEligibilityChecked:true});
-      status('Decisão registrada. A portaria ainda deverá verificar os documentos.');
+      status('Análise preliminar salva. A portaria deverá verificar documentos originais antes da entrada.');
       await load();
       if(openedId===id)await detail(id);
     }catch(e){status('Falha ao salvar: '+e.message,true);}finally{accept.disabled=false;reject.disabled=false;}
