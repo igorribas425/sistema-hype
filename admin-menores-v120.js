@@ -202,12 +202,18 @@ async function detail(id){
     accept.disabled=true;reject.disabled=true;
     try{
       await rpc('review',{id,status:next,note:note.value,documentsChecked:true,eventEligibilityChecked:true});
-      let delivery;
-      try{delivery=await sendNotification(id);}
-      catch(err){delivery={emailSent:false,emailError:err.message,emails:[r.guardian_email,r.minor_email].filter(Boolean),manualLink:null};}
-      await load();
-      if(openedId===id){await detail(id);showNotificationResult(delivery);}
-      status(delivery.emailSent?'Análise salva e dois avisos aceitos pelo provedor de e-mail.':'Análise salva. ATENÇÃO: e-mail automático NÃO confirmado.',!delivery.emailSent);
+      if(next==='conferido'){
+        await load();
+        if(openedId===id)await detail(id);
+        status('✅ Autorização conferida. Baixe o PDF com QR Code e envie para os dois Gmails. Não é ingresso; compra só presencial.');
+      }else{
+        let delivery;
+        try{delivery=await sendNotification(id);}
+        catch(err){delivery={emailSent:false,emailError:err.message,emails:[r.guardian_email,r.minor_email].filter(Boolean),manualLink:null};}
+        await load();
+        if(openedId===id){await detail(id);showNotificationResult(delivery);}
+        status(delivery.emailSent?'Recusa registrada; e-mails enviados.':'Recusa registrada; envio por e-mail não confirmado.',!delivery.emailSent);
+      }
     }catch(e){status('Falha ao salvar: '+e.message,true);}finally{accept.disabled=!docsReady;reject.disabled=false;}
   }
   accept.addEventListener('click',()=>decide('conferido'));
@@ -222,10 +228,11 @@ async function detail(id){
   });
   const email=document.createElement('button');
   email.type='button';email.className='m120-btn m120-ghost';
-  email.textContent=r.status==='conferido'?'📧 REENVIAR LINK PARA OS DOIS GMAILS':'📧 REENVIAR RESULTADO PARA OS DOIS';
+  email.textContent=r.status==='conferido'?'📄 BAIXAR AUTORIZAÇÃO PDF (ENVIO MANUAL)':'📧 REENVIAR RESULTADO PARA OS DOIS';
   email.disabled=!['conferido','recusado'].includes(r.status);
   email.addEventListener('click',async()=>{
-    if(!confirm('Preparar um novo aviso para o Gmail do menor e do responsável? Se a autorização está conferida, um novo link substituirá o anterior.'))return;
+    if(r.status==='conferido'){await downloadAuthorizationPDF(r);return;}
+    if(!confirm('Reenviar resultado da recusa para os dois Gmails?'))return;
     email.disabled=true;email.textContent='TENTANDO ENVIAR...';
     try{
       const result=await sendNotification(r.id);
