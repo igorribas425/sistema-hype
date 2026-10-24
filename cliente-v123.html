@@ -459,10 +459,6 @@ html,body{max-width:100%;overflow-x:hidden}
         <p class="sub">Escolha o evento e o ingresso. O PIX é gerado automaticamente pelo Asaas. Após o pagamento, a confirmação é automática e o ingresso é liberado pelo sistema.</p>
       </div>
 
-      <div class="hype-minor-buyer-card" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:16px 0 20px;padding:16px;border:1px solid #ec4674;border-radius:15px;background:linear-gradient(115deg,#36111f,#130e14);color:#fff">
-        <div style="flex:1 1 195px"><strong style="font-size:15px">🛡️ Vai comprar ingresso para menor de idade?</strong><p style="font-size:12px;line-height:1.5;color:#f3d6df;margin:6px 0 0">Na HYPE, a declaração de idade aparece <b>antes dos dados da compra</b>. Os responsáveis enviam a autorização para análise antes do pagamento.</p></div>
-        <a href="#hypeMinorPurchaseDeclaration" style="background:#d92c59;border-radius:12px;padding:12px 16px;min-height:45px;display:flex;align-items:center;color:#fff;text-decoration:none;font-size:12px;font-weight:900;white-space:nowrap">CONFERIR IDADE ↓</a>
-      </div>
       <div class="info-grid">
         <div class="info-box">
           <span>1</span>
@@ -491,23 +487,19 @@ html,body{max-width:100%;overflow-x:hidden}
       </div>
 
       <form id="ticketForm" onsubmit="createPixOrder(event)">
-        <div class="group" id="hypeMinorPurchaseDeclaration" style="scroll-margin-top:100px;padding:20px;border:2px solid #fa3e77;border-radius:17px;background:linear-gradient(125deg,#37121f,#141015);margin:0 0 22px;box-shadow:0 8px 26px #0006">
-          <label for="clientAgeDeclaration" style="font-size:17px;font-weight:950;color:#fff;display:block;margin-bottom:10px">🛡️ PRIMEIRO: CONFIRME SUA IDADE</label>
-          <p style="font-size:12px;color:#e4ccd5;margin:7px 0">Quem vai usar este ingresso? Selecione uma opção antes de preencher os dados.</p>
-          <select id="clientAgeDeclaration" required style="min-height:55px;font-size:15px;font-weight:800;background:#170b13;border:2px solid #db5578;color:#fff;border-radius:11px;padding:12px;width:100%">
-            <option value="">👇 SELECIONE SUA IDADE</option>
-            <option value="adulto">Não. Tenho 18 anos ou mais.</option>
-            <option value="menor">Sim. Sou menor de 18 anos.</option>
-          </select>
-          <div id="hypeMinorPurchaseWarning" hidden style="border:1px solid #c64c65;padding:13px;background:#411521;color:#ffe6ec;border-radius:12px;margin-top:12px;font-size:12px;line-height:1.55">
-            <strong style="font-size:13px">⚠️ Entrada de menor sujeita à aprovação</strong>
-            <p style="color:#ffe6ec;margin:6px 0 9px">Antes de qualquer pagamento, seu pai, mãe ou responsável legal deverá enviar a autorização, selfie e assinatura. O ADM precisa analisar as regras de entrada. Após a análise, entre em contato com a HYPE para concluir a compra com a equipe. A autorização não garante a entrada.</p>
-            <a id="hypeMinorParentLink" href="./menores.html?v=20261023-documento-v122" target="_blank" rel="noopener" style="display:inline-block;padding:10px 14px;background:#cb2551;color:#fff;text-decoration:none;border-radius:10px;font-weight:900">📷 ABRIR AUTORIZAÇÃO DOS PAIS</a>
-            <p style="color:#ffd9e2;margin:9px 0 0">🚫 É proibido fornecer bebidas alcoólicas a menores de 18 anos, mesmo com autorização dos responsáveis.</p>
+        <div class="group" id="hypeMinorPurchaseDeclaration" style="scroll-margin-top:110px;margin:0 0 18px;padding:13px 15px;background:#1a141b;border:1px solid #4b3642;border-radius:13px">
+          <label for="clientIsMinor" style="display:flex;gap:12px;align-items:center;cursor:pointer;margin:0;color:#fff;font-size:14px;font-weight:800;text-transform:none;letter-spacing:0">
+            <input id="clientIsMinor" type="checkbox" style="width:22px;height:22px;min-width:22px;min-height:22px;margin:0;accent-color:#e42f67;cursor:pointer">
+            <span>Ingresso para menor de 18 anos
+              <small style="display:block;margin-top:4px;font-size:11px;font-weight:500;color:#c7b5c0">Marque para abrir a autorização dos responsáveis em outra aba.</small>
+            </span>
+          </label>
+          <div id="hypeMinorPurchaseWarning" hidden style="padding:12px 0 0;color:#ffdee8;font-size:12px;line-height:1.5">
+            Antes do pagamento, é necessária a análise da HYPE. A entrada depende das regras legais do evento.
+            <a id="hypeMinorParentLink" href="./menores.html?v=20261023-documento-v122" target="_blank" rel="noopener noreferrer" style="display:block;margin:10px 0 4px;padding:12px;background:#b9224b;border-radius:9px;color:#fff;text-align:center;text-decoration:none;font-weight:800">ABRIR AUTORIZAÇÃO DOS PAIS ↗</a>
+            <small style="display:block;font-size:11px;color:#eec4cf">É proibido fornecer bebidas alcoólicas a menores de 18 anos.</small>
           </div>
         </div>
-
-
 
         <div class="group">
           <label>Nome Completo</label>
@@ -652,8 +644,8 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
-<script src="app.js?v=20261024-email-confirm-v124"></script>
-<script src="cliente-menor-v120.js?v=20261023-doc-v122"></script>
+<script src="app.js?v=20261024-minor-checkbox-v125"></script>
+<script src="cliente-menor-v120.js?v=20261024-minor-checkbox-v125"></script>
 <script src="promoter-global-v16-8.js?v=20261002-v57-global"></script>
 <script src="v18-client.js?v=20260902-v20"></script>
 </body>
