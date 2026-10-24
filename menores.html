@@ -23,15 +23,23 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 @media(max-width:560px){.grid{grid-template-columns:1fr}section{padding:16px}}
 </style></head>
 <body><main><div class="logo"><img src="logo-hype.png" alt="HYPE Lounge Club"><div><a href="./cliente.html">← Voltar para ingressos</a></div></div>
-<h1>🛡️ Autorização para menor</h1>
-<p class="subtitle">Declaração do pai, mãe ou responsável legal para análise pela HYPE. O preenchimento não garante ingresso nem autoriza a entrada automaticamente.</p>
+<h1>🛡️ Autorização para menores de 16 e 17 anos</h1>
+<p class="subtitle">Declaração do pai, mãe ou responsável legal para adolescentes de 16 ou 17 anos completos na data do evento. A compra de Pista custa R$ 30 para a noite toda, somente após análise. O preenchimento não garante entrada.</p>
 <div class="notice"><b>🚫 Proibido álcool para menores de 18 anos.</b> Nenhuma autorização dos pais permite venda, fornecimento ou consumo de bebidas alcoólicas por menores. A HYPE e a portaria devem cumprir as regras de admissão do evento e a legislação aplicável. A autorização parental pode não ser suficiente para permitir a entrada.</div>
 <form id="minorForm">
 <section><h2>🎟️ Evento e menor de idade</h2>
 <div class="field"><label for="minorEvent">Evento</label><select id="minorEvent" required><option value="">Carregando eventos...</option></select></div>
 <div class="grid"><div class="field"><label for="minorName">Nome completo do menor</label><input id="minorName" maxlength="120" minlength="5" autocomplete="name" required></div>
 <div class="field"><label for="minorCpf">CPF do menor</label><input id="minorCpf" maxlength="14" inputmode="numeric" placeholder="000.000.000-00" required></div></div>
-<div class="field"><label for="minorBirth">Data de nascimento do menor</label><input type="date" id="minorBirth" required></div></section>
+<div class="field"><label for="minorBirth">Data de nascimento do menor</label><input type="date" id="minorBirth" required><small>Somente 16 ou 17 anos na data da festa. Menores de 16 anos não podem utilizar este cadastro.</small></div>
+<div class="notice">📷 Identificação obrigatória do próprio menor: selfie do rosto e fotografia do documento com nome, foto e data de nascimento legíveis. As imagens serão conferidas manualmente pela HYPE, sem reconhecimento facial automático.</div>
+<div class="field"><label for="minorFacePhoto">1. Selfie facial do menor (obrigatória)</label>
+<input type="file" id="minorFacePhoto" accept="image/jpeg,image/png,image/webp,image/*" capture="user" required>
+<small>Fotografe o rosto do adolescente de frente, sem filtros e com boa iluminação.</small><img id="minorFacePreview" alt="Prévia da selfie do menor" style="display:none;max-width:100%;max-height:240px;object-fit:contain;border-radius:10px;margin:12px auto"></div>
+<div class="field"><label for="minorDocumentPhoto">2. Foto do documento do menor (obrigatória)</label>
+<input type="file" id="minorDocumentPhoto" accept="image/jpeg,image/png,image/webp,image/*" capture="environment" required>
+<small>RG ou documento oficial com identificação e data de nascimento visíveis. A equipe conferirá o original na portaria.</small><img id="minorDocumentPreview" alt="Prévia do documento do menor" style="display:none;max-width:100%;max-height:245px;object-fit:contain;border-radius:10px;margin:12px auto"></div>
+</section>
 <section><h2>👤 Identificação do responsável</h2>
 <div class="grid">
 <div class="field"><label for="guardianName">Nome completo</label><input id="guardianName" maxlength="120" minlength="5" autocomplete="name" required></div>
@@ -56,11 +64,11 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <section><h2>☑️ Termos e autorização</h2>
 <label class="check"><input type="checkbox" id="checkAttend" required><span>Declaro ser pai, mãe ou responsável legal, e autorizo a participação do menor <b>somente se o evento e a legislação permitirem</b>, sujeita à avaliação da organização e conferência de documentos.</span></label>
 <label class="check"><input type="checkbox" id="checkAlcohol" required><span>Estou ciente de que <b>é proibida a venda, o fornecimento e o consumo de bebidas alcoólicas pelo menor</b>, sem exceções por autorização dos pais.</span></label>
-<label class="check"><input type="checkbox" id="checkPrivacy" required><span>Autorizo o tratamento dos dados desta declaração, inclusive a selfie, a foto do documento e a assinatura, exclusivamente para a conferência da autorização, nos termos da LGPD. Reconheço que posso solicitar informações e exclusão à organização, ressalvadas obrigações legais.</span></label>
+<label class="check"><input type="checkbox" id="checkPrivacy" required><span>Autorizo o tratamento dos dados desta declaração, inclusive a selfie e o documento do adolescente, a selfie e o documento do responsável e a assinatura, exclusivamente para a conferência da autorização, nos termos da LGPD. Reconheço que posso solicitar informações e exclusão à organização, ressalvadas obrigações legais.</span></label>
 <label class="check"><input type="checkbox" id="checkGuardian" required><span>Confirmo que os dados, a selfie e o documento enviados são meus, que sou maior de 18 anos e que comparecerei ou fornecerei documentos originais para a conferência exigida pela HYPE.</span></label>
 <div class="notice">🔒 Os arquivos ficam em área privada, acessível somente à administração autorizada. A declaração é analisada pela HYPE e pode ser recusada. Registros podem ser excluídos conforme a política de retenção.</div>
 <button class="action" style="width:100%;margin-top:8px" id="sendForm" type="submit">ENVIAR DECLARAÇÃO PARA CONFERÊNCIA</button>
 </section></form>
 <div id="feedback" role="status" aria-live="polite"></div>
-</main><script src="menores-v120.js?v=20261024-guardian-mail-v127"></script>
+</main><script src="menores-v120.js?v=20261024-minor-face-age-v129"></script>
 </body></html>
