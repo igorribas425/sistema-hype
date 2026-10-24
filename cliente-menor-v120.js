@@ -15,11 +15,12 @@
    }
    const submit=$('ticketForm')?.querySelector('button[type="submit"]');
    if(submit){
-     // Menores só podem ser tratados pela equipe após análise.
+     // Mantém o texto original do botão em cada checkout (PIX ou manual).
+     if(!submit.dataset.hypeOriginalLabel) submit.dataset.hypeOriginalLabel=submit.textContent.trim();
      submit.disabled=minor;
-     submit.title=minor?'Autorização e avaliação do ADM antes do pagamento':'';
+     submit.title=minor?'Autorização e análise do ADM necessárias antes do pagamento':'';
      if(minor)submit.textContent='AGUARDE AUTORIZAÇÃO • NÃO PAGUE AINDA';
-     else if(submit.textContent==='AGUARDE AUTORIZAÇÃO • NÃO PAGUE AINDA')submit.textContent='CRIAR PEDIDO E ABRIR WHATSAPP';
+     else if(submit.textContent==='AGUARDE AUTORIZAÇÃO • NÃO PAGUE AINDA')submit.textContent=submit.dataset.hypeOriginalLabel;
    }
  }
  function init(){
