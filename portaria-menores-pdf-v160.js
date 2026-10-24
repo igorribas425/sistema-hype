@@ -1,15 +1,21 @@
-/* HYPE V160 — Consulta de autorizações aprovada na Portaria.
-   Apenas Admin/Gerente pode listar e baixar PDFs privados. */
+/* HYPE V161 — Consulta pelos aparelhos autorizados da Portaria, sem login duplicado.
+   Supabase valida o dispositivo antes de revelar nomes ou gerar PDFs privados. */
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id);
 const AUTH="https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minors-authorization";
+const DEVICE_KEY="hype_portaria_device_key_v18";
 const PDF="https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minor-pdf";
 let rows=[],ready=false,busy=false,pdfUrl=null;
 const today=()=>new Intl.DateTimeFormat("sv-SE",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
 const years=(date,t)=>{if(!date)return-1;let y=Number(t.slice(0,4))-Number(date.slice(0,4));if(t.slice(5)<String(date).slice(5))y--;return y;};
 function alertMsg(msg,error=false){const el=$("minorDoorStatus");if(el){el.textContent=msg;el.style.color=error?"#ffb2c0":"#b9f9d5";}}
-function access(){const username=$("minorDoorUser").value.trim(),password=$("minorDoorPass").value;if(!username||!password)throw Error("Informe usuário e senha de Admin ou gerente.");return {username,password};}
+function access(){
+  if($("portariaApp")?.classList.contains("hidden"))throw Error("Aguarde a autorização da Portaria.");
+  const deviceKey=localStorage.getItem(DEVICE_KEY)||"";
+  if(!/^[a-f0-9]{64}$/i.test(deviceKey))throw Error("O aparelho não está autorizado. Solicite acesso pelo Admin.");
+  return {deviceKey,eventId:Math.max(0,Number($("eventSelect")?.value)||0)};
+}
 async function request(url,b){
  const resp=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b),cache:"no-store"});
  const data=await resp.json().catch(()=>({}));
@@ -21,21 +27,22 @@ function openToggle(){
  const panel=$("minorDoorPanel"),hidden=!panel.hidden;
  panel.hidden=hidden;
  $("minorDoorToggle").setAttribute("aria-expanded",String(!hidden));
- if(!hidden){panel.scrollIntoView({block:"start",behavior:"smooth"});if(!ready)alertMsg("Entre com usuário e senha de Admin ou gerente para consultar os PDFs.");}
+ if(!hidden){panel.scrollIntoView({block:"start",behavior:"smooth"});if(!ready)load();}
  else cleanup();
 }
 function relevant(r){
- if(r.status!=="conferido")return false;
- if(r.expires_at&&Date.parse(r.expires_at)<Date.now())return false;
  const eventId=Number($("eventSelect")?.value||0);
  return r.event_id==null||Number(r.event_id)===eventId;
 }
+function normalize(value){
+ return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("pt-BR").trim();
+}
 function render(){
- const box=$("minorDoorList"),search=$("minorDoorSearch").value.trim().toLocaleLowerCase("pt-BR");
- const subset=rows.filter(relevant).filter(r=>!search||[r.minor_name,r.guardian_name,r.id].some(x=>String(x||"").toLocaleLowerCase("pt-BR").includes(search)));
+ const box=$("minorDoorList"),search=normalize($("minorDoorSearch").value);
+ const subset=rows.filter(relevant).filter(r=>!search||[r.minor_name,r.guardian_name,r.id].some(x=>normalize(x).includes(search)));
  box.replaceChildren();
  $("minorDoorTotal").textContent=subset.length+" autorização(ões) aprovada(s) e válida(s)";
- if(!subset.length){const empty=document.createElement("p");empty.className="minor-door-hint";empty.textContent="Nenhuma autorização válida encontrada para este evento.";box.append(empty);return;}
+ if(!subset.length){const empty=document.createElement("p");empty.className="minor-door-hint";empty.textContent=search?"Nenhum menor aprovado encontrado para este nome.":"Nenhuma autorização válida encontrada para este evento.";box.append(empty);return;}
  for(const r of subset){
   const card=document.createElement("article");card.className="minor-door-person";
   const info=document.createElement("div");info.className="minor-door-person-info";
@@ -49,16 +56,17 @@ function render(){
 async function load(){
  if(busy)return;
  let credentials;try{credentials=access();}catch(err){alertMsg(err.message,true);return;}
- const btn=$("minorDoorLoad");busy=true;btn.disabled=true;btn.textContent="CONSULTANDO...";
+ const btn=$("minorDoorLoad");busy=true;btn.disabled=true;btn.textContent="ATUALIZANDO...";
  cleanup();ready=false;$("minorDoorList").replaceChildren();
+ $("minorDoorTotal").textContent="Carregando autorizações...";
  try{
-  const result=await request(AUTH,{action:"list",...credentials});
+  const result=await request(AUTH,{action:"door_list",...credentials});
   rows=Array.isArray(result.rows)?result.rows:[];
   ready=true;render();
-  alertMsg("✅ Consulta protegida carregada. Compare os documentos originais na entrada.");
-  if(rows.length>=120){alertMsg("Foram carregados os 120 cadastros mais recentes. Use o Admin para consultar registros mais antigos.");}
- }catch(err){alertMsg("❌ "+err.message,true);}
- finally{busy=false;btn.disabled=false;btn.textContent="🔎 CONSULTAR AUTORIZAÇÕES";}
+  alertMsg("✅ Autorizações carregadas. Pesquise pelo nome ou toque em VER PDF.");
+  if(rows.length>=200)alertMsg("Exibidos até 200 registros válidos. Para cadastros antigos, use o Admin.");
+ }catch(err){rows=[];$("minorDoorTotal").textContent="Consulta indisponível";alertMsg("❌ "+err.message,true);}
+ finally{busy=false;btn.disabled=false;btn.textContent="↻ ATUALIZAR AUTORIZAÇÕES";}
 }
 async function showPDF(record,btn){
  if(busy)return;
@@ -88,10 +96,11 @@ async function showPDF(record,btn){
 function init(){
  $("minorDoorToggle")?.addEventListener("click",openToggle);
  $("minorDoorLoad")?.addEventListener("click",load);
- $("minorDoorSearch")?.addEventListener("input",()=>{if(ready)render()});
- $("eventSelect")?.addEventListener("change",()=>{cleanup();if(ready)render()});
+ $("minorDoorSearch")?.addEventListener("input",()=>{if(ready)render();else if(!$("minorDoorPanel").hidden&&!busy)load();});
+ $("minorDoorSearch")?.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();if(ready)render();else load();}});
+ $("eventSelect")?.addEventListener("change",()=>{cleanup();rows=[];ready=false;if(!$("minorDoorPanel").hidden)load();});
  window.addEventListener("pagehide",cleanup);
- document.addEventListener("visibilitychange",()=>{if(document.hidden){cleanup();}});
+ document.addEventListener("visibilitychange",()=>{if(document.hidden)cleanup();});
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
