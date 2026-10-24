@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer"><meta name="theme-color" content="#0d0b11">
+<title>HYPE • Conferir autorização de menor</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#08080c;color:#fff;font:15px/1.5 system-ui,Arial;padding:18px}main{max-width:750px;margin:auto}
+h1{font-size:25px;line-height:1.25}.hype{color:#ff467b;font-weight:950;letter-spacing:2px}.muted{color:#baaeb9;font-size:13px}
+section{margin:16px 0;padding:18px;background:#17131b;border:1px solid #49303e;border-radius:15px}
+label{display:block;font-weight:750;font-size:12px;margin:12px 0 5px}input{background:#0b090d;color:#fff;border:1px solid #604758;border-radius:9px;padding:12px;width:100%;font:inherit}
+button{width:100%;padding:13px;background:#c3275c;color:white;border:0;border-radius:10px;font-weight:800;margin:12px 0 0;cursor:pointer}
+button:disabled{opacity:.5}.message{padding:12px;border:1px solid #6c4d61;border-radius:10px;color:#ffd1d9;margin:12px 0;overflow-wrap:anywhere}
+.ok{color:#91e8ad;border-color:#357957}.warn{border-color:#cf8b43;color:#ffd59a}.flex{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.item{padding:10px;border:1px solid #403440;border-radius:8px;overflow-wrap:anywhere}.item small{display:block;color:#b0a1ae}
+.photos{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.photos img{width:100%;max-height:255px;object-fit:contain;background:#08080d;border-radius:9px}
+[hidden]{display:none!important}video{width:100%;max-height:250px;border-radius:12px}
+@media(max-width:500px){.flex{grid-template-columns:1fr}}
+</style></head><body>
+<main>
+<p class="hype">HYPE LOUNGE CLUB</p>
+<h1>Conferência de autorização de menores</h1>
+<p class="muted">Somente equipe autorizada. Este QR Code NÃO é ingresso: confirme a autorização, compare os documentos originais e realize a cobrança presencial de R$ 30,00 pelo sistema próprio do evento.</p>
+<section>
+<h2>🔒 Acesso da equipe</h2>
+<label for="username">Usuário Admin / Gerente</label><input id="username" autocomplete="username">
+<label for="password">Senha</label><input id="password" type="password" autocomplete="current-password">
+<label for="protocol">Protocolo / QR da autorização</label><input id="protocol" placeholder="Cole o link ou leia o QR Code" autocomplete="off">
+<button id="verify" type="button">VERIFICAR AUTORIZAÇÃO</button>
+<button id="camera" type="button" style="background:#403040">📷 LER QR CODE COM A CÂMERA</button>
+<video id="video" playsinline muted hidden></video>
+<p id="message" class="message" role="status">Informe o usuário da equipe e leia o QR de autorização.</p>
+</section>
+<section id="result" hidden>
+<h2 id="heading">Autorização</h2>
+<div class="flex" id="fields"></div>
+<div class="message warn">O cadastro aprovado não é ingresso e não confirma pagamento nem libera entrada automaticamente. Confira selfie, fotos e documentos originais; siga as regras legais aplicáveis. Álcool proibido para menores.</div>
+<div class="photos" id="photos"></div>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+(()=>{
+"use strict";
+const $=id=>document.getElementById(id);
+const url="https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minors-authorization";
+let stream=null,busy=false;
+const query=new URLSearchParams(location.search);
+$("protocol").value=query.get("protocolo")||"";
+function feedback(t,good=false){$("message").textContent=t;$("message").className="message "+(good?"ok":"warn");}
+function getId(t){
+ const str=String(t||"").trim();
+ const matched=str.match(/(?:protocolo=)([0-9a-f-]{36})/i);
+ const candidate=matched?matched[1]:str;
+ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(candidate)?candidate.toLowerCase():"";
+}
+async function verify(){
+ const id=getId($("protocol").value),username=$("username").value.trim(),password=$("password").value;
+ $("result").hidden=true;
+ if(!id)return feedback("Protocolo inválido. Leia o QR Code da autorização.");
+ if(!username||!password)return feedback("Informe o usuário e a senha do Admin ou gerente.");
+ $("verify").disabled=true;feedback("Conferindo a autorização com o Supabase...");
+ try{
+  const resp=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"detail",id,username,password})});
+  const d=await resp.json().catch(()=>({}));
+  if(!resp.ok||!d.ok)throw Error(d.error||"Autorização não encontrada");
+  const a=d.row;
+  if(a.status!=="conferido"){feedback(a.status==="recusado"?"⛔ AUTORIZAÇÃO RECUSADA — NÃO VENDER INGRESSO.":"⏳ AUTORIZAÇÃO PENDENTE — NÃO VENDER INGRESSO.");return;}
+  const evresp=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"events"})});
+  const evdata=await evresp.json().catch(()=>({}));const event=(evdata.events||[]).find(x=>Number(x.id)===Number(a.event_id));
+  $("heading").textContent="✅ AUTORIZAÇÃO CONFERIDA";
+  const arr=[["Menor",a.minor_name],["CPF menor",a.minor_cpf],["Nascimento",a.minor_birth_date],
+    ["Responsável",a.guardian_name],["CPF responsável",a.guardian_cpf],
+    ["Vínculo",a.relation],["Evento",event?.name||"Evento #"+a.event_id],
+    ["Data",event?.event_date||"Conferir com o Admin"],["Modalidade","Pista • Noite toda • R$ 30,00 presencial"],
+    ["Pagamento","AINDA NÃO EFETUADO NESTE QR"],["Protocolo",a.id]];
+  const f=$("fields");f.replaceChildren();arr.forEach(([label,value])=>{const item=document.createElement("div");item.className="item";const small=document.createElement("small");small.textContent=label;const bold=document.createElement("strong");bold.textContent=String(value||"—");item.append(small,bold);f.append(item);});
+  const pics=$("photos");pics.replaceChildren();
+  for(const [label,u] of [["Selfie do menor",d.minorFaceUrl],["Documento do menor",d.minorDocumentUrl],["Documento do responsável",d.documentUrl],["Selfie do responsável",d.photoUrl]]){
+   if(!u)continue;const box=document.createElement("div");const p=document.createElement("p");p.textContent=label;
+   const img=document.createElement("img");img.alt=label;img.referrerPolicy="no-referrer";img.src=u;box.append(p,img);pics.append(box);
+  }
+  $("result").hidden=false;feedback("Autorização conferida. Compare os documentos e realize a compra presencial no caixa; NÃO é ingresso.",true);
+ }catch(e){feedback("Não foi possível validar: "+e.message);}
+ finally{$("verify").disabled=false;}
+}
+$("verify").addEventListener("click",verify);
+$("camera").addEventListener("click",async()=>{
+ if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;$("video").hidden=true;$("camera").textContent="📷 LER QR CODE COM A CÂMERA";return;}
+ try{
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+  const v=$("video");v.srcObject=stream;v.hidden=false;await v.play();$("camera").textContent="PARAR CÂMERA";
+  const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");
+  const tick=()=>{
+   if(!stream)return;
+   if(v.readyState>=2&&v.videoWidth){
+    canvas.width=Math.min(700,v.videoWidth);canvas.height=Math.round(v.videoHeight*(canvas.width/v.videoWidth));
+    ctx.drawImage(v,0,0,canvas.width,canvas.height);
+    const data=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const found=window.jsQR?.(data.data,data.width,data.height,{inversionAttempts:"dontInvert"});
+    if(found&&getId(found.data)){
+     $("protocol").value=found.data;stream.getTracks().forEach(t=>t.stop());stream=null;v.hidden=true;$("camera").textContent="📷 LER QR CODE COM A CÂMERA";verify();return;
+    }
+   }requestAnimationFrame(tick);
+  };requestAnimationFrame(tick);
+ }catch(e){feedback("A câmera não abriu: "+e.message);}
+});
+})();
+</script></body></html>
