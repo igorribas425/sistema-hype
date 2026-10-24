@@ -87,8 +87,20 @@ function setTicket(t){
  if(paid){
   $("paymentTitle").textContent="✅ INGRESSO CONFIRMADO";
   $("paymentInfo").textContent="O ingresso "+t.ticket_code+" foi confirmado. O QR Code deve chegar ao e-mail do responsável. Apresente o ingresso e os documentos na portaria.";
-  $("copyPix").hidden=true;$("pixCode").hidden=true;$("qrImage").hidden=true;
-  alertBox("Ingresso confirmado e vinculado à autorização do menor.",false);
+  $("copyPix").hidden=true;$("pixCode").hidden=true;
+  const qr=$("qrImage");
+  if(window.QRCode&&window.QRCode.toDataURL&&t.qr_token){
+    window.QRCode.toDataURL(t.qr_token,{width:260,margin:2,errorCorrectionLevel:"M"})
+      .then(src=>{if(currentTicket===t){qr.src=src;qr.hidden=false;}})
+      .catch(()=>{qr.hidden=true;});
+  }
+  if(Number(t.price)<=0 && String(t.gender)==="Feminino"){
+    api("send-ticket-email",{action:"free_ticket_auto",ticket_id:t.id,qr_token:t.qr_token})
+      .then(()=>alertBox("Ingresso FREE confirmado. Confira o Gmail do responsável para receber o QR Code.",false))
+      .catch(e=>alertBox("O ingresso FREE está confirmado, mas o envio por e-mail falhou: "+e.message+". O QR Code continua nesta página.",true));
+  }else{
+    alertBox("Ingresso confirmado e vinculado à autorização do menor.",false);
+  }
   return;
  }
  $("paymentTitle").textContent="⏳ AGUARDANDO PAGAMENTO";
