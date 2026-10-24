@@ -46,10 +46,18 @@
      const img=new Image();
      // Compatibilidade com Safari/iPhone, inclusive versões em que img.decode() falha.
      await new Promise((resolve,reject)=>{
-       img.onload=()=>resolve(true);
-       img.onerror=()=>reject(new Error('O iPhone não conseguiu abrir a foto. Tente Tirar Foto novamente ou use uma imagem JPG da Biblioteca.'));
+       let settled=false;
+       const finish=err=>{
+         if(settled)return;
+         settled=true;clearTimeout(timeout);
+         img.onload=null;img.onerror=null;
+         if(err)reject(err);else resolve(true);
+       };
+       const timeout=setTimeout(()=>finish(new Error('A foto demorou para abrir no iPhone. Tire outra foto ou escolha JPG na Biblioteca.')),14000);
+       img.onload=()=>finish(null);
+       img.onerror=()=>finish(new Error('O iPhone não conseguiu abrir esta imagem. Tire outra foto ou escolha JPG na Biblioteca.'));
        img.src=url;
-       if(img.complete&&img.naturalWidth)resolve(true);
+       if(img.complete&&img.naturalWidth)finish(null);
      });
      const w=img.naturalWidth,h=img.naturalHeight;
      if(!w||!h)throw new Error('Imagem não reconhecida. Selecione uma foto JPG ou tire outra foto.');
@@ -61,7 +69,10 @@
        const scale=Math.min(1,max/Math.max(w,h));
        const c=document.createElement('canvas');
        c.width=Math.max(1,Math.round(w*scale));c.height=Math.max(1,Math.round(h*scale));
-       c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+       const context=c.getContext('2d');
+       if(!context)throw new Error('Memória insuficiente para processar foto. Feche outras abas e tente novamente.');
+       try{context.drawImage(img,0,0,c.width,c.height);}
+       catch(_){throw new Error('Não foi possível converter esta imagem. Tire outra foto no iPhone.');}
        for(const quality of qualities){
          const result=c.toDataURL('image/jpeg',quality);
          if(result.length<=530000)return result;
@@ -74,7 +85,7 @@
    try{
      photoUrl=await compressPhoto($('guardianPhoto').files[0]);
      $('photoPreview').src=photoUrl;$('photoPreview').style.display='block';
-   }catch(err){photoUrl='';$('photoPreview').style.display='none';message(err.message);}
+   }catch(err){photoUrl='';$('photoPreview').style.display='none';photoError('guardianPhoto',err);}
  });
  $('guardianDocument').addEventListener('change',async()=>{
    documentUrl='';
@@ -83,7 +94,7 @@
      documentUrl=await compressPhoto($('guardianDocument').files[0],'documento');
      $('documentPreview').src=documentUrl;
      $('documentPreview').style.display='block';
-   }catch(err){message(err.message||'Não foi possível ler o documento.');}
+   }catch(err){photoError('guardianDocument',err);}
  });
 
  function updateMinorAge(){
@@ -102,12 +113,12 @@
  $('minorFacePhoto').addEventListener('change',async()=>{
    minorFaceUrl='';
    try{minorFaceUrl=await chooseMinorPhoto('minorFacePhoto','minorFacePreview','selfie');}
-   catch(err){message(err.message||'Não foi possível processar a selfie do menor.');}
+   catch(err){photoError('minorFacePhoto',err);}
  });
  $('minorDocumentPhoto').addEventListener('change',async()=>{
    minorDocumentUrl='';
    try{minorDocumentUrl=await chooseMinorPhoto('minorDocumentPhoto','minorDocumentPreview','documento');}
-   catch(err){message(err.message||'Não foi possível processar o documento do menor.');}
+   catch(err){photoError('minorDocumentPhoto',err);}
  });
  async function chooseMinorPhoto(inputId,previewId,kind){
    const img=$(previewId);img.style.display='none';
