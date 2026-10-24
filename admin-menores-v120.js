@@ -176,6 +176,8 @@ async function detail(id){
   correction.style.cssText='margin:16px 0;padding:16px;border:1px solid #76485a;border-radius:13px;background:#1b1420';
   correction.append(text('h4','📧 Conferir ou corrigir endereço de Gmail'));
   correction.append(text('p','Peça ao responsável para confirmar o endereço correto diretamente pelo WhatsApp antes de trocar. Esta alteração não mexe nas fotos, na aprovação nem no ingresso.'));
+  const returnedAddress=/endereço inexistente|550 5\\.1\\.1/i.test(r.email_notification_error||'')
+    ?String(r.guardian_email||'').trim().toLowerCase():null;
   const choices=[['Gmail do responsável','guardian_email',r.guardian_email],['Gmail do menor','minor_email',r.minor_email]];
   const verifiedLabel=document.createElement('label');
   verifiedLabel.style.cssText='display:flex;align-items:start;gap:9px;margin:10px 0';
@@ -208,14 +210,23 @@ async function detail(id){
         inp.value=email;
         const dt=Array.from(list.querySelectorAll('dt')).find(node=>node.textContent===(field==='guardian_email'?'E-mail do responsável':'Gmail do menor'));
         if(dt&&dt.nextElementSibling)dt.nextElementSibling.textContent=email;
+        const stillReturned=!!(returnedAddress&&
+          [r.guardian_email,r.minor_email].some(value=>String(value||'').trim().toLowerCase()===returnedAddress));
         if(changed){
           const resend=el.querySelector('#minorResendPdf');
-          if(resend){resend.disabled=false;resend.title='';}
+          if(resend){
+            resend.disabled=stillReturned;
+            resend.title=stillReturned?'O endereço devolvido pelo Google ainda está em um dos campos. Corrija os dois.':'Confira os Gmails antes de reenviar o PDF.';
+          }
           const oldAlert=el.querySelector('#minorEmailDeliveryAlert');
-          if(oldAlert)oldAlert.textContent='⚠️ Gmail atualizado; confirme os dois endereços e clique em REENVIAR PDF. A entrega ainda não foi confirmada.';
+          if(oldAlert)oldAlert.textContent=stillReturned
+             ?'⚠️ O endereço inexistente ainda está em um dos Gmails. Corrija antes de reenviar.'
+             :'✅ Gmails corrigidos. Confirme os dois destinatários e clique em REENVIAR PDF.';
         }
-        feedback.style.color='#a7efd4';
-        feedback.textContent='✅ Gmail salvo! Esta ficha permanece aberta. Confira os endereços e reenvie o PDF.';
+        feedback.style.color=stillReturned?'#ffcf9b':'#a7efd4';
+        feedback.textContent=stillReturned
+          ?'✅ Este Gmail foi salvo. ATENÇÃO: o endereço devolvido ainda está no outro campo. Corrija o outro também.'
+          :'✅ Gmail salvo! Esta ficha permanece aberta. Confira os dois endereços antes de reenviar o PDF.';
         status(result.message||'Gmail salvo com sucesso.',false);
         save.textContent='✅ GMAIL SALVO';
       }catch(err){
