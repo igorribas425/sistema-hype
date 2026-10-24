@@ -22,7 +22,7 @@ async function rpc(action,more={}){
 const showDate=(date)=>{try{return date?new Date(date).toLocaleString('pt-BR'):'—';}catch(_){return '—'}};
 const maskCpf=(cpf)=>{const d=String(cpf||'').replace(/\D/g,'');return d.length===11?'***.***.'+d.slice(6,9)+'-'+d.slice(9):'—';};
 const text=(tag,t,cls)=>{const el=document.createElement(tag);if(cls)el.className=cls;el.textContent=t;return el;};
-function eventName(id){return events.find(x=>Number(x.id)===Number(id))?.name||('Evento #'+id);}
+function eventName(id){return id==null?'TODAS AS FESTAS HYPE':(events.find(x=>Number(x.id)===Number(id))?.name||('Evento #'+id));}
 async function load(){
  if(loading)return;
  if(!credentials()){status('Somente ADM e gerente podem acessar esta área.',true);return;}
@@ -34,7 +34,7 @@ async function load(){
   rows=data.rows||[];events=data.events||[];
   const select=$('minorAdminEvent'),previous=select.value;
   select.replaceChildren();
-  const all=document.createElement('option');all.value='';all.textContent='Todos os eventos';select.appendChild(all);
+  const all=document.createElement('option');all.value='';all.textContent='Gerais e por evento';select.appendChild(all);
   events.forEach(ev=>{const opt=document.createElement('option');opt.value=String(ev.id);opt.textContent=ev.name+' — '+ev.event_date;select.appendChild(opt);});
   if([...select.options].some(x=>x.value===previous))select.value=previous;
   render();
@@ -47,7 +47,7 @@ function render(){
  $('minorCountPending').textContent=String(rows.filter(r=>r.status==='pendente').length);
  $('minorCountChecked').textContent=String(rows.filter(r=>r.status==='conferido').length);
  $('minorCountRejected').textContent=String(rows.filter(r=>r.status==='recusado').length);
- if(!rows.length){container.appendChild(text('p','Nenhuma declaração encontrada para este evento.','m120-empty'));return;}
+ if(!rows.length){container.appendChild(text('p','Nenhuma autorização encontrada.','m120-empty'));return;}
  for(const row of rows){
   const card=document.createElement('article');card.className='m120-card';
   const content=document.createElement('div');content.className='m120-card-content';
