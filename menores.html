@@ -50,17 +50,17 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 @media(max-width:560px){.grid{grid-template-columns:1fr}section{padding:16px}}
 </style></head>
 <body><main><div class="logo"><img src="logo-hype.png" alt="HYPE Lounge Club"><div><a href="./cliente.html">← Voltar para ingressos</a></div></div>
-<h1>🛡️ Autorização para menores de 16 e 17 anos</h1>
-<p class="subtitle">Cadastro de autorização para adolescentes de 16 ou 17 anos na data do evento. Envie os documentos e aguarde a análise da HYPE. Se aprovado, o responsável e o menor receberão a autorização para apresentação no evento. O ingresso de R$ 30,00 (Pista, noite toda) será vendido somente presencialmente. Não existe pagamento de menor pelo site.</p>
+<h1>🛡️ Autorização geral de menores — HYPE</h1>
+<p class="subtitle">Uma única solicitação vale para as festas da HYPE, sem preencher o cadastro a cada evento. Para adolescentes que já têm 16 ou 17 anos. Após análise e aprovação, o menor e o responsável recebem a autorização. A validade termina aos 18 anos ou antes, se revogada. Cada festa ainda exige conferência documental e cumprimento das regras de entrada. O ingresso de R$ 30,00 (Pista, noite toda) é comprado somente presencialmente.</p>
 <div class="steps-hint" aria-label="Etapas do cadastro"><div><span>①</span>Dados do menor</div><div><span>②</span>Fotos e responsável</div><div><span>③</span>Assinatura e envio</div></div>
 <div class="notice"><b>🚫 Proibido álcool para menores de 18 anos.</b> Nenhuma autorização dos pais permite venda, fornecimento ou consumo de bebidas alcoólicas por menores. A HYPE e a portaria devem cumprir as regras de admissão do evento e a legislação aplicável. A autorização parental pode não ser suficiente para permitir a entrada.</div>
 <form id="minorForm">
-<section><h2>🎟️ Evento e menor de idade</h2>
-<div class="field"><label for="minorEvent">Evento</label><select id="minorEvent" required><option value="">Carregando eventos...</option></select></div>
+<section><h2>👤 Dados do adolescente</h2>
+<div class="notice" style="background:#163023;border-color:#27835d;color:#d9fbe8"><b>✅ UMA ÚNICA AUTORIZAÇÃO PARA TODAS AS FESTAS HYPE</b> — Não precisa escolher festa. A aprovação é geral, válida enquanto tiver 16 ou 17 anos, salvo revogação. Não garante entrada em evento que tenha outras restrições.</div>
 <div class="grid"><div class="field"><label for="minorName">Nome completo do menor</label><input id="minorName" maxlength="120" minlength="5" autocomplete="name" required></div>
 <div class="field"><label for="minorCpf">CPF do menor</label><input id="minorCpf" maxlength="14" inputmode="numeric" placeholder="000.000.000-00" required></div></div>
-<div class="field"><label for="minorBirth">Data de nascimento do menor</label><input type="date" id="minorBirth" required><small>Somente 16 ou 17 anos na data da festa. Menores de 16 anos não podem utilizar este cadastro.</small></div>
-<div class="field"><label for="minorEmail">Gmail do menor (recebe o resultado da análise)</label><input type="email" id="minorEmail" maxlength="254" autocomplete="email" inputmode="email" placeholder="menor@gmail.com" required><small>A HYPE enviará o resultado da autorização aos dois e-mails, sem link de pagamento.</small></div>
+<div class="field"><label for="minorBirth">Data de nascimento do menor</label><input type="date" id="minorBirth" required><small>Precisa ter 16 ou 17 anos no momento do cadastro. A autorização perde a validade ao completar 18 anos.</small></div>
+<div class="field"><label for="minorEmail">Gmail do menor (recebe o resultado da análise)</label><input type="email" id="minorEmail" maxlength="254" autocomplete="email" inputmode="email" placeholder="menor@gmail.com" required><small>Após aprovação, os dois Gmails deverão receber o PDF com QR Code de autorização geral, sem link para compra.</small></div>
 <div class="notice">📸 <b>Vamos tirar duas fotos do menor:</b> uma do rosto (selfie) e outra do documento. Toque nos quadros abaixo para abrir a câmera. A equipe confere as fotos manualmente.</div>
 <div class="field photo-step">
   <div class="photo-title"><span class="photo-number">1</span><div><strong>Foto do rosto do menor</strong><small>O rosto do menor deve aparecer de frente, inteiro e sem filtro.</small></div></div>
@@ -126,11 +126,11 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <canvas id="signature"></canvas>
 <div style="display:flex;justify-content:flex-end;margin-top:10px"><button id="clearSign" class="action secondary" type="button">Limpar assinatura</button></div></section>
 <section><h2>☑️ Termos e autorização</h2>
-<label class="check"><input type="checkbox" id="checkAttend" required><span>Declaro ser pai, mãe ou responsável legal, e autorizo a participação do menor <b>somente se o evento e a legislação permitirem</b>, sujeita à avaliação da organização e conferência de documentos.</span></label>
+<label class="check"><input type="checkbox" id="checkAttend" required><span>Declaro ser pai, mãe ou responsável legal e autorizo a participação do adolescente nas festas da HYPE enquanto tiver 16 ou 17 anos, <b>somente quando as regras do evento e a legislação permitirem</b>, com conferência dos documentos e possibilidade de revogação da autorização.</span></label>
 <label class="check"><input type="checkbox" id="checkAlcohol" required><span>Estou ciente de que <b>é proibida a venda, o fornecimento e o consumo de bebidas alcoólicas pelo menor</b>, sem exceções por autorização dos pais.</span></label>
-<label class="check"><input type="checkbox" id="checkPrivacy" required><span>Autorizo o tratamento dos dados desta declaração, inclusive a selfie e o documento do adolescente, a selfie e o documento do responsável e a assinatura, exclusivamente para a conferência da autorização, nos termos da LGPD. Reconheço que posso solicitar informações e exclusão à organização, ressalvadas obrigações legais.</span></label>
+<label class="check"><input type="checkbox" id="checkPrivacy" required><span>Autorizo o tratamento dos dados e fotos do adolescente e do responsável, dos documentos e da assinatura para verificar a autorização geral nas festas da HYPE enquanto houver validade, nos termos da LGPD. Reconheço que posso solicitar informações, revogação e exclusão à organização, ressalvadas obrigações legais.</span></label>
 <label class="check"><input type="checkbox" id="checkGuardian" required><span>Confirmo que os dados, a selfie e o documento enviados são meus, que sou maior de 18 anos e que comparecerei ou fornecerei documentos originais para a conferência exigida pela HYPE.</span></label>
-<div class="notice">🔒 Os arquivos ficam em área privada, acessível somente à administração autorizada. A declaração será conferida pela HYPE. O QR Code da autorização não é ingresso, não comprova pagamento e não libera entrada automática. Registros podem ser excluídos conforme a política de retenção.</div>
+<div class="notice">🔒 Os arquivos ficam em área privada, acessível somente à administração autorizada. A declaração é geral para os eventos HYPE enquanto o menor tiver 16 ou 17 anos, desde que não revogada; é conferida pela HYPE. O QR Code não é ingresso, não comprova pagamento nem libera entrada automática. Registros podem ser excluídos conforme a política de retenção.</div>
 <div class="photo-advice"><b>Antes de enviar:</b> confira se as 4 fotos apareceram com ✅, se a assinatura foi feita e se os Gmails estão corretos. A autorização ainda será analisada pela Hype.</div>
 <button class="action" style="width:100%;margin-top:8px" id="sendForm" type="submit">ENVIAR AUTORIZAÇÃO PARA ANÁLISE</button>
 </section></form>
@@ -173,5 +173,5 @@ for(const [id,preview,isDoc] of fields){
 }
 })();
 </script>
-<script src="menores-v120.js?v=20261024-fotos-face-v147"></script>
+<script src="menores-v120.js?v=20261024-autorizacao-geral-v152"></script>
 </body></html>
