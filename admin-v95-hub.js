@@ -50,6 +50,11 @@
       title: 'Sorteio & Acessos',
       subtitle: 'Sorteio do evento e dispositivos autorizados',
       ids: ['v18ControlPanel']
+    },
+    menores: {
+      title: 'Menores de idade',
+      subtitle: 'Declarações dos responsáveis, selfie, assinatura e análise de admissão',
+      ids: ['hypeMinorsAdminPanel']
     }
   };
 
@@ -91,6 +96,8 @@
         await window.HypeV34?.refreshLive?.();
       } else if (key === 'ferramentas') {
         if (typeof window.hypeV18AdminInit === 'function') await window.hypeV18AdminInit();
+      } else if (key === 'menores') {
+        await window.HypeMinorAdminV120?.load?.();
       }
     } catch (err) {
       console.warn('[HYPE V95][refresh]', key, err);
