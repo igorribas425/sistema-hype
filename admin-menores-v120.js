@@ -72,31 +72,15 @@ async function sendNotification(id){
  return data;
 }
 function showNotificationResult(data){
- const el=$('minorAdminDetail');if(!el)return;
+ const root=$('minorAdminDetail');if(!root)return;
  const box=document.createElement('div');box.className='m120-warning';
- const sent=!!data.emailSent;
- box.append(text('strong',sent?'📧 Envio aceito pelo serviço de e-mail para '+(data.emails||[]).length+' destinatário(s). Verifique também Spam.':'⚠️ Aprovação registrada, mas envio automático NÃO confirmado.'));
- if(!sent){
-  box.append(text('p',String(data.emailError||'Falha no serviço de e-mail.')));
-  const emails=(data.emails||[]).filter(v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v)));
-  if(emails.length){
-   const title='HYPE Lounge Club • Resultado da autorização';
-   const body='Olá! A autorização foi analisada pela HYPE Lounge Club.'+(data.manualLink?'\n\nPara continuar a compra exclusiva de menor 16-17 (R$ 30, noite toda), use o link:\n'+data.manualLink:'\n\nEntre em contato com a HYPE para informações.')+'\n\nA entrada continua sujeita às regras do evento e à conferência dos documentos na portaria.';
-   const link=document.createElement('a');
-   link.href='mailto:'+emails.map(encodeURIComponent).join(',')+'?subject='+encodeURIComponent(title)+'&body='+encodeURIComponent(body);
-   link.textContent='📩 ABRIR E-MAIL PARA OS DOIS GMAILS (ENVIAR MANUALMENTE)';
-   link.style.cssText='display:block;background:#d23466;color:#fff;padding:12px;border-radius:9px;margin:10px 0;text-decoration:none;text-align:center;font-weight:bold';
-   box.append(link);
-  }
-  if(data.manualLink){
-   const input=document.createElement('input');input.readOnly=true;input.value=data.manualLink;
-   input.style.cssText='width:100%;padding:10px;box-sizing:border-box;background:#140e16;color:#fff;border:1px solid #93536d';
-   const copy=document.createElement('button');copy.type='button';copy.className='m120-btn';copy.textContent='Copiar link exclusivo';
-   copy.addEventListener('click',()=>navigator.clipboard.writeText(data.manualLink).then(()=>status('Link copiado.')).catch(()=>{input.focus();input.select();}));
-   box.append(input,copy);
-  }
+ const ok=Boolean(data.emailSent);
+ box.append(text('strong',ok?'✅ Envio aceito pelo Gmail de menores. Confira o PDF em anexo nos dois Gmails e na pasta Spam.':'⚠️ Análise registrada, mas o e-mail com PDF não foi confirmado.'));
+ if(!ok){
+  box.append(text('p',String(data.emailError||'Verifique o serviço de envio.')));
+  box.append(text('p','Use o botão BAIXAR PDF COMPLETO no Admin e envie o documento manualmente aos dois destinatários enquanto corrige o Gmail.'));
  }
- el.prepend(box);box.scrollIntoView({behavior:'smooth',block:'center'});
+ root.prepend(box);
 }
 async function downloadAuthorizationPDF(row){
  const c=credentials();
