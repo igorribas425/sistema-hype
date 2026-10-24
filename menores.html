@@ -52,6 +52,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <body><main><div class="logo"><img src="logo-hype.png" alt="HYPE Lounge Club"><div><a href="./cliente.html">← Voltar para ingressos</a></div></div>
 <h1>🛡️ Autorização geral de menores — HYPE</h1>
 <p class="subtitle">Uma única solicitação vale para as festas da HYPE, sem preencher o cadastro a cada evento. Para adolescentes que já têm 16 ou 17 anos. Após análise e aprovação, o menor e o responsável recebem a autorização. A validade termina aos 18 anos ou antes, se revogada. Cada festa ainda exige conferência documental e cumprimento das regras de entrada. O ingresso de R$ 30,00 (Pista, noite toda) é comprado somente presencialmente.</p>
+<div class="notice" style="border-color:#4b698b;background:#192231;color:#e0ecff"><b>📱 iPhone:</b> ao tocar no quadro da foto, escolha “Tirar Foto” ou “Biblioteca de Fotos”. Se estiver abrindo pelo Instagram ou WhatsApp e a tela fechar, toque no menu do aplicativo e escolha <b>Abrir no Safari</b>. Continue pelo Safari.</div>
 <div class="steps-hint" aria-label="Etapas do cadastro"><div><span>①</span>Dados do menor</div><div><span>②</span>Fotos e responsável</div><div><span>③</span>Assinatura e envio</div></div>
 <div class="notice"><b>🚫 Proibido álcool para menores de 18 anos.</b> Nenhuma autorização dos pais permite venda, fornecimento ou consumo de bebidas alcoólicas por menores. A HYPE e a portaria devem cumprir as regras de admissão do evento e a legislação aplicável. A autorização parental pode não ser suficiente para permitir a entrada.</div>
 <form id="minorForm">
@@ -61,7 +62,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <div class="field"><label for="minorCpf">CPF do menor</label><input id="minorCpf" maxlength="14" inputmode="numeric" placeholder="000.000.000-00" required></div></div>
 <div class="field"><label for="minorBirth">Data de nascimento do menor</label><input type="date" id="minorBirth" required><small>Precisa ter 16 ou 17 anos no momento do cadastro. A autorização perde a validade ao completar 18 anos.</small></div>
 <div class="field"><label for="minorEmail">Gmail do menor (recebe o resultado da análise)</label><input type="email" id="minorEmail" maxlength="254" autocomplete="email" inputmode="email" placeholder="menor@gmail.com" required><small>Após aprovação, os dois Gmails deverão receber o PDF com QR Code de autorização geral, sem link para compra.</small></div>
-<div class="notice">📸 <b>Vamos tirar duas fotos do menor:</b> uma do rosto (selfie) e outra do documento. Toque nos quadros abaixo para abrir a câmera. A equipe confere as fotos manualmente.</div>
+<div class="notice">📸 <b>Vamos tirar duas fotos do menor:</b> uma do rosto (selfie) e outra do documento. Toque nos quadros abaixo e escolha <b>Tirar Foto</b> (ou <b>Biblioteca de Fotos</b>, no iPhone). A equipe confere as fotos manualmente.</div>
 <div class="field photo-step">
   <div class="photo-title"><span class="photo-number">1</span><div><strong>Foto do rosto do menor</strong><small>O rosto do menor deve aparecer de frente, inteiro e sem filtro.</small></div></div>
   <label class="photo-upload" for="minorFacePhoto">
@@ -69,7 +70,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
     <strong class="photo-big-label">É uma foto do rosto</strong>
     <span class="photo-button" id="minorFacePhotoButton">📷 TIRAR FOTO DO ROSTO</span>
     <span class="photo-tip">Coloque seu rosto dentro do contorno. Evite boné, óculos escuros e contraluz.</span>
-    <input type="file" class="photo-file-input" id="minorFacePhoto" accept="image/jpeg,image/png,image/webp,image/*" capture="user" aria-label="Abrir câmera para selfie do menor" aria-describedby="minorFacePhotoStatus" required>
+    <input type="file" class="photo-file-input" id="minorFacePhoto" accept="image/*" aria-label="Abrir câmera para selfie do menor" aria-describedby="minorFacePhotoStatus" required>
   </label>
   <p class="photo-status" id="minorFacePhotoStatus" role="status" aria-live="polite">○ Aguardando foto</p>
   <img id="minorFacePreview" class="photo-preview" alt="Foto enviada: foto do rosto do menor" style="display:none">
@@ -81,7 +82,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
     <strong class="photo-big-label">É uma foto do documento</strong>
     <span class="photo-button" id="minorDocumentPhotoButton">🪪 FOTOGRAFAR DOCUMENTO</span>
     <span class="photo-tip">Tire a foto com boa luz, sem reflexos, mostrando todo o documento.</span>
-    <input type="file" class="photo-file-input" id="minorDocumentPhoto" accept="image/jpeg,image/png,image/webp,image/*" capture="environment" aria-label="Fotografar documento do menor" aria-describedby="minorDocumentPhotoStatus" required>
+    <input type="file" class="photo-file-input" id="minorDocumentPhoto" accept="image/*" aria-label="Fotografar documento do menor" aria-describedby="minorDocumentPhotoStatus" required>
   </label>
   <p class="photo-status" id="minorDocumentPhotoStatus" role="status" aria-live="polite">○ Aguardando foto</p>
   <img id="minorDocumentPreview" class="photo-preview" alt="Foto enviada: foto do documento do menor" style="display:none">
@@ -96,7 +97,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <div class="field"><label for="guardianEmail">Gmail do responsável (para receber o resultado e autorização)</label><input id="guardianEmail" type="email" maxlength="254" autocomplete="email" placeholder="exemplo@gmail.com" required></div>
 </div>
 <div class="field"><label for="minorRelation">Vínculo com o menor</label><select id="minorRelation" required><option value="">Selecione</option><option>Pai</option><option>Mãe</option><option>Responsável legal</option></select></div>
-<div class="notice">📸 <b>Agora é a vez do pai, mãe ou responsável:</b> tire uma selfie e fotografe seu RG ou CNH. Toque nos quadros abaixo. As fotos serão conferidas pela equipe, não por reconhecimento facial.</div>
+<div class="notice">📸 <b>Agora é a vez do pai, mãe ou responsável:</b> tire uma selfie e fotografe seu RG ou CNH. Toque nos quadros abaixo e escolha <b>Tirar Foto</b> ou <b>Biblioteca de Fotos</b>. As fotos serão conferidas pela equipe, não por reconhecimento facial.</div>
 <div class="field photo-step">
   <div class="photo-title"><span class="photo-number">3</span><div><strong>Foto do rosto do responsável</strong><small>O rosto do responsável deve aparecer de frente, inteiro e sem filtro.</small></div></div>
   <label class="photo-upload" for="guardianPhoto">
@@ -104,7 +105,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
     <strong class="photo-big-label">É uma foto do rosto</strong>
     <span class="photo-button" id="guardianPhotoButton">📷 TIRAR FOTO DO ROSTO</span>
     <span class="photo-tip">Coloque seu rosto dentro do contorno. Evite boné, óculos escuros e contraluz.</span>
-    <input type="file" class="photo-file-input" id="guardianPhoto" accept="image/jpeg,image/png,image/webp,image/*" capture="user" aria-label="Abrir câmera para selfie do responsável" aria-describedby="guardianPhotoStatus" required>
+    <input type="file" class="photo-file-input" id="guardianPhoto" accept="image/*" aria-label="Abrir câmera para selfie do responsável" aria-describedby="guardianPhotoStatus" required>
   </label>
   <p class="photo-status" id="guardianPhotoStatus" role="status" aria-live="polite">○ Aguardando foto</p>
   <img id="photoPreview" class="photo-preview" alt="Foto enviada: foto do rosto do responsável" style="display:none">
@@ -116,7 +117,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
     <strong class="photo-big-label">É uma foto do documento</strong>
     <span class="photo-button" id="guardianDocumentButton">🪪 FOTOGRAFAR DOCUMENTO</span>
     <span class="photo-tip">Tire a foto com boa luz, sem reflexos, mostrando todo o documento.</span>
-    <input type="file" class="photo-file-input" id="guardianDocument" accept="image/jpeg,image/png,image/webp,image/*" capture="environment" aria-label="Fotografar documento do responsável" aria-describedby="guardianDocumentStatus" required>
+    <input type="file" class="photo-file-input" id="guardianDocument" accept="image/*" aria-label="Fotografar documento do responsável" aria-describedby="guardianDocumentStatus" required>
   </label>
   <p class="photo-status" id="guardianDocumentStatus" role="status" aria-live="polite">○ Aguardando foto</p>
   <img id="documentPreview" class="photo-preview" alt="Foto enviada: foto do documento do responsável" style="display:none">
@@ -173,5 +174,5 @@ for(const [id,preview,isDoc] of fields){
 }
 })();
 </script>
-<script src="menores-v120.js?v=20261024-autorizacao-geral-v152"></script>
+<script src="menores-v120.js?v=20261024-iphone-fotos-v156"></script>
 </body></html>
