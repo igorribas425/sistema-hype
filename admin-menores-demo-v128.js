@@ -67,6 +67,13 @@
      details.replaceChildren();details.hidden=false;
      details.append(el("h3","🧪 Resultado do teste: "+next.toUpperCase()));
      details.append(el("p","Gmails destinatários: "+(response.emails||[]).join(", ")));
+     if(next==="conferido"){
+       const link=el("a","🔗 ABRIR SITE DO TESTE VINCULADO","m120-btn");
+       link.href="https://hypeloungeclub.com.br/menor-comprar.html?demo="+encodeURIComponent(id)+"&v=20261024-v135";
+       link.target="_blank";link.rel="noopener noreferrer";
+       link.style.cssText="display:block;padding:13px;background:#633349;color:#fff;text-decoration:none;border-radius:9px;margin:12px 0;text-align:center;font-weight:700";
+       details.append(link);
+     }
      if(next==="pendente"){info("Teste voltou para pendente.");return;}
      if(response.emailSent){
        info("Mensagem aceita pelo provedor de e-mail; confira Gmail e Spam.");
