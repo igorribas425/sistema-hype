@@ -135,5 +135,43 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <button class="action" style="width:100%;margin-top:8px" id="sendForm" type="submit">ENVIAR AUTORIZAÇÃO PARA ANÁLISE</button>
 </section></form>
 <div id="feedback" role="status" aria-live="polite"></div>
-</main><script src="menores-v120.js?v=20261024-fotos-face-v147"></script>
+</main>
+<script>
+(()=>{
+"use strict";
+const fields=[
+["minorFacePhoto","minorFacePreview",false],
+["minorDocumentPhoto","minorDocumentPreview",true],
+["guardianPhoto","photoPreview",false],
+["guardianDocument","documentPreview",true]
+];
+for(const [id,preview,isDoc] of fields){
+ const input=document.getElementById(id),img=document.getElementById(preview);
+ const status=document.getElementById(id+"Status"),button=document.getElementById(id+"Button");
+ if(!input||!img||!status||!button)continue;
+ const card=input.closest(".photo-upload");
+ input.addEventListener("change",()=>{
+   if(!input.files.length)return;
+   card.classList.remove("is-ready");
+   status.className="photo-status";
+   status.textContent="⏳ Preparando foto, aguarde...";
+   button.textContent="⏳ PROCESSANDO FOTO...";
+ });
+ img.addEventListener("load",()=>{
+   if(!img.getAttribute("src"))return;
+   card.classList.add("is-ready");
+   status.className="photo-status is-ready";
+   status.textContent="✅ Foto recebida! Confira abaixo e toque para trocar se precisar.";
+   button.textContent=isDoc?"✅ DOCUMENTO RECEBIDO • TROCAR":"✅ SELFIE RECEBIDA • TROCAR";
+ });
+ img.addEventListener("error",()=>{
+   card.classList.remove("is-ready");
+   status.className="photo-status is-error";
+   status.textContent="❌ Erro ao carregar a foto. Tente novamente.";
+   button.textContent=isDoc?"🪪 FOTOGRAFAR DOCUMENTO":"📷 TIRAR FOTO DO ROSTO";
+ });
+}
+})();
+</script>
+<script src="menores-v120.js?v=20261024-fotos-face-v147"></script>
 </body></html>
