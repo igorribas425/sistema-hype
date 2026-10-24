@@ -408,6 +408,7 @@ html,body{max-width:100%;overflow-x:hidden}
       <button class="v95-home-card" type="button" data-v95-open="eventos"><span class="v95-icon">🎤</span><b>Eventos</b><small>Festas, lotes, preços e horários</small></button>
       <button class="v95-home-card" type="button" data-v95-open="avaliacao"><span class="v95-icon">⭐</span><b>Avaliações</b><small>Feedbacks bons e ruins</small></button>
       <button class="v95-home-card" type="button" data-v95-open="ferramentas"><span class="v95-icon">🎁</span><b>Sorteio & Acessos</b><small>Sorteio e dispositivos da equipe</small></button>
+      <button class="v95-home-card" type="button" data-v95-open="menores"><span class="v95-icon">🛡️</span><b>Menores de idade</b><small>Autorização dos pais, fotos e assinaturas</small></button>
     </div>
   </section>
 
@@ -1092,7 +1093,54 @@ Bruna Santos"></textarea>
   <script src="hype-v408-lista-admin.js?v=20261003-v71"></script>
   <script src="admin-v92-tabs.js?v=20261019-v106-financeiro"></script>
   <script src="admin-v103-customers.js?v=20261023-genero-feminino-masculino-v118"></script>
-  <script src="admin-v95-hub.js?v=20261004-v103"></script>
+  <script src="admin-v95-hub.js?v=20261023-menores-v120"></script>
   <script src="admin-chamados-portaria-v108.js?v=20261023-push-diagnostico-v117"></script>
+<style id="hypeMinorsAdminStyle">
+#hypeMinorsAdminPanel{display:none!important;max-width:1050px;margin:16px auto 60px;background:#0e0b10;border:1px solid #713448;border-radius:19px;padding:18px;color:#fff}
+#hypeMinorsAdminPanel.v95-show{display:block!important}
+#hypeMinorsAdminPanel h2{font-size:22px;margin:0 0 7px}
+#hypeMinorsAdminPanel small{color:#bdb0b8;line-height:1.4}
+.m120-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.m120-btn{padding:11px 13px;border:1px solid #93405b;border-radius:10px;background:#991d45;color:white;cursor:pointer;font-weight:900;min-height:40px}
+.m120-btn:disabled{opacity:.5}
+.m120-green{background:#1c945c;border-color:#42d08b}.m120-red{background:#922034}.m120-ghost{background:#222027;border-color:#48414a}
+.m120-warning{border:1px solid #a34c5c;background:#32151c;padding:12px;border-radius:12px;color:#ffe0e4;font-size:12px}
+.m120-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.m120-toolbar select{background:#171219;color:white;padding:10px;border:1px solid #583846;border-radius:10px;min-height:44px;max-width:100%}
+.m120-counts{display:flex;gap:10px;flex-wrap:wrap}
+.m120-counts span{padding:7px 12px;border:1px solid #47313b;border-radius:999px;font-size:12px}
+.m120-card{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:12px;margin:9px 0;background:#171118;border:1px solid #432735;border-radius:12px}
+.m120-title{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:0 0 5px}
+.m120-card-content{flex:1 1 240px}.m120-name{font-size:15px}
+.m120-status{border-radius:999px;padding:3px 8px;border:1px solid #805267;font-size:10px;font-weight:900}
+.m120-conferido{color:#adffd4;border-color:#2f805b}.m120-recusado{color:#ff98aa;border-color:#ba355b}.m120-pendente{color:#ffe2ac}
+#m120-admin-document-note{color:#b9aeb2;font-size:12px}
+#minorAdminDetail{background:#161217;border:1px solid #613947;padding:15px;border-radius:13px;margin-top:12px}
+#minorAdminDetail[hidden]{display:none!important}
+.m120-detail-grid{display:grid;grid-template-columns:1fr 2fr;gap:8px 12px;margin:14px 0}
+.m120-detail-grid dt{font-size:11px;color:#b8aeb5}.m120-detail-grid dd{margin:0;font-weight:700;font-size:13px;overflow-wrap:anywhere}
+.m120-image-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:16px 0}
+.m120-image{border:1px solid #503040;border-radius:12px;padding:12px;text-align:center;background:#110e13}
+.m120-image strong{display:block;font-size:12px;margin-bottom:8px}
+.m120-image img{display:block;max-width:100%;max-height:260px;object-fit:contain;margin:auto;border-radius:8px}
+.m120-check{display:flex;align-items:flex-start;gap:10px;font-size:12px;margin:12px 0;color:#e5dce1}
+.m120-check input{width:21px;height:21px;margin:0;flex-shrink:0;accent-color:#e83060}
+.m120-note{width:100%;padding:12px;border:1px solid #755263;border-radius:9px;background:#100d13;color:#fff;margin:9px 0}
+.m120-actions{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:620px){#hypeMinorsAdminPanel{padding:13px;margin:12px 0 70px}.m120-card{align-items:stretch}.m120-card .m120-btn{width:100%}}
+</style>
+<section id="hypeMinorsAdminPanel">
+<div class="m120-head"><div><h2>🛡️ Menores de idade</h2><small>Foto e assinatura do responsável, sob sigilo. Revisão preliminar; não garante entrada.</small></div>
+<a href="./menores.html" target="_blank" rel="noopener" style="color:#ffaac1;font-size:12px">🔗 Formulário dos responsáveis</a></div>
+<p class="m120-warning">⚠️ É proibido fornecer bebidas alcoólicas a menores de 18 anos, mesmo com autorização. Para admissão, confirme as regras do evento e da autoridade competente. A HYPE deve verificar documentos originais na entrada. Não libere ingresso ou pagamento de menor sem análise.</p>
+<div class="m120-counts"><span>⏳ Pendentes <b id="minorCountPending">0</b></span><span>✅ Analisados <b id="minorCountChecked">0</b></span><span>⛔ Recusados <b id="minorCountRejected">0</b></span></div>
+<div class="m120-toolbar"><select id="minorAdminEvent"><option value="">Todos os eventos</option></select>
+<button class="m120-btn" type="button" id="minorRefresh">↻ Atualizar</button>
+<button class="m120-btn m120-ghost" type="button" id="minorPurge">🗑️ Limpar registros vencidos</button></div>
+<p id="minorAdminStatus" role="status" style="color:#b4ebc9;font-size:12px;margin:10px 0">Aguardando acesso do administrador.</p>
+<div id="minorAdminList"></div><div id="minorAdminDetail" hidden></div>
+</section>
+<script src="admin-menores-v120.js?v=20261023"></script>
+
 </body>
 </html>
