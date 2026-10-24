@@ -1,11 +1,12 @@
-/* HYPE Menores V122. Selfie, RG/CNH e assinatura para conferência humana, sem reconhecimento facial. */
+/* HYPE Menores V129: somente 16-17 anos, selfie e documento do menor, conferência humana. */
 (() => {
  'use strict';
  const $=id=>document.getElementById(id);
  const ENDPOINT='https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minors-authorization';
  const wantedId=Number(new URLSearchParams(location.search).get('evento')||0);
  const canvas=$('signature'),ctx=canvas.getContext('2d',{willReadFrequently:true});
- let drawing=false,signed=false,photoUrl='',documentUrl='';
+ let drawing=false,signed=false,photoUrl='',documentUrl='',minorFaceUrl='',minorDocumentUrl='';
+ let availableEvents=[];
  function message(text,ok=false){
    const el=$('feedback');el.textContent=text;el.className=ok?'ok':'bad';el.scrollIntoView({behavior:'smooth',block:'center'});
  }
@@ -76,9 +77,42 @@
      $('documentPreview').style.display='block';
    }catch(err){message(err.message||'Não foi possível ler o documento.');}
  });
+
+ async function updateMinorAge(){
+   const event=availableEvents.find(x=>Number(x.id)===Number($('minorEvent').value));
+   const birth=$('minorBirth').value;
+   if(!event||!birth)return true;
+   const d=new Date(birth+'T12:00:00Z'),e=new Date(event.event_date+'T12:00:00Z');
+   if(Number.isNaN(d.getTime())||Number.isNaN(e.getTime()))return false;
+   let years=e.getUTCFullYear()-d.getUTCFullYear();
+   if(e.getUTCMonth()<d.getUTCMonth()||(e.getUTCMonth()===d.getUTCMonth()&&e.getUTCDate()<d.getUTCDate()))years--;
+   const ok=years===16||years===17;
+   $('minorBirth').setCustomValidity(ok?'':'Somente menores de 16 ou 17 anos na data da festa podem solicitar autorização.');
+   return ok;
+ }
+ $('minorBirth').addEventListener('change',updateMinorAge);
+ $('minorEvent').addEventListener('change',updateMinorAge);
+
+ async function chooseMinorPhoto(inputId,previewId,kind){
+   const img=$(previewId);img.style.display='none';
+   const value=await compressPhoto($(inputId).files[0],kind);
+   img.src=value;img.style.display='block';
+   return value;
+ }
+ $('minorFacePhoto').addEventListener('change',async()=>{
+   minorFaceUrl='';
+   try{minorFaceUrl=await chooseMinorPhoto('minorFacePhoto','minorFacePreview','selfie');}
+   catch(err){message(err.message||'Não foi possível processar a selfie do menor.');}
+ });
+ $('minorDocumentPhoto').addEventListener('change',async()=>{
+   minorDocumentUrl='';
+   try{minorDocumentUrl=await chooseMinorPhoto('minorDocumentPhoto','minorDocumentPreview','documento');}
+   catch(err){message(err.message||'Não foi possível processar o documento do menor.');}
+ });
  async function loadEvents(){
    try{
      const data=await rpc({action:'events'}),list=$('minorEvent');
+     availableEvents=data.events||[];
      list.innerHTML='';
      const empty=document.createElement('option');empty.value='';empty.textContent='Escolha o evento';list.appendChild(empty);
      (data.events||[]).forEach(event=>{
@@ -86,6 +120,7 @@
        list.appendChild(opt);
      });
      if(wantedId&&[...list.options].some(x=>Number(x.value)===wantedId))list.value=String(wantedId);
+     updateMinorAge();
      if(!data.events?.length)message('Nenhum evento disponível para cadastro. Procure a HYPE.');
    }catch(e){message('Erro ao buscar eventos: '+e.message);}
  }
@@ -115,12 +150,16 @@
  $('minorForm').addEventListener('submit',async e=>{
    e.preventDefault();
    const btn=$('sendForm');
+   if(!await updateMinorAge())return message('O menor precisa ter 16 ou 17 anos completos na data da festa.');
+   if(!minorFaceUrl)return message('Tire uma selfie nítida do rosto do próprio menor.');
+   if(!minorDocumentUrl)return message('Envie uma foto legível do documento do próprio menor.');
    if(!signed)return message('O responsável precisa assinar no quadro branco.');
    if(!photoUrl)return message('Inclua a selfie do responsável antes de continuar.');
    if(!documentUrl)return message('Inclua uma foto nítida do RG ou CNH do responsável antes de continuar.');
    const form={
      action:'submit',eventId:Number($('minorEvent').value),
      minorName:$('minorName').value,minorCpf:$('minorCpf').value,minorBirth:$('minorBirth').value,
+     minorFacePhoto:minorFaceUrl,minorDocumentPhoto:minorDocumentUrl,
      guardianName:$('guardianName').value,guardianCpf:$('guardianCpf').value,
      guardianBirth:$('guardianBirth').value,guardianPhone:$('guardianPhone').value,
      guardianEmail:$('guardianEmail').value.trim().toLowerCase(),
