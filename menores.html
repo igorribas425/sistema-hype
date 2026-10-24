@@ -24,7 +24,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 </style></head>
 <body><main><div class="logo"><img src="logo-hype.png" alt="HYPE Lounge Club"><div><a href="./cliente.html">← Voltar para ingressos</a></div></div>
 <h1>🛡️ Autorização para menores de 16 e 17 anos</h1>
-<p class="subtitle">Declaração do pai, mãe ou responsável legal para adolescentes de 16 ou 17 anos completos na data do evento. A compra de Pista custa R$ 30 para a noite toda, somente após análise. O preenchimento não garante entrada.</p>
+<p class="subtitle">Cadastro de autorização para adolescentes de 16 ou 17 anos na data do evento. Envie os documentos e aguarde a análise da HYPE. Se aprovado, o responsável e o menor receberão a autorização para apresentação no evento. O ingresso de R$ 30,00 (Pista, noite toda) será vendido somente presencialmente. Não existe pagamento de menor pelo site.</p>
 <div class="notice"><b>🚫 Proibido álcool para menores de 18 anos.</b> Nenhuma autorização dos pais permite venda, fornecimento ou consumo de bebidas alcoólicas por menores. A HYPE e a portaria devem cumprir as regras de admissão do evento e a legislação aplicável. A autorização parental pode não ser suficiente para permitir a entrada.</div>
 <form id="minorForm">
 <section><h2>🎟️ Evento e menor de idade</h2>
@@ -32,7 +32,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <div class="grid"><div class="field"><label for="minorName">Nome completo do menor</label><input id="minorName" maxlength="120" minlength="5" autocomplete="name" required></div>
 <div class="field"><label for="minorCpf">CPF do menor</label><input id="minorCpf" maxlength="14" inputmode="numeric" placeholder="000.000.000-00" required></div></div>
 <div class="field"><label for="minorBirth">Data de nascimento do menor</label><input type="date" id="minorBirth" required><small>Somente 16 ou 17 anos na data da festa. Menores de 16 anos não podem utilizar este cadastro.</small></div>
-<div class="field"><label for="minorEmail">Gmail do menor (recebe o resultado e o link junto com o responsável)</label><input type="email" id="minorEmail" maxlength="254" autocomplete="email" inputmode="email" placeholder="menor@gmail.com" required><small>A HYPE envia o mesmo resultado para os dois e-mails cadastrados.</small></div>
+<div class="field"><label for="minorEmail">Gmail do menor (recebe o resultado da análise)</label><input type="email" id="minorEmail" maxlength="254" autocomplete="email" inputmode="email" placeholder="menor@gmail.com" required><small>A HYPE enviará o resultado da autorização aos dois e-mails, sem link de pagamento.</small></div>
 <div class="notice">📷 Identificação obrigatória do próprio menor: selfie do rosto e fotografia do documento com nome, foto e data de nascimento legíveis. As imagens serão conferidas manualmente pela HYPE, sem reconhecimento facial automático.</div>
 <div class="field"><label for="minorFacePhoto">1. Selfie facial do menor (obrigatória)</label>
 <input type="file" id="minorFacePhoto" accept="image/jpeg,image/png,image/webp,image/*" capture="user" required>
@@ -47,7 +47,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <div class="field"><label for="guardianCpf">CPF do responsável</label><input id="guardianCpf" maxlength="14" inputmode="numeric" required></div>
 <div class="field"><label for="guardianBirth">Data de nascimento</label><input type="date" id="guardianBirth" required></div>
 <div class="field"><label for="guardianPhone">WhatsApp do responsável</label><input id="guardianPhone" type="tel" maxlength="18" inputmode="tel" required></div>
-<div class="field"><label for="guardianEmail">E-mail do responsável (para receber o resultado da análise)</label><input id="guardianEmail" type="email" maxlength="254" autocomplete="email" placeholder="exemplo@gmail.com" required></div>
+<div class="field"><label for="guardianEmail">Gmail do responsável (para receber o resultado e autorização)</label><input id="guardianEmail" type="email" maxlength="254" autocomplete="email" placeholder="exemplo@gmail.com" required></div>
 </div>
 <div class="field"><label for="minorRelation">Vínculo com o menor</label><select id="minorRelation" required><option value="">Selecione</option><option>Pai</option><option>Mãe</option><option>Responsável legal</option></select></div>
 <div class="notice">📷 Foto para conferência manual, <b>não reconhecimento facial automatizado</b>. Tire uma selfie nítida do próprio responsável. Na entrada, a equipe deverá conferir documentos originais.</div>
@@ -67,9 +67,9 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <label class="check"><input type="checkbox" id="checkAlcohol" required><span>Estou ciente de que <b>é proibida a venda, o fornecimento e o consumo de bebidas alcoólicas pelo menor</b>, sem exceções por autorização dos pais.</span></label>
 <label class="check"><input type="checkbox" id="checkPrivacy" required><span>Autorizo o tratamento dos dados desta declaração, inclusive a selfie e o documento do adolescente, a selfie e o documento do responsável e a assinatura, exclusivamente para a conferência da autorização, nos termos da LGPD. Reconheço que posso solicitar informações e exclusão à organização, ressalvadas obrigações legais.</span></label>
 <label class="check"><input type="checkbox" id="checkGuardian" required><span>Confirmo que os dados, a selfie e o documento enviados são meus, que sou maior de 18 anos e que comparecerei ou fornecerei documentos originais para a conferência exigida pela HYPE.</span></label>
-<div class="notice">🔒 Os arquivos ficam em área privada, acessível somente à administração autorizada. A declaração é analisada pela HYPE e pode ser recusada. Registros podem ser excluídos conforme a política de retenção.</div>
-<button class="action" style="width:100%;margin-top:8px" id="sendForm" type="submit">ENVIAR DECLARAÇÃO PARA CONFERÊNCIA</button>
+<div class="notice">🔒 Os arquivos ficam em área privada, acessível somente à administração autorizada. A declaração será conferida pela HYPE. O QR Code da autorização não é ingresso, não comprova pagamento e não libera entrada automática. Registros podem ser excluídos conforme a política de retenção.</div>
+<button class="action" style="width:100%;margin-top:8px" id="sendForm" type="submit">ENVIAR AUTORIZAÇÃO PARA ANÁLISE</button>
 </section></form>
 <div id="feedback" role="status" aria-live="polite"></div>
-</main><script src="menores-v120.js?v=20261024-two-email-v131"></script>
+</main><script src="menores-v120.js?v=20261024-autorizacao-presencial-v140"></script>
 </body></html>
