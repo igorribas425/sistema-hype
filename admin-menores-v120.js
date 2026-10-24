@@ -118,8 +118,8 @@ async function downloadAuthorizationPDF(row){
   const bytesAsText=atob(data.base64),bytes=new Uint8Array(bytesAsText.length);
   for(let i=0;i<bytes.length;i++)bytes[i]=bytesAsText.charCodeAt(i);
   if(bytes.length<500||String.fromCharCode(...bytes.slice(0,4))!=='%PDF')throw Error('O servidor não retornou um PDF válido.');
-  if(pdfObjectUrl)URL.revokeObjectURL(pdfObjectUrl);
-  pdfObjectUrl=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+  if(pdfObjectUrl)window.URL.revokeObjectURL(pdfObjectUrl);
+  pdfObjectUrl=window.URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
   const target=panel||pdfMessage('PDF pronto');
   target.replaceChildren();
   target.append(text('strong','✅ PDF gerado! Escolha uma das opções abaixo.'));
