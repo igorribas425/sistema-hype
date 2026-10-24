@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Cache-Control" content="no-store">
+<meta name="theme-color" content="#08080b">
+<title>HYPE • Ingresso de menor autorizado</title>
+<style>
+:root{color-scheme:dark;--pink:#e42d65;--bg:#08080b;--panel:#151319;--line:#3b303b;--muted:#c7b7c3;--green:#85f3b4}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top right,#40202e 0,#08080b 45%);color:#fff;font:15px/1.5 system-ui,Arial,sans-serif;padding:18px}
+main{width:min(670px,100%);margin:18px auto 65px}h1{font-size:clamp(25px,5vw,34px);line-height:1.2;margin:5px 0 9px}h2{margin:0 0 12px;font-size:18px}
+.brand{color:#fff;font-size:15px;font-weight:1000;letter-spacing:2px}.brand span{color:#f75583}.sub{color:var(--muted);font-size:13px}
+.box{border:1px solid var(--line);background:var(--panel);padding:19px;border-radius:17px;margin:17px 0;box-shadow:0 10px 35px #0004}
+.notice{background:#321c29;border:1px solid #865065;border-radius:11px;padding:12px 14px;margin:14px 0;font-size:13px}
+.info{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin:15px 0}
+.info>div{padding:12px;border:1px solid #42333f;border-radius:11px;background:#1c171e;overflow-wrap:anywhere}
+small{display:block;color:var(--muted);font-size:11px;margin:0 0 5px}strong{overflow-wrap:anywhere}
+label{display:block;font-weight:800;margin:14px 0 7px}select{width:100%;padding:14px;border-radius:11px;border:1px solid #57434f;background:#211c24;color:#fff;font:inherit}
+button,.button{width:100%;margin-top:14px;border:0;border-radius:12px;background:var(--pink);color:white;font:bold 14px system-ui;padding:15px;cursor:pointer;text-align:center}
+button:disabled{opacity:.55;cursor:wait}.ghost{background:#29232d;border:1px solid #554451}.ok{color:var(--green)}.bad{color:#ff9fb8}
+.qr{display:block;background:white;border:8px solid white;border-radius:12px;margin:14px auto;width:min(265px,100%);height:auto}
+.copy{white-space:pre-wrap;overflow-wrap:anywhere;background:#070709;border:1px dashed #594557;border-radius:10px;padding:13px;margin-top:14px;font-size:12px;max-height:135px;overflow:auto}
+[hidden]{display:none!important}
+@media(max-width:490px){.info{grid-template-columns:1fr}.box{padding:15px}}
+</style>
+</head>
+<body>
+<main>
+<div class="brand">HYPE <span>LOUNGE CLUB</span></div>
+<h1>Compra autorizada para menor</h1>
+<p class="sub">Esta página é exclusiva para o menor indicado na autorização aprovada pela equipe da HYPE. A compra segue o mesmo pagamento e envio de QR Code dos outros ingressos.</p>
+<div id="message" class="notice" role="status">Conferindo o link de autorização...</div>
+<section id="checkout" class="box" hidden>
+<h2>🎟️ Dados do ingresso</h2>
+<div class="info">
+<div><small>EVENTO</small><strong id="eventLabel">—</strong></div>
+<div><small>INGRESSO EM NOME DE</small><strong id="minorName">—</strong></div>
+<div><small>CPF VINCULADO</small><strong id="minorCpf">—</strong></div>
+<div><small>E-MAIL QUE RECEBE O QR CODE</small><strong id="guardianEmail">—</strong></div>
+</div>
+<div class="notice">🛡️ Os dados do menor são preenchidos automaticamente pela autorização. Não podem ser trocados nesta compra. Apresente os documentos originais na portaria. A entrada segue as regras do evento e a legislação.</div>
+<div id="selectArea">
+<label for="gender">Ingresso</label>
+<select id="gender" required><option value="">Selecione</option><option value="Feminino">Feminino</option><option value="Masculino">Masculino</option></select>
+<label for="lot">Categoria / setor</label>
+<select id="lot" required><option value="">Selecione a categoria</option></select>
+<p class="sub">O valor exato será calculado na compra, conforme o preço e a disponibilidade atuais do evento.</p>
+<button id="create" type="button">CONTINUAR PARA PAGAMENTO</button>
+</div>
+</section>
+<section id="payment" class="box" hidden>
+<h2 id="paymentTitle">Pagamento do ingresso</h2>
+<div id="paymentInfo" class="notice"></div>
+<img id="qrImage" class="qr" alt="QR Code PIX" hidden>
+<div id="pixCode" class="copy" hidden></div>
+<button id="copyPix" class="ghost" type="button" hidden>COPIAR PIX COPIA E COLA</button>
+<button id="refresh" class="ghost" type="button">ATUALIZAR SITUAÇÃO DO INGRESSO</button>
+<p class="sub">O comprovante do Asaas não é o ingresso. Após o pagamento confirmado, a HYPE envia o ingresso com QR Code ao e-mail cadastrado. Confira também o Spam.</p>
+</section>
+<a class="button ghost" style="display:block;text-decoration:none" href="cliente.html">VOLTAR AO SITE DA HYPE</a>
+</main>
+<script src="supabase-config.js?v=20261001-v48"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js" referrerpolicy="no-referrer"></script>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const cfg=window.HYPE_SUPABASE_CONFIG||{};
+const token=(new URLSearchParams(location.search).get("token")||"").trim();
+let state=null,currentTicket=null;
+function alertBox(message,bad){$("message").textContent=message;$("message").className="notice "+(bad?"bad":"ok");}
+async function api(name,payload){
+ if(!cfg.url||!cfg.anonKey)throw Error("A conexão da HYPE está indisponível.");
+ const response=await fetch(cfg.url+"/functions/v1/"+name,{method:"POST",headers:{"Content-Type":"application/json","apikey":cfg.anonKey,"Authorization":"Bearer "+cfg.anonKey},body:JSON.stringify(payload)});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok||data.ok===false||data.success===false)throw Error(data.error||"Não foi possível consultar a HYPE.");
+ return data;
+}
+function setTicket(t){
+ if(!t)return;
+ currentTicket=t;
+ $("checkout").hidden=false;$("selectArea").hidden=true;
+ $("payment").hidden=false;
+ const paid=t.payment_status==="Pago";
+ if(paid){
+  $("paymentTitle").textContent="✅ INGRESSO CONFIRMADO";
+  $("paymentInfo").textContent="O ingresso "+t.ticket_code+" foi confirmado. O QR Code deve chegar ao e-mail do responsável. Apresente o ingresso e os documentos na portaria.";
+  $("copyPix").hidden=true;$("pixCode").hidden=true;$("qrImage").hidden=true;
+  alertBox("Ingresso confirmado e vinculado à autorização do menor.",false);
+  return;
+ }
+ $("paymentTitle").textContent="⏳ AGUARDANDO PAGAMENTO";
+ $("paymentInfo").textContent="Pedido "+t.ticket_code+" • Preparando o PIX para pagamento...";
+ if(Number(t.price)<=0){$("paymentInfo").textContent="Ingresso FREE em processamento. Atualize o status.";return;}
+ createPix(t).catch(e=>{alertBox(e.message,true);$("paymentInfo").textContent="Não foi possível consultar o PIX. Atualize a página para tentar novamente."});
+}
+async function createPix(ticket){
+ const body=await api("asaas-pix",{ticket_id:ticket.id,ticket_token:ticket.qr_token});
+ $("paymentInfo").textContent="PIX GERADO • Ingresso "+ticket.ticket_code+" • Valor R$ "+Number(ticket.price).toFixed(2).replace(".",",")+" • Após o pagamento, aguarde a confirmação automática.";
+ $("pixCode").textContent=body.qr_code||"";$("pixCode").hidden=false;$("copyPix").hidden=false;
+ const qr=$("qrImage");
+ if(body.qr_code_base64){qr.src=body.qr_code_base64.startsWith("data:")?body.qr_code_base64:"data:image/png;base64,"+body.qr_code_base64;qr.hidden=false;}
+ else if(window.QRCode&&window.QRCode.toDataURL){qr.src=await window.QRCode.toDataURL(body.qr_code,{width:250,margin:2});qr.hidden=false;}
+ alertBox("O pedido foi criado para o menor autorizado. Faça o PIX para receber o ingresso.",false);
+}
+async function load(){
+ if(!/^[0-9a-f]{64}$/.test(token)){alertBox("Link inválido. Solicite à HYPE o link exclusivo de compra.",true);return;}
+ try{
+  const d=await api("hype-minors-checkout",{action:"status",token});
+  state=d;$("checkout").hidden=false;
+  $("eventLabel").textContent=d.event.name+" • "+new Date(d.event.event_date+"T12:00:00").toLocaleDateString("pt-BR");
+  $("minorName").textContent=d.minorName;$("minorCpf").textContent=d.minorCpfMask;
+  $("guardianEmail").textContent=d.guardianEmail;
+  const select=$("lot");select.replaceChildren();
+  const blank=document.createElement("option");blank.value="";blank.textContent="Selecione a categoria";select.append(blank);
+  (d.lots||[]).forEach(l=>{const x=document.createElement("option");x.value=String(l.id);x.textContent=l.name+" • "+l.sector;select.append(x);});
+  if(d.ticket){setTicket(d.ticket);}else{alertBox("Autorização conferida. Agora é possível comprar o ingresso vinculado ao menor.",false);}
+ }catch(e){alertBox(e.message,true);}
+}
+$("create").addEventListener("click",async()=>{
+ if(!state)return;
+ const lotId=Number($("lot").value),gender=$("gender").value;
+ if(!lotId||!gender)return alertBox("Selecione o ingresso e a categoria.",true);
+ const button=$("create");button.disabled=true;button.textContent="CRIANDO PEDIDO...";
+ try{const d=await api("hype-minors-checkout",{action:"create",token,lotId,gender});setTicket(d.ticket);}
+ catch(e){alertBox(e.message,true);}finally{button.disabled=false;button.textContent="CONTINUAR PARA PAGAMENTO";}
+});
+$("copyPix").addEventListener("click",async()=>{
+ try{await navigator.clipboard.writeText($("pixCode").textContent);alertBox("Código PIX copiado.",false);}catch(e){alertBox("Selecione e copie o código manualmente.",true);}
+});
+$("refresh").addEventListener("click",async()=>{await load();});
+load();
+})();
+</script>
+</body>
+</html>
