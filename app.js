@@ -1550,6 +1550,12 @@ async function createPixOrder(e) {
   const name = document.getElementById("clientName")?.value.trim() || "";
   const phone = document.getElementById("clientPhone")?.value.trim() || "";
   const email = document.getElementById("clientEmail")?.value.trim() || "";
+  const confirmation = document.getElementById("clientEmailConfirm");
+  if (confirmation && email.toLowerCase() !== confirmation.value.trim().toLowerCase()) {
+    alert("Os dois e-mails estão diferentes. Confira o endereço completo para receber seu ingresso com QR Code.");
+    confirmation.focus();
+    return;
+  }
   const cpf = document.getElementById("clientCpf")?.value.trim() || "";
   const gender = document.getElementById("clientGender")?.value || "";
 
