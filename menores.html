@@ -22,7 +22,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 #feedback.ok{display:block;color:#bff8d8;background:#103123;border:1px solid #278c56}#feedback.bad{display:block;color:#ffd4de;background:#381521;border:1px solid #d13c62}
 @media(max-width:560px){.grid{grid-template-columns:1fr}section{padding:16px}}
 </style></head>
-<body><main><div class="logo"><img src="logo-hype.png" alt="HYPE Lounge Club"><div><a href="./index.html">← Voltar para ingressos</a></div></div>
+<body><main><div class="logo"><img src="logo-hype.png" alt="HYPE Lounge Club"><div><a href="./cliente.html">← Voltar para ingressos</a></div></div>
 <h1>🛡️ Autorização para menor</h1>
 <p class="subtitle">Declaração do pai, mãe ou responsável legal para análise pela HYPE. O preenchimento não garante ingresso nem autoriza a entrada automaticamente.</p>
 <div class="notice"><b>🚫 Proibido álcool para menores de 18 anos.</b> Nenhuma autorização dos pais permite venda, fornecimento ou consumo de bebidas alcoólicas por menores. A HYPE e a portaria devem cumprir as regras de admissão do evento e a legislação aplicável. A autorização parental pode não ser suficiente para permitir a entrada.</div>
@@ -38,10 +38,17 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <div class="field"><label for="guardianCpf">CPF do responsável</label><input id="guardianCpf" maxlength="14" inputmode="numeric" required></div>
 <div class="field"><label for="guardianBirth">Data de nascimento</label><input type="date" id="guardianBirth" required></div>
 <div class="field"><label for="guardianPhone">WhatsApp do responsável</label><input id="guardianPhone" type="tel" maxlength="18" inputmode="tel" required></div>
+<div class="field"><label for="guardianEmail">E-mail do responsável</label><input id="guardianEmail" type="email" maxlength="180" autocomplete="email" placeholder="responsavel@gmail.com" required></div>
 </div>
 <div class="field"><label for="minorRelation">Vínculo com o menor</label><select id="minorRelation" required><option value="">Selecione</option><option>Pai</option><option>Mãe</option><option>Responsável legal</option></select></div>
 <div class="notice">📷 Foto para conferência manual, <b>não reconhecimento facial automatizado</b>. Tire uma selfie nítida do próprio responsável. Na entrada, a equipe deverá conferir documentos originais.</div>
-<div class="field"><label for="guardianPhoto">Foto do rosto do responsável</label><input id="guardianPhoto" type="file" accept="image/jpeg,image/png,image/webp,image/*" capture="user" required><small>A câmera frontal poderá abrir no celular. A imagem será compactada antes do envio.</small><img id="photoPreview" alt="Prévia da foto"></div>
+<div class="field"><label for="guardianPhoto">1. Selfie do rosto do responsável</label><input id="guardianPhoto" type="file" accept="image/jpeg,image/png,image/webp,image/*" capture="user" required><small>Tire uma selfie nítida, de frente e com boa iluminação.</small><img id="photoPreview" alt="Prévia da selfie" style="display:none;max-width:100%;max-height:220px;object-fit:contain;border-radius:10px;margin:10px auto"></div>
+<div class="field" style="padding:14px;border:1px solid #66404e;border-radius:13px;background:#20151c">
+<label for="guardianDocument">2. Foto do documento do responsável (obrigatória)</label>
+<input id="guardianDocument" type="file" accept="image/jpeg,image/png,image/webp,image/*" capture="environment" required>
+<small>Fotografe seu <b>RG ou CNH</b>, no lado em que apareçam seu nome e foto. Todas as informações devem ficar legíveis e sem reflexos. Somente documento do responsável, não do menor.</small>
+<img id="documentPreview" alt="Prévia do documento de identificação" style="display:none;max-width:100%;max-height:245px;object-fit:contain;border-radius:10px;margin:12px auto">
+</div>
 </section>
 <section><h2>✍️ Assinatura do responsável</h2><p style="font-size:12px">Assine no quadro branco com o dedo ou mouse, como em um formulário físico.</p>
 <canvas id="signature"></canvas>
@@ -49,11 +56,11 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <section><h2>☑️ Termos e autorização</h2>
 <label class="check"><input type="checkbox" id="checkAttend" required><span>Declaro ser pai, mãe ou responsável legal, e autorizo a participação do menor <b>somente se o evento e a legislação permitirem</b>, sujeita à avaliação da organização e conferência de documentos.</span></label>
 <label class="check"><input type="checkbox" id="checkAlcohol" required><span>Estou ciente de que <b>é proibida a venda, o fornecimento e o consumo de bebidas alcoólicas pelo menor</b>, sem exceções por autorização dos pais.</span></label>
-<label class="check"><input type="checkbox" id="checkPrivacy" required><span>Autorizo o tratamento dos dados desta declaração, inclusive a foto e a assinatura, exclusivamente para a conferência da autorização, nos termos da LGPD. Reconheço que posso solicitar informações e exclusão à organização, ressalvadas obrigações legais.</span></label>
-<label class="check"><input type="checkbox" id="checkGuardian" required><span>Confirmo que os dados e a foto são meus, que sou maior de 18 anos e que comparecerei ou fornecerei documentos originais para a conferência exigida pela HYPE.</span></label>
+<label class="check"><input type="checkbox" id="checkPrivacy" required><span>Autorizo o tratamento dos dados desta declaração, inclusive a selfie, a foto do documento e a assinatura, exclusivamente para a conferência da autorização, nos termos da LGPD. Reconheço que posso solicitar informações e exclusão à organização, ressalvadas obrigações legais.</span></label>
+<label class="check"><input type="checkbox" id="checkGuardian" required><span>Confirmo que os dados, a selfie e o documento enviados são meus, que sou maior de 18 anos e que comparecerei ou fornecerei documentos originais para a conferência exigida pela HYPE.</span></label>
 <div class="notice">🔒 Os arquivos ficam em área privada, acessível somente à administração autorizada. A declaração é analisada pela HYPE e pode ser recusada. Registros podem ser excluídos conforme a política de retenção.</div>
 <button class="action" style="width:100%;margin-top:8px" id="sendForm" type="submit">ENVIAR DECLARAÇÃO PARA CONFERÊNCIA</button>
 </section></form>
 <div id="feedback" role="status" aria-live="polite"></div>
-</main><script src="menores-v120.js?v=20261023"></script>
+</main><script src="menores-v120.js?v=20261023-documento-v122"></script>
 </body></html>
