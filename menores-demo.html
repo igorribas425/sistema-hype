@@ -36,9 +36,9 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 @media(max-width:560px){.demo-data{grid-template-columns:1fr}}
 </style></head>
 <body><main><div class="logo"><img src="logo-hype.png" alt="HYPE Lounge Club"><div><a href="./cliente.html">← Voltar para ingressos</a></div></div>
-<div class="demo-ribbon"><strong>AMBIENTE DE DEMONSTRAÇÃO</strong><span>Não gera autorização, ingresso nem cobrança</span></div>
+<div class="demo-ribbon"><strong>AMBIENTE DE DEMONSTRAÇÃO</strong><span>Registra somente um teste fictício no ADM • sem gerar ingresso ou cobrança</span></div>
 <h1>🧪 Teste fictício • Menores</h1>
-<p class="subtitle">Teste completo do formulário e da tela do ADM com personagens fictícios. Nenhuma informação será enviada ao Supabase ou ao Gmail. Se você escolher imagens do celular, elas aparecerão somente na prévia desta página.</p>
+<p class="subtitle">Teste completo com personagens fictícios. Ao confirmar, o ADM receberá apenas um protocolo de DEMONSTRAÇÃO. CPFs, nomes alterados, fotos e assinatura não serão transmitidos ao banco de dados ou Gmail. Imagens escolhidas no celular aparecem apenas nesta página.</p>
 <div class="notice"><b>🚫 Proibido álcool para menores de 18 anos.</b> Nenhuma autorização dos pais permite venda, fornecimento ou consumo de bebidas alcoólicas por menores. A HYPE e a portaria devem cumprir as regras de admissão do evento e a legislação aplicável. A autorização parental pode não ser suficiente para permitir a entrada.</div>
 <form id="minorForm">
 <section><h2>🎟️ Evento e menor de idade</h2>
@@ -71,14 +71,15 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <label class="check"><input type="checkbox" id="checkAlcohol" required checked><span>Estou ciente de que <b>é proibida a venda, o fornecimento e o consumo de bebidas alcoólicas pelo menor</b>, sem exceções por autorização dos pais.</span></label>
 <label class="check"><input type="checkbox" id="checkPrivacy" required checked><span>Entendi que este teste não envia imagens ou dados para o servidor. Se eu escolher imagens do celular, elas serão exibidas somente na prévia local.</span></label>
 <label class="check"><input type="checkbox" id="checkGuardian" required checked><span>Confirmo que estou simulando um caso fictício. Esta página não autoriza entrada em nenhum evento.</span></label>
-<div class="notice"><b>🔒 Somente demonstração.</b> Nada do que você preencher aqui é salvo no banco de dados ou enviado à administração. Use a página oficial para cadastros verdadeiros.</div>
-<button class="action" style="width:100%;margin-top:8px" id="sendForm" type="submit">SIMULAR ENVIO E VER O ADM</button>
+<div class="notice"><b>🔒 Somente demonstração.</b> Apenas o protocolo do teste é salvo no banco de dados para aparecer na área separada do ADM. Nenhum dado digitado, selfie, documento ou assinatura é enviado. Use a página oficial para cadastros verdadeiros.</div>
+<button class="action" style="width:100%;margin-top:8px" id="sendForm" type="submit">ENVIAR TESTE AO ADM</button>
 </section></form>
 <div id="feedback" role="status" aria-live="polite"></div>
+<div style="margin:12px 0 20px;text-align:center"><a href="./admin.html?v=20261024-demo-v128" target="_blank" rel="noopener" style="display:inline-block;padding:13px 17px;border-radius:11px;background:#37212c;color:#ffb6cb;font-size:13px;font-weight:800;text-decoration:none">Ver testes recebidos no ADM ↗</a></div>
 <section id="demoAdmin" hidden>
- <div class="demo-ribbon" style="margin-top:0"><strong>PRÉVIA FICTÍCIA DO ADM</strong><span>Não aparece no painel administrativo verdadeiro</span></div>
+ <div class="demo-ribbon" style="margin-top:0"><strong>PRÉVIA FICTÍCIA DO ADM</strong><span>Esta prévia é local; o protocolo também aparece no ADM verdadeiro, separado dos cadastros reais</span></div>
  <h2>🛡️ Menores de idade — Simulação</h2>
- <p>Este painel serve para você enxergar como a ficha chegaria para análise. Os dados não foram enviados à HYPE.</p>
+ <p>Este painel serve para você enxergar como a ficha chegaria para análise. Ao ADM foi enviado apenas um protocolo de teste, sem informações pessoais ou imagens.</p>
  <div class="demo-status">Status: <strong id="demoStatus">PENDENTE</strong></div>
  <div id="demoData" class="demo-data"></div>
  <div class="demo-images">
@@ -93,5 +94,5 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
   <button type="button" class="action secondary" id="demoRestart">Voltar ao formulário</button>
  </div>
 </section>
-</main><script src="menores-demo.js?v=20261024-demo-v1"></script>
+</main><script src="menores-demo.js?v=20261024-demo-v128"></script>
 </body></html>
