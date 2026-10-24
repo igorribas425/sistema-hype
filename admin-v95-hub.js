@@ -98,6 +98,7 @@
         if (typeof window.hypeV18AdminInit === 'function') await window.hypeV18AdminInit();
       } else if (key === 'menores') {
         await window.HypeMinorAdminV120?.load?.();
+        await window.HypeMinorDemoV128?.load?.();
       }
     } catch (err) {
       console.warn('[HYPE V95][refresh]', key, err);
