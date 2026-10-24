@@ -34,6 +34,136 @@
     `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="210"><rect width="480" height="210" fill="white"/><text x="25" y="95" font-family="cursive" font-size="35" font-style="italic" fill="#352635">Mariana Exemplo</text><text x="25" y="145" font-family="Arial" font-size="18" font-weight="bold" fill="#b01748">ASSINATURA FICTÍCIA</text></svg>`;
    return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
  }
+
+ function demoPortal(id){return "https://hypeloungeclub.com.br/menores-demo-validar.html?demo="+encodeURIComponent(id);}
+ function portraitSvg(minor){
+   const name=minor?"Lucas Exemplo":"Mariana Exemplo";
+   const b=minor?"#5b7798":"#a25a87",tone=minor?"#bcb3a9":"#ca9d98";
+   const svg='<svg xmlns="http://www.w3.org/2000/svg" width="480" height="420" viewBox="0 0 480 420">'+
+    '<rect width="480" height="420" fill="#f0e9ef"/><rect x="0" y="0" width="480" height="55" fill="#82284e"/>'+
+    '<text x="240" y="35" fill="#fff" font-family="Arial" font-weight="bold" font-size="23" text-anchor="middle">RETRATO ILUSTRATIVO</text>'+
+    '<circle cx="240" cy="190" r="95" fill="'+tone+'"/><path d="M115 355 Q120 255 240 260 Q355 255 365 355" fill="'+b+'"/>'+
+    '<path d="M150 145 Q165 75 240 85 Q320 80 333 148 Q295 106 240 109 Q185 104 150 145" fill="#3e3340"/>'+
+    '<text x="240" y="389" text-anchor="middle" fill="#392c3a" font-family="Arial" font-size="24" font-weight="bold">'+name+'</text>'+
+    '<text x="240" y="410" text-anchor="middle" fill="#b72a5e" font-family="Arial" font-size="15">SIMULACAO - NAO E FOTO REAL</text></svg>';
+   return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
+ }
+ function documentSvg(minor){
+   const name=minor?"Lucas Exemplo":"Mariana Exemplo";
+   const cpf=minor?"000.000.000-01":"000.000.000-02";
+   const svg='<svg xmlns="http://www.w3.org/2000/svg" width="600" height="365" viewBox="0 0 600 365">'+
+    '<rect width="600" height="365" rx="18" fill="#fff8fc"/><rect width="600" height="55" fill="#7d234e"/>'+
+    '<text x="25" y="36" font-family="Arial" font-size="27" font-weight="bold" fill="white">DOCUMENTO CENOGRAFICO</text>'+
+    '<rect x="23" y="78" width="150" height="170" fill="#d4b3c4"/>'+
+    '<circle cx="98" cy="138" r="42" fill="#8f647c"/><path d="M40 230 Q44 173 97 182 Q150 175 155 230" fill="#8f647c"/>'+
+    '<text x="197" y="105" font-family="Arial" font-size="20" fill="#382333">NOME</text>'+
+    '<text x="197" y="138" font-family="Arial" font-size="25" font-weight="bold" fill="#382333">'+name+'</text>'+
+    '<text x="197" y="181" font-family="Arial" font-size="20" fill="#382333">CPF FICTICIO</text>'+
+    '<text x="197" y="213" font-family="Arial" font-size="22" fill="#382333">'+cpf+'</text>'+
+    '<rect x="0" y="277" width="600" height="88" fill="#bc285f"/>'+
+    '<text x="300" y="323" text-anchor="middle" font-family="Arial" font-size="29" font-weight="bold" fill="white">SEM VALIDADE LEGAL</text>'+
+    '<text x="300" y="348" text-anchor="middle" font-family="Arial" font-size="14" fill="white">EXCLUSIVAMENTE PARA TESTAR O PDF DA HYPE</text></svg>';
+   return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
+ }
+ async function svgPng(svgUri,width=640){
+   const image=new Image();image.src=svgUri;await image.decode();
+   const c=document.createElement("canvas");
+   c.width=width;c.height=Math.round(width*image.naturalHeight/image.naturalWidth);
+   const ctx=c.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,c.width,c.height);
+   ctx.drawImage(image,0,0,c.width,c.height);
+   return c.toDataURL("image/png");
+ }
+ async function demoPDF(id){
+   if(!window.jspdf?.jsPDF||!window.QRCode?.toDataURL)throw Error("Bibliotecas PDF/QR ainda não carregadas. Atualize o Admin.");
+   const verify=await api("list");
+   const row=(verify.rows||[]).find(r=>r.id===id);
+   if(!row||row.status!=="conferido")throw Error("Confirme o teste fictício no Admin antes de baixar o PDF.");
+   const link=demoPortal(id);
+   const [qr,faceMinor,faceGuardian,docMinor,docGuardian,signature]=await Promise.all([
+     window.QRCode.toDataURL(link,{width:520,margin:3,errorCorrectionLevel:"H"}),
+     svgPng(portraitSvg(true)),svgPng(portraitSvg(false)),svgPng(documentSvg(true)),
+     svgPng(documentSvg(false)),svgPng(fakeArt("assinatura"))
+   ]);
+   const pdf=new window.jspdf.jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+   const ink=[42,33,41],pink=[192,38,96],gray=[102,83,101];
+   const drawBase=(num)=>{
+     pdf.setFillColor(27,17,26);pdf.rect(0,0,210,33,"F");
+     pdf.setTextColor(255,255,255);pdf.setFont("helvetica","bold");pdf.setFontSize(18);
+     pdf.text("HYPE LOUNGE CLUB",16,16);
+     pdf.setTextColor(255,164,191);pdf.setFontSize(9);
+     pdf.text("DOCUMENTO DE DEMONSTRACAO - SEM VALIDADE",16,24);
+     pdf.setDrawColor(232,203,215);pdf.line(16,273,194,273);
+     pdf.setTextColor(112,102,110);pdf.setFontSize(9);
+     pdf.text("HYPE | SIMULACAO | Pagina "+num+" de 2 | NAO E INGRESSO",16,280);
+     pdf.setFont("helvetica","bold");pdf.setTextColor(240,217,227);pdf.setFontSize(30);
+     pdf.text("TESTE FICTICIO",106,265,{align:"center"});
+   };
+   const line=(lbl,val,y)=>{
+     pdf.setFont("helvetica","bold");pdf.setFontSize(10);pdf.setTextColor(...pink);
+     pdf.text(lbl.toUpperCase(),16,y);
+     pdf.setFont("helvetica","normal");pdf.setTextColor(...ink);
+     pdf.text(pdf.splitTextToSize(String(val),110),74,y);
+   };
+   drawBase(1);pdf.setTextColor(...ink);pdf.setFont("helvetica","bold");pdf.setFontSize(16);
+   pdf.text("Autorizacao de menor - modelo ficticio",16,44);
+   pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.setTextColor(...gray);
+   pdf.text("Fluxo: cadastro > analise no Admin > PDF com QR > conferencia > compra no evento.",16,52);
+   const fields=[
+     ["Menor","Lucas Exemplo"],["CPF do menor","000.000.000-01 (INVENTADO)"],
+     ["Nascimento menor","15/08/2010"],["Gmail do menor","matheusanjosb@gmail.com"],
+     ["Responsavel","Mariana Exemplo"],["CPF responsavel","000.000.000-02 (INVENTADO)"],
+     ["Nascimento responsavel","12/04/1985 (FICTICIO)"],["Vinculo","Mae"],
+     ["Telefone","(00) 00000-0000"],["Gmail responsavel","igorribas425@gmail.com"],
+     ["Evento","Evento ficticio HYPE"],["Preco no evento","Pista / Noite toda / R$ 30,00"],
+     ["Pagamento","SOMENTE PRESENCIAL"],["Situacao do teste","CONFERIDO NO AMBIENTE FICTICIO"]
+   ];
+   let y=64;for(const [key,value] of fields){line(key,value,y);y+=9.3;}
+   pdf.setFillColor(251,237,245);pdf.roundedRect(16,199,116,47,3,3,"F");
+   pdf.setTextColor(...pink);pdf.setFont("helvetica","bold");pdf.setFontSize(12);
+   pdf.text("QR DE DEMONSTRACAO",22,209);
+   pdf.setTextColor(...ink);pdf.setFont("helvetica","normal");pdf.setFontSize(9.5);
+   pdf.text(pdf.splitTextToSize("Apresente este QR para demonstrar a consulta. Ele nao permite entrada, pagamento ou compra real.",102),22,219);
+   pdf.addImage(qr,"PNG",141,192,54,54);
+   pdf.setFontSize(8);pdf.setTextColor(...gray);
+   pdf.text("Protocolo: "+id,16,256);
+   pdf.addPage();drawBase(2);
+   pdf.setTextColor(...ink);pdf.setFont("helvetica","bold");pdf.setFontSize(16);
+   pdf.text("Fotos e documentos ilustrativos",16,44);
+   pdf.setTextColor(...gray);pdf.setFont("helvetica","normal");pdf.setFontSize(10);
+   pdf.text("Na autorizacao verdadeira, esta pagina mostrara os arquivos enviados no cadastro.",16,52);
+   pdf.setFont("helvetica","bold");pdf.setTextColor(...pink);pdf.setFontSize(11);
+   pdf.text("SELFIE FICTICIA DO MENOR",16,63);
+   pdf.text("SELFIE FICTICIA DO RESPONSAVEL",113,63);
+   pdf.addImage(faceMinor,"PNG",16,68,80,69);
+   pdf.addImage(faceGuardian,"PNG",113,68,80,69);
+   pdf.text("DOCUMENTO FICTICIO DO MENOR",16,151);
+   pdf.text("DOCUMENTO FICTICIO RESPONSAVEL",113,151);
+   pdf.addImage(docMinor,"PNG",16,157,80,49);
+   pdf.addImage(docGuardian,"PNG",113,157,80,49);
+   pdf.text("ASSINATURA ILUSTRATIVA DO RESPONSAVEL",16,221);
+   pdf.addImage(signature,"PNG",16,225,92,35);
+   pdf.setFillColor(251,234,241);pdf.roundedRect(116,223,78,38,3,3,"F");
+   pdf.setTextColor(...pink);pdf.setFontSize(11);pdf.text("AVISO OBRIGATORIO",121,233);
+   pdf.setTextColor(...ink);pdf.setFont("helvetica","normal");pdf.setFontSize(8);
+   pdf.text(pdf.splitTextToSize("Nenhuma imagem representa pessoa ou documento real. Este PDF nao vale como autorizacao legal ou ingresso.",68),121,240);
+   pdf.save("HYPE-TESTE-AUTORIZACAO-"+id.slice(0,8)+".pdf");
+ }
+ function addDemoButtons(parent,id){
+   const btn=el("button","📄 BAIXAR PDF FICTICIO COMPLETO (FOTOS + QR)","m120-btn m120-green");
+   btn.type="button";
+   btn.style.cssText="display:block;width:100%;padding:13px;margin:12px 0;font-weight:850";
+   btn.addEventListener("click",async()=>{
+     btn.disabled=true;btn.textContent="GERANDO PDF FICTICIO...";
+     try{await demoPDF(id);info("PDF ficticio completo gerado para conferencia. Nenhum ingresso foi criado.");}
+     catch(e){info("Falha ao gerar PDF: "+e.message,true);}
+     finally{btn.disabled=false;btn.textContent="📄 BAIXAR PDF FICTICIO COMPLETO (FOTOS + QR)";}
+   });
+   parent.append(btn);
+   const a=el("a","🔎 SIMULAR LEITURA DO QR CODE","m120-btn");
+   a.href=demoPortal(id);a.target="_blank";a.rel="noopener noreferrer";
+   a.style.cssText="display:block;text-align:center;background:#53213b;color:white;text-decoration:none;padding:13px;border-radius:9px;margin-bottom:12px;font-weight:850";
+   parent.append(a);
+ }
  async function load(){
    if(loading||!staff())return;
    loading=true;info("Buscando demonstrações...");
@@ -68,13 +198,10 @@
      details.append(el("h3","🧪 Resultado do teste: "+next.toUpperCase()));
      details.append(el("p","Gmails destinatários: "+(response.emails||[]).join(", ")));
      if(next==="conferido"){
-       const link=el("a","🔗 ABRIR SITE DO TESTE VINCULADO","m120-btn");
-       link.href="https://hypeloungeclub.com.br/menor-comprar.html?demo="+encodeURIComponent(id)+"&v=20261024-v135";
-       link.target="_blank";link.rel="noopener noreferrer";
-       link.style.cssText="display:block;padding:13px;background:#633349;color:#fff;text-decoration:none;border-radius:9px;margin:12px 0;text-align:center;font-weight:700";
-       details.append(link);
+       addDemoButtons(details,id);
      }
      if(next==="pendente"){info("Teste voltou para pendente.");return;}
+     if(next==="conferido"){info("Teste ficticio aprovado. Baixe o PDF com QR Code neste painel; envio automatico do anexo ainda nao habilitado.");details.append(el("p","🧪 PDF ficticio disponivel para download. O e-mail automatico com anexo ainda nao esta conectado."));return;}
      if(response.emailSent){
        info("Mensagem aceita pelo provedor de e-mail; confira Gmail e Spam.");
        details.append(el("p","✅ Envio aceito para os dois endereços."));
@@ -116,6 +243,7 @@
    target.append(images);
    const warn=el("p","Atenção: marcar este teste como CONFERIDO não autoriza ninguém a entrar e não libera pagamento ou ingresso.","m120-warning");
    target.append(warn);
+   if(row.status==="conferido")addDemoButtons(target,row.id);
    const actions=el("div",undefined,"m120-actions");
    for(const [label,next,cls] of [["✅ Simular conferido","conferido","m120-green"],["⛔ Simular recusado","recusado","m120-red"],["↻ Voltar pendente","pendente","m120-ghost"]]){
      const button=el("button",label,"m120-btn "+cls);button.type="button";
@@ -127,7 +255,17 @@
    close.addEventListener("click",()=>{target.hidden=true});actions.append(close);
    target.append(actions);target.scrollIntoView({behavior:"smooth",block:"start"});
  }
- function init(){$("m128Refresh")?.addEventListener("click",load)}
+ async function createTest(){
+   const button=$("m128Create");if(button)button.disabled=true;
+   try{
+     const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"submit"})});
+     const data=await r.json().catch(()=>({}));
+     if(!r.ok||!data.ok)throw Error(data.error||"Falha ao criar teste ficticio");
+     await load();info("Lucas Exemplo ficticio criado como PENDENTE. Clique em VER TESTE para simular a aprovacao.");
+   }catch(e){info("Falha ao criar teste: "+e.message,true);}
+   finally{if(button)button.disabled=false;}
+ }
+ function init(){$("m128Refresh")?.addEventListener("click",load);$("m128Create")?.addEventListener("click",createTest)}
  window.HypeMinorDemoV128={load};
  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
