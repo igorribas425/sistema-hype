@@ -17,7 +17,8 @@
   const READER_KEY='hype_reader_secret_v20';
   const LABEL_KEY='hype_reader_label_v20';
   const CHECK_MS=2000;
-  const state={sb:null,secret:'',label:'',stream:null,timer:null,busy:false,connected:false,heartbeat:null,wantsCamera:false,checking:false,cameraStarting:false,lastDecodedAt:0,lastHintAt:0};
+  const IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
+  const state={sb:null,secret:'',label:'',stream:null,timer:null,busy:false,connected:false,heartbeat:null,wantsCamera:false,checking:false,cameraStarting:false,lastDecodedAt:0,lastHintAt:0,lastRaw:'',lastSentAt:0};
   const $=id=>document.getElementById(id);
 
   function client(){
@@ -77,6 +78,8 @@
     video.autoplay=true;
     video.playsInline=true;
     video.setAttribute('playsinline','');
+    video.setAttribute('webkit-playsinline','');
+    video.setAttribute('muted','');
     video.srcObject=stream;
     $('cameraBox')?.classList.add('show');
 
@@ -153,7 +156,8 @@
         return;
       }
       if(wasRunning && state.connected && !state.stream){
-        start(true).catch(()=>{});
+        if(IOS)setStatus('iPhone: toque em ABRIR LEITOR para reativar a câmera.','ok');
+        else start(true).catch(()=>{});
       }
     },CHECK_MS);
   }
@@ -177,7 +181,8 @@
         const valid=await statusCheck();
         if(valid!==true)return;
         startHeartbeat();
-        setTimeout(()=>start(),250);
+        if(IOS)setStatus('✅ Leitor autorizado! No iPhone, toque em ABRIR LEITOR para permitir a câmera.','ok');
+        else setTimeout(()=>start(),250);
         return;
       }catch(err){
         localStorage.removeItem(READER_KEY);
@@ -195,7 +200,8 @@
       const valid=await statusCheck();
       if(valid===true){
         startHeartbeat();
-        setTimeout(()=>start(),250);
+        if(IOS)setStatus('✅ Leitor autorizado! No iPhone, toque em ABRIR LEITOR para permitir a câmera.','ok');
+        else setTimeout(()=>start(),250);
       }
     } else {
       setStatus('Abra neste celular o link exclusivo gerado no computador da Portaria.','bad');
@@ -287,14 +293,14 @@
     try{
       state.wantsCamera=true;
       if(!state.connected)return;
-      if(!fromHeartbeat){
-        const valid=await statusCheck();
-        if(valid!==true)return;
-      }
+      // O link já foi validado por claim/statusCheck e é revalidado pelo heartbeat.
+      // Evitar await antes de getUserMedia preserva o toque do usuário no Safari iOS.
       if(state.stream)return;
       if(!navigator.mediaDevices?.getUserMedia){setStatus('Este navegador não permite abrir a câmera.','bad');return;}
       try{
         stopCameraOnly();
+        state.lastRaw='';
+        state.lastSentAt=0;
         state.stream=await openCameraStream();
         const video=await attachAndPlay(state.stream);
         const decoder=await makeDecoder(video);
@@ -305,15 +311,20 @@
           try{
             const raw=await decoder.read();
             if(raw){
-              state.lastDecodedAt=Date.now();
-              const ok=await submit(raw);
-              if(ok){
-                stopCameraOnly();
-                setTimeout(()=>{if(state.connected&&state.wantsCamera)start(true);},850);
-              }
-            }else if(Date.now()-state.lastDecodedAt>6500 && Date.now()-state.lastHintAt>12000){
+              const now=Date.now();
+              state.lastDecodedAt=now;
+              if(raw===state.lastRaw&&now-state.lastSentAt<4500)return;
+              state.lastRaw=raw;
+              state.lastSentAt=now;
+              // Mantém a mesma câmera aberta após cada leitura: sem pedir permissão
+              // novamente no iPhone e sem enviar o mesmo QR a cada frame.
+              await submit(raw);
+            }else{
+              state.lastRaw='';
+              if(Date.now()-state.lastDecodedAt>6500 && Date.now()-state.lastHintAt>12000){
               state.lastHintAt=Date.now();
               setStatus('QR difícil de ler? Aumente o brilho do ingresso, mantenha o código inteiro na tela e aproxime ou afaste devagar.','');
+              }
             }
           }catch(_){ /* continua tentando ler */ }
         },decoder.name==='IOS'?180:300);
@@ -341,7 +352,7 @@
     }
     state.wantsCamera=true;
     stopCameraOnly();
-    await start(); // revalida o acesso; não altera credencial nem entrada
+    await start(); // usa o clique do usuário; a validação periódica segue ativa
   }
 
   function stop(){state.wantsCamera=false;stopCameraOnly();}
@@ -350,7 +361,10 @@
   window.addEventListener('pagehide',()=>stopCameraOnly());
   document.addEventListener('visibilitychange',()=>{
     if(document.hidden)stopCameraOnly();
-    else if(state.connected&&state.wantsCamera)statusCheck().then(ok=>{if(ok===true)start(true);});
+    else if(state.connected&&state.wantsCamera){
+      if(IOS)setStatus('iPhone: toque em ABRIR LEITOR para reativar a câmera.','ok');
+      else statusCheck().then(ok=>{if(ok===true)start(true);});
+    }
   });
 
   window.HypeReader={start,stop,restart,forget};
