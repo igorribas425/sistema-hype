@@ -184,33 +184,17 @@ async function detail(id){
   });
   const email=document.createElement('button');
   email.type='button';email.className='m120-btn m120-ghost';
-  email.textContent=r.status==='conferido'?'📧 ENVIAR LINK DE COMPRA':'📧 RESPONDER POR E-MAIL';
-  email.disabled=!/^\S+@\S+\.\S+$/.test(String(r.guardian_email||''));
-  email.title=email.disabled?'Cadastro sem e-mail válido. Confira com o responsável.':'Preparar aviso por e-mail';
+  email.textContent=r.status==='conferido'?'📧 REENVIAR LINK PARA OS DOIS GMAILS':'📧 REENVIAR RESULTADO PARA OS DOIS';
+  email.disabled=!['conferido','recusado'].includes(r.status);
   email.addEventListener('click',async()=>{
-    const address=String(r.guardian_email||'').trim();
-    if(!/^\S+@\S+\.\S+$/.test(address))return status('Este cadastro não possui e-mail válido.',true);
-    const title='HYPE Lounge Club • Autorização para '+r.minor_name;
-    let body='';
-    if(r.status==='conferido'){
-      email.disabled=true;email.textContent='GERANDO LINK PRIVADO...';
-      try{
-        const d=await rpc('issue_checkout',{id:r.id});
-        const link=d.purchaseLink;
-        body='Olá, '+r.guardian_name+'!\n\nA autorização para '+r.minor_name+' no evento '+eventName(r.event_id)+' foi conferida pela HYPE.\n\nA compra está disponível exclusivamente neste link:\n'+link+'\n\nO ingresso Pista para a noite toda custa R$ 30, em nome e CPF do menor autorizado. Realize o PIX e aguarde o QR Code no e-mail do responsável.\n\nA conferência não garante entrada: documentos originais e regras legais de admissão serão verificados na portaria. É proibido fornecer bebidas alcoólicas a menores de 18 anos.\n\nHYPE Lounge Club';
-        const box=document.createElement('div');box.className='m120-warning';
-        const explanation=text('p','LINK PRIVADO GERADO. O e-mail será aberto para você apertar Enviar. Se preferir, copie o link abaixo:');
-        const field=document.createElement('input');field.value=link;field.readOnly=true;field.style.cssText='width:100%;padding:12px;border-radius:8px;color:#fff;background:#100c11;border:1px solid #9c6a83';
-        const copy=document.createElement('button');copy.type='button';copy.className='m120-btn m120-ghost';copy.textContent='📋 COPIAR LINK';
-        copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(link);status('Link copiado. Envie somente ao responsável.',false);}catch(_){field.focus();field.select();status('Selecione e copie o link.',true);}});
-        box.append(explanation,field,copy);el.appendChild(box);
-        status('Link exclusivo preparado. Não houve envio automático; confirme o envio no seu e-mail.');
-      }catch(err){status('Falha ao gerar link: '+err.message,true);return;}
-      finally{email.disabled=false;email.textContent='📧 ENVIAR LINK DE COMPRA';}
-    }else{
-      body='Olá, '+r.guardian_name+'!\n\nSobre a autorização para '+r.minor_name+' no evento '+eventName(r.event_id)+': a declaração ainda não foi aprovada para compra. Entre em contato com a equipe da HYPE para esclarecimentos.\n\nHYPE Lounge Club';
-    }
-    window.location.href='mailto:'+encodeURIComponent(address)+'?subject='+encodeURIComponent(title)+'&body='+encodeURIComponent(body);
+    if(!confirm('Preparar um novo aviso para o Gmail do menor e do responsável? Se a autorização está conferida, um novo link substituirá o anterior.'))return;
+    email.disabled=true;email.textContent='TENTANDO ENVIAR...';
+    try{
+      const result=await sendNotification(r.id);
+      showNotificationResult(result);
+      status(result.emailSent?'Solicitação de envio aceita para os dois Gmails.':'Envio automático NÃO confirmado; use o link de e-mail manual.',!result.emailSent);
+    }catch(err){status('Falha na notificação: '+err.message,true);}
+    finally{email.disabled=false;email.textContent='📧 REENVIAR RESULTADO AOS DOIS GMAILS';}
   });
   buttons.append(accept,reject,whatsapp,email,close);el.appendChild(buttons);
  }catch(e){el.replaceChildren(text('p','Erro ao abrir ficha: '+e.message));}
