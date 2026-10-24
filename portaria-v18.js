@@ -1012,20 +1012,6 @@
       // de detecção QR. Caso contrário o clique deixa de autorizar a câmera.
       state.cameraDetector=null;
       state.cameraStream=await openMobileCamera();
-      if('BarcodeDetector' in window){
-        try{
-          if(typeof BarcodeDetector.getSupportedFormats==='function'){
-            const formats=await BarcodeDetector.getSupportedFormats();
-            if(Array.isArray(formats) && !formats.includes('qr_code')) throw new Error('qr_code não suportado');
-          }
-          state.cameraDetector=new BarcodeDetector({formats:['qr_code']});
-        }catch(_){
-          state.cameraDetector=null;
-        }
-      }
-      if(!state.cameraDetector && typeof window.jsQR!=='function'){
-        throw new Error('Leitor de QR não carregou. Confira a internet, atualize a página e tente novamente.');
-      }
       const video=$('cameraVideo');
       if(!video) throw new Error('Área da câmera não encontrada.');
 
@@ -1040,14 +1026,37 @@
 
       await video.play();
 
-      // Evita o caso em que o navegador concede acesso mas entrega tela preta.
-      await new Promise(r=>setTimeout(r,180));
-      if(!video.videoWidth || !video.videoHeight){
-        await new Promise(r=>setTimeout(r,650));
-        if(!video.videoWidth || !video.videoHeight){
-          throw new Error('A câmera abriu, mas não entregou imagem. Feche Câmera/WhatsApp/Instagram e tente novamente.');
+      if('BarcodeDetector' in window){
+        try{
+          if(typeof BarcodeDetector.getSupportedFormats==='function'){
+            const formats=await BarcodeDetector.getSupportedFormats();
+            if(Array.isArray(formats) && !formats.includes('qr_code')) throw new Error('qr_code não suportado');
+          }
+          state.cameraDetector=new BarcodeDetector({formats:['qr_code']});
+        }catch(_){
+          state.cameraDetector=null;
         }
       }
+      if(!state.cameraDetector && typeof window.jsQR!=='function'){
+        throw new Error('Leitor de QR não carregou. Confira a internet, atualize a página e tente novamente.');
+      }
+
+
+      // iPhone pode entregar a imagem alguns segundos depois de liberar a câmera.
+      if(!video.videoWidth||!video.videoHeight){
+        await Promise.race([
+          new Promise(resolve=>{
+            const done=()=>{video.removeEventListener('loadeddata',done);video.removeEventListener('loadedmetadata',done);resolve(true);};
+            video.addEventListener('loadeddata',done,{once:true});
+            video.addEventListener('loadedmetadata',done,{once:true});
+            if(video.videoWidth&&video.videoHeight)done();
+          }),
+          new Promise(resolve=>setTimeout(resolve,3400))
+        ]);
+      }
+      if(!video.videoWidth||!video.videoHeight)
+        throw new Error('A câmera não entregou imagem no Safari. Abra diretamente pelo Safari e verifique a permissão de câmera.');
+
 
       setCameraStatus(true,'CÂMERA QR ATIVA • APONTE PARA O INGRESSO OU LISTA');
 
