@@ -75,7 +75,7 @@ function showNotificationResult(data){
  const root=$('minorAdminDetail');if(!root)return;
  const box=document.createElement('div');box.className='m120-warning';
  const ok=Boolean(data.emailSent);
- box.append(text('strong',ok?'✅ Envio aceito pelo Gmail de menores. Confira o PDF em anexo nos dois Gmails e na pasta Spam.':'⚠️ Análise registrada, mas o e-mail com PDF não foi confirmado.'));
+ box.append(text('strong',ok?'✅ Pedido de envio aceito pelo Gmail. Isso não garante entrega: confira os destinatários, Spam e eventuais devoluções.':'⚠️ Análise registrada, mas o e-mail com PDF não foi confirmado.'));
  if(!ok){
   box.append(text('p',String(data.emailError||'Verifique o serviço de envio.')));
   box.append(text('p','Use o botão BAIXAR PDF COMPLETO no Admin e envie o documento manualmente aos dois destinatários enquanto corrige o Gmail.'));
@@ -255,7 +255,7 @@ async function detail(id){
         catch(err) { delivery={emailSent:false,emailError:err.message}; }
         await load();
         if(openedId===id){await detail(id);showNotificationResult(delivery);}
-        status(delivery.emailSent?'PDF enviado aos dois Gmails.':'Autorização aprovada, mas o PDF não foi enviado: '+String(delivery.emailError||'Falha desconhecida'),!delivery.emailSent);
+        status(delivery.emailSent?'Pedido de envio aceito pelo Gmail. Confirme recebimento e eventuais devoluções.':'Autorização aprovada, mas o PDF não foi enviado: '+String(delivery.emailError||'Falha desconhecida'),!delivery.emailSent);
       }else{
         let delivery;
         try{delivery=await sendNotification(id);}
@@ -294,14 +294,14 @@ async function detail(id){
   if(r.status==="conferido"){
     const resend=document.createElement("button");resend.type="button";resend.className="m120-btn m120-green";
     resend.textContent="📧 REENVIAR PDF AOS DOIS GMAILS";
-    const bounced=Boolean(r.email_notification_error&&/endereço inexistente|550 5\\.1\\.1/i.test(r.email_notification_error));
+    const bounced=Boolean(r.email_notification_error&&/endereço inexistente|550 5\.1\.1/i.test(r.email_notification_error));
     if(bounced){resend.disabled=true;resend.title="Corrija o Gmail inexistente e reabra a ficha antes de reenviar.";}
     resend.addEventListener("click",async()=>{
       resend.disabled=true;resend.textContent="ENVIANDO PDF...";
       try{
         const result=await sendNotification(r.id);
         showNotificationResult(result);
-        status(result.emailSent?"PDF aceito para envio aos dois Gmails.":"Envio do PDF não confirmado: "+String(result.emailError||"Erro desconhecido"),!result.emailSent);
+        status(result.emailSent?"Envio aceito pelo Gmail, mas entrega ainda não confirmada.":"Envio do PDF não confirmado: "+String(result.emailError||"Erro desconhecido"),!result.emailSent);
       }catch(e){status("Erro no envio do PDF: "+e.message,true);}
       finally{resend.disabled=false;resend.textContent="📧 REENVIAR PDF AOS DOIS GMAILS";}
     });
