@@ -62,7 +62,12 @@ html,body{max-width:100%;overflow-x:hidden}
   /* Nova consulta, sem alterar check-in/QR nem o cadastro de entrada. */
   .minor-door-section{margin:18px 0;background:#101014;border:1px solid #694357;border-radius:19px;padding:16px}
   .minor-door-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  .minor-door-head h3{font-size:18px;margin:0 0 5px}
+  .minor-door-head h3{font-size:16px;margin:0}
+  .minor-door-section:not(.minor-door-open){padding:11px 15px;margin:10px 0;border-radius:12px}
+  .minor-door-section:not(.minor-door-open) .minor-door-head{align-items:center}
+  .minor-door-toggle{min-height:40px;white-space:nowrap;min-width:118px}
+  #minorDoorPanel{margin-top:12px}
+  @media(max-width:580px){.minor-door-head h3{font-size:13px}.minor-door-toggle{min-width:103px;font-size:12px;padding:9px 10px}}
   .minor-door-hint{font-size:12px;color:#c5b5c0;line-height:1.55;margin:7px 0}
   .minor-door-toggle{background:#8e2650!important;color:#fff!important}
   #minorDoorPanel[hidden],#minorDoorPdfViewer[hidden]{display:none!important}
@@ -151,11 +156,11 @@ html,body{max-width:100%;overflow-x:hidden}
 
     <section id="minorDoorSection" class="minor-door-section" aria-label="Consultar autorizações de menores">
       <div class="minor-door-head">
-        <div><h3>🛡️ MENORES AUTORIZADOS</h3>
-        <p class="minor-door-hint">Consulte autorizações aprovadas, veja o PDF com fotos, documentos, assinatura e QR Code. Não é ingresso e não libera entrada automaticamente.</p></div>
-        <button id="minorDoorToggle" class="btn minor-door-toggle" type="button" aria-expanded="false">📄 VER AUTORIZAÇÕES E PDFs</button>
+        <h3>🛡️ MENORES AUTORIZADOS</h3>
+        <button id="minorDoorToggle" class="btn minor-door-toggle" type="button" aria-controls="minorDoorPanel" aria-expanded="false">VER MAIS ▾</button>
       </div>
       <div id="minorDoorPanel" hidden>
+        <p class="minor-door-hint">Consulte autorizações aprovadas, veja o PDF com fotos, documentos, assinatura e QR Code. Não é ingresso e não libera entrada automaticamente.</p>
         <p class="minor-door-hint">🔒 Acesso pelo próprio aparelho autorizado da Portaria. Não precisa digitar outro usuário ou senha. O Admin pode revogar o acesso deste aparelho.</p>
         <button id="minorDoorLoad" class="btn" type="button" style="width:100%;margin:6px 0 13px">↻ ATUALIZAR AUTORIZAÇÕES</button>
         <p id="minorDoorStatus" role="status" aria-live="polite" class="minor-door-hint">Abra esta área para carregar automaticamente as autorizações aprovadas.</p>
@@ -269,7 +274,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="supabase-config.js?v=20261003-v85"></script>
 <script src="hype-qrcode.js?v=20260902-v21"></script>
 <script src="portaria-v18.js?v=20261023-acesso-unico-v109"></script>
-<script src="portaria-menores-pdf-v160.js?v=20261024-menores-autorizados-v162"></script>
+<script src="portaria-menores-pdf-v160.js?v=20261024-menores-compacto-v163"></script>
 <script src="hype-v406-lista-simples.js?v=20261005-v106"></script>
 <script src="portaria-v20.js?v=20261005-v105"></script>
 <script src="portaria-v67-register.js?v=20261023-genero-v119"></script>
