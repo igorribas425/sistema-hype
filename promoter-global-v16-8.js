@@ -117,9 +117,11 @@
       p_username: HYPE.user,
       p_password: HYPE.pass
     });
+    // Ranking real: vendas confirmadas em R$, independentemente da quantidade de tickets.
+    // FREE vale R$ 0 no faturamento. Empates: mais confirmados, depois nome.
     return (Array.isArray(rows) ? rows : []).sort((a,b) =>
+      Number(b.revenue || 0) - Number(a.revenue || 0) ||
       Number(b.paid_count || 0) - Number(a.paid_count || 0) ||
-      Number(b.sales_count || 0) - Number(a.sales_count || 0) ||
       String(a.name || '').localeCompare(String(b.name || ''), 'pt-BR')
     );
   }
@@ -144,20 +146,21 @@
       }
 
       box.innerHTML = `
-        <div style="margin-top:14px;font-size:12px;color:var(--muted);font-weight:800;letter-spacing:.6px">PROMOTERS GLOBAIS • TODOS OS EVENTOS</div>
+        <div style="margin-top:14px;font-size:12px;color:#cbe9da;font-weight:900;letter-spacing:.5px">🏆 RANKING DE PROMOTERS • MAIOR FATURAMENTO PRIMEIRO</div>
+        <div style="margin-top:5px;font-size:11px;color:var(--muted)">Somente valores de ingressos com pagamento confirmado. FREE vale R$ 0. Ranking acumulado de todos os eventos.</div>
         ${rows.map((p, index) => `
           <div style="margin-top:10px;padding:13px;border:1px solid var(--line);border-radius:14px;background:#0b0b0e">
             <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
               <div style="min-width:0;flex:1">
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                  <strong style="font-size:15px;color:#fff">${index < 3 ? `${index+1}º • ` : ''}${esc(p.name)}</strong>
+                  <strong style="font-size:15px;color:#fff">${index === 0 ? '🥇 ' : index === 1 ? '🥈 ' : index === 2 ? '🥉 ' : ''}${index+1}º • ${esc(p.name)}</strong>
                   <span style="font-size:10px;padding:4px 7px;border-radius:999px;border:1px solid var(--line);color:${p.active ? '#9ef0b9' : '#ff9aaa'}">${p.active ? 'ATIVO' : 'INATIVO'}</span>
                 </div>
                 <div style="margin-top:5px;font-size:11px;color:var(--muted)">Código: <b style="color:#fff">${esc(p.code)}</b> • funciona em todos os eventos</div>
                 <div style="margin-top:6px;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted)">
-                  <span>✅ Pagos: <b style="color:#fff">${Number(p.paid_count || 0)}</b></span>
-                  <span>🧾 Pedidos: <b style="color:#fff">${Number(p.sales_count || 0)}</b></span>
-                  <span>💰 Faturamento: <b style="color:#fff">${esc(money(p.revenue || 0))}</b></span>
+                  <span>🧾 Confirmados: <b style="color:#fff">${Number(p.paid_count || 0)}</b></span>
+                  <span>📋 Pedidos: <b style="color:#fff">${Number(p.sales_count || 0)}</b></span>
+                  <span>💰 TOTAL VENDIDO: <b style="color:#a8f3c4;font-size:15px">${esc(money(p.revenue || 0))}</b></span>
                 </div>
                 <div style="margin-top:7px;font-size:10px;color:#777;word-break:break-all">${esc(promoterLink(p))}</div>
               </div>
