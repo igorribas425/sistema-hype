@@ -159,6 +159,7 @@
    const form={
      action:'submit',eventId:Number($('minorEvent').value),
      minorName:$('minorName').value,minorCpf:$('minorCpf').value,minorBirth:$('minorBirth').value,
+     minorEmail:$('minorEmail').value.trim().toLowerCase(),
      minorFacePhoto:minorFaceUrl,minorDocumentPhoto:minorDocumentUrl,
      guardianName:$('guardianName').value,guardianCpf:$('guardianCpf').value,
      guardianBirth:$('guardianBirth').value,guardianPhone:$('guardianPhone').value,
