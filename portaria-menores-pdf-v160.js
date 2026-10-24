@@ -24,11 +24,18 @@ async function request(url,b){
 }
 function cleanup(){if(pdfUrl){URL.revokeObjectURL(pdfUrl);pdfUrl=null;}const viewer=$("minorDoorPdfViewer");if(viewer){viewer.hidden=true;viewer.replaceChildren();}}
 function openToggle(){
- const panel=$("minorDoorPanel"),hidden=!panel.hidden;
- panel.hidden=hidden;
- $("minorDoorToggle").setAttribute("aria-expanded",String(!hidden));
- if(!hidden){panel.scrollIntoView({block:"start",behavior:"smooth"});if(!ready)load();}
- else cleanup();
+ const panel=$("minorDoorPanel"),isOpening=panel.hidden;
+ panel.hidden=!isOpening;
+ const toggle=$("minorDoorToggle");
+ toggle.setAttribute("aria-expanded",String(isOpening));
+ toggle.textContent=isOpening?"VER MENOS ▴":"VER MAIS ▾";
+ $("minorDoorSection")?.classList.toggle("minor-door-open",isOpening);
+ if(isOpening){
+   if(!ready)load();
+   else render();
+ }else{
+   cleanup();
+ }
 }
 function relevant(r){
  const eventId=Number($("eventSelect")?.value||0);
@@ -94,7 +101,12 @@ async function showPDF(record,btn){
  finally{busy=false;btn.disabled=false;btn.textContent="📄 VER PDF";}
 }
 function init(){
- $("minorDoorToggle")?.addEventListener("click",openToggle);
+ const panel=$("minorDoorPanel");
+ if(panel)panel.hidden=true;
+ const button=$("minorDoorToggle");
+ if(button){button.textContent="VER MAIS ▾";button.setAttribute("aria-expanded","false");}
+ $("minorDoorSection")?.classList.remove("minor-door-open");
+ button?.addEventListener("click",openToggle);
  $("minorDoorLoad")?.addEventListener("click",load);
  $("minorDoorSearch")?.addEventListener("input",()=>{if(ready)render();else if(!$("minorDoorPanel").hidden&&!busy)load();});
  $("minorDoorSearch")?.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();if(ready)render();else load();}});
