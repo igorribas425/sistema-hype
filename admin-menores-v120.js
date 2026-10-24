@@ -168,6 +168,7 @@ async function detail(id){
   el.appendChild(list);
   if(r.email_notification_error&&!r.email_notified_at){
     const bad=text('p','⚠️ ENTREGA DO GMAIL NÃO CONFIRMADA: '+r.email_notification_error,'m120-warning');
+    bad.id='minorEmailDeliveryAlert';
     bad.style.cssText='border:1px solid #b45373;background:#341b28;padding:14px;border-radius:12px';
     el.append(bad);
   }
@@ -188,18 +189,43 @@ async function detail(id){
     inp.autocomplete='off';inp.style.cssText='width:100%;padding:12px;border:1px solid #715169;border-radius:9px;background:#0d0b11;color:#fff';
     const save=document.createElement('button');save.type='button';save.className='m120-btn';
     save.textContent='SALVAR '+label.toUpperCase();save.style.marginTop='7px';
-    save.addEventListener('click',async()=>{
-      if(!confirmed.checked){status('Marque a confirmação de contato com o responsável.',true);return;}
-      if(!inp.checkValidity()){status('Informe um Gmail válido.',true);return;}
-      if(!confirm('Você confirmou este endereço diretamente com o responsável? O PDF possui documentos pessoais.'))return;
+    const feedback=document.createElement('p');
+    feedback.setAttribute('role','status');
+    feedback.setAttribute('aria-live','polite');
+    feedback.style.cssText='margin:7px 0 13px;font-size:13px;min-height:18px;color:#a7efd4';
+    save.addEventListener('click',async(event)=>{
+      event.preventDefault();event.stopPropagation();
+      if(!confirmed.checked){feedback.style.color='#ffb9c8';feedback.textContent='Confirme que falou com o responsável.';return;}
+      if(!inp.checkValidity()){feedback.style.color='#ffb9c8';feedback.textContent='Confira o endereço de Gmail.';return;}
+      if(!confirm('Você verificou este Gmail com o responsável? O PDF contém documentos pessoais.'))return;
       save.disabled=true;save.textContent='SALVANDO...';
+      feedback.style.color='#a7efd4';feedback.textContent='Salvando o Gmail...';
       try{
         const result=await rpc('correct_email',{id,field,email:inp.value.trim(),contactVerified:true});
-        status(result.message||'Gmail corrigido. Clique REENVIAR PDF depois.');
-        await detail(id);
-      }catch(err){status('Erro ao corrigir Gmail: '+err.message,true);save.disabled=false;save.textContent='SALVAR '+label.toUpperCase();}
+        const email=String(result.email||inp.value.trim()).toLowerCase();
+        const changed=r[field]!==email;
+        r[field]=email;
+        inp.value=email;
+        const dt=Array.from(list.querySelectorAll('dt')).find(node=>node.textContent===(field==='guardian_email'?'E-mail do responsável':'Gmail do menor'));
+        if(dt&&dt.nextElementSibling)dt.nextElementSibling.textContent=email;
+        if(changed){
+          const resend=el.querySelector('#minorResendPdf');
+          if(resend){resend.disabled=false;resend.title='';}
+          const oldAlert=el.querySelector('#minorEmailDeliveryAlert');
+          if(oldAlert)oldAlert.textContent='⚠️ Gmail atualizado; confirme os dois endereços e clique em REENVIAR PDF. A entrega ainda não foi confirmada.';
+        }
+        feedback.style.color='#a7efd4';
+        feedback.textContent='✅ Gmail salvo! Esta ficha permanece aberta. Confira os endereços e reenvie o PDF.';
+        status(result.message||'Gmail salvo com sucesso.',false);
+        save.textContent='✅ GMAIL SALVO';
+      }catch(err){
+        feedback.style.color='#ffb9c8';
+        feedback.textContent='❌ Não salvou: '+err.message;
+        status('Erro ao corrigir Gmail: '+err.message,true);
+        save.textContent='TENTAR SALVAR';
+      }finally{save.disabled=false;}
     });
-    correction.append(labelEl,inp,save);
+    correction.append(labelEl,inp,save,feedback);
   }
   el.append(correction);
   const docs=document.createElement('div');docs.className='m120-image-grid';
@@ -294,6 +320,7 @@ async function detail(id){
   if(r.status==="conferido"){
     const resend=document.createElement("button");resend.type="button";resend.className="m120-btn m120-green";
     resend.textContent="📧 REENVIAR PDF AOS DOIS GMAILS";
+    resend.id='minorResendPdf';
     const bounced=Boolean(r.email_notification_error&&/endereço inexistente|550 5\.1\.1/i.test(r.email_notification_error));
     if(bounced){resend.disabled=true;resend.title="Corrija o Gmail inexistente e reabra a ficha antes de reenviar.";}
     resend.addEventListener("click",async()=>{
