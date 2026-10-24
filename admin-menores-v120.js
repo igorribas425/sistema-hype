@@ -185,9 +185,12 @@ async function detail(id){
     try{
       await rpc('review',{id,status:next,note:note.value,documentsChecked:true,eventEligibilityChecked:true});
       if(next==='conferido'){
+        let delivery;
+        try { delivery=await sendNotification(id); }
+        catch(err) { delivery={emailSent:false,emailError:err.message}; }
         await load();
-        if(openedId===id)await detail(id);
-        status('Autorização conferida. Envio do PDF aos dois Gmails: utilize o botão REENVIAR PDF no cadastro.');
+        if(openedId===id){await detail(id);showNotificationResult(delivery);}
+        status(delivery.emailSent?'PDF enviado aos dois Gmails.':'Autorização aprovada, mas o PDF não foi enviado: '+String(delivery.emailError||'Falha desconhecida'),!delivery.emailSent);
       }else{
         let delivery;
         try{delivery=await sendNotification(id);}
