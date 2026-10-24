@@ -25,6 +25,7 @@ body{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env
     <p>Este celular foi aberto por um link exclusivo e funciona somente como câmera/leitor em Android ou iPhone. Ele não mostra clientes, vendas, pagamentos, Admin ou senhas. Se o Admin desconectar a Portaria ou este leitor, a câmera é encerrada automaticamente.</p><div style="margin-top:10px;font-size:10px;color:#777">DISPOSITIVO REGISTRADO: <b id="readerName" style="color:#fff">Celular leitor</b></div>
     <div id="readerStatus" class="status">Conectando ao computador...</div>
     <button id="startBtn" class="btn" onclick="HypeReader.start()" disabled>📷 ABRIR LEITOR</button>
+    <p class="note" style="font-size:12px!important;color:#a8f3c4!important;margin:8px 0">📱 iPhone: depois que o leitor estiver autorizado, toque em <b>ABRIR LEITOR</b> para liberar a câmera. No WhatsApp/Instagram, prefira abrir no Safari.</p>
     <button id="restartBtn" class="btn secondary" onclick="HypeReader.restart()" disabled>↻ REINICIAR CÂMERA</button>
     <div id="cameraBox" class="camera"><video id="video" autoplay muted playsinline webkit-playsinline></video><canvas id="qrCanvas" style="display:none"></canvas><div class="scanline"></div></div>
     <p class="note" style="margin-top:10px">QR difícil de ler? Aumente o brilho da tela do ingresso, mantenha o código completo à vista e aproxime ou afaste o celular devagar. Reiniciar a câmera não desconecta o leitor.</p>
@@ -36,6 +37,6 @@ body{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-<script src="leitor-v20.js?v=20261018-camera-segura"></script>
+<script src="leitor-v20.js?v=20261024-iphone-camera-v165"></script>
 </body>
 </html>
