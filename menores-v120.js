@@ -81,6 +81,12 @@
      throw new Error('Imagem ainda grande. Tire outra foto mais próxima do documento.');
    }finally{window.URL.revokeObjectURL(url);}
  }
+ function photoError(inputId,err){
+   const el=$(inputId+'Status');
+   if(el){el.className='photo-status is-error';el.textContent='❌ '+String(err?.message||'Erro na foto. Tente novamente.');}
+   const label=$(inputId+'Button');if(label)label.textContent='📷 TENTAR FOTO NOVAMENTE';
+   message(err?.message||'Não foi possível carregar a foto.');
+ }
  $('guardianPhoto').addEventListener('change',async()=>{
    try{
      photoUrl=await compressPhoto($('guardianPhoto').files[0]);
