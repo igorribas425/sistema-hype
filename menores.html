@@ -41,6 +41,12 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 .photo-button{font-size:14px;font-weight:900;background:#d12d63;border-radius:10px;color:white;padding:11px 14px;display:block;width:min(100%,300px)}
 .photo-tip{font-size:11px;color:#e8c9d8;max-width:340px;line-height:1.45}
 .photo-file-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;padding:0;font-size:0}
+/* iOS: somente o input transparente recebe o clique. Um label com input
+   aninhado pode acionar duas vezes o seletor e fechar a câmera no WebKit. */
+.photo-upload{isolation:isolate;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.photo-file-input{display:block;z-index:2;appearance:none;-webkit-appearance:none;touch-action:manipulation}
+.photo-upload .photo-button{pointer-events:none}
+
 .photo-upload.is-ready{border-color:#299c6b;background:linear-gradient(140deg,#173d2d,#1a2621)}
 .photo-upload.is-ready .photo-button{background:#267f5e}
 .photo-upload.is-ready .guide-svg{opacity:.7}
@@ -69,25 +75,25 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <div class="notice">📸 <b>Vamos tirar duas fotos do menor:</b> uma do rosto (selfie) e outra do documento. Toque nos quadros abaixo e escolha <b>Tirar Foto</b> (ou <b>Biblioteca de Fotos</b>, no iPhone). A equipe confere as fotos manualmente.</div>
 <div class="field photo-step">
   <div class="photo-title"><span class="photo-number">1</span><div><strong>Foto do rosto do menor</strong><small>O rosto do menor deve aparecer de frente, inteiro e sem filtro.</small></div></div>
-  <label class="photo-upload" for="minorFacePhoto">
+  <div class="photo-upload">
     <svg aria-hidden="true" class="guide-svg" viewBox="0 0 120 116" xmlns="http://www.w3.org/2000/svg"><rect x="13" y="6" width="94" height="104" rx="30" fill="#2e1d2c" stroke="#b9567d" stroke-width="2.5" stroke-dasharray="7 6"/><circle cx="60" cy="42" r="21" fill="#ddb6ca"/><path d="M24 92c4-23 19-33 36-33s32 10 36 33" fill="#ddb6ca"/><path d="M28 22h15M77 22h15M28 99h15M77 99h15" stroke="#f07a9f" stroke-width="3" stroke-linecap="round"/></svg>
     <strong class="photo-big-label">É uma foto do rosto</strong>
     <span class="photo-button" id="minorFacePhotoButton">📷 TIRAR FOTO DO ROSTO</span>
     <span class="photo-tip">Coloque seu rosto dentro do contorno. Evite boné, óculos escuros e contraluz.</span>
     <input type="file" class="photo-file-input" id="minorFacePhoto" accept="image/*" aria-label="Abrir câmera para selfie do menor" aria-describedby="minorFacePhotoStatus" required>
-  </label>
+  </div>
   <p class="photo-status" id="minorFacePhotoStatus" role="status" aria-live="polite">○ Aguardando foto</p>
   <img id="minorFacePreview" class="photo-preview" alt="Foto enviada: foto do rosto do menor" style="display:none">
 </div>
 <div class="field photo-step">
   <div class="photo-title"><span class="photo-number">2</span><div><strong>Foto do documento do menor</strong><small>Fotografe o documento do menor com nome, foto e dados legíveis.</small></div></div>
-  <label class="photo-upload" for="minorDocumentPhoto">
+  <div class="photo-upload">
     <svg aria-hidden="true" class="guide-svg doc-svg" viewBox="0 0 120 116" xmlns="http://www.w3.org/2000/svg"><rect x="16" y="15" width="88" height="86" rx="11" fill="#ead7e3"/><rect x="16" y="15" width="88" height="19" rx="9" fill="#ae3a65"/><circle cx="43" cy="57" r="12" fill="#986881"/><path d="M25 79c1-10 8-15 18-15s17 5 18 15" fill="#986881"/><path d="M72 51h22M72 64h22M72 77h17" stroke="#997485" stroke-width="5" stroke-linecap="round"/><path d="M16 31h88" stroke="#ae3a65" stroke-width="5"/></svg>
     <strong class="photo-big-label">É uma foto do documento</strong>
     <span class="photo-button" id="minorDocumentPhotoButton">🪪 FOTOGRAFAR DOCUMENTO</span>
     <span class="photo-tip">Tire a foto com boa luz, sem reflexos, mostrando todo o documento.</span>
     <input type="file" class="photo-file-input" id="minorDocumentPhoto" accept="image/*" aria-label="Fotografar documento do menor" aria-describedby="minorDocumentPhotoStatus" required>
-  </label>
+  </div>
   <p class="photo-status" id="minorDocumentPhotoStatus" role="status" aria-live="polite">○ Aguardando foto</p>
   <img id="minorDocumentPreview" class="photo-preview" alt="Foto enviada: foto do documento do menor" style="display:none">
 </div>
@@ -104,25 +110,25 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <div class="notice">📸 <b>Agora é a vez do pai, mãe ou responsável:</b> tire uma selfie e fotografe seu RG ou CNH. Toque nos quadros abaixo e escolha <b>Tirar Foto</b> ou <b>Biblioteca de Fotos</b>. As fotos serão conferidas pela equipe, não por reconhecimento facial.</div>
 <div class="field photo-step">
   <div class="photo-title"><span class="photo-number">3</span><div><strong>Foto do rosto do responsável</strong><small>O rosto do responsável deve aparecer de frente, inteiro e sem filtro.</small></div></div>
-  <label class="photo-upload" for="guardianPhoto">
+  <div class="photo-upload">
     <svg aria-hidden="true" class="guide-svg" viewBox="0 0 120 116" xmlns="http://www.w3.org/2000/svg"><rect x="13" y="6" width="94" height="104" rx="30" fill="#2e1d2c" stroke="#b9567d" stroke-width="2.5" stroke-dasharray="7 6"/><circle cx="60" cy="42" r="21" fill="#ddb6ca"/><path d="M24 92c4-23 19-33 36-33s32 10 36 33" fill="#ddb6ca"/><path d="M28 22h15M77 22h15M28 99h15M77 99h15" stroke="#f07a9f" stroke-width="3" stroke-linecap="round"/></svg>
     <strong class="photo-big-label">É uma foto do rosto</strong>
     <span class="photo-button" id="guardianPhotoButton">📷 TIRAR FOTO DO ROSTO</span>
     <span class="photo-tip">Coloque seu rosto dentro do contorno. Evite boné, óculos escuros e contraluz.</span>
     <input type="file" class="photo-file-input" id="guardianPhoto" accept="image/*" aria-label="Abrir câmera para selfie do responsável" aria-describedby="guardianPhotoStatus" required>
-  </label>
+  </div>
   <p class="photo-status" id="guardianPhotoStatus" role="status" aria-live="polite">○ Aguardando foto</p>
   <img id="photoPreview" class="photo-preview" alt="Foto enviada: foto do rosto do responsável" style="display:none">
 </div>
 <div class="field photo-step">
   <div class="photo-title"><span class="photo-number">4</span><div><strong>Foto do documento do responsável</strong><small>Fotografe o documento do responsável com nome, foto e dados legíveis.</small></div></div>
-  <label class="photo-upload" for="guardianDocument">
+  <div class="photo-upload">
     <svg aria-hidden="true" class="guide-svg doc-svg" viewBox="0 0 120 116" xmlns="http://www.w3.org/2000/svg"><rect x="16" y="15" width="88" height="86" rx="11" fill="#ead7e3"/><rect x="16" y="15" width="88" height="19" rx="9" fill="#ae3a65"/><circle cx="43" cy="57" r="12" fill="#986881"/><path d="M25 79c1-10 8-15 18-15s17 5 18 15" fill="#986881"/><path d="M72 51h22M72 64h22M72 77h17" stroke="#997485" stroke-width="5" stroke-linecap="round"/><path d="M16 31h88" stroke="#ae3a65" stroke-width="5"/></svg>
     <strong class="photo-big-label">É uma foto do documento</strong>
     <span class="photo-button" id="guardianDocumentButton">🪪 FOTOGRAFAR DOCUMENTO</span>
     <span class="photo-tip">Tire a foto com boa luz, sem reflexos, mostrando todo o documento.</span>
     <input type="file" class="photo-file-input" id="guardianDocument" accept="image/*" aria-label="Fotografar documento do responsável" aria-describedby="guardianDocumentStatus" required>
-  </label>
+  </div>
   <p class="photo-status" id="guardianDocumentStatus" role="status" aria-live="polite">○ Aguardando foto</p>
   <img id="documentPreview" class="photo-preview" alt="Foto enviada: foto do documento do responsável" style="display:none">
 </div>
@@ -178,5 +184,5 @@ for(const [id,preview,isDoc] of fields){
 }
 })();
 </script>
-<script src="menores-v120.js?v=20261024-iphone-fotos-v156"></script>
+<script src="menores-v120.js?v=20261024-iphone-camera-estavel-v164"></script>
 </body></html>
