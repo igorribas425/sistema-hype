@@ -38,6 +38,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <div class="field"><label for="guardianCpf">CPF do responsável</label><input id="guardianCpf" maxlength="14" inputmode="numeric" required></div>
 <div class="field"><label for="guardianBirth">Data de nascimento</label><input type="date" id="guardianBirth" required></div>
 <div class="field"><label for="guardianPhone">WhatsApp do responsável</label><input id="guardianPhone" type="tel" maxlength="18" inputmode="tel" required></div>
+<div class="field"><label for="guardianEmail">E-mail do responsável (para receber o resultado da análise)</label><input id="guardianEmail" type="email" maxlength="254" autocomplete="email" placeholder="exemplo@gmail.com" required></div>
 </div>
 <div class="field"><label for="minorRelation">Vínculo com o menor</label><select id="minorRelation" required><option value="">Selecione</option><option>Pai</option><option>Mãe</option><option>Responsável legal</option></select></div>
 <div class="notice">📷 Foto para conferência manual, <b>não reconhecimento facial automatizado</b>. Tire uma selfie nítida do próprio responsável. Na entrada, a equipe deverá conferir documentos originais.</div>
@@ -61,5 +62,5 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <button class="action" style="width:100%;margin-top:8px" id="sendForm" type="submit">ENVIAR DECLARAÇÃO PARA CONFERÊNCIA</button>
 </section></form>
 <div id="feedback" role="status" aria-live="polite"></div>
-</main><script src="menores-v120.js?v=20261024-cpf-v126"></script>
+</main><script src="menores-v120.js?v=20261024-guardian-mail-v127"></script>
 </body></html>
