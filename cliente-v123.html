@@ -520,8 +520,14 @@ html,body{max-width:100%;overflow-x:hidden}
         </div>
 
         <div class="group">
-          <label>E-mail para receber o ingresso</label>
-          <input type="email" id="clientEmail" placeholder="seunome@gmail.com" required autocomplete="email">
+          <label>E-mail para receber o ingresso com QR Code</label>
+          <input type="email" id="clientEmail" placeholder="seunome@gmail.com" required autocomplete="email" spellcheck="false">
+          <small style="display:block;color:#f2d7dd;margin-top:5px;font-size:11px">Confira com atenção: a fatura do Asaas não é o ingresso da HYPE.</small>
+        </div>
+        <div class="group">
+          <label for="clientEmailConfirm">Confirme seu e-mail (obrigatório)</label>
+          <input type="email" id="clientEmailConfirm" placeholder="Digite novamente o mesmo e-mail" required autocomplete="off" spellcheck="false">
+          <small style="display:block;color:#c9c9d0;margin-top:5px;font-size:11px">O QR Code será enviado ao endereço informado acima. Um erro de digitação impede a entrega.</small>
         </div>
 
         <div class="group two-col">
@@ -593,8 +599,9 @@ html,body{max-width:100%;overflow-x:hidden}
         <div class="success-icon">✅</div>
         <h3>PAGAMENTO CONFIRMADO</h3>
         <p>Seu ingresso HYPE está liberado.</p>
-        <small id="paymentSuccessEmail">📧 Seu ingresso normalmente chega no Gmail em menos de 1 minuto. Confira também Spam/Lixo eletrônico e apresente o QR Code na Portaria.</small>
-        <button class="btn" onclick="openPaidTicket()">ACESSAR MEU INGRESSO</button>
+        <small id="paymentSuccessEmail">📧 Você pode receber a cobrança do Asaas separadamente. O ingresso HYPE é outro e-mail. Se ele não aparecer, confira Spam/Lixo eletrônico e clique abaixo para ver seu QR Code agora.</small>
+        <button class="btn" onclick="openPaidTicket()">🎟️ ABRIR MEU QR CODE AGORA</button>
+        <small style="display:block;margin-top:8px;color:#e9dce1;font-size:11px">Salve uma captura de tela do ingresso para apresentar com seu documento na portaria, mesmo que o e-mail demore.</small>
       </div>
 
       <div class="manual-area" id="manualArea">
@@ -645,7 +652,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
-<script src="app.js?v=20261023-client-age-v123"></script>
+<script src="app.js?v=20261024-email-confirm-v124"></script>
 <script src="cliente-menor-v120.js?v=20261023-doc-v122"></script>
 <script src="promoter-global-v16-8.js?v=20261002-v57-global"></script>
 <script src="v18-client.js?v=20260902-v20"></script>
