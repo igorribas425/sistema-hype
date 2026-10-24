@@ -99,41 +99,23 @@ function showNotificationResult(data){
  el.prepend(box);box.scrollIntoView({behavior:'smooth',block:'center'});
 }
 async function downloadAuthorizationPDF(row){
-  if(row.status!=="conferido"){status("Somente autorizações conferidas podem gerar PDF e QR Code.",true);return;}
-  if(!window.jspdf?.jsPDF||!window.QRCode?.toDataURL){status("Carregando geradores de PDF e QR. Atualize a página e tente novamente.",true);return;}
-  try{
-    const qrUrl="https://hypeloungeclub.com.br/menores-portaria.html?protocolo="+encodeURIComponent(row.id);
-    const qr=await window.QRCode.toDataURL(qrUrl,{width:450,margin:3,errorCorrectionLevel:"H"});
-    const doc=new window.jspdf.jsPDF({unit:"mm",format:"a4"});
-    doc.setFillColor(15,11,19);doc.rect(0,0,210,297,"F");
-    doc.setTextColor(245,64,116);doc.setFont("helvetica","bold");doc.setFontSize(21);doc.text("HYPE LOUNGE CLUB",15,23);
-    doc.setTextColor(255,255,255);doc.setFontSize(16);doc.text("AUTORIZACAO DE MENOR - CONFERIDA",15,37);
-    doc.setTextColor(210,193,206);doc.setFontSize(11);
-    const values=[
-      "NOME DO ADOLESCENTE: "+row.minor_name,
-      "DATA DE NASCIMENTO: "+row.minor_birth_date,
-      "CPF DO ADOLESCENTE: "+maskCpf(row.minor_cpf),
-      "RESPONSAVEL: "+row.guardian_name,
-      "EVENTO: "+eventName(row.event_id),
-      "SITUACAO: CONFERIDA PELA HYPE",
-      "INGRESSO: R$ 30,00 - PISTA - NOITE TODA",
-      "PAGAMENTO: SOMENTE PRESENCIAL NO EVENTO",
-      "PROTOCOLO: "+row.id
-    ];
-    let y=52;for(const line of values){const lines=doc.splitTextToSize(line,177);doc.text(lines,15,y);y+=lines.length*5.6+3;}
-    doc.setFillColor(255,255,255);doc.roundedRect(69,145,72,72,3,3,"F");
-    doc.addImage(qr,"PNG",72,148,66,66);
-    doc.setFontSize(11);doc.setTextColor(255,255,255);
-    doc.text("Apresente este QR Code ao caixa/portaria e mostre documento original.",105,226,{align:"center",maxWidth:180});
-    doc.setFontSize(10);doc.setTextColor(255,174,191);
-    doc.text("ESTE DOCUMENTO NAO E INGRESSO, NAO COMPROVA PAGAMENTO",105,242,{align:"center"});
-    doc.text("NEM PERMITE ENTRADA AUTOMATICA.",105,249,{align:"center"});
-    doc.setTextColor(190,185,196);doc.setFontSize(8.5);
-    doc.text("Documento digital sujeito a verificacao no painel oficial HYPE e regras legais do evento.",105,267,{align:"center",maxWidth:185});
-    doc.text("E proibido fornecer bebidas alcoolicas a menores de 18 anos.",105,274,{align:"center"});
-    doc.save("HYPE-AUTORIZACAO-"+row.id.slice(0,8)+".pdf");
-    status("PDF com QR Code da autorizacao gerado. Envie aos dois Gmails cadastrados.",false);
-  }catch(e){status("Erro ao gerar PDF: "+e.message,true);}
+ const c=credentials();
+ if(!c||row.status!=="conferido"){status("Acesso autorizado e aprovação necessários.",true);return;}
+ try{
+  status("Gerando PDF completo com fotos e assinatura...");
+  const r=await fetch("https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minor-pdf",{
+   method:"POST",headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({id:row.id,...c})
+  });
+  const d=await r.json();
+  if(!r.ok||!d.ok)throw Error(d.error||"Erro ao gerar PDF");
+  const b=atob(d.base64),u=new Uint8Array(b.length);
+  for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);
+  const link=document.createElement("a"),obj=URL.createObjectURL(new Blob([u],{type:"application/pdf"}));
+  link.href=obj;link.download=d.filename;document.body.appendChild(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(obj),2000);
+  status("PDF completo baixado, com fotos e assinatura.",false);
+ }catch(e){status("Erro no PDF: "+e.message,true);}
 }
 
 async function detail(id){
