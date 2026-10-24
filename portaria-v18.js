@@ -1008,7 +1008,10 @@
 
     state.cameraOpening=true;
     try{
+      // No Safari, getUserMedia deve acontecer antes de qualquer await
+      // de detecção QR. Caso contrário o clique deixa de autorizar a câmera.
       state.cameraDetector=null;
+      state.cameraStream=await openMobileCamera();
       if('BarcodeDetector' in window){
         try{
           if(typeof BarcodeDetector.getSupportedFormats==='function'){
@@ -1023,8 +1026,6 @@
       if(!state.cameraDetector && typeof window.jsQR!=='function'){
         throw new Error('Leitor de QR não carregou. Confira a internet, atualize a página e tente novamente.');
       }
-
-      state.cameraStream=await openMobileCamera();
       const video=$('cameraVideo');
       if(!video) throw new Error('Área da câmera não encontrada.');
 
@@ -1032,6 +1033,8 @@
       video.autoplay=true;
       video.playsInline=true;
       video.setAttribute('playsinline','');
+      video.setAttribute('webkit-playsinline','');
+      video.setAttribute('muted','');
       video.srcObject=state.cameraStream;
       $('scannerArea')?.classList.add('show');
 
