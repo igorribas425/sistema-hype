@@ -100,7 +100,7 @@ function init(){
  $("minorDoorSearch")?.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();if(ready)render();else load();}});
  $("eventSelect")?.addEventListener("change",()=>{cleanup();rows=[];ready=false;if(!$("minorDoorPanel").hidden)load();});
  window.addEventListener("pagehide",cleanup);
- document.addEventListener("visibilitychange",()=>{if(document.hidden)cleanup();});
+ // Não descartar PDF ao mudar para a aba de visualização no Safari; sai ao fechar a página.
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
