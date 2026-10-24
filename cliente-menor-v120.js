@@ -11,7 +11,7 @@
    if(link){
       let eventId=0;
       try{if(typeof HYPE!=='undefined')eventId=Number(HYPE.selectedEventId||HYPE.event?.id||0)}catch(_){}
-      link.href='./menores.html'+(eventId>0?'?evento='+encodeURIComponent(String(eventId)):'');
+      link.href='./menores.html?v=20261023-documento-v122'+(eventId>0?'&evento='+encodeURIComponent(String(eventId)):'');
    }
    const submit=$('ticketForm')?.querySelector('button[type="submit"]');
    if(submit){
