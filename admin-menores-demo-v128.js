@@ -94,7 +94,7 @@
     ["Menor fictício","Lucas Exemplo"],["CPF fictício","000.000.000-01"],
     ["Responsável fictícia","Mariana Exemplo"],["CPF fictício","000.000.000-02"],
     ["Vínculo fictício","Mãe"],["Nascimento","2010-08-15"],
-    ["Contato","Não coletado no teste"],["Evento","Demonstração sem ingresso real"]
+    ["Gmail do responsável","igorribas425@gmail.com"],["Gmail do menor","matheusanjosb@gmail.com"],["Evento","Demonstração sem ingresso real"]
    ];
    const dl=el("dl",undefined,"m120-detail-grid");
    for(const [k,v]of fields){dl.append(el("dt",k),el("dd",v));}
