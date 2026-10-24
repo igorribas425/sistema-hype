@@ -60,6 +60,44 @@ function render(){
   card.append(content,b);container.appendChild(card);
  }
 }
+
+async function sendNotification(id){
+ const creds=credentials();if(!creds)throw Error('Acesso restrito ao ADM.');
+ const resp=await fetch('https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minor-notify',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({id,...creds})
+ });
+ const data=await resp.json().catch(()=>({}));
+ if(!resp.ok||!data.ok)throw Error(data.error||'Falha ao notificar');
+ return data;
+}
+function showNotificationResult(data){
+ const el=$('minorAdminDetail');if(!el)return;
+ const box=document.createElement('div');box.className='m120-warning';
+ const sent=!!data.emailSent;
+ box.append(text('strong',sent?'📧 Envio aceito pelo serviço de e-mail para '+(data.emails||[]).length+' destinatário(s). Verifique também Spam.':'⚠️ Aprovação registrada, mas envio automático NÃO confirmado.'));
+ if(!sent){
+  box.append(text('p',String(data.emailError||'Falha no serviço de e-mail.')));
+  const emails=(data.emails||[]).filter(v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v)));
+  if(emails.length){
+   const title='HYPE Lounge Club • Resultado da autorização';
+   const body='Olá! A autorização foi analisada pela HYPE Lounge Club.'+(data.manualLink?'\n\nPara continuar a compra exclusiva de menor 16-17 (R$ 30, noite toda), use o link:\n'+data.manualLink:'\n\nEntre em contato com a HYPE para informações.')+'\n\nA entrada continua sujeita às regras do evento e à conferência dos documentos na portaria.';
+   const link=document.createElement('a');
+   link.href='mailto:'+emails.map(encodeURIComponent).join(',')+'?subject='+encodeURIComponent(title)+'&body='+encodeURIComponent(body);
+   link.textContent='📩 ABRIR E-MAIL PARA OS DOIS GMAILS (ENVIAR MANUALMENTE)';
+   link.style.cssText='display:block;background:#d23466;color:#fff;padding:12px;border-radius:9px;margin:10px 0;text-decoration:none;text-align:center;font-weight:bold';
+   box.append(link);
+  }
+  if(data.manualLink){
+   const input=document.createElement('input');input.readOnly=true;input.value=data.manualLink;
+   input.style.cssText='width:100%;padding:10px;box-sizing:border-box;background:#140e16;color:#fff;border:1px solid #93536d';
+   const copy=document.createElement('button');copy.type='button';copy.className='m120-btn';copy.textContent='Copiar link exclusivo';
+   copy.addEventListener('click',()=>navigator.clipboard.writeText(data.manualLink).then(()=>status('Link copiado.')).catch(()=>{input.focus();input.select();}));
+   box.append(input,copy);
+  }
+ }
+ el.prepend(box);box.scrollIntoView({behavior:'smooth',block:'center'});
+}
 async function detail(id){
  openedId=id;const el=$('minorAdminDetail');el.hidden=false;
  el.replaceChildren(text('p','Carregando ficha e documentos...'));
@@ -76,7 +114,7 @@ async function detail(id){
    ['Nome do menor',r.minor_name],['CPF do menor',r.minor_cpf],
    ['Nascimento do menor',r.minor_birth_date],['Nome do responsável',r.guardian_name],
    ['CPF do responsável',r.guardian_cpf],['Nascimento do responsável',r.guardian_birth_date],
-   ['WhatsApp',r.guardian_phone],['E-mail do responsável',r.guardian_email||'Não informado (cadastro antigo)'],['Vínculo declarado',r.relation],
+   ['WhatsApp',r.guardian_phone],['E-mail do responsável',r.guardian_email||'Não informado (cadastro antigo)'],['Gmail do menor',r.minor_email||'Não informado (cadastro antigo)'],['Vínculo declarado',r.relation],
    ['Conferido por',r.reviewed_by||'Pendente'],['Ingresso vinculado',r.checkout_ticket_id?'ID '+r.checkout_ticket_id+' • origem: menor autorizado':'Ainda não comprado'],['Observação',r.review_note||'—']
   ];
   fields.forEach(([k,v])=>{list.append(text('dt',k),text('dd',String(v||'—')));});
@@ -126,9 +164,12 @@ async function detail(id){
     accept.disabled=true;reject.disabled=true;
     try{
       await rpc('review',{id,status:next,note:note.value,documentsChecked:true,eventEligibilityChecked:true});
-      status('Análise preliminar salva. A portaria deverá verificar documentos originais antes da entrada.');
+      let delivery;
+      try{delivery=await sendNotification(id);}
+      catch(err){delivery={emailSent:false,emailError:err.message,emails:[r.guardian_email,r.minor_email].filter(Boolean),manualLink:null};}
       await load();
-      if(openedId===id)await detail(id);
+      if(openedId===id){await detail(id);showNotificationResult(delivery);}
+      status(delivery.emailSent?'Análise salva e dois avisos aceitos pelo provedor de e-mail.':'Análise salva. ATENÇÃO: e-mail automático NÃO confirmado.',!delivery.emailSent);
     }catch(e){status('Falha ao salvar: '+e.message,true);}finally{accept.disabled=!docsReady;reject.disabled=false;}
   }
   accept.addEventListener('click',()=>decide('conferido'));
