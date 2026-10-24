@@ -77,7 +77,7 @@ async function detail(id){
    ['Nascimento do menor',r.minor_birth_date],['Nome do responsável',r.guardian_name],
    ['CPF do responsável',r.guardian_cpf],['Nascimento do responsável',r.guardian_birth_date],
    ['WhatsApp',r.guardian_phone],['E-mail do responsável',r.guardian_email||'Não informado (cadastro antigo)'],['Vínculo declarado',r.relation],
-   ['Conferido por',r.reviewed_by||'Pendente'],['Observação',r.review_note||'—']
+   ['Conferido por',r.reviewed_by||'Pendente'],['Ingresso vinculado',r.checkout_ticket_id?'ID '+r.checkout_ticket_id+' • origem: menor autorizado':'Ainda não comprado'],['Observação',r.review_note||'—']
   ];
   fields.forEach(([k,v])=>{list.append(text('dt',k),text('dd',String(v||'—')));});
   el.appendChild(list);
