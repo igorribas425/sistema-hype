@@ -98,6 +98,44 @@ function showNotificationResult(data){
  }
  el.prepend(box);box.scrollIntoView({behavior:'smooth',block:'center'});
 }
+async function downloadAuthorizationPDF(row){
+  if(row.status!=="conferido"){status("Somente autorizações conferidas podem gerar PDF e QR Code.",true);return;}
+  if(!window.jspdf?.jsPDF||!window.QRCode?.toDataURL){status("Carregando geradores de PDF e QR. Atualize a página e tente novamente.",true);return;}
+  try{
+    const qrUrl="https://hypeloungeclub.com.br/menores-portaria.html?protocolo="+encodeURIComponent(row.id);
+    const qr=await window.QRCode.toDataURL(qrUrl,{width:450,margin:3,errorCorrectionLevel:"H"});
+    const doc=new window.jspdf.jsPDF({unit:"mm",format:"a4"});
+    doc.setFillColor(15,11,19);doc.rect(0,0,210,297,"F");
+    doc.setTextColor(245,64,116);doc.setFont("helvetica","bold");doc.setFontSize(21);doc.text("HYPE LOUNGE CLUB",15,23);
+    doc.setTextColor(255,255,255);doc.setFontSize(16);doc.text("AUTORIZACAO DE MENOR - CONFERIDA",15,37);
+    doc.setTextColor(210,193,206);doc.setFontSize(11);
+    const values=[
+      "NOME DO ADOLESCENTE: "+row.minor_name,
+      "DATA DE NASCIMENTO: "+row.minor_birth_date,
+      "CPF DO ADOLESCENTE: "+maskCpf(row.minor_cpf),
+      "RESPONSAVEL: "+row.guardian_name,
+      "EVENTO: "+eventName(row.event_id),
+      "SITUACAO: CONFERIDA PELA HYPE",
+      "INGRESSO: R$ 30,00 - PISTA - NOITE TODA",
+      "PAGAMENTO: SOMENTE PRESENCIAL NO EVENTO",
+      "PROTOCOLO: "+row.id
+    ];
+    let y=52;for(const line of values){const lines=doc.splitTextToSize(line,177);doc.text(lines,15,y);y+=lines.length*5.6+3;}
+    doc.setFillColor(255,255,255);doc.roundedRect(69,145,72,72,3,3,"F");
+    doc.addImage(qr,"PNG",72,148,66,66);
+    doc.setFontSize(11);doc.setTextColor(255,255,255);
+    doc.text("Apresente este QR Code ao caixa/portaria e mostre documento original.",105,226,{align:"center",maxWidth:180});
+    doc.setFontSize(10);doc.setTextColor(255,174,191);
+    doc.text("ESTE DOCUMENTO NAO E INGRESSO, NAO COMPROVA PAGAMENTO",105,242,{align:"center"});
+    doc.text("NEM PERMITE ENTRADA AUTOMATICA.",105,249,{align:"center"});
+    doc.setTextColor(190,185,196);doc.setFontSize(8.5);
+    doc.text("Documento digital sujeito a verificacao no painel oficial HYPE e regras legais do evento.",105,267,{align:"center",maxWidth:185});
+    doc.text("E proibido fornecer bebidas alcoolicas a menores de 18 anos.",105,274,{align:"center"});
+    doc.save("HYPE-AUTORIZACAO-"+row.id.slice(0,8)+".pdf");
+    status("PDF com QR Code da autorizacao gerado. Envie aos dois Gmails cadastrados.",false);
+  }catch(e){status("Erro ao gerar PDF: "+e.message,true);}
+}
+
 async function detail(id){
  openedId=id;const el=$('minorAdminDetail');el.hidden=false;
  el.replaceChildren(text('p','Carregando ficha e documentos...'));
@@ -196,6 +234,19 @@ async function detail(id){
     }catch(err){status('Falha na notificação: '+err.message,true);}
     finally{email.disabled=false;email.textContent='📧 REENVIAR RESULTADO AOS DOIS GMAILS';}
   });
+  if(r.status==="conferido"){
+    const pdf=document.createElement("button");pdf.type="button";pdf.className="m120-btn m120-green";
+    pdf.textContent="📄 BAIXAR AUTORIZAÇÃO PDF + QR CODE";
+    pdf.addEventListener("click",()=>downloadAuthorizationPDF(r));
+    buttons.append(pdf);
+    const validator=document.createElement("a");
+    validator.href="menores-portaria.html?protocolo="+encodeURIComponent(r.id);
+    validator.target="_blank";validator.rel="noopener noreferrer";
+    validator.textContent="🔎 ABRIR CONFERÊNCIA DO QR";
+    validator.className="m120-btn m120-ghost";
+    validator.style.cssText="text-decoration:none;display:inline-flex;align-items:center;justify-content:center";
+    buttons.append(validator);
+  }
   buttons.append(accept,reject,whatsapp,email,close);el.appendChild(buttons);
  }catch(e){el.replaceChildren(text('p','Erro ao abrir ficha: '+e.message));}
 }
