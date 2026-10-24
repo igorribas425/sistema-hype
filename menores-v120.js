@@ -89,10 +89,27 @@
      if(!data.events?.length)message('Nenhum evento disponível para cadastro. Procure a HYPE.');
    }catch(e){message('Erro ao buscar eventos: '+e.message);}
  }
+ // Máscara progressiva: XXX.XXX.XXX-XX, preservando os 11 dígitos e a posição do cursor.
+ function formatCpf(value){
+   const digits=String(value||'').replace(/\D/g,'').slice(0,11);
+   let result=digits.slice(0,3);
+   if(digits.length>3)result+='.'+digits.slice(3,6);
+   if(digits.length>6)result+='.'+digits.slice(6,9);
+   if(digits.length>9)result+='-'+digits.slice(9,11);
+   return result;
+ }
  ['minorCpf','guardianCpf'].forEach(id=>{
    $(id).addEventListener('input',e=>{
-     const d=e.target.value.replace(/\D/g,'').slice(0,11);
-     e.target.value=d.replace(/^(\d{3})(\d)/,'$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/,'$1.$2.$3').replace(/\.(\d{3})(\d)$/ ,'.$1-$2');
+     const field=e.target;
+     const before=field.value.slice(0,field.selectionStart??field.value.length).replace(/\D/g,'').length;
+     const formatted=formatCpf(field.value);
+     field.value=formatted;
+     let cursor=0,digitCount=0;
+     while(cursor<formatted.length&&digitCount<before){
+       if(/\d/.test(formatted[cursor]))digitCount++;
+       cursor++;
+     }
+     if(typeof field.setSelectionRange==='function')field.setSelectionRange(cursor,cursor);
    });
  });
  $('minorForm').addEventListener('submit',async e=>{
