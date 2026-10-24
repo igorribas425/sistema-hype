@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta name="theme-color" content="#140c14">
+<title>HYPE • Conferência fictícia de autorização</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:22px 14px 70px;background:radial-gradient(circle at top,#491b30,#09090d 60%);color:white;font:15px/1.5 system-ui,Arial}
+main{max-width:640px;margin:auto}.brand{color:#ff6f9d;font-size:14px;font-weight:950;letter-spacing:2px}h1{font-size:28px;margin:6px 0}.warning{color:#ffd1df;background:#3e1729;border:1px solid #dd487c;padding:14px;border-radius:12px}
+.card{margin:14px 0;background:#17121a;border:1px solid #583447;border-radius:15px;padding:20px}.status{font-weight:bold;font-size:22px;color:#b6efc9}
+.details{display:grid;grid-template-columns:1fr 1fr;gap:12px}.details>div{background:#251923;border-radius:10px;padding:11px;overflow-wrap:anywhere}
+small{display:block;color:#c5a5b4;margin-bottom:3px}strong{font-size:14px}.tag{font-weight:900;color:#ff9cba;font-size:12px}
+@media(max-width:500px){.details{grid-template-columns:1fr}}
+</style></head>
+<body><main><div class="brand">HYPE LOUNGE CLUB</div><h1>Verificação do QR de autorização</h1>
+<div class="warning"><b>🧪 SIMULAÇÃO SEM VALIDADE</b> — este é um exemplo para testar o fluxo. O QR Code não é ingresso, não autoriza entrada e não permite comprar ingresso com dados fictícios.</div>
+<section class="card"><p class="tag">CENÁRIO FICTÍCIO • LUCAS EXEMPLO</p><div id="status">Consultando autorização de demonstração...</div><div id="details" class="details" hidden></div></section>
+<p style="color:#c9aec0;font-size:13px">Na operação real, a equipe faz a leitura do QR da autorização aprovada, confere as fotos e os documentos originais no sistema restrito e só então realiza a venda presencial de R$ 30,00. Nenhuma compra ou registro de entrada ocorre nesta página.</p>
+</main>
+<script>
+(async()=>{
+"use strict";
+const id=new URLSearchParams(location.search).get("demo")||"";
+const status=document.getElementById("status"),area=document.getElementById("details");
+if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id)){status.textContent="⛔ QR de demonstração inválido.";return;}
+try{
+ const r=await fetch("https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minors-demo",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"preview",id})});
+ const d=await r.json().catch(()=>({}));
+ if(!r.ok||d.ok!==true||d.mode!=="demo")throw Error(d.error||"Demonstração não aprovada.");
+ status.textContent="✅ TESTE FICTÍCIO CONFERIDO";
+ status.className="status";
+ const fields=[["Menor fictício",d.minorName],["CPF fictício",d.minorCpf],["Responsável fictícia",d.guardianName],["Evento de demonstração",d.eventName],["Modalidade fictícia",d.sector],["Preço presencial simulado","R$ 30,00"],["Protocolo de demonstração",d.id],["Pagamento","NÃO REALIZADO — SIMULAÇÃO"]];
+ for(const [key,value] of fields){
+  const box=document.createElement("div"),lbl=document.createElement("small"),val=document.createElement("strong");
+  lbl.textContent=key;val.textContent=String(value||"—");box.append(lbl,val);area.append(box);
+ }area.hidden=false;
+}catch(e){status.textContent="⛔ "+e.message;}
+})();
+</script></body></html>
