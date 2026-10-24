@@ -1,4 +1,4 @@
-/* HYPE V125 — Caixa de menor que abre autorização dos pais em aba separada. */
+/* HYPE V125 — Opção de menor compatível com iPhone: formulário aberto na mesma aba. */
 (() => {
  'use strict';
  const $=id=>document.getElementById(id);
@@ -10,9 +10,11 @@
    const warning=$('hypeMinorPurchaseWarning'),link=$('hypeMinorParentLink');
    if(warning)warning.hidden=!minor;
    if(link){
-      let eventId=0;
-      try{if(typeof HYPE!=='undefined')eventId=Number(HYPE.selectedEventId||HYPE.event?.id||0)}catch(_){}
-      link.href='./menores.html?v=20261023-documento-v122'+(eventId>0?'&evento='+encodeURIComponent(String(eventId)):'');
+      // iPhone/WhatsApp/Instagram: não abrir pop-up ou nova aba (WebViews podem fechar).
+      // A autorização é geral e não depende do evento selecionado.
+      link.href='./menores.html?v=20261024-iphone-fotos-v156';
+      link.target='_self';
+      link.removeAttribute('rel');
    }
    const submit=$('ticketForm')?.querySelector('button[type="submit"]');
    if(submit){
@@ -28,10 +30,7 @@
    $('clientAgeDeclaration')?.addEventListener('change',update);
    $('clientIsMinor')?.addEventListener('change',()=>{
      update();
-     if($('clientIsMinor').checked){
-       const link=$('hypeMinorParentLink');
-       if(link)window.open(link.href,'_blank','noopener,noreferrer');
-     }
+     // Deixe a pessoa tocar no link manualmente. Não usar window.open no iPhone.
    });
    $('clientCpf')?.addEventListener('input',update);
    $('ticketType')?.addEventListener('change',update);
