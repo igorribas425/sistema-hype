@@ -58,6 +58,27 @@ html,body{max-width:100%;overflow-x:hidden}
   .v60-exit-status.ok{color:#a8f3c4;border-color:rgba(40,209,124,.35)}.v60-exit-status.bad{color:#ff9bab;border-color:rgba(255,22,61,.35)}
   @media(max-width:620px){.v60-feedback-grid,.v60-exit-actions{grid-template-columns:1fr}}
   </style>
+  <style id="hype-minor-door-v160">
+  /* Nova consulta, sem alterar check-in/QR nem o cadastro de entrada. */
+  .minor-door-section{margin:18px 0;background:#101014;border:1px solid #694357;border-radius:19px;padding:16px}
+  .minor-door-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .minor-door-head h3{font-size:18px;margin:0 0 5px}
+  .minor-door-hint{font-size:12px;color:#c5b5c0;line-height:1.55;margin:7px 0}
+  .minor-door-toggle{background:#8e2650!important;color:#fff!important}
+  #minorDoorPanel[hidden],#minorDoorPdfViewer[hidden]{display:none!important}
+  .minor-door-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+  .minor-door-grid label{display:block;font-size:12px;font-weight:750;color:#edd8e2;margin-bottom:5px}
+  .minor-door-grid input{width:100%;min-height:47px;background:#08080b;color:#fff;border:1px solid #6e4a5d;border-radius:11px;padding:10px;font-size:16px}
+  .minor-door-person{padding:13px;border:1px solid #4b3442;border-radius:13px;background:#171119;margin:10px 0;display:flex;align-items:center;justify-content:space-between;gap:13px}
+  .minor-door-person-info{flex:1;min-width:0;overflow-wrap:anywhere}
+  .minor-door-person-info strong{display:block;font-size:15px}
+  .minor-door-person-info span{display:block;margin-top:5px;color:#c1b2be;font-size:12px}
+  .minor-door-person>.btn{min-width:120px}
+  #minorDoorPdfViewer{border:1px solid #358663;border-radius:13px;padding:14px;margin-top:17px;background:#111e19}
+  #minorDoorPdfViewer h4{margin:0 0 10px}
+  .minor-door-pdf-link{display:block;text-align:center;text-decoration:none;padding:13px;margin:10px 0;min-height:46px}
+  @media(max-width:580px){.minor-door-grid{grid-template-columns:minmax(0,1fr)}.minor-door-person{align-items:stretch;flex-direction:column}.minor-door-person>.btn{width:100%}.minor-door-section{padding:13px}}
+  </style>
   <link rel="stylesheet" href="hype-v38-responsive.css?v=20260905-v42">
   <link rel="manifest" href="manifest.webmanifest?v=42">
 <style id="hype-v67-register-style">
@@ -127,6 +148,30 @@ html,body{max-width:100%;overflow-x:hidden}
 
 
     <div id="results" class="results"><div class="empty">Busque uma pessoa para liberar ou conferir a entrada.</div></div>
+
+    <section id="minorDoorSection" class="minor-door-section" aria-label="Consultar autorizações de menores">
+      <div class="minor-door-head">
+        <div><h3>🛡️ MENORES AUTORIZADOS</h3>
+        <p class="minor-door-hint">Consulte autorizações aprovadas, veja o PDF com fotos, documentos, assinatura e QR Code. Não é ingresso e não libera entrada automaticamente.</p></div>
+        <button id="minorDoorToggle" class="btn minor-door-toggle" type="button" aria-expanded="false">📄 VER AUTORIZAÇÕES E PDFs</button>
+      </div>
+      <div id="minorDoorPanel" hidden>
+        <p class="minor-door-hint">🔒 Somente Admin e gerente podem consultar os documentos pessoais. A autorização deste aparelho na Portaria continua separada do acesso aos PDFs.</p>
+        <div class="minor-door-grid">
+          <div><label for="minorDoorUser">Usuário Admin / gerente</label><input id="minorDoorUser" type="text" autocomplete="username" placeholder="Usuário da equipe"></div>
+          <div><label for="minorDoorPass">Senha da conferência</label><input id="minorDoorPass" type="password" autocomplete="current-password" placeholder="Senha"></div>
+        </div>
+        <button id="minorDoorLoad" class="btn primary" type="button" style="width:100%;margin:6px 0 13px">🔎 CONSULTAR AUTORIZAÇÕES</button>
+        <p id="minorDoorStatus" role="status" aria-live="polite" class="minor-door-hint">Entre com usuário e senha para carregar as autorizações.</p>
+        <div class="minor-door-grid" style="margin:13px 0">
+          <div><label for="minorDoorSearch">Buscar por nome, responsável ou protocolo</label><input id="minorDoorSearch" type="search" autocomplete="off" placeholder="Digite o nome do menor"></div>
+          <div style="display:flex;align-items:end"><strong id="minorDoorTotal" class="minor-door-hint" style="display:block;padding-bottom:14px">Aguardando consulta</strong></div>
+        </div>
+        <div id="minorDoorList"></div>
+        <div id="minorDoorPdfViewer" hidden></div>
+        <p class="minor-door-hint">Importante: confira a identidade, a validade e as regras do evento. A venda do ingresso de menor é somente presencial, quando permitida.</p>
+      </div>
+    </section>
 
     <section class="search-card portaria-extra" style="margin-top:16px">
       <div class="v19-section-head"><div><h3>LISTA DE CONVIDADOS</h3><p>Busque um nome cadastrado no Admin e confirme a entrada sem ingresso.</p></div></div>
@@ -228,6 +273,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="supabase-config.js?v=20261003-v85"></script>
 <script src="hype-qrcode.js?v=20260902-v21"></script>
 <script src="portaria-v18.js?v=20261023-acesso-unico-v109"></script>
+<script src="portaria-menores-pdf-v160.js?v=20261024-menores-portaria-v160"></script>
 <script src="hype-v406-lista-simples.js?v=20261005-v106"></script>
 <script src="portaria-v20.js?v=20261005-v105"></script>
 <script src="portaria-v67-register.js?v=20261023-genero-v119"></script>
