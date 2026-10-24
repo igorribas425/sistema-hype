@@ -117,7 +117,15 @@ async function detail(id){
   }
   accept.addEventListener('click',()=>decide('conferido'));
   reject.addEventListener('click',()=>decide('recusado'));
-  buttons.append(accept,reject,close);el.appendChild(buttons);
+  const whatsapp=document.createElement('button');
+  whatsapp.type='button';whatsapp.className='m120-btn m120-ghost';whatsapp.textContent='💬 FALAR COM RESPONSÁVEL';
+  whatsapp.addEventListener('click',()=>{
+    const number=String(r.guardian_phone||'').replace(/\D/g,'');
+    if(number.length<10||number.length>11){status('Número de WhatsApp do responsável inválido.',true);return;}
+    const msg='Olá! Aqui é da HYPE Lounge Club. Sobre a autorização para '+r.minor_name+' no evento '+eventName(r.event_id)+': precisamos confirmar a análise e os próximos passos para o ingresso. Lembramos que a autorização não dispensa a conferência documental na portaria e menores não podem consumir bebidas alcoólicas.';
+    window.open('https://wa.me/55'+number+'?text='+encodeURIComponent(msg),'_blank','noopener,noreferrer');
+  });
+  buttons.append(accept,reject,whatsapp,close);el.appendChild(buttons);
  }catch(e){el.replaceChildren(text('p','Erro ao abrir ficha: '+e.message));}
 }
 async function purge(){
