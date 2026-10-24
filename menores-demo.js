@@ -101,10 +101,10 @@
       record=response.record;
     }catch(error){
       message('Falha ao registrar no ADM: '+(error.message||error)+'. Tente novamente.',false);
-      btn.disabled=false;btn.textContent='SIMULAR ENVIO E VER O ADM';
+      btn.disabled=false;btn.textContent='ENVIAR TESTE AO ADM';
       return;
     }
-    btn.disabled=false;btn.textContent='SIMULAR ENVIO E VER O ADM';
+    btn.disabled=false;btn.textContent='ENVIAR TESTE AO ADM';
     const data=[
       ['Protocolo de teste (no ADM)',record.id],
       ['Evento',$('minorEvent').selectedOptions[0]?.textContent||'HYPE — Demonstração'],
