@@ -189,6 +189,8 @@ input:focus,select:focus,textarea:focus{border-color:#d9d9de!important}
 .save-all-sectors{margin-top:14px}
 @media(max-width:600px){.sector-fields{grid-template-columns:1fr}.sector-fields .full{grid-column:auto}}
 
+.m128-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center;background:#140e15;border:1px solid #674253;border-radius:12px;padding:11px;margin:9px 0}
+#m128Detail[hidden]{display:none!important}
 </style>
 <style>
 .stats-extended{grid-template-columns:repeat(7,1fr)}
@@ -1138,9 +1140,19 @@ Bruna Santos"></textarea>
 <button class="m120-btn" type="button" id="minorRefresh">↻ Atualizar</button>
 <button class="m120-btn m120-ghost" type="button" id="minorPurge">🗑️ Limpar registros vencidos</button></div>
 <p id="minorAdminStatus" role="status" style="color:#b4ebc9;font-size:12px;margin:10px 0">Aguardando acesso do administrador.</p>
+<section id="m128DemoSection" style="margin:22px 0;border:2px dashed #b75b78;border-radius:15px;padding:14px;background:#25121b">
+  <div class="m120-head"><div><h3 style="margin:0;font-size:17px;color:#fff">🧪 Testes fictícios <span style="font-size:12px;color:#f8b4c8">(separados dos reais)</span></h3>
+  <small>Recebidos pelo formulário de demonstração. Nunca liberam ingresso nem entrada.</small></div>
+  <a href="./menores-demo.html?v=20261024-demo-v128" target="_blank" rel="noopener" style="font-size:12px;color:#ffb7cb">Abrir formulário fictício ↗</a></div>
+  <div class="m120-toolbar"><button type="button" class="m120-btn m120-ghost" id="m128Refresh">↻ Atualizar testes</button><span style="padding:10px;color:#e3bacc;font-size:12px">Total exibido: <b id="m128Count">0</b></span></div>
+  <p id="m128Status" role="status" style="color:#c5f2d4;font-size:12px">Abra esta aba com acesso ADM.</p>
+  <div id="m128List"></div><div id="m128Detail" hidden style="padding:14px;background:#161018;border:1px solid #75415a;border-radius:12px;margin-top:12px"></div>
+</section>
+<div style="border-top:1px solid #4e3442;padding-top:14px;margin-top:18px"><strong style="font-size:17px">Autorizações reais</strong><p style="font-size:12px;color:#c9adb9;margin:6px 0 11px">Somente cadastros verdadeiros com análise de documentos.</p></div>
 <div id="minorAdminList"></div><div id="minorAdminDetail" hidden></div>
 </section>
 <script src="admin-menores-v120.js?v=20261023-documento-v122"></script>
+<script src="admin-menores-demo-v128.js?v=20261024-v128"></script>
 
 </body>
 </html>
