@@ -106,7 +106,6 @@
      minorName:$('minorName').value,minorCpf:$('minorCpf').value,minorBirth:$('minorBirth').value,
      guardianName:$('guardianName').value,guardianCpf:$('guardianCpf').value,
      guardianBirth:$('guardianBirth').value,guardianPhone:$('guardianPhone').value,
-     guardianEmail:$('guardianEmail').value,
      relation:$('minorRelation').value,photo:photoUrl,documentPhoto:documentUrl,
      signature:canvas.toDataURL('image/png'),
      attend:$('checkAttend').checked,noAlcohol:$('checkAlcohol').checked,
