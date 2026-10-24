@@ -166,6 +166,42 @@ async function detail(id){
   ];
   fields.forEach(([k,v])=>{list.append(text('dt',k),text('dd',String(v||'—')));});
   el.appendChild(list);
+  if(r.email_notification_error&&!r.email_notified_at){
+    const bad=text('p','⚠️ ENTREGA DO GMAIL NÃO CONFIRMADA: '+r.email_notification_error,'m120-warning');
+    bad.style.cssText='border:1px solid #b45373;background:#341b28;padding:14px;border-radius:12px';
+    el.append(bad);
+  }
+  const correction=document.createElement('section');
+  correction.style.cssText='margin:16px 0;padding:16px;border:1px solid #76485a;border-radius:13px;background:#1b1420';
+  correction.append(text('h4','📧 Conferir ou corrigir endereço de Gmail'));
+  correction.append(text('p','Peça ao responsável para confirmar o endereço correto diretamente pelo WhatsApp antes de trocar. Esta alteração não mexe nas fotos, na aprovação nem no ingresso.'));
+  const choices=[['Gmail do responsável','guardian_email',r.guardian_email],['Gmail do menor','minor_email',r.minor_email]];
+  const verifiedLabel=document.createElement('label');
+  verifiedLabel.style.cssText='display:flex;align-items:start;gap:9px;margin:10px 0';
+  const confirmed=document.createElement('input');confirmed.type='checkbox';confirmed.style.cssText='width:20px;height:20px;flex:none;margin:3px 0';
+  verifiedLabel.append(confirmed,text('span','Confirmo que verifiquei o endereço atualizado diretamente com o responsável.'));
+  correction.append(verifiedLabel);
+  for(const [label,field,value] of choices){
+    const labelEl=document.createElement('label');labelEl.style.cssText='display:block;margin:12px 0 5px';
+    labelEl.append(text('strong',label));
+    const inp=document.createElement('input');inp.type='email';inp.value=value||'';inp.maxLength=180;
+    inp.autocomplete='off';inp.style.cssText='width:100%;padding:12px;border:1px solid #715169;border-radius:9px;background:#0d0b11;color:#fff';
+    const save=document.createElement('button');save.type='button';save.className='m120-btn';
+    save.textContent='SALVAR '+label.toUpperCase();save.style.marginTop='7px';
+    save.addEventListener('click',async()=>{
+      if(!confirmed.checked){status('Marque a confirmação de contato com o responsável.',true);return;}
+      if(!inp.checkValidity()){status('Informe um Gmail válido.',true);return;}
+      if(!confirm('Você confirmou este endereço diretamente com o responsável? O PDF possui documentos pessoais.'))return;
+      save.disabled=true;save.textContent='SALVANDO...';
+      try{
+        const result=await rpc('correct_email',{id,field,email:inp.value.trim(),contactVerified:true});
+        status(result.message||'Gmail corrigido. Clique REENVIAR PDF depois.');
+        await detail(id);
+      }catch(err){status('Erro ao corrigir Gmail: '+err.message,true);save.disabled=false;save.textContent='SALVAR '+label.toUpperCase();}
+    });
+    correction.append(labelEl,inp,save);
+  }
+  el.append(correction);
   const docs=document.createElement('div');docs.className='m120-image-grid';
   for(const [label,url] of [
     ['📷 Selfie facial do menor (16-17 anos)',data.minorFaceUrl],
@@ -258,6 +294,8 @@ async function detail(id){
   if(r.status==="conferido"){
     const resend=document.createElement("button");resend.type="button";resend.className="m120-btn m120-green";
     resend.textContent="📧 REENVIAR PDF AOS DOIS GMAILS";
+    const bounced=Boolean(r.email_notification_error&&/endereço inexistente|550 5\\.1\\.1/i.test(r.email_notification_error));
+    if(bounced){resend.disabled=true;resend.title="Corrija o Gmail inexistente e reabra a ficha antes de reenviar.";}
     resend.addEventListener("click",async()=>{
       resend.disabled=true;resend.textContent="ENVIANDO PDF...";
       try{
