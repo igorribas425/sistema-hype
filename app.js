@@ -1517,6 +1517,23 @@ function renderFreeEntry(entry) {
 async function createPixOrder(e) {
   e.preventDefault();
 
+  // No checkout PIX, a confirmação de idade é obrigatória antes de gerar pedido.
+  // Menores dependem da avaliação do responsável; não emitir PIX antecipado.
+  const ageDeclaration = document.getElementById('clientAgeDeclaration');
+  if (ageDeclaration && !ageDeclaration.value) {
+    alert('Confirme se o ingresso será utilizado por maior ou menor de 18 anos.');
+    ageDeclaration.focus();
+    ageDeclaration.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+  if (ageDeclaration?.value === 'menor') {
+    const warning = document.getElementById('hypeMinorPurchaseWarning');
+    if (warning) warning.hidden = false;
+    alert('Antes de pagar o ingresso de um menor, o responsável deve preencher a autorização e a HYPE precisa analisar a admissão. O pagamento será tratado com a equipe após a análise.');
+    warning?.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+
   if (HYPE.promoterLinkCode) {
     const promoterOk = await hypeValidatePromoterLinkV56(HYPE.promoterLinkCode);
     if (!promoterOk) {
@@ -3131,7 +3148,7 @@ function hypeV14ScrollToTickets() {
   const form = document.getElementById("ticketForm");
   const box = document.getElementById("ticketBox");
   (form || box)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  setTimeout(() => document.getElementById("clientName")?.focus({ preventScroll: true }), 550);
+  setTimeout(() => (document.getElementById("clientAgeDeclaration") || document.getElementById("clientName"))?.focus({ preventScroll: true }), 550);
 }
 
 function hypeV14ChooseLot(lotId) {
