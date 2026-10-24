@@ -59,8 +59,27 @@
    finally{loading=false;}
  }
  async function review(id,next){
-   try{await api("review",{id,status:next});info("Status do teste: "+next.toUpperCase());await load();$("m128Detail").hidden=true;}
-   catch(e){info("Falha: "+e.message,true);}
+   try{
+     const response=await api("review",{id,status:next});
+     await load();
+     const details=$("m128Detail");
+     details.replaceChildren();details.hidden=false;
+     details.append(el("h3","🧪 Resultado do teste: "+next.toUpperCase()));
+     details.append(el("p","Gmails destinatários: "+(response.emails||[]).join(", ")));
+     if(next==="pendente"){info("Teste voltou para pendente.");return;}
+     if(response.emailSent){
+       info("Mensagem aceita pelo provedor de e-mail; confira Gmail e Spam.");
+       details.append(el("p","✅ Envio aceito para os dois endereços."));
+     }else{
+       info("Teste analisado, mas o envio automático NÃO foi confirmado.",true);
+       details.append(el("p","⚠️ "+(response.emailError||"Envio não confirmado.")));
+       const a=el("a","📧 ABRIR E-MAIL PREENCHIDO PARA OS DOIS","m120-btn");
+       const body="TESTE FICTÍCIO DA HYPE. Nenhuma compra real foi liberada."+(response.manualLink?"\n\nLink de demonstração:\n"+response.manualLink:"");
+       a.href="mailto:"+(response.emails||[]).map(encodeURIComponent).join(",")+"?subject="+encodeURIComponent("HYPE — teste fictício de autorização")+"&body="+encodeURIComponent(body);
+       a.style.cssText="display:block;padding:13px;background:#c83264;color:white;border-radius:9px;margin-top:12px";
+       details.append(a);
+     }
+   }catch(e){info("Falha: "+e.message,true);}
  }
  async function remove(id){
    if(!confirm("Excluir somente este teste fictício? Nenhum ingresso real será afetado."))return;
