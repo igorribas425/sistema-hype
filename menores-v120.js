@@ -176,11 +176,11 @@
      const box=$('feedback');
      box.className='ok';box.replaceChildren();
      const top=document.createElement('strong');top.textContent='✅ Declaração recebida. Protocolo: '+response.protocol;
-     const sub=document.createElement('p');sub.textContent='Aguarde a conferência do ADM. Esta declaração não garante entrada, não substitui a documentação original e NÃO autoriza bebidas alcoólicas para menores.';
+     const sub=document.createElement('p');sub.textContent='Cadastro enviado para análise da HYPE. Aguarde o resultado nos Gmails informados. Se aprovado, apresente a autorização recebida por e-mail, o QR Code e os documentos originais no evento para comprar o ingresso presencial de R$ 30,00. Este protocolo NÃO é um ingresso e não libera entrada.';
      const back=document.createElement('a');back.href='./cliente.html';back.textContent='← Voltar para ingressos';
      box.append(top,sub,back);box.scrollIntoView({behavior:'smooth',block:'start'});
    }catch(err){message('❌ '+(err.message||err));}
-   finally{btn.disabled=false;btn.textContent='ENVIAR DECLARAÇÃO PARA CONFERÊNCIA';}
+   finally{btn.disabled=false;btn.textContent='ENVIAR AUTORIZAÇÃO PARA ANÁLISE';}
  });
  loadEvents();
 })();
