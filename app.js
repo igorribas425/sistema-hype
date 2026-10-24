@@ -1520,13 +1520,16 @@ async function createPixOrder(e) {
   // No checkout PIX, a confirmação de idade é obrigatória antes de gerar pedido.
   // Menores dependem da avaliação do responsável; não emitir PIX antecipado.
   const ageDeclaration = document.getElementById('clientAgeDeclaration');
-  if (ageDeclaration && !ageDeclaration.value) {
+  const minorCheckbox = document.getElementById('clientIsMinor');
+  // Nova compra oficial: desmarcado = fluxo adulto; marcado = autorização, sem PIX.
+  // Mantém a seleção antiga como compatibilidade nas outras páginas.
+  if (!minorCheckbox && ageDeclaration && !ageDeclaration.value) {
     alert('Confirme se o ingresso será utilizado por maior ou menor de 18 anos.');
     ageDeclaration.focus();
     ageDeclaration.scrollIntoView({behavior:'smooth',block:'center'});
     return;
   }
-  if (ageDeclaration?.value === 'menor') {
+  if (minorCheckbox?.checked || ageDeclaration?.value === 'menor') {
     const warning = document.getElementById('hypeMinorPurchaseWarning');
     if (warning) warning.hidden = false;
     alert('Antes de pagar o ingresso de um menor, o responsável deve preencher a autorização e a HYPE precisa analisar a admissão. O pagamento será tratado com a equipe após a análise.');
