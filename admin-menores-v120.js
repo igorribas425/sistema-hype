@@ -134,16 +134,33 @@ async function detail(id){
     window.open('https://wa.me/55'+number+'?text='+encodeURIComponent(msg),'_blank','noopener,noreferrer');
   });
   const email=document.createElement('button');
-  email.type='button';email.className='m120-btn m120-ghost';email.textContent='📧 RESPONDER POR E-MAIL';
+  email.type='button';email.className='m120-btn m120-ghost';
+  email.textContent=r.status==='conferido'?'📧 ENVIAR LINK DE COMPRA':'📧 RESPONDER POR E-MAIL';
   email.disabled=!/^\S+@\S+\.\S+$/.test(String(r.guardian_email||''));
-  email.title=email.disabled?'O cadastro não possui e-mail válido.':'Abrir seu aplicativo de e-mail com o aviso preenchido';
-  email.addEventListener('click',()=>{
+  email.title=email.disabled?'Cadastro sem e-mail válido. Confira com o responsável.':'Preparar aviso por e-mail';
+  email.addEventListener('click',async()=>{
     const address=String(r.guardian_email||'').trim();
-    if(!/^\S+@\S+\.\S+$/.test(address))return;
-    const title='HYPE Lounge Club • Retorno da autorização';
-    const approved=r.status==='conferido';
-    const statusText=approved?'Sua declaração foi CONFERIDA pela equipe da HYPE. A conferência não garante entrada nem constitui ingresso. Entre em contato com a HYPE para verificar as condições e, quando permitido, concluir a compra.':'Sua declaração ainda não foi aprovada para compra. Entre em contato com a equipe da HYPE para esclarecimentos.';
-    const body='Olá, '+r.guardian_name+'!\n\nSobre a autorização de '+r.minor_name+' para o evento '+eventName(r.event_id)+':\n\n'+statusText+'\n\nA entrada depende das regras do evento e da apresentação dos documentos originais na portaria. É proibido fornecer bebidas alcoólicas a menores de 18 anos.\n\nEquipe HYPE Lounge Club';
+    if(!/^\S+@\S+\.\S+$/.test(address))return status('Este cadastro não possui e-mail válido.',true);
+    const title='HYPE Lounge Club • Autorização para '+r.minor_name;
+    let body='';
+    if(r.status==='conferido'){
+      email.disabled=true;email.textContent='GERANDO LINK PRIVADO...';
+      try{
+        const d=await rpc('issue_checkout',{id:r.id});
+        const link=d.purchaseLink;
+        body='Olá, '+r.guardian_name+'!\n\nA autorização para '+r.minor_name+' no evento '+eventName(r.event_id)+' foi conferida pela HYPE.\n\nA compra está disponível exclusivamente neste link:\n'+link+'\n\nO nome e CPF do menor já estão vinculados ao ingresso. Escolha a categoria, realize o pagamento e aguarde o QR Code no e-mail do responsável.\n\nA conferência não garante entrada: documentos originais e regras legais de admissão serão verificados na portaria. É proibido fornecer bebidas alcoólicas a menores de 18 anos.\n\nHYPE Lounge Club';
+        const box=document.createElement('div');box.className='m120-warning';
+        const explanation=text('p','LINK PRIVADO GERADO. O e-mail será aberto para você apertar Enviar. Se preferir, copie o link abaixo:');
+        const field=document.createElement('input');field.value=link;field.readOnly=true;field.style.cssText='width:100%;padding:12px;border-radius:8px;color:#fff;background:#100c11;border:1px solid #9c6a83';
+        const copy=document.createElement('button');copy.type='button';copy.className='m120-btn m120-ghost';copy.textContent='📋 COPIAR LINK';
+        copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(link);status('Link copiado. Envie somente ao responsável.',false);}catch(_){field.focus();field.select();status('Selecione e copie o link.',true);}});
+        box.append(explanation,field,copy);el.appendChild(box);
+        status('Link exclusivo preparado. Não houve envio automático; confirme o envio no seu e-mail.');
+      }catch(err){status('Falha ao gerar link: '+err.message,true);return;}
+      finally{email.disabled=false;email.textContent='📧 ENVIAR LINK DE COMPRA';}
+    }else{
+      body='Olá, '+r.guardian_name+'!\n\nSobre a autorização para '+r.minor_name+' no evento '+eventName(r.event_id)+': a declaração ainda não foi aprovada para compra. Entre em contato com a equipe da HYPE para esclarecimentos.\n\nHYPE Lounge Club';
+    }
     window.location.href='mailto:'+encodeURIComponent(address)+'?subject='+encodeURIComponent(title)+'&body='+encodeURIComponent(body);
   });
   buttons.append(accept,reject,whatsapp,email,close);el.appendChild(buttons);
