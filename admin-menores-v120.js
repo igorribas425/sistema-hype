@@ -242,10 +242,10 @@ async function detail(id){
   });
   const email=document.createElement('button');
   email.type='button';email.className='m120-btn m120-ghost';
-  email.textContent=r.status==='conferido'?'📄 BAIXAR AUTORIZAÇÃO PDF (ENVIO MANUAL)':'📧 REENVIAR RESULTADO PARA OS DOIS';
-  email.disabled=!['conferido','recusado'].includes(r.status);
+  email.textContent='📧 REENVIAR RESULTADO DA RECUSA';
+  email.disabled=r.status!=='recusado';
   email.addEventListener('click',async()=>{
-    if(r.status==='conferido'){await downloadAuthorizationPDF(r);return;}
+    if(r.status!=='recusado')return;
     if(!confirm('Reenviar resultado da recusa para os dois Gmails?'))return;
     email.disabled=true;email.textContent='TENTANDO ENVIAR...';
     try{
@@ -280,7 +280,8 @@ async function detail(id){
     validator.style.cssText="text-decoration:none;display:inline-flex;align-items:center;justify-content:center";
     buttons.append(validator);
   }
-  buttons.append(accept,reject,whatsapp,email,close);el.appendChild(buttons);
+  if(r.status==='conferido'){accept.disabled=true;accept.textContent='✅ JÁ CONFERIDO';}
+  buttons.append(accept,reject,whatsapp,close);if(r.status==='recusado')buttons.append(email);el.appendChild(buttons);
  }catch(e){el.replaceChildren(text('p','Erro ao abrir ficha: '+e.message));}
 }
 async function purge(){
