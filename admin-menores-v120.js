@@ -211,6 +211,18 @@ async function detail(id){
     finally{email.disabled=false;email.textContent='📧 REENVIAR RESULTADO AOS DOIS GMAILS';}
   });
   if(r.status==="conferido"){
+    const resend=document.createElement("button");resend.type="button";resend.className="m120-btn m120-green";
+    resend.textContent="📧 REENVIAR PDF AOS DOIS GMAILS";
+    resend.addEventListener("click",async()=>{
+      resend.disabled=true;resend.textContent="ENVIANDO PDF...";
+      try{
+        const result=await sendNotification(r.id);
+        showNotificationResult(result);
+        status(result.emailSent?"PDF aceito para envio aos dois Gmails.":"Envio do PDF não confirmado: "+String(result.emailError||"Erro desconhecido"),!result.emailSent);
+      }catch(e){status("Erro no envio do PDF: "+e.message,true);}
+      finally{resend.disabled=false;resend.textContent="📧 REENVIAR PDF AOS DOIS GMAILS";}
+    });
+    buttons.append(resend);
     const pdf=document.createElement("button");pdf.type="button";pdf.className="m120-btn m120-green";
     pdf.textContent="📄 BAIXAR AUTORIZAÇÃO PDF + QR CODE";
     pdf.addEventListener("click",()=>downloadAuthorizationPDF(r));
