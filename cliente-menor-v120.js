@@ -1,11 +1,12 @@
-/* HYPE V120 — Sinalização de menor antes de pagar: aprovação manual primeiro */
+/* HYPE V125 — Caixa de menor que abre autorização dos pais em aba separada. */
 (() => {
  'use strict';
  const $=id=>document.getElementById(id);
  function update(){
    const choice=$('clientAgeDeclaration');
-   if(!choice)return;
-   const minor=choice.value==='menor';
+   const check=$('clientIsMinor');
+   if(!choice && !check)return;
+   const minor=check ? check.checked : choice.value==='menor';
    const warning=$('hypeMinorPurchaseWarning'),link=$('hypeMinorParentLink');
    if(warning)warning.hidden=!minor;
    if(link){
@@ -25,6 +26,13 @@
  }
  function init(){
    $('clientAgeDeclaration')?.addEventListener('change',update);
+   $('clientIsMinor')?.addEventListener('change',()=>{
+     update();
+     if($('clientIsMinor').checked){
+       const link=$('hypeMinorParentLink');
+       if(link)window.open(link.href,'_blank','noopener,noreferrer');
+     }
+   });
    $('clientCpf')?.addEventListener('input',update);
    $('ticketType')?.addEventListener('change',update);
    update();
