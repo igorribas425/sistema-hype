@@ -1316,6 +1316,22 @@ function sendReceiptWhatsApp() {
 async function createManualOrder(e) {
   e.preventDefault();
 
+  // Autodeclaração de idade na compra. Análise do responsável ANTES de pagar.
+  // Esta verificação da página NÃO substitui controle documental na portaria.
+  const ageDeclaration = document.getElementById('clientAgeDeclaration');
+  if (!ageDeclaration || !ageDeclaration.value) {
+    alert('Selecione a declaração de idade antes de continuar.');
+    ageDeclaration?.focus();
+    return;
+  }
+  if (ageDeclaration.value === 'menor') {
+    const warning=document.getElementById('hypeMinorPurchaseWarning');
+    if(warning)warning.hidden=false;
+    alert('Ingressos para menores não podem ser pagos diretamente pelo site. Solicite a autorização dos pais e aguarde a análise da HYPE. A administração entrará em contato sobre pagamento e regras de entrada.');
+    warning?.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+
   if (HYPE.promoterLinkCode) {
     const promoterOk = await hypeValidatePromoterLinkV56(HYPE.promoterLinkCode);
     if (!promoterOk) {
