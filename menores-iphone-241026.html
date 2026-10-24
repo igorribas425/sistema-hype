@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<!-- O link antigo enviado no WhatsApp continua nesta mesma página.
+     Parâmetros v e evento são ignorados pelo cadastro geral.
+     Sem redirecionamento em cadeia, para evitar tela branca no navegador interno do iPhone. -->
+<title>Cadastro de Menor — Acesso iPhone • HYPE Lounge Club</title><meta name="theme-color" content="#08080b"><link rel="icon" href="favicon.png">
+<style>
+:root{color-scheme:dark;--bg:#09090d;--surface:#141219;--border:#39242d;--red:#ea2451;--muted:#b5a7b0}*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#35121c,#09090d 52%);color:#fff;font-family:system-ui,-apple-system,Arial,sans-serif;padding:18px 12px 70px;line-height:1.5}
+main{max-width:780px;margin:auto}.logo{text-align:center;padding:12px 0 20px}.logo img{max-width:180px;width:48vw}.logo a{color:#f3bbc9;text-decoration:none;font-size:12px}
+h1{font-size:clamp(24px,6vw,34px);margin:5px 0}.subtitle{color:var(--muted);margin:6px 0 20px;font-size:14px}
+section{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px;margin:14px 0;box-shadow:0 8px 22px #0004}
+h2{margin:0 0 15px;font-size:17px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{margin-bottom:12px}.field label{display:block;font-weight:800;font-size:12px;margin-bottom:6px}
+input,select{background:#0a0a0e;border:1px solid #55404a;color:#fff;border-radius:10px;width:100%;font:inherit;padding:12px;min-height:48px}
+input[type=file]{font-size:12px}input:focus,select:focus{outline:2px solid #ec3e69;outline-offset:1px}
+small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
+.notice{padding:12px 15px;background:#331219;border:1px solid #943348;border-radius:13px;color:#ffe1e7;font-size:13px;margin:12px 0}
+.check{display:flex;gap:12px;align-items:start;padding:12px 0;border-bottom:1px solid #332730;font-size:13px}
+.check input{width:20px;height:20px;min-height:auto;margin:1px 0 0;accent-color:#ef2f59;flex:0 0 auto}
+#photoPreview{max-height:190px;max-width:100%;object-fit:contain;border-radius:12px;display:none;margin:10px auto}
+#signature{display:block;background:#fff;touch-action:none;border:2px solid #e9dde1;border-radius:12px;width:100%;height:155px}
+.action{border:0;border-radius:12px;background:#b81d43;color:#fff;cursor:pointer;font:inherit;font-weight:900;padding:14px 18px;min-height:48px}.action:disabled{opacity:.6;cursor:wait}.secondary{background:#27202b;border:1px solid #68505e}
+#feedback{border-radius:12px;padding:13px 16px;line-height:1.5;font-size:13px;display:none}
+#feedback.ok{display:block;color:#bff8d8;background:#103123;border:1px solid #278c56}#feedback.bad{display:block;color:#ffd4de;background:#381521;border:1px solid #d13c62}
+
+/* Guias visuais de selfie e documentos: botões grandes e fáceis de usar no celular. */
+.steps-hint{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0}
+.steps-hint div{background:#21141d;border:1px solid #754059;padding:12px 10px;border-radius:12px;font-size:12px;text-align:center;font-weight:800}
+.steps-hint span{display:block;color:#f4a5c2;font-size:19px;margin-bottom:4px}
+.photo-step{border:1px solid #654055;background:#19131c;border-radius:16px;padding:14px;margin:16px 0}
+.photo-title{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.photo-title strong{display:block;font-size:15px}
+.photo-title small{display:block;color:#c4b5bf;font-size:12px;margin-top:3px}
+.photo-number{display:inline-grid;place-items:center;width:29px;height:29px;border-radius:50%;background:#a91f53;color:white;font-weight:900;flex:none}
+.photo-upload{position:relative;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed #b64b78;background:linear-gradient(140deg,#321b2d,#231523);border-radius:15px;padding:18px 14px;min-height:215px;text-align:center;cursor:pointer;overflow:hidden}
+.photo-upload:focus-within{outline:3px solid #ff7da8;outline-offset:2px}
+.guide-svg{height:104px;width:118px;display:block;flex:none}
+.photo-big-label{font-size:15px;letter-spacing:.1px}
+.photo-button{font-size:14px;font-weight:900;background:#d12d63;border-radius:10px;color:white;padding:11px 14px;display:block;width:min(100%,300px)}
+.photo-tip{font-size:11px;color:#e8c9d8;max-width:340px;line-height:1.45}
+.photo-file-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;padding:0;font-size:0}
+/* iOS: somente o input transparente recebe o clique. Um label com input
+   aninhado pode acionar duas vezes o seletor e fechar a câmera no WebKit. */
+.photo-upload{isolation:isolate;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.photo-file-input{display:block;z-index:2;appearance:none;-webkit-appearance:none;touch-action:manipulation}
+.photo-upload .photo-button{pointer-events:none}
+
+.photo-upload.is-ready{border-color:#299c6b;background:linear-gradient(140deg,#173d2d,#1a2621)}
+.photo-upload.is-ready .photo-button{background:#267f5e}
+.photo-upload.is-ready .guide-svg{opacity:.7}
+.photo-status{color:#ead0da;font-size:12px;margin:8px 0 0}
+.photo-status.is-ready{color:#98f2bd;font-weight:800}
+.photo-status.is-error{color:#ffb8c5}
+.photo-preview{display:none;max-width:100%;max-height:270px;object-fit:contain;border:2px solid #38986a;border-radius:12px;margin:12px auto 0}
+.photo-advice{margin:10px 0 14px;padding:12px;border-radius:11px;background:#20222b;border:1px solid #555a6d;font-size:13px;color:#f2e2ea}
+.photo-advice b{color:white}
+@media(max-width:560px){.steps-hint{gap:5px}.steps-hint div{padding:9px 5px;font-size:11px}.photo-step{padding:11px}.photo-upload{padding:16px 10px}.photo-button{font-size:13px}}
+@media(max-width:560px){.grid{grid-template-columns:1fr}section{padding:16px}}
+</style></head>
+<body><main><div class="logo"><img src="logo-hype.png" alt="HYPE Lounge Club"><div><a href="./cliente.html">← Voltar para ingressos</a></div></div>
+<h1>🛡️ Autorização geral de menores — HYPE</h1>
+<p class="subtitle">Uma única solicitação vale para as festas da HYPE, sem preencher o cadastro a cada evento. Para adolescentes que já têm 16 ou 17 anos. Após análise e aprovação, o menor e o responsável recebem a autorização. A validade termina aos 18 anos ou antes, se revogada. Cada festa ainda exige conferência documental e cumprimento das regras de entrada. O ingresso de R$ 30,00 (Pista, noite toda) é comprado somente presencialmente.</p>
+<div class="notice" style="border-color:#3d7b68;background:#132c24;color:#d4ffea"><b>✅ Acesso direto para iPhone:</b> esta página é separada do link geral da HYPE para evitar uma versão antiga em cache. Preencha normalmente; a autorização é enviada ao mesmo sistema oficial. Abra no <b>Safari</b> (fora do navegador interno do WhatsApp/Instagram). Para fotos, toque no quadro e escolha <b>Tirar Foto</b> ou <b>Biblioteca de Fotos</b>.</div>
+<div class="notice" style="border-color:#4b698b;background:#192231;color:#e0ecff"><b>📱 iPhone:</b> ao tocar no quadro da foto, escolha “Tirar Foto” ou “Biblioteca de Fotos”. Se estiver abrindo pelo Instagram ou WhatsApp e a tela fechar, toque no menu do aplicativo e escolha <b>Abrir no Safari</b>. Continue pelo Safari.</div>
+<div class="steps-hint" aria-label="Etapas do cadastro"><div><span>①</span>Dados do menor</div><div><span>②</span>Fotos e responsável</div><div><span>③</span>Assinatura e envio</div></div>
+<div class="notice"><b>🚫 Proibido álcool para menores de 18 anos.</b> Nenhuma autorização dos pais permite venda, fornecimento ou consumo de bebidas alcoólicas por menores. A HYPE e a portaria devem cumprir as regras de admissão do evento e a legislação aplicável. A autorização parental pode não ser suficiente para permitir a entrada.</div>
+<form id="minorForm">
+<section><h2>👤 Dados do adolescente</h2>
+<div class="notice" style="background:#163023;border-color:#27835d;color:#d9fbe8"><b>✅ UMA ÚNICA AUTORIZAÇÃO PARA TODAS AS FESTAS HYPE</b> — Não precisa escolher festa. A aprovação é geral, válida enquanto tiver 16 ou 17 anos, salvo revogação. Não garante entrada em evento que tenha outras restrições.</div>
+<div class="grid"><div class="field"><label for="minorName">Nome completo do menor</label><input id="minorName" maxlength="120" minlength="5" autocomplete="name" required></div>
+<div class="field"><label for="minorCpf">CPF do menor</label><input id="minorCpf" maxlength="14" inputmode="numeric" placeholder="000.000.000-00" required></div></div>
+<div class="field"><label for="minorBirth">Data de nascimento do menor</label><input type="date" id="minorBirth" required><small>Precisa ter 16 ou 17 anos no momento do cadastro. A autorização perde a validade ao completar 18 anos.</small></div>
+<div class="field"><label for="minorEmail">Gmail do menor (recebe o resultado da análise)</label><input type="email" id="minorEmail" maxlength="254" autocomplete="email" inputmode="email" placeholder="menor@gmail.com" required><small>Após aprovação, os dois Gmails deverão receber o PDF com QR Code de autorização geral, sem link para compra.</small></div>
+<div class="notice">📸 <b>Vamos tirar duas fotos do menor:</b> uma do rosto (selfie) e outra do documento. Toque nos quadros abaixo e escolha <b>Tirar Foto</b> (ou <b>Biblioteca de Fotos</b>, no iPhone). A equipe confere as fotos manualmente.</div>
+<div class="field photo-step">
+  <div class="photo-title"><span class="photo-number">1</span><div><strong>Foto do rosto do menor</strong><small>O rosto do menor deve aparecer de frente, inteiro e sem filtro.</small></div></div>
+  <div class="photo-upload">
+    <svg aria-hidden="true" class="guide-svg" viewBox="0 0 120 116" xmlns="http://www.w3.org/2000/svg"><rect x="13" y="6" width="94" height="104" rx="30" fill="#2e1d2c" stroke="#b9567d" stroke-width="2.5" stroke-dasharray="7 6"/><circle cx="60" cy="42" r="21" fill="#ddb6ca"/><path d="M24 92c4-23 19-33 36-33s32 10 36 33" fill="#ddb6ca"/><path d="M28 22h15M77 22h15M28 99h15M77 99h15" stroke="#f07a9f" stroke-width="3" stroke-linecap="round"/></svg>
+    <strong class="photo-big-label">É uma foto do rosto</strong>
+    <span class="photo-button" id="minorFacePhotoButton">📷 TIRAR FOTO DO ROSTO</span>
+    <span class="photo-tip">Coloque seu rosto dentro do contorno. Evite boné, óculos escuros e contraluz.</span>
+    <input type="file" class="photo-file-input" id="minorFacePhoto" accept="image/*" aria-label="Abrir câmera para selfie do menor" aria-describedby="minorFacePhotoStatus" required>
+  </div>
+  <p class="photo-status" id="minorFacePhotoStatus" role="status" aria-live="polite">○ Aguardando foto</p>
+  <img id="minorFacePreview" class="photo-preview" alt="Foto enviada: foto do rosto do menor" style="display:none">
+</div>
+<div class="field photo-step">
+  <div class="photo-title"><span class="photo-number">2</span><div><strong>Foto do documento do menor</strong><small>Fotografe o documento do menor com nome, foto e dados legíveis.</small></div></div>
+  <div class="photo-upload">
+    <svg aria-hidden="true" class="guide-svg doc-svg" viewBox="0 0 120 116" xmlns="http://www.w3.org/2000/svg"><rect x="16" y="15" width="88" height="86" rx="11" fill="#ead7e3"/><rect x="16" y="15" width="88" height="19" rx="9" fill="#ae3a65"/><circle cx="43" cy="57" r="12" fill="#986881"/><path d="M25 79c1-10 8-15 18-15s17 5 18 15" fill="#986881"/><path d="M72 51h22M72 64h22M72 77h17" stroke="#997485" stroke-width="5" stroke-linecap="round"/><path d="M16 31h88" stroke="#ae3a65" stroke-width="5"/></svg>
+    <strong class="photo-big-label">É uma foto do documento</strong>
+    <span class="photo-button" id="minorDocumentPhotoButton">🪪 FOTOGRAFAR DOCUMENTO</span>
+    <span class="photo-tip">Tire a foto com boa luz, sem reflexos, mostrando todo o documento.</span>
+    <input type="file" class="photo-file-input" id="minorDocumentPhoto" accept="image/*" aria-label="Fotografar documento do menor" aria-describedby="minorDocumentPhotoStatus" required>
+  </div>
+  <p class="photo-status" id="minorDocumentPhotoStatus" role="status" aria-live="polite">○ Aguardando foto</p>
+  <img id="minorDocumentPreview" class="photo-preview" alt="Foto enviada: foto do documento do menor" style="display:none">
+</div>
+</section>
+<section><h2>👤 Identificação do responsável</h2>
+<div class="grid">
+<div class="field"><label for="guardianName">Nome completo</label><input id="guardianName" maxlength="120" minlength="5" autocomplete="name" required></div>
+<div class="field"><label for="guardianCpf">CPF do responsável</label><input id="guardianCpf" maxlength="14" inputmode="numeric" required></div>
+<div class="field"><label for="guardianBirth">Data de nascimento</label><input type="date" id="guardianBirth" required></div>
+<div class="field"><label for="guardianPhone">WhatsApp do responsável</label><input id="guardianPhone" type="tel" maxlength="18" inputmode="tel" required></div>
+<div class="field"><label for="guardianEmail">Gmail do responsável (para receber o resultado e autorização)</label><input id="guardianEmail" type="email" maxlength="254" autocomplete="email" placeholder="exemplo@gmail.com" required></div>
+</div>
+<div class="field"><label for="minorRelation">Vínculo com o menor</label><select id="minorRelation" required><option value="">Selecione</option><option>Pai</option><option>Mãe</option><option>Responsável legal</option></select></div>
+<div class="notice">📸 <b>Agora é a vez do pai, mãe ou responsável:</b> tire uma selfie e fotografe seu RG ou CNH. Toque nos quadros abaixo e escolha <b>Tirar Foto</b> ou <b>Biblioteca de Fotos</b>. As fotos serão conferidas pela equipe, não por reconhecimento facial.</div>
+<div class="field photo-step">
+  <div class="photo-title"><span class="photo-number">3</span><div><strong>Foto do rosto do responsável</strong><small>O rosto do responsável deve aparecer de frente, inteiro e sem filtro.</small></div></div>
+  <div class="photo-upload">
+    <svg aria-hidden="true" class="guide-svg" viewBox="0 0 120 116" xmlns="http://www.w3.org/2000/svg"><rect x="13" y="6" width="94" height="104" rx="30" fill="#2e1d2c" stroke="#b9567d" stroke-width="2.5" stroke-dasharray="7 6"/><circle cx="60" cy="42" r="21" fill="#ddb6ca"/><path d="M24 92c4-23 19-33 36-33s32 10 36 33" fill="#ddb6ca"/><path d="M28 22h15M77 22h15M28 99h15M77 99h15" stroke="#f07a9f" stroke-width="3" stroke-linecap="round"/></svg>
+    <strong class="photo-big-label">É uma foto do rosto</strong>
+    <span class="photo-button" id="guardianPhotoButton">📷 TIRAR FOTO DO ROSTO</span>
+    <span class="photo-tip">Coloque seu rosto dentro do contorno. Evite boné, óculos escuros e contraluz.</span>
+    <input type="file" class="photo-file-input" id="guardianPhoto" accept="image/*" aria-label="Abrir câmera para selfie do responsável" aria-describedby="guardianPhotoStatus" required>
+  </div>
+  <p class="photo-status" id="guardianPhotoStatus" role="status" aria-live="polite">○ Aguardando foto</p>
+  <img id="photoPreview" class="photo-preview" alt="Foto enviada: foto do rosto do responsável" style="display:none">
+</div>
+<div class="field photo-step">
+  <div class="photo-title"><span class="photo-number">4</span><div><strong>Foto do documento do responsável</strong><small>Fotografe o documento do responsável com nome, foto e dados legíveis.</small></div></div>
+  <div class="photo-upload">
+    <svg aria-hidden="true" class="guide-svg doc-svg" viewBox="0 0 120 116" xmlns="http://www.w3.org/2000/svg"><rect x="16" y="15" width="88" height="86" rx="11" fill="#ead7e3"/><rect x="16" y="15" width="88" height="19" rx="9" fill="#ae3a65"/><circle cx="43" cy="57" r="12" fill="#986881"/><path d="M25 79c1-10 8-15 18-15s17 5 18 15" fill="#986881"/><path d="M72 51h22M72 64h22M72 77h17" stroke="#997485" stroke-width="5" stroke-linecap="round"/><path d="M16 31h88" stroke="#ae3a65" stroke-width="5"/></svg>
+    <strong class="photo-big-label">É uma foto do documento</strong>
+    <span class="photo-button" id="guardianDocumentButton">🪪 FOTOGRAFAR DOCUMENTO</span>
+    <span class="photo-tip">Tire a foto com boa luz, sem reflexos, mostrando todo o documento.</span>
+    <input type="file" class="photo-file-input" id="guardianDocument" accept="image/*" aria-label="Fotografar documento do responsável" aria-describedby="guardianDocumentStatus" required>
+  </div>
+  <p class="photo-status" id="guardianDocumentStatus" role="status" aria-live="polite">○ Aguardando foto</p>
+  <img id="documentPreview" class="photo-preview" alt="Foto enviada: foto do documento do responsável" style="display:none">
+</div>
+</section>
+<section><h2>✍️ Assinatura do responsável</h2><p style="font-size:12px"><b>Pai, mãe ou responsável:</b> use o dedo para assinar dentro da área branca abaixo. No computador, use o mouse.</p>
+<canvas id="signature"></canvas>
+<div style="display:flex;justify-content:flex-end;margin-top:10px"><button id="clearSign" class="action secondary" type="button">Limpar assinatura</button></div></section>
+<section><h2>☑️ Termos e autorização</h2>
+<label class="check"><input type="checkbox" id="checkAttend" required><span>Declaro ser pai, mãe ou responsável legal e autorizo a participação do adolescente nas festas da HYPE enquanto tiver 16 ou 17 anos, <b>somente quando as regras do evento e a legislação permitirem</b>, com conferência dos documentos e possibilidade de revogação da autorização.</span></label>
+<label class="check"><input type="checkbox" id="checkAlcohol" required><span>Estou ciente de que <b>é proibida a venda, o fornecimento e o consumo de bebidas alcoólicas pelo menor</b>, sem exceções por autorização dos pais.</span></label>
+<label class="check"><input type="checkbox" id="checkPrivacy" required><span>Autorizo o tratamento dos dados e fotos do adolescente e do responsável, dos documentos e da assinatura para verificar a autorização geral nas festas da HYPE enquanto houver validade, nos termos da LGPD. Reconheço que posso solicitar informações, revogação e exclusão à organização, ressalvadas obrigações legais.</span></label>
+<label class="check"><input type="checkbox" id="checkGuardian" required><span>Confirmo que os dados, a selfie e o documento enviados são meus, que sou maior de 18 anos e que comparecerei ou fornecerei documentos originais para a conferência exigida pela HYPE.</span></label>
+<div class="notice">🔒 Os arquivos ficam em área privada, acessível somente à administração autorizada. A declaração é geral para os eventos HYPE enquanto o menor tiver 16 ou 17 anos, desde que não revogada; é conferida pela HYPE. O QR Code não é ingresso, não comprova pagamento nem libera entrada automática. Registros podem ser excluídos conforme a política de retenção.</div>
+<div class="photo-advice"><b>Antes de enviar:</b> confira se as 4 fotos apareceram com ✅, se a assinatura foi feita e se os Gmails estão corretos. A autorização ainda será analisada pela Hype.</div>
+<button class="action" style="width:100%;margin-top:8px" id="sendForm" type="submit">ENVIAR AUTORIZAÇÃO PARA ANÁLISE</button>
+</section></form>
+<div id="feedback" role="status" aria-live="polite"></div>
+</main>
+<script>
+(()=>{
+"use strict";
+const fields=[
+["minorFacePhoto","minorFacePreview",false],
+["minorDocumentPhoto","minorDocumentPreview",true],
+["guardianPhoto","photoPreview",false],
+["guardianDocument","documentPreview",true]
+];
+for(const [id,preview,isDoc] of fields){
+ const input=document.getElementById(id),img=document.getElementById(preview);
+ const status=document.getElementById(id+"Status"),button=document.getElementById(id+"Button");
+ if(!input||!img||!status||!button)continue;
+ const card=input.closest(".photo-upload");
+ input.addEventListener("change",()=>{
+   if(!input.files.length)return;
+   card.classList.remove("is-ready");
+   status.className="photo-status";
+   status.textContent="⏳ Preparando foto, aguarde...";
+   button.textContent="⏳ PROCESSANDO FOTO...";
+ });
+ img.addEventListener("load",()=>{
+   if(!img.getAttribute("src"))return;
+   card.classList.add("is-ready");
+   status.className="photo-status is-ready";
+   status.textContent="✅ Foto recebida! Confira abaixo e toque para trocar se precisar.";
+   button.textContent=isDoc?"✅ DOCUMENTO RECEBIDO • TROCAR":"✅ SELFIE RECEBIDA • TROCAR";
+ });
+ img.addEventListener("error",()=>{
+   card.classList.remove("is-ready");
+   status.className="photo-status is-error";
+   status.textContent="❌ Erro ao carregar a foto. Tente novamente.";
+   button.textContent=isDoc?"🪪 FOTOGRAFAR DOCUMENTO":"📷 TIRAR FOTO DO ROSTO";
+ });
+}
+})();
+</script>
+<script src="menores-v120.js?v=20261024-iphone-atendimento-privado-v166"></script>
+</body></html>
