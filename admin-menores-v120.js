@@ -76,7 +76,7 @@ async function detail(id){
    ['Nome do menor',r.minor_name],['CPF do menor',r.minor_cpf],
    ['Nascimento do menor',r.minor_birth_date],['Nome do responsável',r.guardian_name],
    ['CPF do responsável',r.guardian_cpf],['Nascimento do responsável',r.guardian_birth_date],
-   ['WhatsApp',r.guardian_phone],['E-mail',r.guardian_email||'Não informado'],['Vínculo declarado',r.relation],
+   ['WhatsApp',r.guardian_phone],['E-mail do responsável',r.guardian_email||'Não informado (cadastro antigo)'],['Vínculo declarado',r.relation],
    ['Conferido por',r.reviewed_by||'Pendente'],['Observação',r.review_note||'—']
   ];
   fields.forEach(([k,v])=>{list.append(text('dt',k),text('dd',String(v||'—')));});
@@ -133,7 +133,20 @@ async function detail(id){
     const msg='Olá! Aqui é da HYPE Lounge Club. Sobre a autorização para '+r.minor_name+' no evento '+eventName(r.event_id)+': precisamos confirmar a análise e os próximos passos para o ingresso. Lembramos que a autorização não dispensa a conferência documental na portaria e menores não podem consumir bebidas alcoólicas.';
     window.open('https://wa.me/55'+number+'?text='+encodeURIComponent(msg),'_blank','noopener,noreferrer');
   });
-  buttons.append(accept,reject,whatsapp,close);el.appendChild(buttons);
+  const email=document.createElement('button');
+  email.type='button';email.className='m120-btn m120-ghost';email.textContent='📧 RESPONDER POR E-MAIL';
+  email.disabled=!/^\S+@\S+\.\S+$/.test(String(r.guardian_email||''));
+  email.title=email.disabled?'O cadastro não possui e-mail válido.':'Abrir seu aplicativo de e-mail com o aviso preenchido';
+  email.addEventListener('click',()=>{
+    const address=String(r.guardian_email||'').trim();
+    if(!/^\S+@\S+\.\S+$/.test(address))return;
+    const title='HYPE Lounge Club • Retorno da autorização';
+    const approved=r.status==='conferido';
+    const statusText=approved?'Sua declaração foi CONFERIDA pela equipe da HYPE. A conferência não garante entrada nem constitui ingresso. Entre em contato com a HYPE para verificar as condições e, quando permitido, concluir a compra.':'Sua declaração ainda não foi aprovada para compra. Entre em contato com a equipe da HYPE para esclarecimentos.';
+    const body='Olá, '+r.guardian_name+'!\n\nSobre a autorização de '+r.minor_name+' para o evento '+eventName(r.event_id)+':\n\n'+statusText+'\n\nA entrada depende das regras do evento e da apresentação dos documentos originais na portaria. É proibido fornecer bebidas alcoólicas a menores de 18 anos.\n\nEquipe HYPE Lounge Club';
+    window.location.href='mailto:'+encodeURIComponent(address)+'?subject='+encodeURIComponent(title)+'&body='+encodeURIComponent(body);
+  });
+  buttons.append(accept,reject,whatsapp,email,close);el.appendChild(buttons);
  }catch(e){el.replaceChildren(text('p','Erro ao abrir ficha: '+e.message));}
 }
 async function purge(){
