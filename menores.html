@@ -32,6 +32,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <div class="grid"><div class="field"><label for="minorName">Nome completo do menor</label><input id="minorName" maxlength="120" minlength="5" autocomplete="name" required></div>
 <div class="field"><label for="minorCpf">CPF do menor</label><input id="minorCpf" maxlength="14" inputmode="numeric" placeholder="000.000.000-00" required></div></div>
 <div class="field"><label for="minorBirth">Data de nascimento do menor</label><input type="date" id="minorBirth" required><small>Somente 16 ou 17 anos na data da festa. Menores de 16 anos não podem utilizar este cadastro.</small></div>
+<div class="field"><label for="minorEmail">Gmail do menor (recebe o resultado e o link junto com o responsável)</label><input type="email" id="minorEmail" maxlength="254" autocomplete="email" inputmode="email" placeholder="menor@gmail.com" required><small>A HYPE envia o mesmo resultado para os dois e-mails cadastrados.</small></div>
 <div class="notice">📷 Identificação obrigatória do próprio menor: selfie do rosto e fotografia do documento com nome, foto e data de nascimento legíveis. As imagens serão conferidas manualmente pela HYPE, sem reconhecimento facial automático.</div>
 <div class="field"><label for="minorFacePhoto">1. Selfie facial do menor (obrigatória)</label>
 <input type="file" id="minorFacePhoto" accept="image/jpeg,image/png,image/webp,image/*" capture="user" required>
@@ -70,5 +71,5 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <button class="action" style="width:100%;margin-top:8px" id="sendForm" type="submit">ENVIAR DECLARAÇÃO PARA CONFERÊNCIA</button>
 </section></form>
 <div id="feedback" role="status" aria-live="polite"></div>
-</main><script src="menores-v120.js?v=20261024-minor-face-age-v129"></script>
+</main><script src="menores-v120.js?v=20261024-two-email-v131"></script>
 </body></html>
