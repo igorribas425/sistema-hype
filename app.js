@@ -1603,6 +1603,7 @@ async function createPixOrder(e) {
     HYPE.currentEntryId = entry.id;
     HYPE.currentEntryCode = entry.ticket_code;
     window.__hypeCurrentManualEntry = entry;
+    hypeSaveClientOrderV168(entry);
 
     if (entry.payment_status === "Pago" && Number(entry.price || 0) <= 0) {
       renderFreeEntry(entry);
@@ -1626,7 +1627,9 @@ async function createPixOrder(e) {
 
     const payment = await createAsaasPix(entry.id, entry.qr_token);
     window.__hypeCurrentPix = payment;
+    hypeSaveClientOrderV168(entry,payment);
     renderAsaasPayment(entry, payment);
+    await refreshCurrentOrderStatus(false); // Caso webhook tenha confirmado durante a criação.
     hypeNotify(`PIX do pedido ${entry.ticket_code} gerado.`);
   } catch (err) {
     alert(hypeUserMessage(err, "Não foi possível gerar o PIX. Tente novamente em instantes."));
@@ -1667,9 +1670,81 @@ function reopenOrderWhatsApp() {
   openOrderWhatsApp(entry);
 }
 
+// V168: preserva o pedido deste aparelho ao voltar do aplicativo do banco.
+// O código fica apenas no navegador do comprador por até 24 horas, sem CPF/email.
+const HYPE_CLIENT_ORDER_KEY_V168 = "hype_client_recent_order_v168";
+function hypeSaveClientOrderV168(entry, pix = null) {
+  const code=String(entry?.ticket_code||"").trim();
+  if(!/^HYPE-[A-Z0-9]{6,24}$/i.test(code))return;
+  const payload={
+    id:Number(entry.id)||0, ticket_code:code,
+    event_id:Number(entry.event_id)||0,
+    price:Number(entry.price)||0,
+    lot_name:String(entry.lot_name||"").slice(0,100),
+    qr_code:String(pix?.qr_code||"").slice(0,1100),
+    created:Date.now()
+  };
+  try{localStorage.setItem(HYPE_CLIENT_ORDER_KEY_V168,JSON.stringify(payload));}catch(_){}
+}
+function hypeGetClientOrderV168() {
+  try{
+    const item=JSON.parse(localStorage.getItem(HYPE_CLIENT_ORDER_KEY_V168)||"null");
+    if(!item||!/^HYPE-[A-Z0-9]{6,24}$/i.test(String(item.ticket_code||""))||
+       !Number.isFinite(Number(item.created))||Date.now()-Number(item.created)>24*60*60*1000||
+       Number(item.created)>Date.now()+30000){localStorage.removeItem(HYPE_CLIENT_ORDER_KEY_V168);return null;}
+    return item;
+  }catch(_){return null;}
+}
+async function hypeRecoverClientOrderV168(inputCode=null) {
+  const saved=inputCode?null:hypeGetClientOrderV168();
+  const code=String(inputCode||saved?.ticket_code||"").trim().toUpperCase();
+  if(!/^HYPE-[A-Z0-9]{6,24}$/.test(code))return false;
+  // Não mostrar ingresso com dados locais: apenas após consulta do Supabase.
+  const rows=await sbRpc("public_get_ticket",{p_code:code});
+  const entry=Array.isArray(rows)?rows[0]:rows;
+  if(!entry||String(entry.ticket_code||"").toUpperCase()!==code)throw Error("Pedido não encontrado. Confira o código.");
+  HYPE.currentEntryCode=entry.ticket_code;
+  HYPE.currentEntryId=entry.id;
+  window.__hypeCurrentManualEntry={...(window.__hypeCurrentManualEntry||{}),...entry};
+  hypeSaveClientOrderV168(entry,saved?.qr_code?{qr_code:saved.qr_code}:null);
+  if(entry.payment_status==="Pago"){
+    await refreshCurrentOrderStatus(false);
+    const target=document.getElementById("paymentSuccessArea");
+    if(target&&target.style.display!=="none")target.scrollIntoView({block:"center",behavior:"smooth"});
+    return true;
+  }
+  // Se ainda estiver pendente, restaurar o Pix já gerado sem criar segunda cobrança.
+  if(saved?.qr_code&&inputCode==null){
+    renderAsaasPayment(entry,{qr_code:saved.qr_code});
+    const status=document.getElementById("pixPaymentStatus");
+    if(status)status.textContent="AGUARDANDO CONFIRMAÇÃO DO PIX";
+  }else if(inputCode){
+    hypeNotify("Pedido encontrado. Pagamento ainda não confirmado; não gere outro Pix.");
+  }
+  return false;
+}
+async function hypeFindOrderByCodeV168(){
+  const input=document.getElementById("hypeFindOrderCodeV168");
+  const code=String(input?.value||"").trim().toUpperCase();
+  if(!/^HYPE-[A-Z0-9]{6,24}$/.test(code)){
+    alert("Informe o código do pedido no formato HYPE-XXXXXXXXXX.");
+    return;
+  }
+  const btn=document.getElementById("hypeFindOrderBtnV168");
+  if(btn){btn.disabled=true;btn.textContent="CONSULTANDO PAGAMENTO...";}
+  try{
+    const paid=await hypeRecoverClientOrderV168(code);
+    if(!paid)alert("Pedido localizado, mas ainda não consta como PAGO no Supabase. Se você já pagou, não pague novamente. Procure a Hype com o comprovante.");
+  }catch(err){alert(hypeUserMessage(err,"Não foi possível consultar o ingresso."));}
+  finally{if(btn){btn.disabled=false;btn.textContent="🔎 CONSULTAR MEU INGRESSO";}}
+}
+
+let hypeOrderCheckingV168=false;
+let hypeOrderPaidV168=false;
 async function refreshCurrentOrderStatus(showMessage = true) {
   const code = HYPE.currentEntryCode;
-  if (!code) return;
+  if (!code||hypeOrderCheckingV168)return;
+  hypeOrderCheckingV168=true;
 
   try {
     const rows = await sbRpc("public_get_ticket", { p_code: code });
@@ -1679,7 +1754,9 @@ async function refreshCurrentOrderStatus(showMessage = true) {
     const localOrder = window.__hypeCurrentManualEntry || {};
     const mergedEntry = {
       ...entry,
-      email: entry.email || localOrder.email || ""
+      email: entry.email || localOrder.email || "",
+      qr_token: entry.qr_token || localOrder.qr_token || entry.ticket_code,
+      email_sent: Boolean(entry.email_sent_at||entry.email_sent)
     };
 
     const statusEls = [
@@ -1695,6 +1772,8 @@ async function refreshCurrentOrderStatus(showMessage = true) {
     });
 
     if (entry.payment_status === "Pago") {
+      const firstConfirmation=!hypeOrderPaidV168;
+      hypeOrderPaidV168=true;
       fillTicketCard(mergedEntry);
 
       const manualArea = document.getElementById("manualArea");
@@ -1714,19 +1793,22 @@ async function refreshCurrentOrderStatus(showMessage = true) {
       const successEmail = document.getElementById("paymentSuccessEmail");
       if (successEmail) {
         const isFreeConfirmed = Number(entry.price || 0) <= 0;
-        successEmail.textContent = entry.email_sent
+        successEmail.textContent = mergedEntry.email_sent
           ? "📧 Seu ingresso já foi enviado para o Gmail. Confira também Spam/Lixo eletrônico e apresente o QR Code na Portaria."
           : isFreeConfirmed
             ? "📧 Ingresso FREE liberado. Normalmente o Gmail chega em menos de 1 minuto. Confira também Spam/Lixo eletrônico e apresente o QR Code na Portaria."
-            : "📧 Pagamento confirmado. Normalmente o ingresso chega no Gmail em menos de 1 minuto. Confira também Spam/Lixo eletrônico e apresente o QR Code na Portaria.";
+            : "⚠️ PAGAMENTO CONFIRMADO! O Gmail está temporariamente indisponível. Toque em ACESSAR MEU INGRESSO para apresentar o QR Code na Portaria.";
       }
 
-      if (showMessage) hypeNotify(Number(entry.price || 0) <= 0 ? "Ingresso FREE liberado!" : "Pagamento confirmado. Seu ingresso está liberado!");
+      if (showMessage||firstConfirmation) hypeNotify(Number(entry.price || 0) <= 0 ? "Ingresso FREE liberado!" : "✅ PIX CONFIRMADO! Toque em ACESSAR MEU INGRESSO.");
     } else if (showMessage) {
       hypeNotify("Pagamento ainda não foi confirmado.");
     }
   } catch (err) {
-    if (showMessage) alert(hypeUserMessage(err, "Não foi possível consultar o pedido."));
+    console.warn("[HYPE][consulta compra] Falha em public_get_ticket",err);
+    if (showMessage) alert(hypeUserMessage(err, "Não foi possível consultar o pedido. Tente novamente."));
+  } finally {
+    hypeOrderCheckingV168=false;
   }
 }
 
@@ -1746,9 +1828,9 @@ function fillTicketCard(entry) {
 
   const emailNotice = document.getElementById("ticketEmailNotice");
   if (emailNotice) {
-    emailNotice.textContent = entry.email_sent
-      ? "📧 Cópia enviada para o Gmail. Confira também Spam/Lixo eletrônico e apresente o QR Code na Portaria."
-      : "📧 O ingresso normalmente chega no Gmail em menos de 1 minuto. Confira também Spam/Lixo eletrônico e apresente o QR Code na Portaria.";
+    emailNotice.textContent = Boolean(entry.email_sent_at||entry.email_sent)
+      ? "📧 Envio de e-mail registrado. Apresente este QR Code na Portaria."
+      : "⚠️ E-mail temporariamente indisponível. Este QR Code é seu ingresso válido; apresente na Portaria.";
   }
 
   const qr = document.getElementById("ticketQrImg");
