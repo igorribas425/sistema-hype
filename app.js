@@ -731,16 +731,26 @@ function renderPublicEvent() {
   renderEventCarousel();
 }
 
+// A sincronização automática de funcionários é contingência, não polling a cada segundo.
+// O webhook e o agendamento no Supabase continuam sendo as fontes principais.
+const hypeAsaasSyncLastAttemptV166 = new Map();
 async function hypeSyncPendingAsaasV64(tickets) {
   if (!HYPE.user || !HYPE.pass) return 0;
+  if (typeof document !== "undefined" && document.hidden) return 0;
+  const now = Date.now();
+  const RETRY_MS = 5 * 60 * 1000;
   const pending = (tickets || []).filter(item =>
     item &&
     item.payment_status === "Pendente" &&
     item.asaas_payment_id &&
-    /asaas/i.test(String(item.payment_method || ""))
-  ).slice(0, 10);
+    /asaas/i.test(String(item.payment_method || "")) &&
+    now - (hypeAsaasSyncLastAttemptV166.get(Number(item.id)) || 0) >= RETRY_MS
+  ).slice(0, 5);
   if (!pending.length) return 0;
 
+  // Registra antes de executar chamadas assíncronas, evitando requisições
+  // sobrepostas quando diferentes partes do Admin atualizam simultaneamente.
+  pending.forEach(item => hypeAsaasSyncLastAttemptV166.set(Number(item.id), now));
   const cfg = hypeCfg();
   let changed = 0;
   await Promise.allSettled(pending.map(async item => {
