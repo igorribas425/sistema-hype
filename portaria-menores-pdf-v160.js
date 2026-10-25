@@ -6,13 +6,6 @@ const $=id=>document.getElementById(id);
 const AUTH="https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minors-authorization";
 const DEVICE_KEY="hype_portaria_device_key_v18";
 const PDF="https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minor-pdf";
-const deepLinkId=(()=>{
- const hash=new URLSearchParams(String(location.hash||"").replace(/^#/,""));
- const id=String(hash.get("menor")||"").trim();
- return /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id)?id.toLowerCase():"";
-})();
-let deepLinkApplied=false;
-
 let rows=[],ready=false,busy=false,pdfUrl=null;
 const today=()=>new Intl.DateTimeFormat("sv-SE",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
 const years=(date,t)=>{if(!date)return-1;let y=Number(t.slice(0,4))-Number(date.slice(0,4));if(t.slice(5)<String(date).slice(5))y--;return y;};
@@ -51,26 +44,6 @@ function relevant(r){
 function normalize(value){
  return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("pt-BR").trim();
 }
-function applyDeepLink(){
- if(deepLinkApplied||!deepLinkId||!ready)return;
- const r=rows.find(x=>String(x.id||"").toLowerCase()===deepLinkId);
- if(!r){alertMsg("Esta autorização não está disponível neste evento ou não está aprovada.",true);deepLinkApplied=true;return;}
- deepLinkApplied=true;
- const input=$("minorDoorSearch");
- if(input)input.value=r.minor_name||"";
- render();
- $("minorDoorSection")?.scrollIntoView({behavior:"smooth",block:"start"});
- alertMsg("Autorização localizada. Toque em VER PDF COMPLETO e depois BAIXAR PDF ORIGINAL.");
- // Esconde o protocolo da barra de endereços após encontrar a pessoa.
- try{history.replaceState(history.state,"",location.pathname+location.search);}catch(_){}
-}
-function openDeepLinkIfAuthorized(){
- if(!deepLinkId||deepLinkApplied||$("portariaApp")?.classList.contains("hidden"))return;
- const panel=$("minorDoorPanel");
- if(panel?.hidden)openToggle();
- else if(ready)applyDeepLink();
- else if(!busy)load();
-}
 function render(){
  const box=$("minorDoorList"),search=normalize($("minorDoorSearch").value);
  const subset=rows.filter(relevant).filter(r=>!search||[r.minor_name,r.guardian_name,r.id].some(x=>normalize(x).includes(search)));
@@ -82,7 +55,7 @@ function render(){
   const info=document.createElement("div");info.className="minor-door-person-info";
   const name=document.createElement("strong");name.textContent=r.minor_name||"Adolescente";
   const small=document.createElement("span");small.textContent="Responsável: "+(r.guardian_name||"—")+" • "+(r.event_id==null?"Autorização geral":"Evento específico");
-  const button=document.createElement("button");button.type="button";button.className="btn green";button.textContent="📄 VER PDF COMPLETO";button.dataset.id=r.id;
+  const button=document.createElement("button");button.type="button";button.className="btn green";button.textContent="📄 VER PDF";button.dataset.id=r.id;
   button.addEventListener("click",()=>showPDF(r,button));
   info.append(name,small);card.append(info,button);box.append(card);
  }
@@ -97,8 +70,7 @@ async function load(){
   const result=await request(AUTH,{action:"door_list",...credentials});
   rows=Array.isArray(result.rows)?result.rows:[];
   ready=true;render();
-  if(deepLinkId&&!deepLinkApplied)applyDeepLink();
-  else alertMsg("✅ Autorizações carregadas. Pesquise pelo nome ou toque em VER PDF.");
+  alertMsg("✅ Autorizações carregadas. Pesquise pelo nome ou toque em VER PDF.");
   if(rows.length>=200)alertMsg("Exibidos até 200 registros válidos. Para cadastros antigos, use o Admin.");
  }catch(err){rows=[];$("minorDoorTotal").textContent="Consulta indisponível";alertMsg("❌ "+err.message,true);}
  finally{busy=false;btn.disabled=false;btn.textContent="↻ ATUALIZAR AUTORIZAÇÕES";}
@@ -120,13 +92,13 @@ async function showPDF(record,btn){
   const open=document.createElement("a");open.href=pdfUrl;open.target="_blank";open.rel="noopener noreferrer";
   open.className="btn green minor-door-pdf-link";open.textContent="👁️ ABRIR PDF COMPLETO";
   const save=document.createElement("a");save.href=pdfUrl;save.download=result.filename||"HYPE-AUTORIZACAO.pdf";
-  save.className="btn minor-door-pdf-link";save.textContent="⬇️ BAIXAR PDF ORIGINAL (COM FOTOS E ASSINATURA)";
+  save.className="btn minor-door-pdf-link";save.textContent="⬇️ BAIXAR PDF";
   const hint=document.createElement("p");hint.className="minor-door-hint";hint.textContent="O PDF inclui selfie, documentos, assinatura e QR Code. Confira os originais e as regras do evento. Não é ingresso.";
   box.replaceChildren(title,open,save,hint);box.hidden=false;
   box.scrollIntoView({block:"nearest",behavior:"smooth"});
   alertMsg("✅ PDF gerado. Toque em ABRIR PDF COMPLETO.");
  }catch(err){alertMsg("❌ PDF não abriu: "+err.message,true);}
- finally{busy=false;btn.disabled=false;btn.textContent="📄 VER PDF COMPLETO";}
+ finally{busy=false;btn.disabled=false;btn.textContent="📄 VER PDF";}
 }
 function init(){
  const panel=$("minorDoorPanel");
@@ -140,17 +112,6 @@ function init(){
  $("minorDoorSearch")?.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();if(ready)render();else load();}});
  $("eventSelect")?.addEventListener("change",()=>{cleanup();rows=[];ready=false;if(!$("minorDoorPanel").hidden)load();});
  window.addEventListener("pagehide",cleanup);
- // Aguarda a autorização real do dispositivo antes de abrir um link direto.
- if(deepLinkId&&$("portariaApp")){
-   const observer=new MutationObserver(()=>{
-     if(!$("portariaApp").classList.contains("hidden")){
-       observer.disconnect();
-       openDeepLinkIfAuthorized();
-     }
-   });
-   observer.observe($("portariaApp"),{attributes:true,attributeFilter:["class"]});
-   openDeepLinkIfAuthorized();
- }
  // Não descartar PDF ao mudar para a aba de visualização no Safari; sai ao fechar a página.
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
