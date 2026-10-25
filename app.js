@@ -1069,6 +1069,12 @@ async function initClient() {
     hypeV14Render();
     clientCatalogLastRefresh = Date.now();
 
+    // Se o cliente voltou do app do banco ou recarregou a página,
+    // recuperar seu pedido anterior sem gerar uma nova cobrança.
+    await hypeRecoverClientOrderV168().catch(err=>
+      console.warn("[HYPE][restaurar compra] Não foi possível consultar pedido salvo",err)
+    );
+
     clearInterval(clientTicker);
     clientTicker = setInterval(async () => {
       try {
@@ -1603,6 +1609,8 @@ async function createPixOrder(e) {
     HYPE.currentEntryId = entry.id;
     HYPE.currentEntryCode = entry.ticket_code;
     window.__hypeCurrentManualEntry = entry;
+    hypeOrderPaidV168=false;
+    window.__hypeTicketOpened=false;
     hypeSaveClientOrderV168(entry);
 
     if (entry.payment_status === "Pago" && Number(entry.price || 0) <= 0) {
@@ -1837,13 +1845,30 @@ function fillTicketCard(entry) {
   if (qr) qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(entry.qr_token || entry.ticket_code)}`;
 }
 
-function openPaidTicket() {
-  window.__hypeTicketOpened = true;
-  const successArea = document.getElementById("paymentSuccessArea");
-  const card = document.getElementById("ticketCard");
-  if (successArea) successArea.style.display = "none";
-  if (card) card.style.display = "block";
-  requestAnimationFrame(() => card?.scrollIntoView({ behavior: "smooth", block: "start" }));
+async function openPaidTicket() {
+  // Nunca abrir QR usando só o estado do navegador: confirmar pagamento no banco.
+  if(!HYPE.currentEntryCode){
+    alert("Pedido não encontrado nesta aba. Pesquise o código no campo CONSULTAR INGRESSO.");
+    return;
+  }
+  const btn=document.getElementById("hypeOpenPaidTicketBtn");
+  if(btn){btn.disabled=true;btn.textContent="VERIFICANDO INGRESSO...";}
+  try {
+    const rows=await sbRpc("public_get_ticket",{p_code:HYPE.currentEntryCode});
+    const entry=Array.isArray(rows)?rows[0]:rows;
+    if(!entry||entry.payment_status!=="Pago"){
+      alert("Pagamento ainda não consta como confirmado. Não faça outro Pix. Verifique novamente em instantes.");
+      return;
+    }
+    fillTicketCard({...entry,qr_token:entry.qr_token||window.__hypeCurrentManualEntry?.qr_token||entry.ticket_code});
+    window.__hypeTicketOpened = true;
+    const successArea=document.getElementById("paymentSuccessArea");
+    const card=document.getElementById("ticketCard");
+    if(successArea)successArea.style.display="none";
+    if(card)card.style.display="block";
+    requestAnimationFrame(()=>card?.scrollIntoView({behavior:"smooth",block:"start"}));
+  }catch(err){alert(hypeUserMessage(err,"Não foi possível confirmar o ingresso. Tente novamente."));}
+  finally{if(btn){btn.disabled=false;btn.textContent="🎟️ ACESSAR MEU INGRESSO";}}
 }
 
 async function showTicketCard() {
