@@ -486,6 +486,14 @@ html,body{max-width:100%;overflow-x:hidden}
         Depois que o PIX for confirmado, o ingresso normalmente chega no seu e-mail em <strong>menos de 1 minuto</strong>. Se não aparecer na caixa de entrada, confira <strong>Spam</strong> e <strong>Lixo eletrônico</strong>. Na Portaria, apresente o <strong>QR Code do e-mail</strong> junto com seu documento.
       </div>
 
+      <details id="hypeRecoverTicketPanelV168" style="margin:10px 0 18px;background:#151118;border:1px solid #674258;border-radius:14px;padding:13px 15px">
+        <summary style="cursor:pointer;color:#b7f7ce;font-weight:850;font-size:14px">🎟️ JÁ PAGOU? CONSULTAR MEU INGRESSO</summary>
+        <p style="color:#dcc8d6;font-size:12px;margin:12px 0 9px;line-height:1.55">Se você voltou do aplicativo do banco ou recarregou esta página, digite o código HYPE do seu pedido. Não faça outro PIX.</p>
+        <label for="hypeFindOrderCodeV168" style="display:block;font-size:12px;margin-bottom:7px">Código do pedido (HYPE-...)</label>
+        <input id="hypeFindOrderCodeV168" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="HYPE-XXXXXXXXXX" maxlength="30" style="width:100%;min-height:48px;font-size:16px;padding:12px;border-radius:9px;background:#09080b;color:#fff;border:1px solid #694456;margin-bottom:10px" onkeydown="if(event.key==='Enter'){event.preventDefault();hypeFindOrderByCodeV168()}">
+        <button id="hypeFindOrderBtnV168" type="button" class="btn" onclick="hypeFindOrderByCodeV168()" style="width:100%;background:#13664a;color:#fff">🔎 CONSULTAR MEU INGRESSO</button>
+      </details>
+
       <form id="ticketForm" onsubmit="createPixOrder(event)">
         <div class="group" id="hypeMinorPurchaseDeclaration" style="scroll-margin-top:110px;margin:0 0 18px;padding:13px 15px;background:#1a141b;border:1px solid #4b3642;border-radius:13px">
           <label for="clientIsMinor" style="display:flex;gap:12px;align-items:center;cursor:pointer;margin:0;color:#fff;font-size:14px;font-weight:800;text-transform:none;letter-spacing:0">
@@ -592,7 +600,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <h3>PAGAMENTO CONFIRMADO</h3>
         <p>Seu ingresso HYPE está liberado.</p>
         <small id="paymentSuccessEmail">📧 Você pode receber a cobrança do Asaas separadamente. O ingresso HYPE é outro e-mail. Se ele não aparecer, confira Spam/Lixo eletrônico e clique abaixo para ver seu QR Code agora.</small>
-        <button class="btn" onclick="openPaidTicket()">🎟️ ABRIR MEU QR CODE AGORA</button>
+        <button id="hypeOpenPaidTicketBtn" class="btn" onclick="openPaidTicket()">🎟️ ACESSAR MEU INGRESSO</button>
         <small style="display:block;margin-top:8px;color:#e9dce1;font-size:11px">Salve uma captura de tela do ingresso para apresentar com seu documento na portaria, mesmo que o e-mail demore.</small>
       </div>
 
@@ -644,7 +652,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
-<script src="app.js?v=20261024-minor-checkbox-v125"></script>
+<script src="app.js?v=20261025-pix-recupera-ingresso-v168"></script>
 <script src="cliente-menor-v120.js?v=20261024-iphone-same-tab-v156"></script>
 <script src="promoter-global-v16-8.js?v=20261002-v57-global"></script>
 <script src="v18-client.js?v=20260902-v20"></script>
