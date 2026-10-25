@@ -1842,7 +1842,16 @@ function fillTicketCard(entry) {
   }
 
   const qr = document.getElementById("ticketQrImg");
-  if (qr) qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(entry.qr_token || entry.ticket_code)}`;
+  if (qr) {
+    const code=String(entry.qr_token||entry.ticket_code||"").trim();
+    if(code&&window.QRCode?.toDataURL){
+      // Gerar QR localmente para o ingresso não depender do Gmail nem de um
+      // site externo de QR Code quando a rede do cliente oscilar.
+      window.QRCode.toDataURL(code,{width:260,margin:2,errorCorrectionLevel:"M"})
+        .then(url=>{if(qr.isConnected)qr.src=url;})
+        .catch(()=>{if(qr.isConnected)qr.src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data="+encodeURIComponent(code);});
+    }else if(code)qr.src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data="+encodeURIComponent(code);
+  }
 }
 
 async function openPaidTicket() {
