@@ -146,8 +146,8 @@
       }
 
       box.innerHTML = `
-        <div style="margin-top:14px;font-size:12px;color:#cbe9da;font-weight:900;letter-spacing:.5px">🏆 RANKING DE PROMOTERS • MAIOR FATURAMENTO PRIMEIRO</div>
-        <div style="margin-top:5px;font-size:11px;color:var(--muted)">Somente valores de ingressos com pagamento confirmado. FREE vale R$ 0. Ranking acumulado de todos os eventos.</div>
+        <div style="margin-top:14px;font-size:12px;color:#cbe9da;font-weight:900;letter-spacing:.5px">🏆 RANKING DE PROMOTERS • FESTA ATUAL</div>
+        <div style="margin-top:5px;font-size:11px;color:var(--muted)">Somente valores de ingressos com pagamento confirmado. FREE vale R$ 0. Ranking da festa atual. Eventos anteriores continuam no histórico.</div>
         ${rows.map((p, index) => `
           <div style="margin-top:10px;padding:13px;border:1px solid var(--line);border-radius:14px;background:#0b0b0e">
             <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
