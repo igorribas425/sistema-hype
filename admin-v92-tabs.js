@@ -333,6 +333,8 @@
         <b>FREE ${r.free} • Lista ${r.list}</b>
         <b>Bruto: ${esc(brl(r.revenue))}<small>Líquido est.: ${esc(brl(r.netEstimated))}</small></b>
       </div>`).join(''):'<div class="v92-empty">Nenhuma venda registrada neste filtro.</div>';
+    // Os cards de cima seguem o mesmo filtro do fechamento detalhado.
+    if(typeof renderClientsTable==='function') renderClientsTable();
   }
 
   async function refreshSales(forceFetch=true) {
