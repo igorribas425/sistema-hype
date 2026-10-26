@@ -274,7 +274,12 @@
       });
       events=[...map.values()].sort((a,b)=>String(b.event_date||'').localeCompare(String(a.event_date||'')));
     } catch (_) {}
-    const current=select.value || 'all';
+    // Ao iniciar um novo evento, o financeiro abre no evento ativo.
+    // O histórico continua disponível em TODOS OS EVENTOS quando selecionado.
+    const firstLoad=select.dataset.hypeFinanceInitializedV170 !== '1';
+    const activeEvent=events.find(e=>e.active!==false);
+    const current=firstLoad?String(activeEvent?.id || 'all'):(select.value || 'all');
+    select.dataset.hypeFinanceInitializedV170='1';
     select.innerHTML='<option value="all">TODOS OS EVENTOS</option>'+events.map(e=>`<option value="${Number(e.id)}">${esc(e.event_date || '')} • ${esc(e.name || 'Evento HYPE')}</option>`).join('');
     select.value=[...select.options].some(o=>o.value===current)?current:'all';
   }
