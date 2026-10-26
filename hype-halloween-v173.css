@@ -1,0 +1,79 @@
+/* HYPE Halloween V173 — apenas decoracao na pagina de ingressos.
+   Sem manipulacao do formulario, pagamento ou links de promoters. */
+#hypeHalloweenSceneV173{display:none;position:fixed;inset:0;overflow:hidden;pointer-events:none;isolation:isolate;z-index:2}
+body.hype-halloween-live #hypeHalloweenSceneV173{display:block}
+body.hype-halloween-live{background:
+  radial-gradient(ellipse 70% 26% at 50% 4%,rgba(117,9,13,.18),transparent 84%),
+  radial-gradient(ellipse 32% 72% at 0% 60%,rgba(127,10,16,.14),transparent 90%),
+  radial-gradient(ellipse 32% 72% at 100% 60%,rgba(127,10,16,.14),transparent 90%),#050505}
+body.hype-halloween-live .page-shell{position:relative;z-index:3}
+body.hype-halloween-live .v14-spotlight{
+  box-shadow:0 34px 95px rgba(0,0,0,.55),0 0 34px rgba(201,23,24,.14);
+  border-color:rgba(227,60,48,.35)}
+body.hype-halloween-live .v14-lot-card{border-color:rgba(218,46,38,.28)}
+body.hype-halloween-live .v14-lot-card:hover{border-color:rgba(255,83,55,.66)}
+#hypeHalloweenSceneV173 .hhw-frame{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:fill;
+  opacity:.70;filter:drop-shadow(0 0 8px rgba(150,13,19,.3))}
+#hypeHalloweenSceneV173 .hhw-ember{
+  position:absolute;inset:0;background:
+    radial-gradient(circle at 7% 27%,rgba(218,26,15,.21),transparent 19%),
+    radial-gradient(circle at 96% 71%,rgba(190,16,12,.13),transparent 18%);
+  opacity:.8;animation:hhwEmbers 8s ease-in-out infinite alternate}
+#hypeHalloweenSceneV173 .hhw-fly{
+  position:absolute;display:block;overflow:visible;fill:#120707;
+  opacity:.82;will-change:transform;
+  filter:drop-shadow(0 0 4px rgba(255,80,45,.55))}
+#hypeHalloweenSceneV173 .hhw-witch{
+  width:clamp(96px,12vw,195px);height:auto;
+  animation-timing-function:linear;animation-iteration-count:infinite}
+#hypeHalloweenSceneV173 .hhw-witch-one{
+  top:clamp(110px,14vh,185px);left:-220px;animation-name:hhwWitchRight;animation-duration:22s;animation-delay:-6s}
+#hypeHalloweenSceneV173 .hhw-witch-two{
+  top:clamp(285px,43vh,470px);right:-210px;
+  width:clamp(78px,9vw,145px);opacity:.6;
+  animation-name:hhwWitchLeft;animation-duration:29s;animation-delay:-16s}
+#hypeHalloweenSceneV173 .hhw-bat{height:auto;width:clamp(28px,5.2vw,80px);animation-timing-function:linear;animation-iteration-count:infinite}
+#hypeHalloweenSceneV173 .hhw-bat-one{top:8%;left:-100px;animation-name:hhwBatAcross;animation-duration:13s;animation-delay:-4s}
+#hypeHalloweenSceneV173 .hhw-bat-two{top:29%;left:-100px;animation-name:hhwBatAcross;animation-duration:18s;animation-delay:-13s;width:clamp(24px,3.6vw,58px);opacity:.63}
+#hypeHalloweenSceneV173 .hhw-bat-three{top:58%;right:-100px;animation-name:hhwBatBack;animation-duration:23s;animation-delay:-10s;width:clamp(26px,4vw,65px);opacity:.5}
+#hypeHalloweenSceneV173 .hhw-bat-four{top:17%;right:-100px;animation-name:hhwBatBack;animation-duration:17s;animation-delay:-9s;width:clamp(22px,3.6vw,54px)}
+@keyframes hhwEmbers{from{opacity:.38}to{opacity:.82}}
+@keyframes hhwWitchRight{
+  0%{transform:translate3d(0,8px,0) rotate(-4deg)}
+  26%{transform:translate3d(calc(28vw + 80px),-22px,0) rotate(2deg)}
+  55%{transform:translate3d(calc(58vw + 110px),28px,0) rotate(-2deg)}
+  100%{transform:translate3d(calc(100vw + 445px),-17px,0) rotate(2deg)}}
+@keyframes hhwWitchLeft{
+  0%{transform:translate3d(0,9px,0) scaleX(-1) rotate(-4deg)}
+  48%{transform:translate3d(calc(-52vw - 145px),-37px,0) scaleX(-1) rotate(1deg)}
+  100%{transform:translate3d(calc(-100vw - 440px),8px,0) scaleX(-1) rotate(-3deg)}}
+@keyframes hhwBatAcross{
+  0%{transform:translate3d(0,0,0) rotate(-9deg) scale(.84)}
+  30%{transform:translate3d(calc(32vw + 75px),32px,0) rotate(14deg) scale(1.12)}
+  60%{transform:translate3d(calc(64vw + 110px),-16px,0) rotate(-10deg) scale(.9)}
+  100%{transform:translate3d(calc(100vw + 250px),27px,0) rotate(8deg) scale(1.03)}}
+@keyframes hhwBatBack{
+  0%{transform:translate3d(0,0,0) scaleX(-1) rotate(7deg)}
+  48%{transform:translate3d(calc(-50vw - 110px),32px,0) scaleX(-1) rotate(-12deg)}
+  100%{transform:translate3d(calc(-100vw - 225px),-22px,0) scaleX(-1) rotate(8deg)}}
+@media(max-width:720px){
+  #hypeHalloweenSceneV173 .hhw-frame{opacity:.53}
+  #hypeHalloweenSceneV173 .hhw-ember{opacity:.42}
+  #hypeHalloweenSceneV173 .hhw-witch-one{top:115px;width:90px}
+  #hypeHalloweenSceneV173 .hhw-witch-two,#hypeHalloweenSceneV173 .hhw-bat-three{display:none}
+  #hypeHalloweenSceneV173 .hhw-bat-one{top:7%;width:35px}
+  #hypeHalloweenSceneV173 .hhw-bat-two{top:37%;width:27px;opacity:.54}
+  #hypeHalloweenSceneV173 .hhw-bat-four{top:60%;width:26px;opacity:.53}
+  body.hype-halloween-live .v14-spotlight{box-shadow:0 15px 38px rgba(0,0,0,.4),0 0 20px rgba(185,30,27,.10)}
+}
+@media(prefers-reduced-motion:reduce){
+  #hypeHalloweenSceneV173 .hhw-fly{animation:none!important;opacity:.24!important}
+  #hypeHalloweenSceneV173 .hhw-witch-one{transform:translate3d(22vw,0,0)!important}
+  #hypeHalloweenSceneV173 .hhw-bat-one{transform:translate3d(66vw,0,0)!important}
+  #hypeHalloweenSceneV173 .hhw-witch-two,
+  #hypeHalloweenSceneV173 .hhw-bat-two,
+  #hypeHalloweenSceneV173 .hhw-bat-three,
+  #hypeHalloweenSceneV173 .hhw-bat-four{display:none!important}
+  #hypeHalloweenSceneV173 .hhw-ember{animation:none!important}
+}
