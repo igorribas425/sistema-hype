@@ -1,0 +1,136 @@
+/* HYPE Halloween 30/10/2026 – decoração visual, nunca interfere nas compras.
+   Mesmo cliente.html atende link normal e ?promoter=CODIGO. */
+body.hype-halloween-active {
+  background:
+    radial-gradient(ellipse 80% 46% at 50% 0%,rgba(121,8,10,.18),transparent 78%),
+    radial-gradient(ellipse 65% 50% at 94% 84%,rgba(163,17,12,.15),transparent 77%),
+    #050304;
+}
+.hype-halloween-frame {
+  position:fixed;
+  inset:0;
+  z-index:8;
+  pointer-events:none!important;
+  background:url("hype-halloween-frame-2026.svg?v=1") center center / 100% 100% no-repeat;
+  opacity:0;
+  visibility:hidden;
+  transition:opacity .7s ease,visibility .7s ease;
+  will-change:opacity;
+}
+body.hype-halloween-active .hype-halloween-frame {opacity:.68;visibility:visible}
+.hype-halloween-sky {
+  position:fixed;
+  inset:0;
+  z-index:12;
+  overflow:hidden;
+  pointer-events:none!important;
+  visibility:hidden;
+  contain:layout style;
+}
+body.hype-halloween-active .hype-halloween-sky {visibility:visible}
+.hype-halloween-sky *, .hype-halloween-frame * {pointer-events:none!important}
+.hype-halloween-sky .hh-flyer {
+  position:absolute;
+  display:block;
+  width:var(--hh-size, 110px);
+  height:auto;
+  left:0;
+  top:var(--hh-top,18%);
+  opacity:var(--hh-opacity,.75);
+  transform:translate3d(-280px,0,0);
+  filter:drop-shadow(0 1px 3px #ee271f) drop-shadow(0 0 8px #f24c17);
+  animation:hh-fly var(--hh-speed,27s) linear var(--hh-delay,-4s) infinite;
+  will-change:transform;
+}
+.hype-halloween-sky .hh-flyer svg {
+  display:block;
+  width:100%;
+  height:auto;
+  transform:scaleX(var(--hh-direction,1));
+}
+@keyframes hh-fly {
+  0% {transform:translate3d(-310px,0,0) rotate(-5deg)}
+  24% {transform:translate3d(calc(25vw + 60px),-22px,0) rotate(3deg)}
+  49% {transform:translate3d(calc(50vw + 100px),10px,0) rotate(-3deg)}
+  74% {transform:translate3d(calc(75vw + 180px),-18px,0) rotate(2deg)}
+  100% {transform:translate3d(calc(100vw + 320px),0,0) rotate(-2deg)}
+}
+.hype-halloween-sky .hh-flyer.hh-bat {
+  filter:drop-shadow(0 0 3px #fd6840);
+  animation-name:hh-bat-fly;
+}
+@keyframes hh-bat-fly {
+  0% {transform:translate3d(-150px,15px,0) scale(.75) rotate(-9deg)}
+  25% {transform:translate3d(calc(25vw + 20px),-29px,0) scale(1) rotate(8deg)}
+  50% {transform:translate3d(calc(50vw + 50px),11px,0) scale(.92) rotate(-4deg)}
+  75% {transform:translate3d(calc(75vw + 75px),-14px,0) scale(1.07) rotate(7deg)}
+  100% {transform:translate3d(calc(100vw + 160px),5px,0) scale(.76) rotate(-6deg)}
+}
+.hype-halloween-sky .hh-bat svg {animation:hh-wing .53s ease-in-out infinite alternate}
+@keyframes hh-wing {to{transform:scaleX(var(--hh-direction,1)) scaleY(.73) rotate(3deg)}}
+body.hype-halloween-active .v14-spotlight {
+  border-color:rgba(241,55,31,.55)!important;
+  box-shadow:0 25px 95px rgba(0,0,0,.78),0 0 38px rgba(245,40,23,.13),inset 0 0 30px rgba(92,13,9,.22);
+}
+body.hype-halloween-active #ticketBox {
+  position:relative;
+  isolation:isolate;
+  border-radius:25px;
+}
+body.hype-halloween-active #ticketBox::before {
+  content:"";
+  position:absolute;
+  inset:-8px;
+  border:2px solid rgba(205,44,23,.4);
+  border-radius:27px;
+  box-shadow:0 0 16px rgba(218,36,18,.22),inset 0 0 17px rgba(183,24,18,.13);
+  pointer-events:none;
+  z-index:1;
+}
+body.hype-halloween-active .v14-lot-card.active {box-shadow:0 0 0 1px rgba(255,94,43,.52),0 0 23px rgba(255,60,31,.18)}
+body.hype-halloween-active #v14EventName {text-shadow:0 0 28px rgba(255,81,36,.3)}
+body.hype-halloween-active .events-head small:first-child {color:#ff9b76}
+body.hype-halloween-active .hype-halloween-ribbon {
+  display:flex;
+}
+.hype-halloween-ribbon {
+  display:none;
+  position:relative;
+  justify-content:center;
+  align-items:center;
+  margin:0 auto 5px;
+  padding:10px 18px;
+  max-width:100%;
+  width:fit-content;
+  gap:10px;
+  border:1px solid rgba(255,88,52,.55);
+  border-radius:999px;
+  background:linear-gradient(100deg,rgba(28,7,10,.93),rgba(104,17,14,.72),rgba(24,7,11,.93));
+  color:#ffe5d7;
+  font-size:clamp(10px,1.1vw,13px);
+  line-height:1.35;
+  font-weight:900;
+  letter-spacing:1.1px;
+  text-align:center;
+  box-shadow:0 0 18px rgba(222,40,25,.16);
+  pointer-events:none;
+}
+.hype-halloween-ribbon .hh-ribbon-mark{font-size:18px;color:#ff9b52}
+@media (max-width: 720px) {
+  .hype-halloween-frame {background-size:100% 100%;opacity:0}
+  body.hype-halloween-active .hype-halloween-frame {opacity:.38}
+  .hype-halloween-sky .hh-flyer.hh-witch {--hh-size:83px!important;opacity:.53;top:var(--hh-top)}
+  .hype-halloween-sky .hh-flyer.hh-witch.hh-witch-2,
+  .hype-halloween-sky .hh-flyer.hh-bat.hh-bat-4,
+  .hype-halloween-sky .hh-flyer.hh-bat.hh-bat-5 {display:none}
+  .hype-halloween-sky .hh-flyer.hh-bat {--hh-size:36px!important;opacity:.58}
+  .hype-halloween-ribbon {font-size:10px;letter-spacing:.6px;padding:10px 13px;border-radius:15px}
+  .hype-halloween-ribbon .hh-ribbon-mark{font-size:15px}
+}
+@media (prefers-reduced-motion: reduce) {
+  .hype-halloween-sky .hh-flyer {animation:none!important;display:none}
+  .hype-halloween-frame{transition:none;will-change:auto}
+}
+@media (prefers-reduced-data: reduce) {
+  .hype-halloween-sky .hh-bat-4,.hype-halloween-sky .hh-bat-5{display:none}
+}
