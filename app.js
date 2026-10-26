@@ -741,6 +741,7 @@ async function hypeSyncPendingAsaasV64(tickets) {
   const RETRY_MS = 5 * 60 * 1000;
   const pending = (tickets || []).filter(item =>
     item &&
+    Number(item.event_id) === hypeActiveEventIdV171() &&
     item.payment_status === "Pendente" &&
     item.asaas_payment_id &&
     /asaas/i.test(String(item.payment_method || "")) &&
@@ -788,34 +789,35 @@ async function loadStaffTickets(search = "") {
     p_search: search
   };
 
-  // Carrega as duas versões da listagem. A versão manual traz e-mail/método
-  // e a versão antiga funciona como segurança para nenhum pedido sumir do Admin.
-  const [v54Result, v16Result, manualResult, legacyResult] = await Promise.allSettled([
-    sbRpc("staff_list_tickets_v54", params),
-    sbRpc("staff_list_tickets_v16", params),
-    sbRpc("staff_list_tickets_manual", params),
-    sbRpc("staff_list_tickets", params)
-  ]);
-
-  const v54 = v54Result.status === "fulfilled" && Array.isArray(v54Result.value) ? v54Result.value : [];
-  const v16 = v16Result.status === "fulfilled" && Array.isArray(v16Result.value) ? v16Result.value : [];
-  const manual = manualResult.status === "fulfilled" && Array.isArray(manualResult.value) ? manualResult.value : [];
-  const legacy = legacyResult.status === "fulfilled" && Array.isArray(legacyResult.value) ? legacyResult.value : [];
-  if (v54Result.status === "rejected" && v16Result.status === "rejected" && manualResult.status === "rejected" && legacyResult.status === "rejected") {
-    const msg = v54Result.reason?.message || v16Result.reason?.message || manualResult.reason?.message || legacyResult.reason?.message || "Não foi possível carregar os pedidos.";
-    throw new Error(msg);
+  // V172: o Admin busca somente a festa atual. A consulta histórica completa
+  // fica reservada ao clique explícito em VER HISTÓRICO ANTERIOR.
+  const activeEventId = hypeActiveEventIdV171();
+  const includeHistory = Boolean(HYPE.showClientHistoryV171 || !activeEventId);
+  let rows = [];
+  if (!includeHistory) {
+    try {
+      const current = await sbRpc("staff_list_tickets_current_v172", {
+        ...params, p_event_id:activeEventId
+      });
+      if (!Array.isArray(current)) throw new Error("Resposta inválida da lista da festa atual.");
+      rows = current;
+    } catch (error) {
+      // Contingência segura caso a RPC nova ainda esteja propagando: os dados
+      // antigos são filtrados no cliente e nunca aparecem como vendas da nova festa.
+      const fallback = await sbRpc("staff_list_tickets_v54", params);
+      if (!Array.isArray(fallback)) throw error;
+      rows = fallback.filter(t => Number(t.event_id)===activeEventId);
+    }
+  } else {
+    // Apenas solicitação manual do histórico: nenhuma busca de eventos antigos
+    // nem sincronização de pagamentos antigos é feita durante o auto-refresh.
+    const all = await sbRpc("staff_list_tickets_v54", params);
+    if (!Array.isArray(all)) throw new Error("Não foi possível consultar o histórico.");
+    rows = all;
   }
-
-  const byId = new Map();
-  legacy.forEach(row => byId.set(Number(row.id), { ...row }));
-  manual.forEach(row => { const old = byId.get(Number(row.id)) || {}; byId.set(Number(row.id), { ...old, ...row }); });
-  v16.forEach(row => { const old = byId.get(Number(row.id)) || {}; byId.set(Number(row.id), { ...old, ...row }); });
-  v54.forEach(row => { const old = byId.get(Number(row.id)) || {}; byId.set(Number(row.id), { ...old, ...row }); });
-  HYPE.tickets = [...byId.values()].sort((a, b) => {
-    const ad = new Date(a.purchased_at || 0).getTime();
-    const bd = new Date(b.purchased_at || 0).getTime();
-    return bd - ad;
-  });
+  HYPE.tickets = rows.sort((a,b)=>
+    new Date(b.purchased_at||0).getTime()-new Date(a.purchased_at||0).getTime()
+  );
 
   // V64: corrige automaticamente pagamentos PIX que o Asaas marcou como pagos
   // mas cujo webhook não conseguiu atualizar o ingresso.
@@ -828,7 +830,7 @@ async function loadStaffTickets(search = "") {
   const events = (Array.isArray(HYPE.adminEvents) && HYPE.adminEvents.length
     ? HYPE.adminEvents
     : HYPE.events || [])
-    .filter(event => event && event.id != null);
+    .filter(event => event && event.id != null && (includeHistory || Number(event.id) === activeEventId));
   const guestResults = await Promise.allSettled(events.map(async event => {
     const args = {p_username:HYPE.user,p_password:HYPE.pass,p_event_id:Number(event.id)};
     try { return await sbRpc("staff_guest_simple_list_v67", args); }
@@ -862,11 +864,12 @@ async function loadStaffTickets(search = "") {
     }));
   }).sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
 
-  HYPE.ticketLoadSource = v16.length ? "v16" : manual.length ? "manual+compatibilidade" : "compatibilidade";
+  HYPE.ticketLoadSource = includeHistory ? "histórico-sob-demanda-v172" : "evento-atual-v172";
   const status = document.getElementById("adminOrdersStatus");
   if (status) {
-    const listLabel = HYPE.guestLists.length ? ` + ${HYPE.guestLists.length} nome(s) de lista` : "";
-    status.textContent = `${HYPE.tickets.length} pedido(s)${listLabel} carregado(s) • atualizado ${new Date().toLocaleTimeString("pt-BR", {hour:"2-digit",minute:"2-digit",second:"2-digit"})}`;
+    const visibleCount = HYPE.tickets.length + HYPE.guestLists.length;
+    const scopeLabel = includeHistory ? "incluindo histórico" : "da festa atual";
+    status.textContent = `${visibleCount} registro(s) ${scopeLabel} • atualizado ${new Date().toLocaleTimeString("pt-BR", {hour:"2-digit",minute:"2-digit",second:"2-digit"})}`;
     status.className = "admin-sync-status ok";
   }
 
@@ -1984,9 +1987,22 @@ function hypeActiveEventIdV171() {
     .sort((a,b)=>String(b.event_date||"").localeCompare(String(a.event_date||"")))[0];
   return Number(current?.id || HYPE.selectedEventId || 0);
 }
-function hypeToggleClientHistoryV171() {
-  HYPE.showClientHistoryV171=!Boolean(HYPE.showClientHistoryV171);
-  renderClientsTable();
+async function hypeToggleClientHistoryV171() {
+  const previous=Boolean(HYPE.showClientHistoryV171);
+  HYPE.showClientHistoryV171=!previous;
+  const button=document.getElementById("hypeHistoryTicketsToggleV171");
+  if(button){button.disabled=true;button.textContent=HYPE.showClientHistoryV171?"CARREGANDO HISTÓRICO...":"VOLTANDO À FESTA ATUAL...";}
+  try{
+    await loadStaffTickets(document.getElementById("searchInput")?.value || "");
+    renderClientsTable();
+    renderV16Dashboard();
+  }catch(error){
+    HYPE.showClientHistoryV171=previous;
+    alert(hypeUserMessage(error,"Não foi possível carregar os ingressos."));
+    renderClientsTable();
+  }finally{
+    if(button)button.disabled=false;
+  }
 }
 function hypeToggleArchivedEventsV171() {
   HYPE.showArchivedEventsV171=!Boolean(HYPE.showArchivedEventsV171);
@@ -2263,7 +2279,7 @@ async function initAdmin(fromLogin = false) {
     clearInterval(HYPE.refreshTimer);
     HYPE.refreshTimer = setInterval(async () => {
       try {
-        if (document.hidden || hypeAutoSyncEditing()) return;
+        if (document.hidden || hypeAutoSyncEditing() || HYPE.showClientHistoryV171) return;
         const before = hypeAdminPeopleSignatureV91();
         await loadStaffTickets(document.getElementById("searchInput")?.value || "");
         const after = hypeAdminPeopleSignatureV91();
