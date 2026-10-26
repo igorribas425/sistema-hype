@@ -835,7 +835,7 @@ Bruna Santos"></textarea>
     <div class="panel-box" id="v95ClientsPanel">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
         <h3 style="margin-bottom:0">Clientes & Ingressos</h3>
-        <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn-action" onclick="refreshAdminOrders(true)">↻ ATUALIZAR</button><button class="btn-action" onclick="exportEntriesCSV()">⬇ CSV</button><button id="purgeTicketsBtn" class="btn-action admin-only" onclick="clearAll()" style="color:var(--red);display:none">🗑 LIMPAR INGRESSOS</button></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn-action" onclick="refreshAdminOrders(true)">↻ ATUALIZAR</button><button class="btn-action" onclick="exportEntriesCSV()">⬇ CSV</button><button id="hypeHistoryTicketsToggleV171" class="btn-action" type="button" onclick="hypeToggleClientHistoryV171()">VER HISTÓRICO ANTERIOR</button><button id="purgeTicketsBtn" class="btn-action admin-only" onclick="clearAll()" style="color:var(--red);display:none">🗑 LIMPAR INGRESSOS</button></div>
       </div>
       <div class="admin-sync-wrap"><div id="adminOrdersStatus" class="admin-sync-status">Carregando pedidos...</div></div>
 
@@ -861,8 +861,8 @@ Bruna Santos"></textarea>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
-<script src="app.js?v=20261026-halloween-financeiro-v170"></script>
-<script src="promoter-global-v16-8.js?v=20261024-ranking-faturamento-v159"></script>
+<script src="app.js?v=20261026-fechamento-novo-v171"></script>
+<script src="promoter-global-v16-8.js?v=20261026-ranking-zerado-v171"></script>
 <script src="hype-qrcode.js?v=20261001-v49"></script>
 <script src="hype-v49-registration-admin.js?v=20261003-v100"></script>
 <script>
@@ -1093,7 +1093,7 @@ Bruna Santos"></textarea>
   <script src="hype-push-config.js?v=116"></script>
   <script src="hype-v38-chat.js?v=117"></script>
   <script src="hype-v408-lista-admin.js?v=20261003-v71"></script>
-  <script src="admin-v92-tabs.js?v=20261026-financeiro-novo-evento-v170"></script>
+  <script src="admin-v92-tabs.js?v=20261026-financeiro-e-cards-v171"></script>
   <script src="admin-v103-customers.js?v=20261023-genero-feminino-masculino-v118"></script>
   <script src="admin-v95-hub.js?v=20261024-demo-v128"></script>
   <!-- Chamados da portaria desativados a pedido do ADM; chat HYPE e demais recursos preservados. -->
