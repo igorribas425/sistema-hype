@@ -1975,11 +1975,60 @@ function adminEventDateLabel(e) {
   return d.toLocaleDateString("pt-BR", {weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"}).replace(".", "");
 }
 
+
+// HYPE V171: novo fechamento por festa. Os ingressos antigos continuam no banco,
+// acessíveis por "VER HISTÓRICO", sem somar nos números do evento atual.
+function hypeActiveEventIdV171() {
+  const all=[...(HYPE.adminEvents||[]),...(HYPE.events||[])];
+  const current=all.filter(e=>e&&e.id&&e.active!==false)
+    .sort((a,b)=>String(b.event_date||"").localeCompare(String(a.event_date||"")))[0];
+  return Number(current?.id || HYPE.selectedEventId || 0);
+}
+function hypeToggleClientHistoryV171() {
+  HYPE.showClientHistoryV171=!Boolean(HYPE.showClientHistoryV171);
+  renderClientsTable();
+}
+function hypeToggleArchivedEventsV171() {
+  HYPE.showArchivedEventsV171=!Boolean(HYPE.showArchivedEventsV171);
+  renderAdminEvents();
+}
+async function hypeDeleteEventSafeV171(eventId) {
+  if(HYPE.role!=="admin")return alert("Somente o Admin pode excluir eventos.");
+  const id=Number(eventId);
+  const item=(HYPE.adminEvents||[]).find(e=>Number(e.id)===id);
+  if(!id||!item)return alert("Evento não encontrado.");
+  if(!confirm("Excluir definitivamente o evento "+(item.name||"#"+id)+"?\n\nSomente eventos SEM ingressos e SEM histórico podem ser excluídos. Eventos com registros serão protegidos."))return;
+  try{
+    await sbRpc("staff_delete_event_safe_v171",{
+      p_username:HYPE.user,p_password:HYPE.pass,p_event_id:id
+    });
+    HYPE.adminEditingEventId=null;
+    await loadPublicState();
+    await loadAdminEvents();
+    HYPE.selectedEventId=hypeActiveEventIdV171()||HYPE.adminEvents?.[0]?.id||null;
+    if(HYPE.selectedEventId)await loadAdminLots(HYPE.selectedEventId).catch(()=>{});
+    renderAdminEvents();
+    renderConfigTickets();
+    renderClientsTable();
+    renderV16Dashboard();
+    hypeNotify("Evento sem histórico excluído com segurança.");
+  }catch(error){
+    alert(hypeUserMessage(error,"Não foi possível excluir: há registros que precisam ser preservados."));
+  }
+}
+
 function renderAdminEvents() {
   const listEl = document.getElementById("adminEventsList");
   if (!listEl) return;
 
   const events = HYPE.adminEvents || HYPE.events || [];
+  const showingArchived=Boolean(HYPE.showArchivedEventsV171);
+  const visibleEvents=showingArchived?events:events.filter(e=>e.active!==false);
+  const archivedCount=events.filter(e=>e.active===false).length;
+  const archiveToggle=archivedCount
+    ? '<div style="grid-column:1/-1;padding:6px 0 13px"><button class="btn-action" onclick="hypeToggleArchivedEventsV171()">'+
+      (showingArchived?'OCULTAR ARQUIVADOS':'VER '+archivedCount+' EVENTO(S) ANTERIOR(ES)')+'</button></div>'
+    : '';
   const selected = events.find(e => Number(e.id) === Number(HYPE.selectedEventId));
   const selectedName = document.getElementById("adminSelectedEventName");
   if (selectedName) selectedName.textContent = selected
@@ -1994,7 +2043,7 @@ function renderAdminEvents() {
   if (!events.length) {
     listEl.innerHTML = `<div class="admin-event-empty">Nenhum evento cadastrado. Clique em <b>+ NOVO EVENTO</b>.</div>`;
   } else {
-    listEl.innerHTML = events.map(e => {
+    listEl.innerHTML = archiveToggle+visibleEvents.map(e => {
       const selected = Number(e.id) === Number(HYPE.selectedEventId);
       const active = e.active !== false;
       return `
@@ -2010,6 +2059,7 @@ function renderAdminEvents() {
           <div class="admin-event-actions">
             <button class="btn-action" onclick="selectAdminEvent(${Number(e.id)})">${selected ? "✓ LOTES DESTE EVENTO" : "VER LOTES"}</button>
             <button class="btn-action" onclick="openAdminEventEditor(${Number(e.id)})">EDITAR</button>
+            ${HYPE.role==="admin"?`<button class="btn-action btn-del" onclick="hypeDeleteEventSafeV171(${Number(e.id)})">EXCLUIR</button>`:""}
           </div>
         </div>`;
     }).join("");
@@ -2405,12 +2455,22 @@ async function renderClientsTable() {
   const tbody = document.getElementById("adminTableBody");
   if (!tbody) return;
   const term = (document.getElementById("searchInput")?.value || "").toLowerCase();
-  const records = [...(HYPE.tickets || []), ...(HYPE.guestLists || [])].sort((a,b)=>{
+  const showHistory=Boolean(HYPE.showClientHistoryV171);
+  const activeEventId=hypeActiveEventIdV171();
+  const allRecords=[...(HYPE.tickets || []), ...(HYPE.guestLists || [])];
+  const records=(showHistory || !activeEventId ? allRecords : allRecords.filter(x=>Number(x.event_id)===activeEventId)).sort((a,b)=>{
     const time = item => new Date(item.entered_at || item.paid_at || item.purchased_at || item.created_at || 0).getTime() || 0;
     return time(b) - time(a);
   });
   const list = records.filter(item => String(item.customer_name || '').toLowerCase().includes(term) || String(item.lot_name || '').toLowerCase().includes(term) || String(item.ticket_code || '').toLowerCase().includes(term) || String(item.phone || '').toLowerCase().includes(term) || String(item.email || '').toLowerCase().includes(term) || String(item.event_name || '').toLowerCase().includes(term) || String(item.promoter_code || '').toLowerCase().includes(term) || String(item.coupon_code || '').toLowerCase().includes(term) || String(item.cpf || '').toLowerCase().includes(term));
-  if (!list.length) tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">Nenhum cliente encontrado.</td></tr>`;
+  const historyToggle=document.getElementById("hypeHistoryTicketsToggleV171");
+  if(historyToggle)historyToggle.textContent=showHistory?"OCULTAR HISTÓRICO":"VER HISTÓRICO ANTERIOR";
+  const ticketStatus=document.getElementById("adminOrdersStatus");
+  if(ticketStatus){
+    ticketStatus.textContent=records.length+" registro(s) "+(showHistory?"incluindo histórico":"do evento atual")+" • atualizado "+new Date().toLocaleTimeString("pt-BR");
+    ticketStatus.className="admin-sync-status ok";
+  }
+  if (!list.length) tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">${showHistory?"Nenhum cliente encontrado.":"Nenhum ingresso nesta festa ainda. O histórico das festas anteriores está preservado."}</td></tr>`;
   else tbody.innerHTML = list.map(item => {
     if (item.record_type === "guest_list") {
       const entered = item.guest_status === "Entrou";
@@ -2443,15 +2503,22 @@ async function renderClientsTable() {
     return `<tr><td><strong>${hypeEscape(item.customer_name || "SEM NOME")}</strong><br><span class="badge gender">${hypeEscape(item.gender || "N/I")}</span><small style="color:var(--muted)">${hypeEscape(item.ticket_code || "")} ${entry}</small><small style="display:block;color:var(--muted);line-height:1.55">📱 ${hypeEscape(item.phone || "—")}<br>📧 ${hypeEscape(item.email || "—")}<br>CPF: ${cpf}</small>${emailState}</td><td>${isFree ? "FREE" : hypeFormatMoney(item.price)}<br><small style="color:var(--muted)">${hypeEscape(item.lot_name || "")}</small><small style="display:block;color:var(--muted)">${hypeEscape(item.sector || "")} • ${hypeEscape(item.payment_method || "Manual")}</small>${item.event_name ? `<small style="display:block;color:var(--muted)">🎤 ${hypeEscape(item.event_name)}</small>` : ""}${item.promoter_code ? `<small style="display:block;color:#7dd3fc">Promoter: ${hypeEscape(item.promoter_code)}</small>` : ""}${item.coupon_code ? `<small style="display:block;color:#86efac">Cupom: ${hypeEscape(item.coupon_code)} • -${hypeFormatMoney(item.discount_amount || 0)}</small>` : ""}</td><td><span class="badge ${status}">${hypeEscape(displayStatus)}</span>${paymentStatus === "Pendente" && /asaas/i.test(String(item.payment_method || "")) ? (item.asaas_payment_id ? '<small style="display:block;color:#a8f3c4;margin-top:5px;font-weight:800">✅ PIX GERADO NO ASAAS • AGUARDANDO CLIENTE PAGAR</small>' : '<small style="display:block;color:#ff8da0;margin-top:5px;font-weight:900">⚠️ PIX NÃO GERADO NO ASAAS • NÃO HÁ COBRANÇA</small>') : ''}<br><small>${hypeEscape(item.entry_status || "Não utilizado")}</small></td><td><div class="actions-cell">${canPay && paymentStatus !== "Pago" ? `<button class="btn-action btn-confirm" onclick="setPayment(${item.id},'Pago')">✅ CONFIRMAR</button>` : ""}${canPay && paymentStatus === "Pago" && item.email ? `<button class="btn-action" onclick="resendTicketEmailFromAdmin(${Number(item.id)})">📧 REENVIAR QR</button>` : ""}${canPay && paymentStatus === "Pago" ? `<button class="btn-action" onclick="setPayment(${item.id},'Pendente')">PENDENTE</button>` : ""}${canPay && paymentStatus !== "Cancelado" ? `<button class="btn-action btn-del" onclick="setPayment(${item.id},'Cancelado')">CANCELAR</button>` : ""}${HYPE.role === "admin" ? `<button class="btn-action btn-del" style="border-color:#ff4d67;background:rgba(255,22,61,.18)" onclick="purgeSingleTicketV25(${item.id})">🧪 EXCLUIR TESTE</button>` : ""}</div></td></tr>`;
   }).join('');
 
-  const total = HYPE.tickets.length + (HYPE.guestLists || []).length;
-  const paid = HYPE.tickets.filter(x=>x.payment_status==='Pago' && Number(x.price||0)>0).length;
-  const free = HYPE.tickets.filter(x=>x.payment_status==='Pago' && Number(x.price||0)<=0).length;
-  const listCount = (HYPE.guestLists || []).length;
-  const pending = HYPE.tickets.filter(x=>x.payment_status==='Pendente').length;
-  const canceled = HYPE.tickets.filter(x=>x.payment_status==='Cancelado').length;
-  const entered = HYPE.tickets.filter(x=>x.entry_status==='Entrada utilizada').length + (HYPE.guestLists || []).filter(x=>x.guest_status==='Entrou').length;
-  const cash = HYPE.tickets.filter(x=>x.payment_status==='Pago' && Number(x.price||0)>0).reduce((s,x)=>s+Number(x.price||0),0);
-  const pendingValue = HYPE.tickets.filter(x=>x.payment_status==='Pendente').reduce((s,x)=>s+Number(x.price||0),0);
+  const financeSelect=document.getElementById("v94SalesEvent");
+  const financeReady=financeSelect?.dataset.hypeFinanceInitializedV170==="1";
+  // "TODOS OS EVENTOS" é consulta opcional, não o fechamento inicial.
+  const financeId=financeReady && financeSelect.value==="all" ? 0 :
+    (financeReady?Number(financeSelect.value):activeEventId);
+  const scopedTickets=(HYPE.tickets||[]).filter(t=>!financeId||Number(t.event_id)===financeId);
+  const scopedGuests=(HYPE.guestLists||[]).filter(t=>!financeId||Number(t.event_id)===financeId);
+  const total = scopedTickets.length + scopedGuests.length;
+  const paid = scopedTickets.filter(x=>x.payment_status==='Pago' && Number(x.price||0)>0).length;
+  const free = scopedTickets.filter(x=>x.payment_status==='Pago' && Number(x.price||0)<=0).length;
+  const listCount = scopedGuests.length;
+  const pending = scopedTickets.filter(x=>x.payment_status==='Pendente').length;
+  const canceled = scopedTickets.filter(x=>x.payment_status==='Cancelado').length;
+  const entered = scopedTickets.filter(x=>x.entry_status==='Entrada utilizada').length + scopedGuests.filter(x=>x.guest_status==='Entrou').length;
+  const cash = scopedTickets.filter(x=>x.payment_status==='Pago' && Number(x.price||0)>0).reduce((sum,x)=>sum+Number(x.price||0),0);
+  const pendingValue = scopedTickets.filter(x=>x.payment_status==='Pendente').reduce((sum,x)=>sum+Number(x.price||0),0);
   const set = (id,v)=>{const el=document.getElementById(id);if(el)el.innerText=v;};
   set('totalCount',total); set('paidCount',paid); set('freeCount',free); set('listCount',listCount); set('pendingCount',pending); set('totalCash',hypeFormatMoney(cash)); set('enteredCount',entered); set('canceledCount',canceled); set('pendingValue',hypeFormatMoney(pendingValue));
 }
