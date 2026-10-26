@@ -3558,7 +3558,11 @@ function renderV16Dashboard() {
   const eventSelect=document.getElementById("v16DashboardEvent");
   const events=HYPE.adminEvents?.length ? HYPE.adminEvents : HYPE.events || [];
   if(eventSelect){
-    const currentValue=eventSelect.value||(HYPE.selectedEventId ? String(HYPE.selectedEventId) : "all");
+    // Mostra a festa ativa ao abrir o painel, mantendo o histórico consultável.
+    const firstDashboard=eventSelect.dataset.hypeDashboardInitializedV170 !== "1";
+    const activeDashboardEvent=events.find(e=>e.active!==false);
+    const currentValue=firstDashboard ? String(activeDashboardEvent?.id || HYPE.selectedEventId || "all") : (eventSelect.value || "all");
+    eventSelect.dataset.hypeDashboardInitializedV170="1";
     eventSelect.innerHTML='<option value="all">TODOS OS EVENTOS</option>'+events.map(e=>`<option value="${Number(e.id)}">${hypeEscape(e.name||"Evento")}</option>`).join("");
     eventSelect.value=[...eventSelect.options].some(o=>o.value===currentValue)?currentValue:"all";
   }
