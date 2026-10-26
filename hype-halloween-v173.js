@@ -32,18 +32,34 @@
     scene.id = sceneId;
     scene.setAttribute("aria-hidden", "true");
     scene.innerHTML =
-      '<img class="hhw-frame" src="assets/hype-halloween-frame-v173.svg" alt="" decoding="async">' +
+      '<img class="hhw-frame" src="assets/hype-halloween-frame-v173.svg" alt="" decoding="async" data-hype-fallback="1">' +
       '<div class="hhw-ember"></div>' +
       witch("hhw-witch-one") + witch("hhw-witch-two") +
       bat("hhw-bat-one") + bat("hhw-bat-two") +
       bat("hhw-bat-three") + bat("hhw-bat-four");
     document.body.appendChild(scene);
   }
+  let requestedOriginalFrame=false;
+  function loadOriginalFrame() {
+    if(requestedOriginalFrame)return;
+    requestedOriginalFrame=true;
+    // Moldura escolhida: miniatura AVIF da arte original (centro transparente).
+    // O SVG anterior é mantido como reserva se houver falha de rede.
+    fetch("assets/hype-halloween-frame-v172.b64.txt?v=20261026-original", {cache:"force-cache"})
+      .then(response=>{if(!response.ok)throw new Error("Moldura indisponível");return response.text();})
+      .then(uri=>{
+        uri=uri.trim();
+        if(!/^data:image\\/avif;base64,[A-Za-z0-9+/=]+$/.test(uri)||uri.length>12000)return;
+        const frame=document.querySelector("#"+sceneId+" .hhw-frame");
+        if(frame){frame.src=uri;frame.removeAttribute("data-hype-fallback");}
+      })
+      .catch(()=>{});
+  }
   function syncHalloween() {
     const title = document.getElementById("v14EventName");
     const text = String(title?.textContent || "").trim().toLowerCase();
     const shouldShow = /halloween/.test(text);
-    if (shouldShow) buildScene();
+    if (shouldShow) { buildScene(); loadOriginalFrame(); }
     document.body.classList.toggle("hype-halloween-live", shouldShow);
   }
   function init() {
