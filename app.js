@@ -3558,7 +3558,7 @@ function renderV16Dashboard() {
   const eventSelect=document.getElementById("v16DashboardEvent");
   const events=HYPE.adminEvents?.length ? HYPE.adminEvents : HYPE.events || [];
   if(eventSelect){
-    const currentValue=eventSelect.value||"all";
+    const currentValue=eventSelect.value||(HYPE.selectedEventId ? String(HYPE.selectedEventId) : "all");
     eventSelect.innerHTML='<option value="all">TODOS OS EVENTOS</option>'+events.map(e=>`<option value="${Number(e.id)}">${hypeEscape(e.name||"Evento")}</option>`).join("");
     eventSelect.value=[...eventSelect.options].some(o=>o.value===currentValue)?currentValue:"all";
   }
