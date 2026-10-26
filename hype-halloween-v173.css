@@ -1,6 +1,6 @@
 /* HYPE Halloween V173 — apenas decoracao na pagina de ingressos.
    Sem manipulacao do formulario, pagamento ou links de promoters. */
-#hypeHalloweenSceneV173{display:none;position:fixed;inset:0;overflow:hidden;pointer-events:none;isolation:isolate;z-index:2}
+#hypeHalloweenSceneV173{display:none;position:fixed;inset:0;overflow:hidden;pointer-events:none;isolation:isolate;z-index:4}
 body.hype-halloween-live #hypeHalloweenSceneV173{display:block}
 body.hype-halloween-live{background:
   radial-gradient(ellipse 70% 26% at 50% 4%,rgba(117,9,13,.18),transparent 84%),
