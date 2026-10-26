@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
+<defs>
+ <radialGradient id="hh173-moon"><stop stop-color="#fff5c2"/><stop offset=".36" stop-color="#ffba62"/><stop offset=".74" stop-color="#e54929"/><stop offset="1" stop-color="#710506"/></radialGradient>
+ <radialGradient id="hh173-fog"><stop stop-color="#ff3c26" stop-opacity=".65"/><stop offset=".42" stop-color="#bf070b" stop-opacity=".23"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+ <linearGradient id="hh173-gate" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#18090b"/><stop offset=".5" stop-color="#521517"/><stop offset="1" stop-color="#080506"/></linearGradient>
+ <linearGradient id="hh173-pumpkin" x1="0" y1="0" x2="0.9" y2="1"><stop stop-color="#fe7035"/><stop offset=".45" stop-color="#a3210b"/><stop offset="1" stop-color="#320b08"/></linearGradient>
+ <filter id="hh173-glow"><feGaussianBlur stdDeviation="9"/></filter>
+ <symbol id="hh173-web" viewBox="0 0 250 235"><g stroke="#fbe1d9" stroke-opacity=".52" stroke-width="1.6" fill="none">
+ <path d="M0 0 L248 0 M0 0 L0 234 M0 0 L235 190 M0 0 L218 100 M0 0 L117 229 M0 0 L250 45"/>
+ <path d="M24 0 Q26 15 0 22 M58 0 Q62 41 0 60 M99 0 Q113 77 0 106 M148 0 Q170 129 0 161 M201 0 Q238 184 0 210 M244 0 Q255 209 45 233"/>
+ <path d="M0 22 Q26 24 24 0 M0 60 Q68 59 58 0 M0 106 Q117 104 99 0 M0 161 Q190 170 148 0 M0 210 Q256 230 201 0"/></g></symbol>
+ <symbol id="hh173-pumpkin" viewBox="0 0 145 133">
+ <ellipse cx="72" cy="81" rx="57" ry="44" fill="#250504" opacity=".8" filter="url(#hh173-glow)"/>
+ <path d="M68 44 C60 25 61 19 72 13 L81 18 78 45" fill="#25522b" stroke="#102615" stroke-width="4"/>
+ <path d="M72 39 C44 18 13 54 15 85 C15 114 39 128 72 126 C105 128 130 110 130 82 C130 54 101 22 72 39Z" fill="url(#hh173-pumpkin)" stroke="#110406" stroke-width="5"/>
+ <path d="M73 40 C47 43 44 112 73 124 M76 40 C102 42 104 116 76 124 M44 46 C17 75 29 105 45 114 M102 46 C129 78 114 105 103 115" fill="none" stroke="#62100b" stroke-width="4" opacity=".85"/>
+ <path d="M31 79 L60 70 52 92 Z M85 71 L115 81 94 92 Z" fill="#fff19b" stroke="#410a08" stroke-width="3"/>
+ <path d="M72 82 L64 99 78 99 Z" fill="#fbe68b"/>
+ <path d="M34 102 Q67 125 111 101 L101 115 88 109 79 120 68 110 56 121 49 109 Z" fill="#ffe074" stroke="#47100a" stroke-width="4"/>
+ </symbol>
+ <symbol id="hh173-lamp" viewBox="0 0 80 260"><path d="M36 66 L36 260 L46 260 L46 66" fill="#11090a" stroke="#4f1110" stroke-width="3"/>
+ <path d="M20 36 L60 36 69 75 12 75Z" fill="#32090b" stroke="#200405" stroke-width="5"/>
+ <path d="M28 42 L52 42 58 70 23 70Z" fill="#ff5e29"/>
+ <path d="M32 48 L50 48 52 65 30 65Z" fill="#ffd76b" opacity=".85"/>
+ <path d="M18 36 L40 12 L61 36 M11 76 H70 M36 10H44" fill="none" stroke="#1b0809" stroke-width="7"/>
+ <circle cx="40" cy="60" r="25" fill="#ff420e" opacity=".42" filter="url(#hh173-glow)"/></symbol>
+</defs>
+<!-- Transparent center; thin crimson illuminated rim -->
+<rect x="6" y="6" width="1428" height="888" rx="52" fill="none" stroke="#ff2f25" stroke-opacity=".20" stroke-width="11"/>
+<rect x="18" y="19" width="1404" height="862" rx="42" fill="none" stroke="#c31618" stroke-opacity=".24" stroke-width="2"/>
+<!-- Glowing mist stays at the edges -->
+<ellipse cx="0" cy="485" rx="190" ry="590" fill="url(#hh173-fog)"/>
+<ellipse cx="1440" cy="470" rx="188" ry="580" fill="url(#hh173-fog)"/>
+<ellipse cx="700" cy="910" rx="750" ry="150" fill="url(#hh173-fog)" opacity=".65"/>
+<ellipse cx="670" cy="-33" rx="740" ry="135" fill="url(#hh173-fog)" opacity=".7"/>
+<!-- Moons -->
+<circle cx="120" cy="115" r="84" fill="#ed2417" opacity=".45" filter="url(#hh173-glow)"/>
+<circle cx="120" cy="115" r="72" fill="url(#hh173-moon)" opacity=".88"/>
+<circle cx="102" cy="92" r="17" fill="#8c251b" opacity=".2"/><circle cx="157" cy="135" r="22" fill="#9f2420" opacity=".16"/><circle cx="119" cy="148" r="10" fill="#6d1716" opacity=".17"/>
+<circle cx="1322" cy="87" r="51" fill="url(#hh173-moon)" opacity=".5"/>
+<!-- Gothic branches and iron gates left -->
+<path d="M0 0 Q35 135 37 280 M0 125 Q63 87 111 58 M26 180 Q86 155 134 138 M19 220 Q55 274 97 296 M31 84 Q66 25 102 0" stroke="#0b0506" stroke-width="17" fill="none" stroke-linecap="round"/>
+<path d="M0 0 Q15 50 60 63 M34 148 Q76 124 130 120 M37 245 Q85 222 119 240" stroke="#2b0709" stroke-width="5" fill="none"/>
+<path d="M0 320 V775 M42 308 V768 M83 330 V770 M120 360 V763 M0 370 H152 M0 678 H160" stroke="#18080b" stroke-width="12" fill="none"/>
+<path d="M0 316 L0 281 M42 308 L42 268 M83 329 L83 292 M120 359 L120 318" stroke="#380d10" stroke-width="9"/>
+<!-- Right-side gates and gothic details -->
+<path d="M1440 85 Q1380 142 1394 265 M1440 206 Q1360 204 1313 253 M1408 285 Q1371 319 1326 318 M1434 420 L1434 770 M1393 354 L1393 768 M1352 356 L1352 770 M1311 374 L1311 760 M1291 384 H1440 M1302 663 H1440" stroke="#19070a" stroke-width="13" fill="none"/>
+<path d="M1434 418 V372 M1393 354 V315 M1352 356 V317 M1311 374 V333" stroke="#550e10" stroke-width="9"/>
+<use href="#hh173-lamp" x="25" y="275" width="68" height="282"/>
+<use href="#hh173-lamp" x="1350" y="265" width="68" height="282"/>
+<!-- Corner cobwebs -->
+<use href="#hh173-web" x="1" y="0" width="222" height="211"/>
+<use href="#hh173-web" x="1220" y="0" width="220" height="210" transform="rotate(90 1330 105)"/>
+<use href="#hh173-web" x="5" y="718" width="156" height="160" transform="rotate(-90 83 798)" opacity=".7"/>
+<use href="#hh173-web" x="1290" y="723" width="140" height="155" transform="rotate(180 1360 801)" opacity=".76"/>
+<!-- Jack-o'-lanterns and candles -->
+<use href="#hh173-pumpkin" x="27" y="733" width="132" height="125"/>
+<use href="#hh173-pumpkin" x="1278" y="751" width="129" height="119"/>
+<use href="#hh173-pumpkin" x="141" y="789" width="84" height="76" opacity=".8"/>
+<use href="#hh173-pumpkin" x="1212" y="800" width="79" height="70" opacity=".78"/>
+<path d="M252 828 L252 871 M263 840 L263 875 M1185 833 V875 M1174 847 V879" stroke="#541015" stroke-width="10"/>
+<path d="M249 822 Q252 799 257 824 M1183 827 Q1186 804 1190 830" fill="#ffc36d"/>
+<!-- Embers hugging the borders -->
+<g fill="#ff4f24" opacity=".78">
+<circle cx="55" cy="568" r="4"/><circle cx="94" cy="640" r="2"/><circle cx="39" cy="715" r="3"/>
+<circle cx="1400" cy="602" r="3"/><circle cx="1341" cy="700" r="4"/><circle cx="1380" cy="535" r="2"/>
+<circle cx="350" cy="35" r="2"/><circle cx="511" cy="19" r="3"/><circle cx="915" cy="28" r="2"/>
+<circle cx="318" cy="862" r="2"/><circle cx="440" cy="882" r="3"/><circle cx="870" cy="866" r="2"/><circle cx="1065" cy="883" r="3"/>
+</g>
+</svg>
