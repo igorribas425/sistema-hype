@@ -1,0 +1,10 @@
+/* Logo oficial HYPE Halloween 2026 - somente vitrine de ingressos. */
+.page-brand{position:relative!important;isolation:isolate;overflow:visible;margin:0 auto -5px!important}
+.page-brand .brand-logo{
+  display:block;width:min(420px,89vw)!important;max-width:100%;height:auto!important;
+  object-fit:contain;object-position:center;
+  filter:drop-shadow(0 13px 18px rgba(0,0,0,.70)) drop-shadow(0 0 17px rgba(122,10,16,.21))!important;
+}
+@media(max-width:720px){
+  .page-brand .brand-logo{width:min(355px,88vw)!important}
+}
