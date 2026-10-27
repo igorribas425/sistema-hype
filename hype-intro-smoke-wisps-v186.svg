@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="510" viewBox="0 0 720 510">
+<defs>
+ <radialGradient id="cloud" cx="47%" cy="49%" r="55%">
+  <stop offset="0" stop-color="#d9d2d0" stop-opacity=".50"/>
+  <stop offset=".25" stop-color="#beb7bd" stop-opacity=".39"/>
+  <stop offset=".52" stop-color="#aaa2a9" stop-opacity=".22"/>
+  <stop offset=".77" stop-color="#827f86" stop-opacity=".08"/>
+  <stop offset="1" stop-color="#827f86" stop-opacity="0"/>
+ </radialGradient>
+ <filter id="wisp" x="-35%" y="-35%" width="170%" height="170%" color-interpolation-filters="sRGB">
+  <feTurbulence type="fractalNoise" baseFrequency=".016 .033" numOctaves="3" seed="13" result="turb"/>
+  <feDisplacementMap in="SourceGraphic" in2="turb" scale="48" xChannelSelector="R" yChannelSelector="G" result="distorted"/>
+  <feGaussianBlur in="distorted" stdDeviation="8"/>
+ </filter>
+</defs>
+<g filter="url(#wisp)">
+ <ellipse cx="318" cy="273" rx="278" ry="157" fill="url(#cloud)" opacity=".96" transform="rotate(-13 318 273)"/>
+ <ellipse cx="465" cy="191" rx="162" ry="112" fill="url(#cloud)" opacity=".68" transform="rotate(19 465 191)"/>
+ <ellipse cx="191" cy="325" rx="160" ry="88" fill="url(#cloud)" opacity=".75" transform="rotate(-21 191 325)"/>
+ <path d="M89 305C165 226 188 378 294 287S406 180 510 257 611 307 687 237" stroke="#d4cfd0" stroke-opacity=".21" stroke-width="48" fill="none"/>
+ <path d="M108 386Q266 197 405 300T667 175" stroke="#9f9ba5" stroke-opacity=".16" stroke-width="59" fill="none"/>
+</g>
+</svg>
