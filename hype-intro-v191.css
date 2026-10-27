@@ -1,0 +1,595 @@
+/* HYPE PREMIUM INTRO V182 - imagens cinematográficas, layout responsivo isolado. */
+html.hi182-lock,body.hi182-lock{overflow:hidden!important}
+#hypeIntroV182{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;isolation:isolate;overflow:hidden;background:#070407;color:#ffdfac;overscroll-behavior:contain;font-family:Georgia,'Times New Roman',serif;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
+#hypeIntroV182,#hypeIntroV182 *{box-sizing:border-box}
+#hypeIntroV182 .hi182-surround{position:absolute;inset:-35px;background:linear-gradient(90deg,rgba(0,0,0,.73),rgba(0,0,0,.3) 40%,rgba(0,0,0,.3) 60%,rgba(0,0,0,.76)),url("assets/hype-intro-closed-v182.webp") center/cover no-repeat;filter:blur(26px) brightness(.53);transform:scale(1.09);pointer-events:none}
+#hypeIntroV182 .hi182-surround:after{content:"";position:absolute;inset:0;background:radial-gradient(circle,transparent 16%,#0009 100%)}
+#hypeIntroV182 .hi182-stage{position:relative;width:min(100vw,56.34dvh);height:100dvh;max-height:100%;min-width:0;overflow:hidden;background:#0d0809;box-shadow:0 0 120px #000d,0 0 0 1px #d5a3693b;isolation:isolate}
+#hypeIntroV182 .hi182-photo{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;object-position:center;user-select:none;-webkit-user-drag:none;pointer-events:none;will-change:opacity,transform}
+#hypeIntroV182 .hi182-closed{opacity:1;transform:scale(1);transition:opacity .82s cubic-bezier(.17,.67,.2,1),transform 1.5s ease}
+#hypeIntroV182 .hi182-open{opacity:0;transform:translateY(2%) scale(1.065);transition:opacity 1.04s ease,transform 1.25s cubic-bezier(.19,.68,.16,1)}
+#hypeIntroV182 .hi182-smoke{z-index:5;opacity:0;transform:scale(.7) rotate(-7deg);filter:blur(7px);transition:opacity .37s ease, transform 1.7s ease,filter .9s ease}
+#hypeIntroV182 .hi182-darken{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 52%,transparent 40%,rgba(0,0,0,.16) 80%,rgba(0,0,0,.33));z-index:6;opacity:.25;transition:opacity .5s}
+#hypeIntroV182 .hi182-glint{position:absolute;z-index:7;pointer-events:none;top:51%;left:51%;width:120px;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fc7b41aa,transparent 60%);mix-blend-mode:screen;filter:blur(15px);opacity:.32;transform:translate(-50%,-50%);animation:hi182-shimmer 4s ease-in-out infinite}
+@keyframes hi182-shimmer{0%,100%{opacity:.13;transform:translate(-50%,-50%) scale(.8)}50%{opacity:.44;transform:translate(-50%,-50%) scale(1.2)}}
+#hypeIntroV182 .hi182-hit{position:absolute;z-index:10;appearance:none;border:0;background:transparent;color:transparent;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
+#hypeIntroV182 .hi182-hit:focus-visible{outline:3px solid #ffe0a2;outline-offset:2px;background:rgba(255,194,81,.07)}
+#hypeIntroV182 .hi182-envelope-hit{left:13%;top:41%;width:75%;height:31%;border-radius:20px;touch-action:manipulation}
+#hypeIntroV182 .hi182-buy-hit{display:none;left:33%;top:54.7%;width:37%;height:6.8%;min-height:45px;touch-action:manipulation}
+#hypeIntroV182 .hi182-buy-hit:focus-visible{border-radius:8px}
+#hypeIntroV182 .hi182-skip{position:absolute;z-index:25;right:4%;bottom:max(3.5%,env(safe-area-inset-bottom));padding:11px 17px;min-height:43px;min-width:155px;border:1px solid #edbb76a8;border-radius:999px;background:rgba(11,8,9,.88);box-shadow:0 4px 21px #0009, inset 0 0 5px #f0b77311;font:500 clamp(11px,2vw,14px)/1.2 Arial,sans-serif;color:#fff0d8;cursor:pointer;text-align:center;touch-action:manipulation}
+#hypeIntroV182 .hi182-skip:focus-visible{outline:3px solid #ffe0a2;outline-offset:3px}
+#hypeIntroV182 .hi182-skip:hover{border-color:#ffd899;background:#211619}
+#hypeIntroV182 .hi182-caption{position:absolute;z-index:20;top:78%;left:5%;width:90%;text-align:center;pointer-events:none;color:#ffda9c;font:600 clamp(9px,2.1vw,13px)/1.4 Arial,sans-serif;letter-spacing:.16em;text-shadow:0 2px 18px #000;opacity:0;transition:opacity .3s}
+#hypeIntroV182 .hi182-sparks{position:absolute;inset:0;z-index:14;pointer-events:none;overflow:hidden}
+#hypeIntroV182 .hi182-spark{position:absolute;left:var(--x);top:var(--y);width:4px;height:4px;background:#ffc48a;border-radius:50%;box-shadow:0 0 8px #ff9f4e,0 0 19px #d85435;opacity:0;animation:hi182-particle var(--duration) ease-out var(--delay) forwards}
+@keyframes hi182-particle{0%{opacity:0;transform:translate(0,0) scale(.25)}30%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.12)}}
+#hypeIntroV182.hi182-opened .hi182-closed{opacity:0;transform:scale(1.09) translateY(1%)}
+#hypeIntroV182.hi182-opened .hi182-open{opacity:1;transform:translateY(0) scale(1)}
+#hypeIntroV182.hi182-opened .hi182-envelope-hit{display:none}
+#hypeIntroV182.hi182-opened .hi182-buy-hit{display:block}
+#hypeIntroV182.hi182-opened .hi182-glint{opacity:0;animation:none}
+#hypeIntroV182.hi182-exiting .hi182-smoke{opacity:.93;transform:scale(1.18) rotate(4deg);filter:blur(0)}
+#hypeIntroV182.hi182-exiting .hi182-darken{opacity:.67}
+#hypeIntroV182.hi182-exiting .hi182-stage{animation:hi182-smokeout 1.8s ease-in-out forwards}
+@keyframes hi182-smokeout{0%,35%{opacity:1}78%{opacity:.85}100%{opacity:0}}
+#hypeIntroV182.hi182-exiting .hi182-hit,#hypeIntroV182.hi182-exiting .hi182-skip{pointer-events:none}
+#hypeIntroV182.hi182-gone{opacity:0;pointer-events:none;transition:opacity .3s}
+@media(min-aspect-ratio:4/3){#hypeIntroV182 .hi182-stage{border-left:1px solid #b88c524d;border-right:1px solid #b88c524d}}
+@media(max-width:500px){#hypeIntroV182 .hi182-stage{width:100vw;height:100dvh;box-shadow:none}#hypeIntroV182 .hi182-photo{object-fit:cover;object-position:center}#hypeIntroV182 .hi182-skip{font-size:12px;right:4%;bottom:max(4%,env(safe-area-inset-bottom));min-height:44px;padding:10px 14px;min-width:148px}#hypeIntroV182 .hi182-envelope-hit{left:12%;top:40.5%;width:77%;height:31%}#hypeIntroV182 .hi182-buy-hit{left:31%;top:54.4%;width:40%;height:7%}}
+@media(prefers-reduced-motion:reduce){#hypeIntroV182 *,#hypeIntroV182 *:before,#hypeIntroV182 *:after{animation-duration:.01ms!important;transition-duration:.01ms!important}#hypeIntroV182 .hi182-sparks{display:none}}
+
+
+
+
+
+/* HYPE v186 — névoa texturizada, translúcida, sem estouro branco.
+   Apenas intro, pagamentos e identificação dos promoters permanecem intactos. */
+#hypeIntroV182 .hi182-stage,#hypeIntroV182 .hi182-photo{border:0!important;outline:0!important;box-shadow:none!important}
+#hypeIntroV182 .hi182-smoke{display:none!important}
+#hypeIntroV182 .hi182-hit:focus{outline:none;background:transparent}
+#hypeIntroV182 .hi182-hit:focus-visible{outline:2px solid rgba(250,213,156,.86);outline-offset:2px}
+#hypeIntroV182 .hi182-stage::after{
+ content:"";position:absolute;z-index:8;inset:auto 0 0;height:20%;
+ background:linear-gradient(transparent,rgba(5,3,7,.56));pointer-events:none
+}
+#hypeIntroV182.hi182-exiting,#hypeIntroV182.hi182-exiting .hi182-stage{animation:none!important}
+#hypeIntroV182.hi182-exiting{opacity:1!important;transition:none!important}
+#hypeIntroV182.hi182-exiting .hi182-open{opacity:1!important;transition:none!important}
+#hypeIntroV182.hi182-exiting .hi182-closed{opacity:0!important;transition:none!important}
+#hypeIntroV182.hi182-exiting .hi182-hit{display:none!important}
+#hypeIntroV182.hi182-exiting .hi182-glint{opacity:0!important;animation:none!important}
+#hypeIntroV182.hi182-exiting .hi182-skip{opacity:0!important;visibility:hidden!important;transition:opacity .14s!important}
+#hypeIntroV182 .hi186-fog{position:absolute;inset:0;z-index:18;pointer-events:none;overflow:hidden;opacity:0;isolation:isolate}
+#hypeIntroV182 .hi186-cloud{
+ position:absolute;left:var(--sx);top:var(--sy);width:var(--sw);height:var(--sh);
+ opacity:0;border-radius:50%;
+ background:
+  url("hype-intro-smoke-wisps-v186.svg") center/100% 100% no-repeat,
+  radial-gradient(ellipse at 42% 46%,rgba(215,211,207,.27) 0%,rgba(167,156,165,.19) 32%,rgba(92,86,98,.08) 55%,transparent 78%);
+ filter:blur(clamp(6px,2vw,17px));
+ transform:translate(-50%,-50%) rotate(var(--rot)) scale(.22);
+ will-change:transform,opacity;
+}
+#hypeIntroV182 .hi186-fog:after{
+ content:"";position:absolute;inset:26% 12% 15%;opacity:0;
+ background:
+  radial-gradient(ellipse 39% 32% at 45% 47%,rgba(190,178,184,.15),transparent 95%),
+  radial-gradient(ellipse 35% 28% at 64% 64%,rgba(164,149,159,.11),transparent 96%);
+ filter:blur(26px);
+}
+#hypeIntroV182.hi182-exiting .hi186-fog{opacity:1}
+#hypeIntroV182.hi182-exiting .hi186-cloud{
+ animation:hi186-roll 1.95s cubic-bezier(.18,.54,.26,1) var(--delay) both
+}
+#hypeIntroV182.hi182-exiting .hi186-fog:after{animation:hi186-mist 1.95s ease-out both}
+#hypeIntroV182.hi186-revealing{opacity:0!important;pointer-events:none;transition:opacity .89s ease-in-out!important}
+#hypeIntroV182.hi186-skipping .hi186-fog{display:none!important}
+@keyframes hi186-roll{
+ 0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--rot)) scale(.25)}
+ 22%{opacity:.42}
+ 42%,60%{opacity:.72}
+ 78%{opacity:.50}
+ 100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(calc(var(--rot) + 38deg)) scale(2.25)}
+}
+@keyframes hi186-mist{0%{opacity:0}32%{opacity:.25}50%,68%{opacity:.44}100%{opacity:0}}
+@media(max-width:650px){#hypeIntroV182 .hi186-cloud{filter:blur(11px)}}
+@media(prefers-reduced-motion:reduce){
+ #hypeIntroV182 .hi186-fog{display:none!important}
+ #hypeIntroV182.hi186-revealing{transition:none!important}
+}
+
+
+/* HYPE v187 · Noite de Halloween: velas animadas + corvo do lado direito.
+   Regras confinadas ao overlay. Não alteram checkout, Pix, QR ou promoters. */
+#hypeIntroV182 .hi182-photo{
+  filter:brightness(.78) contrast(1.13) saturate(.88);
+}
+#hypeIntroV182 .hi182-surround{
+  filter:blur(28px) brightness(.38) saturate(.66)!important;
+}
+#hypeIntroV182 .hi187-night{
+  position:absolute;inset:0;z-index:7;pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(1,2,9,.18) 0%,rgba(3,3,10,.16) 25%,rgba(6,3,13,.27) 55%,rgba(1,1,7,.35) 100%),
+    radial-gradient(ellipse at 50% 51%,transparent 26%,rgba(1,0,8,.24) 95%);
+}
+#hypeIntroV182 .hi187-effects-space{
+  position:absolute;z-index:9;left:50%;top:0;
+  height:100%;width:max(100%,56.28dvh);
+  transform:translateX(-50%);
+  pointer-events:none;
+}
+#hypeIntroV182 .hi187-candle{
+  position:absolute;left:var(--cx);top:var(--cy);
+  width:clamp(36px,5dvh,72px);height:clamp(49px,8dvh,106px);
+  transform:translate(-50%,-50%);
+  pointer-events:none;mix-blend-mode:screen;
+  opacity:.68;animation:hi187-glow var(--speed) ease-in-out infinite alternate;
+}
+#hypeIntroV182 .hi187-candle:before{
+  content:"";position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 45%,
+   rgba(255,203,92,.49) 0%,
+   rgba(245,117,37,.22) 23%,
+   rgba(255,100,33,.09) 46%,transparent 75%);
+  filter:blur(9px);
+}
+#hypeIntroV182 .hi187-candle:after{
+  content:"";position:absolute;left:50%;top:43%;
+  transform:translate(-50%,-50%) rotate(-2deg);
+  width:6px;height:13px;border-radius:55% 55% 45% 45%;
+  background:radial-gradient(ellipse at center,rgba(255,247,176,.64),rgba(255,170,65,.36) 46%,transparent 72%);
+  filter:blur(2px);
+  animation:hi187-flame calc(var(--speed) * .65) ease-in-out infinite alternate;
+}
+@keyframes hi187-glow{
+  0%{opacity:.38;transform:translate(-50%,-50%) scale(.86)}
+  26%{opacity:.57}
+  52%{opacity:.43;transform:translate(-50%,-50%) scale(.96)}
+  78%{opacity:.79}
+  100%{opacity:.62;transform:translate(-50%,-50%) scale(1.12)}
+}
+@keyframes hi187-flame{
+  0%{transform:translate(-50%,-50%) rotate(-7deg) scale(.82)}
+  40%{transform:translate(-44%,-52%) rotate(8deg) scale(1.08)}
+  100%{transform:translate(-52%,-49%) rotate(-3deg) scale(.93)}
+}
+#hypeIntroV182 .hi187-crow-hit{
+  position:absolute;z-index:13;
+  left:76%;top:22.5%;width:24%;height:23%;
+  padding:0;border:0;outline:0;border-radius:32%;
+  background:transparent;appearance:none;
+  cursor:pointer;touch-action:manipulation;pointer-events:auto;
+}
+#hypeIntroV182 .hi187-crow-hit:focus{outline:none;background:transparent}
+#hypeIntroV182 .hi187-crow-hit:focus-visible{
+  outline:2px dashed rgba(225,167,90,.85);outline-offset:-4px;
+}
+#hypeIntroV182 .hi187-crow-eye{
+  position:absolute;z-index:12;left:90%;top:26.2%;
+  width:8px;height:8px;border-radius:50%;
+  transform:translate(-50%,-50%);opacity:0;
+  background:radial-gradient(circle at 45% 35%,#fff7aa 0%,#fb8b37 32%,#97120f 55%,transparent 79%);
+  box-shadow:0 0 10px 3px rgba(225,57,20,.50),0 0 22px 7px rgba(207,45,10,.20);
+  pointer-events:none;
+}
+#hypeIntroV182 .hi187-feather{
+  position:absolute;z-index:12;left:var(--fx);top:var(--fy);
+  width:clamp(7px,1.3dvh,14px);height:clamp(19px,3.8dvh,45px);
+  background:linear-gradient(95deg,#090609 25%,#2b2428 53%,#060408 85%);
+  clip-path:polygon(51% 0%,68% 11%,88% 34%,65% 78%,44% 100%,33% 62%,24% 35%);
+  opacity:0;filter:drop-shadow(0 1px 2px rgba(203,149,103,.23));
+  transform:translate(-50%,-50%) rotate(var(--angle)) scale(.4);
+  pointer-events:none;
+}
+#hypeIntroV182.hi187-crow-awake .hi187-crow-eye{
+  animation:hi187-eyes 1.65s ease-out both;
+}
+#hypeIntroV182.hi187-crow-awake .hi187-feather{
+  animation:hi187-feathers 1.55s ease-out var(--delay) both;
+}
+#hypeIntroV182.hi187-crow-awake .hi187-candle{
+  animation-duration:.54s;
+}
+@keyframes hi187-eyes{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}
+  22%{opacity:.96;transform:translate(-50%,-50%) scale(1.1)}
+  52%{opacity:.72}
+  72%{opacity:.97}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(.45)}
+}
+@keyframes hi187-feathers{
+  0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--angle)) scale(.4)}
+  26%{opacity:.85}
+  78%{opacity:.46}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(calc(var(--angle) + 130deg)) scale(1)}
+}
+/* Só anima a intro. Quando o visitante compra, o cenário dissolve normalmente. */
+#hypeIntroV182.hi182-exiting .hi187-crow-hit{pointer-events:none!important}
+#hypeIntroV182.hi182-exiting .hi187-candle{animation:none;opacity:.22}
+@media(prefers-reduced-motion:reduce){
+ #hypeIntroV182 .hi187-candle,
+ #hypeIntroV182 .hi187-candle:after,
+ #hypeIntroV182 .hi187-feather,
+ #hypeIntroV182 .hi187-crow-eye{animation:none!important}
+ #hypeIntroV182 .hi187-candle{opacity:.37!important}
+}
+
+
+/* HYPE v188 - corvo com movimentos da cabeça e asa; luz das velas e parallax.
+   Isolado na intro, sem tocar em ingressos, ASAAS ou identificacao de promoters. */
+#hypeIntroV182{
+  --hi188-x:0px;--hi188-y:0px;--hi188-fogx:0px;--hi188-fogy:0px;
+}
+#hypeIntroV182 .hi182-photo{
+  transform-origin:center center;
+  backface-visibility:hidden;
+}
+#hypeIntroV182 .hi182-closed{
+  transform:translate3d(var(--hi188-x),var(--hi188-y),0) scale(1.045);
+}
+#hypeIntroV182 .hi182-open{
+  transform:translate3d(var(--hi188-x),var(--hi188-y),0) translateY(2%) scale(1.07);
+}
+#hypeIntroV182.hi182-opened .hi182-closed{
+  transform:translate3d(var(--hi188-x),var(--hi188-y),0) scale(1.10) translateY(1%);
+}
+#hypeIntroV182.hi182-opened .hi182-open{
+  transform:translate3d(var(--hi188-x),var(--hi188-y),0) scale(1.045);
+}
+#hypeIntroV182 .hi187-effects-space{
+  transform:translate3d(var(--hi188-x),var(--hi188-y),0) translateX(-50%);
+  transition:transform .22s ease-out;
+}
+#hypeIntroV182 .hi186-fog{
+  transform:translate3d(var(--hi188-fogx),var(--hi188-fogy),0);
+  transition:transform .25s ease-out;
+}
+#hypeIntroV182 .hi187-candle{
+  opacity:.78;
+  filter:drop-shadow(0 0 13px rgba(246,124,28,.30));
+}
+#hypeIntroV182 .hi187-candle::before{
+  background:radial-gradient(ellipse at 50% 45%,
+    rgba(255,226,124,.58),
+    rgba(251,156,57,.27) 22%,
+    rgba(255,85,26,.11) 48%,
+    transparent 78%);
+  filter:blur(7px);
+}
+#hypeIntroV182 .hi187-candle::after{
+  width:8px;height:19px;
+  border-radius:54% 48% 56% 42% / 80% 73% 30% 29%;
+  background:linear-gradient(180deg,
+    rgba(255,245,201,.17),rgba(255,245,181,.85) 38%,rgba(255,171,53,.82) 70%,rgba(249,102,26,0));
+  filter:blur(1.4px);
+  box-shadow:0 0 12px rgba(255,159,46,.4);
+  transform-origin:center 90%;
+}
+#hypeIntroV182 .hi188-raven-head,
+#hypeIntroV182 .hi188-raven-wing{
+  position:absolute;inset:0;width:100%;height:100%;
+  z-index:10;pointer-events:none;
+  background:url("assets/hype-intro-closed-v182.webp") center / 100% 100% no-repeat;
+  filter:brightness(.76) contrast(1.14) saturate(.82);
+  transform:translateZ(0);
+  will-change:transform;
+}
+/* Recorte do próprio corvo da imagem. O resto da foto continua intacto. */
+#hypeIntroV182 .hi188-raven-head{
+  clip-path:polygon(80% 26.9%,83.1% 26.6%,85.6% 25.5%,89.1% 24.8%,92% 24.6%,95.4% 25.7%,97.6% 28.1%,97.4% 31.8%,93.3% 33.2%,89.3% 32.8%,85.3% 30.6%,81% 29.3%);
+  transform-origin:94% 31.6%;
+  animation:hi188-head-idle 7.5s ease-in-out infinite;
+}
+#hypeIntroV182 .hi188-raven-wing{
+  clip-path:polygon(91% 29.4%,96% 29.9%,100% 30.9%,100% 40.6%,96% 41.1%,89% 37%,87.2% 31.4%);
+  transform-origin:92% 31.4%;
+  animation:hi188-wing-idle 5.1s ease-in-out infinite;
+}
+#hypeIntroV182.hi182-opened .hi188-raven-head,
+#hypeIntroV182.hi182-opened .hi188-raven-wing{
+  background-image:url("assets/hype-intro-open-v182.webp");
+}
+#hypeIntroV182.hi187-crow-awake .hi188-raven-head{
+  animation:hi188-head-look 1.24s ease-in-out both;
+}
+#hypeIntroV182.hi187-crow-awake .hi188-raven-wing{
+  animation:hi188-wing-flap 1.04s ease-in-out both;
+}
+@keyframes hi188-head-idle{
+  0%,17%,45%,73%,100%{transform:rotate(0deg) translate3d(0,0,0)}
+  26%,34%{transform:rotate(-2.7deg) translate3d(-2px,-1px,0)}
+  83%,90%{transform:rotate(1.8deg) translate3d(1px,0,0)}
+}
+@keyframes hi188-wing-idle{
+  0%,35%,68%,100%{transform:rotate(0deg) scale(1)}
+  46%,51%{transform:rotate(1.6deg) scale(1.008)}
+}
+@keyframes hi188-head-look{
+  0%{transform:rotate(0)}
+  18%{transform:rotate(-6deg) translate(-3px,-2px)}
+  45%{transform:rotate(4deg) translate(2px,1px)}
+  67%{transform:rotate(-2.5deg)}
+  100%{transform:rotate(0)}
+}
+@keyframes hi188-wing-flap{
+  0%,100%{transform:rotate(0deg) scale(1)}
+  22%,60%{transform:rotate(-6deg) scale(1.015)}
+  38%,78%{transform:rotate(5deg) scale(.997)}
+}
+#hypeIntroV182 .hi188-ambient-mist{
+  position:absolute;z-index:8;pointer-events:none;
+  left:var(--mx);top:var(--my);width:var(--mw);height:var(--mh);
+  background:radial-gradient(ellipse,rgba(131,123,138,.13),rgba(98,81,96,.07) 40%,transparent 74%);
+  border-radius:50%;filter:blur(22px);opacity:.2;
+  animation:hi188-mist-drift var(--dur) ease-in-out infinite alternate;
+}
+@keyframes hi188-mist-drift{
+  0%{opacity:.12;transform:translate3d(-12px,9px,0) rotate(-8deg)}
+  100%{opacity:.31;transform:translate3d(18px,-22px,0) rotate(7deg)}
+}
+#hypeIntroV182.hi182-exiting .hi188-ambient-mist{opacity:0;animation:none}
+#hypeIntroV182 .hi188-motion-btn{
+  display:none;position:absolute;z-index:26;
+  bottom:max(4%,env(safe-area-inset-bottom));left:4%;
+  min-height:41px;max-width:43%;
+  padding:8px 12px;border:1px solid rgba(216,170,102,.57);
+  background:rgba(9,7,12,.81);border-radius:999px;
+  color:#f2d4ab;font:600 11px/1.2 Arial,sans-serif;
+  cursor:pointer;pointer-events:auto;touch-action:manipulation;
+}
+#hypeIntroV182 .hi188-motion-btn.hi188-visible{display:block}
+#hypeIntroV182 .hi188-motion-btn:focus-visible{outline:2px solid #f6d6a5;outline-offset:3px}
+#hypeIntroV182.hi182-exiting .hi188-motion-btn{display:none!important}
+@media(prefers-reduced-motion:reduce){
+  #hypeIntroV182 .hi188-raven-head,
+  #hypeIntroV182 .hi188-raven-wing,
+  #hypeIntroV182 .hi188-ambient-mist{animation:none!important}
+  #hypeIntroV182 .hi188-ambient-mist,
+  #hypeIntroV182 .hi188-motion-btn{display:none!important}
+}
+
+
+/* v189 | Corvo 2.5D fotorealista separado, camadas seguras para o envelope. */
+#hypeIntroV182 .hi188-raven-head,
+#hypeIntroV182 .hi188-raven-wing,
+#hypeIntroV182 .hi187-crow-eye{display:none!important}
+#hypeIntroV182 .hi189-original-cover{
+ position:absolute;z-index:2;pointer-events:none;
+ left:75%;top:24%;width:31%;height:33%;
+ background:linear-gradient(90deg,transparent,rgba(7,4,8,.65) 29%,rgba(7,4,8,.92) 68%,rgba(7,4,8,.94));
+ filter:blur(13px);
+}
+#hypeIntroV182 .hi189-raven{
+ appearance:none;position:absolute;z-index:16;
+ left:78.5%;top:27.0%;width:34%;height:auto;aspect-ratio:270/337;
+ border:0!important;outline:0!important;border-radius:0;
+ background:none!important;box-shadow:none!important;
+ cursor:pointer;padding:0;pointer-events:auto;touch-action:manipulation;
+ transform-origin:55% 85%;
+ animation:hi189-raven-breathe 6.5s ease-in-out infinite;
+ filter:drop-shadow(-4px 4px 7px rgba(0,0,0,.65)) brightness(.86);
+}
+#hypeIntroV182 .hi189-raven img{
+ position:absolute;inset:0;display:block;width:100%;height:100%;
+ object-fit:contain;pointer-events:none;user-select:none;
+ -webkit-user-drag:none;backface-visibility:hidden;
+}
+#hypeIntroV182 .hi189-raven-body{z-index:1}
+#hypeIntroV182 .hi189-raven-head{
+ z-index:2;transform-origin:32% 40%;
+ animation:hi189-head-idle 5.2s cubic-bezier(.25,.1,.2,1) infinite;
+ will-change:transform;
+}
+#hypeIntroV182 .hi189-raven-react{
+ z-index:4;opacity:0;transform-origin:53% 82%;
+ transform:translateY(3px) scale(.98);
+ transition:opacity .22s ease,transform .22s ease;
+}
+#hypeIntroV182 .hi189-raven:focus{outline:none!important}
+#hypeIntroV182 .hi189-raven:focus-visible{
+ outline:2px solid rgba(234,196,136,.85)!important;
+ outline-offset:2px!important;border-radius:14px;
+}
+#hypeIntroV182.hi187-crow-awake .hi189-raven{
+ animation:hi189-raven-react 1.45s ease-in-out both;
+}
+#hypeIntroV182.hi187-crow-awake .hi189-raven-body,
+#hypeIntroV182.hi187-crow-awake .hi189-raven-head{
+ opacity:0;transition:opacity .19s ease;
+}
+#hypeIntroV182.hi187-crow-awake .hi189-raven-react{
+ opacity:1;transform:translateY(-3px) scale(1.025);
+ transition:opacity .13s ease-in,transform .45s ease-out;
+}
+@keyframes hi189-raven-breathe{
+ 0%,100%{transform:rotate(-.35deg) translateY(0) scale(1)}
+ 48%{transform:rotate(.45deg) translateY(-2px) scale(1.008)}
+}
+@keyframes hi189-head-idle{
+ 0%,13%,72%,100%{transform:rotate(0deg)}
+ 24%,41%{transform:rotate(-3.2deg) translate(-1px,-2px)}
+ 54%,64%{transform:rotate(2.0deg) translate(1px,0)}
+ 82%,90%{transform:rotate(-1.6deg)}
+}
+@keyframes hi189-raven-react{
+ 0%,100%{transform:translateY(0) rotate(0)}
+ 18%{transform:translateY(-7px) rotate(-2.3deg)}
+ 34%{transform:translateY(-2px) rotate(1.3deg)}
+ 62%{transform:translateY(-5px) rotate(-1.3deg)}
+ 85%{transform:translateY(0) rotate(.5deg)}
+}
+/* Velas sempre nas laterais, acima/fora do contorno da carta. */
+#hypeIntroV182 .hi187-candle{z-index:3}
+#hypeIntroV182 .hi187-candle:before{opacity:.62}
+#hypeIntroV182 .hi187-candle:after{opacity:.82}
+/* Fumaça aparece em torno do convite, com uma passagem escura suave entre cenas. */
+#hypeIntroV182 .hi189-smoke-shroud{
+ position:absolute;inset:0;z-index:19;pointer-events:none;
+ opacity:0;background:
+ radial-gradient(ellipse at 50% 52%,rgba(49,45,53,.41) 0%,rgba(22,18,27,.48) 37%,rgba(9,7,12,.12) 70%,transparent 96%);
+ filter:blur(30px);
+}
+#hypeIntroV182.hi182-exiting .hi189-smoke-shroud{
+ animation:hi189-smoke-shroud 2.08s ease-in-out forwards;
+}
+#hypeIntroV182.hi182-exiting .hi186-cloud{
+ filter:blur(clamp(7px,2vw,16px)) brightness(.81);
+}
+#hypeIntroV182.hi182-exiting .hi189-raven{opacity:.4;transition:opacity .55s}
+#hypeIntroV182.hi182-exiting .hi187-candle{opacity:0;animation:none}
+@keyframes hi189-smoke-shroud{
+ 0%,12%{opacity:0}
+ 43%{opacity:.58}
+ 68%{opacity:.81}
+ 100%{opacity:0}
+}
+@media(max-width:650px){
+ #hypeIntroV182 .hi189-raven{left:78%;top:26.6%;width:35.5%}
+ #hypeIntroV182 .hi189-original-cover{left:73%;width:33%}
+}
+@media(prefers-reduced-motion:reduce){
+ #hypeIntroV182 .hi189-raven,
+ #hypeIntroV182 .hi189-raven-head{animation:none!important}
+ #hypeIntroV182.hi187-crow-awake .hi189-raven{animation:none!important}
+ #hypeIntroV182.hi182-exiting .hi189-smoke-shroud{animation:none!important}
+}
+
+
+/* HYPE v190 · Camadas corrigidas apos teste em Android, sem mexer no checkout.
+   1 corvo visivel, 3 velas alinhadas e nevoa concentrada ao redor da carta. */
+#hypeIntroV182 .hi189-original-cover{
+  left:77.5%!important;top:22.5%!important;
+  width:30%!important;height:26%!important;
+  border-radius:48%;
+  background:radial-gradient(ellipse at 76% 45%,
+    rgba(7,5,10,.98) 0%,rgba(10,7,13,.93) 39%,
+    rgba(14,8,13,.78) 60%,rgba(10,7,14,.34) 77%,
+    transparent 100%)!important;
+  filter:blur(19px)!important;
+  z-index:2!important;pointer-events:none!important;
+}
+#hypeIntroV182 .hi189-raven{
+  /* Coordenadas da FOTO (proporcao vertical 780:1386), nao da largura
+     visivel do telefone. Assim o corvo nao sai da tela. */
+  left:65%!important;top:24.5%!important;
+  width:23%!important;height:auto!important;
+  aspect-ratio:270 / 337!important;
+  z-index:16!important;
+  filter:drop-shadow(0 5px 10px rgba(0,0,0,.85)) brightness(.83)!important;
+}
+#hypeIntroV182 .hi189-raven img{object-fit:contain!important}
+#hypeIntroV182 .hi189-raven-head{
+  transform-origin:31% 35%!important;
+  animation:hi190-look 6.5s ease-in-out infinite!important;
+}
+#hypeIntroV182.hi187-crow-awake .hi189-raven-head{animation:none!important}
+#hypeIntroV182.hi187-crow-awake .hi189-raven{
+  animation:hi190-reaction 1.42s ease-in-out both!important;
+}
+@keyframes hi190-look{
+  0%,14%,67%,100%{transform:rotate(0deg)}
+  23%,38%{transform:rotate(-3deg) translate(-1px,-1px)}
+  49%,57%{transform:rotate(2deg) translate(1px,1px)}
+  79%,90%{transform:rotate(-1.6deg)}
+}
+@keyframes hi190-reaction{
+  0%,100%{transform:translateY(0) rotate(0)}
+  18%{transform:translateY(-3px) rotate(-2deg)}
+  37%{transform:translateY(-1px) rotate(1deg)}
+  65%{transform:translateY(-4px) rotate(-1deg)}
+}
+/* As chamas pertencem exclusivamente aos casticais da esquerda. */
+#hypeIntroV182 .hi187-candle{
+  width:38px!important;height:59px!important;
+  max-width:4.9dvh!important;max-height:7.5dvh!important;
+  z-index:3!important;
+  opacity:.54!important;
+  filter:drop-shadow(0 0 6px rgba(238,120,39,.26))!important;
+}
+#hypeIntroV182 .hi187-candle:before{opacity:.58!important;filter:blur(9px)!important}
+#hypeIntroV182 .hi187-candle:after{
+  width:5px!important;height:13px!important;
+  opacity:.7!important;
+  filter:blur(1.3px)!important;
+  box-shadow:0 0 5px rgba(255,169,71,.21)!important;
+}
+/* Evita efeito de tela toda esbranquicada no auge da nevoa. */
+#hypeIntroV182 .hi189-smoke-shroud{display:none!important}
+#hypeIntroV182 .hi186-fog{
+  z-index:19!important;
+  mask-image:radial-gradient(ellipse 82% 62% at 53% 56%,
+    rgba(0,0,0,.60) 0%,rgba(0,0,0,.90) 47%,rgba(0,0,0,.38) 77%,transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 82% 62% at 53% 56%,
+    rgba(0,0,0,.60) 0%,rgba(0,0,0,.90) 47%,rgba(0,0,0,.38) 77%,transparent 100%);
+}
+#hypeIntroV182 .hi186-cloud{
+  background:url("hype-intro-smoke-wisps-v186.svg") center / contain no-repeat!important;
+  filter:brightness(.66) contrast(.93) blur(8px)!important;
+}
+#hypeIntroV182.hi182-exiting .hi186-cloud{
+  animation:hi190-smoke 1.85s ease-out var(--delay) both!important;
+}
+#hypeIntroV182 .hi186-fog:after{opacity:0!important;animation:none!important}
+@keyframes hi190-smoke{
+  0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--rot)) scale(.26)}
+  25%{opacity:.35}
+  49%,65%{opacity:.66}
+  80%{opacity:.42}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(calc(var(--rot) + 28deg)) scale(2.25)}
+}
+#hypeIntroV182.hi186-revealing{
+  opacity:0!important;
+  transition:opacity .54s ease-in!important;
+}
+/* As camadas da intro somem todas juntas no fim do efeito. */
+#hypeIntroV182.hi182-exiting .hi189-raven{opacity:1;transition:opacity .54s ease-in!important}
+#hypeIntroV182.hi182-exiting.hi186-revealing .hi189-raven{opacity:0}
+@media(max-width:650px){
+  #hypeIntroV182 .hi189-raven{left:65%!important;top:24.5%!important;width:23%!important}
+}
+@media(prefers-reduced-motion:reduce){
+  #hypeIntroV182 .hi189-raven-head,
+  #hypeIntroV182 .hi189-raven{animation:none!important}
+  #hypeIntroV182 .hi186-fog{display:none!important}
+}
+
+
+
+/* v191 · corvo restaurado ao poleiro direito da cena.
+   Muda apenas o enquadramento do corvo; mantém a fumaça v190 intacta. */
+#hypeIntroV182 .hi189-original-cover{
+  left:73%!important;
+  top:20.5%!important;
+  width:45%!important;
+  height:34%!important;
+  background:radial-gradient(ellipse at 48% 48%,
+     rgba(10,7,12,.99) 0%,
+     rgba(10,7,12,.97) 43%,
+     rgba(10,7,12,.86) 55%,
+     rgba(10,7,12,.58) 72%,
+     transparent 100%)!important;
+  filter:blur(12px)!important;
+  border-radius:50%!important;
+  z-index:2!important;
+  pointer-events:none!important;
+}
+/* Posicionamento na mesma área onde a coluna dourada original aparece. */
+#hypeIntroV182 .hi189-raven{
+  left:78%!important;
+  top:24.2%!important;
+  width:29%!important;
+  height:auto!important;
+  aspect-ratio:270/337!important;
+  z-index:16!important;
+}
+/* Todas as imagens e ações pertencem ao mesmo corvo interativo. */
+#hypeIntroV182 .hi189-raven img{width:100%!important;height:100%!important}
+@media(max-width:650px){
+  #hypeIntroV182 .hi189-raven{
+    left:78%!important;
+    top:24.2%!important;
+    width:29%!important;
+  }
+}
