@@ -75,3 +75,29 @@ body.hype-halloween-live #hypeHalloweenSceneV173 .hhw-witch{
 @media (prefers-reduced-motion:reduce) {
   body.hype-halloween-live::before {transition:none !important}
 }
+
+/* Acabamento de títulos longos e cards do evento: nada cortado. */
+body.hype-halloween-live .event-card-body {min-width:0 !important;}
+body.hype-halloween-live .event-card-body h2{
+  font-size:clamp(23px,2.55vw,38px) !important;
+  line-height:1.05 !important;
+  overflow-wrap:anywhere !important;
+  letter-spacing:-.7px !important;
+}
+body.hype-halloween-live .v14-content{min-width:0 !important}
+body.hype-halloween-live #v14Artist{
+  font-size:clamp(30px,3.5vw,52px) !important;
+  line-height:1.05 !important;
+  overflow-wrap:anywhere !important;
+}
+body.hype-halloween-live .v14-spotlight .v14-event-name{
+  overflow-wrap:anywhere !important;
+}
+@media(max-width:720px){
+  body.hype-halloween-live .event-card-body h2{
+    font-size:clamp(23px,7vw,33px) !important;
+  }
+  body.hype-halloween-live #v14Artist{
+    font-size:clamp(28px,8vw,40px) !important;
+  }
+}
