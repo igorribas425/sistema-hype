@@ -1,0 +1,280 @@
+/* HYPE Halloween v196 · visual da vitrine e checkout públicos.
+   Só CSS: não interfere em scripts, validações, valores, PIX, QR ou promoters. */
+body.hh196-halloween{
+  --hh196-crimson:#c52c3a;
+  --hh196-blood:#75141f;
+  --hh196-rust:#e28c5a;
+  --hh196-border:rgba(171,55,68,.44);
+  --hh196-gold:#f7c59a;
+  --hh196-paper:#fbebea;
+  --hh196-muted:#c4b5b9;
+  color:var(--hh196-paper);
+  background:
+    radial-gradient(ellipse 84% 44% at 50% -5%,rgba(103,15,29,.32),transparent 75%),
+    radial-gradient(ellipse 54% 42% at 0 53%,rgba(51,9,21,.28),transparent 80%),
+    radial-gradient(ellipse 56% 50% at 100% 75%,rgba(69,15,29,.22),transparent 79%),
+    #070508 !important;
+}
+body.hh196-halloween .page-shell{position:relative}
+body.hh196-halloween .top-nav{
+  background:rgba(12,6,12,.95);
+  border-bottom:1px solid var(--hh196-border);
+  box-shadow:0 8px 26px rgba(0,0,0,.25);
+}
+body.hh196-halloween .top-nav a{
+  color:#f0d7d7;
+  background:rgba(93,21,35,.14);
+  border:1px solid rgba(186,70,78,.42);
+}
+body.hh196-halloween .top-nav a:hover,
+body.hh196-halloween .top-nav a:focus-visible{
+  background:rgba(153,41,54,.24);
+  border-color:#e79393;
+}
+/* Cabeçalhos da vitrine, hero, prazos e seleção de evento */
+body.hh196-halloween .events-head small:first-child,
+body.hh196-halloween .section-head small,
+body.hh196-halloween .box-kicker,
+body.hh196-halloween .v14-kicker,
+body.hh196-halloween .v14-lots-head small{
+  color:var(--hh196-rust)!important;
+}
+body.hh196-halloween .events-head h2,
+body.hh196-halloween .v14-content h1,
+body.hh196-halloween .section-head h1,
+body.hh196-halloween .box-title{
+  color:#fff5f2;
+  text-shadow:0 3px 26px rgba(155,29,48,.22);
+}
+body.hh196-halloween .event-card,
+body.hh196-halloween .event-showcase,
+body.hh196-halloween .v14-spotlight,
+body.hh196-halloween .purchase-copy,
+body.hh196-halloween .box{
+  background:linear-gradient(155deg,#1c0b14 0%,#0f0a10 46%,#09080c 100%);
+  border:1px solid var(--hh196-border)!important;
+  box-shadow:0 20px 55px rgba(0,0,0,.46),inset 0 1px 0 rgba(255,178,154,.05),0 0 30px rgba(110,22,41,.07)!important;
+}
+body.hh196-halloween .event-card.selected,
+body.hh196-halloween .v14-lot-card.active{
+  border-color:rgba(238,112,102,.74)!important;
+  box-shadow:0 17px 45px rgba(0,0,0,.53),0 0 25px rgba(168,28,49,.19)!important;
+}
+body.hh196-halloween .v14-spotlight{isolation:isolate}
+body.hh196-halloween .v14-spotlight-shade{
+  background:linear-gradient(100deg,rgba(9,4,8,.30),rgba(19,6,15,.84) 49%,rgba(8,4,8,.98));
+}
+/* Cobweb-style ornamental lines in the form panels. No overlay over fields. */
+body.hh196-halloween .purchase-copy,
+body.hh196-halloween .box{position:relative}
+body.hh196-halloween .purchase-copy::before,
+body.hh196-halloween .box::before{
+  content:"";
+  position:absolute;top:0;right:0;
+  width:96px;height:95px;pointer-events:none;
+  opacity:.20;z-index:0;
+  background:
+    repeating-radial-gradient(circle at 100% 0,transparent 0 15px,rgba(220,174,176,.5) 16px 17px,transparent 18px 23px),
+    linear-gradient(135deg,transparent 49.5%,rgba(233,180,182,.58) 50%,transparent 50.5%),
+    linear-gradient(115deg,transparent 49.5%,rgba(233,180,182,.40) 50%,transparent 50.5%);
+  clip-path:polygon(100% 0,100% 100%,0 0);
+}
+body.hh196-halloween .purchase-copy>*,
+body.hh196-halloween .box>*{position:relative}
+body.hh196-halloween .info-box,
+body.hh196-halloween .v14-time,
+body.hh196-halloween .v14-lot-card,
+body.hh196-halloween .v15-gender-price,
+body.hh196-halloween .service-fee-card,
+body.hh196-halloween .manual-status-card,
+body.hh196-halloween .ticket-info{
+  background:linear-gradient(145deg,rgba(75,21,36,.26),rgba(11,8,13,.89))!important;
+  border:1px solid rgba(145,55,65,.43)!important;
+  color:#f5e7e8;
+}
+body.hh196-halloween .info-box span{
+  background:radial-gradient(circle,rgba(159,43,60,.32),rgba(65,20,32,.07));
+  border-color:rgba(202,88,92,.55);
+  color:#fff0e7;
+}
+body.hh196-halloween .info-box p,
+body.hh196-halloween .v14-event-desc,
+body.hh196-halloween .event-card-body p,
+body.hh196-halloween p.sub{color:var(--hh196-muted)}
+body.hh196-halloween .event-badge,
+body.hh196-halloween .event-card-day,
+body.hh196-halloween .v14-meta-chip,
+body.hh196-halloween .v14-lot-status{
+  border-color:rgba(204,77,75,.55);
+  background:rgba(48,11,25,.86);
+  color:#f7dfd5;
+}
+body.hh196-halloween .event-dot.active{
+  background:#cc4a55!important;
+  box-shadow:0 0 12px rgba(190,55,69,.6)!important;
+}
+body.hh196-halloween .v14-lot-card:hover:not(.disabled){
+  transform:translateY(-3px);
+  border-color:rgba(226,120,110,.72)!important;
+}
+body.hh196-halloween .v14-lot-price,
+body.hh196-halloween .v14-lot-card.active .v15-gender-price.selected b{
+  color:var(--hh196-gold);
+}
+body.hh196-halloween .v14-lot-card.disabled{
+  opacity:.46;
+  cursor:not-allowed;
+}
+/* Global ticket form; 16px minimum on phones, never cover typing. */
+body.hh196-halloween .purchase-layout label,
+body.hh196-halloween .box label{
+  color:#edc6bf;
+  letter-spacing:1.05px;
+}
+body.hh196-halloween #ticketForm input:not([type="hidden"]):not([type="checkbox"]),
+body.hh196-halloween #ticketForm select,
+body.hh196-halloween #ticketForm textarea,
+body.hh196-halloween #hypeFindOrderCodeV168{
+  background:#100c13!important;
+  color:#fff0ee!important;
+  border:1px solid rgba(176,69,75,.52)!important;
+  box-shadow:inset 0 2px 7px rgba(0,0,0,.3);
+  caret-color:#ffa882;
+  transition:border-color .16s ease,box-shadow .16s ease,background .16s ease;
+  font-family:inherit;
+}
+body.hh196-halloween #ticketForm input:not([type="hidden"])::placeholder,
+body.hh196-halloween #hypeFindOrderCodeV168::placeholder{
+  color:#a99ba0;
+  opacity:1;
+}
+body.hh196-halloween #ticketForm input:not([type="hidden"]):focus,
+body.hh196-halloween #ticketForm select:focus,
+body.hh196-halloween #ticketForm textarea:focus,
+body.hh196-halloween #hypeFindOrderCodeV168:focus{
+  background:#1c0e1a!important;
+  outline:none!important;
+  border-color:#f0a082!important;
+  box-shadow:0 0 0 3px rgba(192,58,66,.22),0 0 21px rgba(188,43,59,.11),inset 0 2px 7px rgba(0,0,0,.18)!important;
+}
+body.hh196-halloween #ticketForm select option{
+  color:#fff0ed;background:#190d18;
+}
+body.hh196-halloween #ticketForm input[type="checkbox"]{
+  accent-color:#be3446;
+}
+body.hh196-halloween #ticketForm input[readonly],
+body.hh196-halloween #ticketPriceDisplay{
+  color:#ffd0a2!important;
+  font-weight:900;
+  background:linear-gradient(120deg,#140b12,#0b0a0e)!important;
+}
+body.hh196-halloween #hypeMinorPurchaseDeclaration{
+  background:linear-gradient(135deg,#2c101e,#100b14)!important;
+  border-color:rgba(208,82,103,.62)!important;
+  box-shadow:inset 0 1px 0 rgba(247,162,148,.05)!important;
+}
+/* Core controls are dark scarlet. Keep success and WhatsApp green on purpose. */
+body.hh196-halloween :is(.btn:not(.whatsapp-btn):not(.success-btn):not(.ghost-btn),.event-select-btn,.v14-action.primary,.v14-sticky-buy button,.v16-mini-btn){
+  background:linear-gradient(145deg,#9b2537 0%,#7a1428 50%,#4d0b1c 100%)!important;
+  color:#fff6f2!important;
+  border:1px solid rgba(248,153,131,.72)!important;
+  text-shadow:0 1px 1px rgba(0,0,0,.4);
+  box-shadow:inset 0 1px 0 rgba(255,201,157,.15),0 8px 22px rgba(100,15,31,.24)!important;
+  transition:transform .17s ease,box-shadow .17s ease,filter .17s ease,border-color .17s ease;
+}
+body.hh196-halloween :is(.ghost-btn,.v14-action:not(.primary)){
+  background:linear-gradient(145deg,#22101b,#130c16)!important;
+  color:#f8dfd8!important;
+  border:1px solid rgba(176,76,81,.56)!important;
+  box-shadow:none!important;
+}
+body.hh196-halloween .event-card.selected .event-select-btn{
+  background:linear-gradient(145deg,#4a1623,#230d19)!important;
+  border-color:rgba(245,160,131,.74)!important;
+  color:#fff3ea!important;
+}
+body.hh196-halloween :is(button,.btn,a):focus-visible{
+  outline:2px solid #ffc099!important;
+  outline-offset:3px!important;
+}
+@media(hover:hover){
+  body.hh196-halloween :is(.btn,.event-select-btn,.v14-action,.v14-sticky-buy button,.v16-mini-btn):hover:not(:disabled){
+    transform:translateY(-2px);
+    filter:brightness(1.12);
+    border-color:#f2ae9c!important;
+    box-shadow:0 9px 25px rgba(164,33,49,.24)!important;
+  }
+}
+body.hh196-halloween :is(.btn,.event-select-btn,.v14-action,.v14-sticky-buy button,.v16-mini-btn):active:not(:disabled){
+  transform:translateY(1px) scale(.992);
+  filter:brightness(.94);
+}
+body.hh196-halloween :is(button,.btn):disabled,
+body.hh196-halloween .v14-lot-card.disabled{
+  filter:grayscale(.55)!important;
+  opacity:.46;
+  cursor:not-allowed;
+  box-shadow:none!important;
+}
+/* Transaction signals retain their semantic colors. */
+body.hh196-halloween .whatsapp-btn,
+body.hh196-halloween .success-btn{
+  border-color:rgba(91,208,141,.6)!important;
+}
+body.hh196-halloween .ticket-schedule,
+body.hh196-halloween .ticket-card,
+body.hh196-halloween .service-fee-card{
+  border-color:rgba(190,72,85,.48);
+}
+body.hh196-halloween .ticket-schedule.active{border-color:rgba(40,209,124,.46)}
+body.hh196-halloween .ticket-schedule.upcoming{border-color:rgba(56,189,248,.46)}
+body.hh196-halloween .ticket-schedule.expired{border-color:rgba(255,255,255,.18)}
+body.hh196-halloween .pix-key{
+  background:#0b1110;
+  border:1px solid rgba(90,177,126,.42);
+  color:#9af2bf;
+}
+body.hh196-halloween :is(.qrcode,.ticket-qr){
+  background:#fff!important;
+  filter:none!important;
+  border-color:#fff!important;
+}
+body.hh196-halloween :is(.qrcode img,.ticket-qr img){
+  filter:none!important;
+  mix-blend-mode:normal!important;
+}
+body.hh196-halloween .ticket-card{
+  background:linear-gradient(140deg,#1a1118,#0a090b)!important;
+  border-style:dashed;
+}
+body.hh196-halloween .toast{
+  background:#1d0e19;
+  border:1px solid rgba(231,101,106,.7);
+  color:#fff0ed;
+  box-shadow:0 8px 28px #0009;
+}
+body.hh196-halloween .v14-sticky-buy{
+  background:linear-gradient(145deg,rgba(32,8,20,.96),rgba(14,9,14,.97));
+  border-top:1px solid rgba(207,76,88,.42);
+  backdrop-filter:blur(12px);
+}
+@media(max-width:720px){
+  body.hh196-halloween .purchase-copy,
+  body.hh196-halloween .box{border-radius:22px}
+  body.hh196-halloween #ticketForm :is(input:not([type="hidden"]),select,textarea){
+    font-size:16px!important;
+  }
+  body.hh196-halloween :is(.btn,.event-select-btn,.v14-action,.v14-sticky-buy button){
+    min-height:48px;
+  }
+  body.hh196-halloween .purchase-copy::before,
+  body.hh196-halloween .box::before{
+    width:66px;height:66px;opacity:.16;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  body.hh196-halloween :is(.btn,.event-select-btn,.v14-action,.v14-sticky-buy button,.v16-mini-btn){
+    transition:none!important;
+  }
+}
