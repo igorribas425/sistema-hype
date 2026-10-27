@@ -1,0 +1,70 @@
+/* HYPE v178 – fundo de Halloween fornecido pelo cliente.
+   Aplicado exclusivamente quando o evento de Halloween esta selecionado.
+   Checkout, Asaas, QR Codes, promotores, admins e eventos comuns inalterados. */
+body.hype-halloween-live {
+  background: #05070b !important;
+}
+
+/* Usar camada fixa separada do conteudo evita distorcoes e scroll lateral. */
+body.hype-halloween-live::before {
+  content: "" !important;
+  display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  opacity: 1 !important;
+  background-color: #070b13 !important;
+  background-image:
+    linear-gradient(90deg, rgba(4,7,13,.55) 0%, rgba(4,7,13,.28) 40%, rgba(4,7,13,.43) 72%, rgba(4,7,13,.59) 100%),
+    linear-gradient(180deg, rgba(3,6,13,.26) 0%, rgba(3,6,13,.07) 43%, rgba(3,6,13,.56) 100%),
+    url("assets/hype-halloween-bg-v178.webp") !important;
+  background-size: cover,cover,cover !important;
+  background-position: center,center,center 51% !important;
+  background-repeat: no-repeat !important;
+  transition: none !important;
+}
+body.hype-halloween-live .event-ambient {
+  opacity: .035 !important;
+}
+body.hype-halloween-live .page-shell {
+  position: relative;
+  z-index: 3 !important;
+}
+/* Cards legiveis – sem escurecer a arte original da festa. */
+body.hype-halloween-live .event-card,
+body.hype-halloween-live .purchase-copy,
+body.hype-halloween-live .box,
+body.hype-halloween-live .v14-spotlight {
+  background-color: rgba(7,8,14,.88) !important;
+}
+body.hype-halloween-live .purchase-copy,
+body.hype-halloween-live .box {
+  background-image: linear-gradient(160deg,rgba(11,12,18,.94),rgba(7,8,12,.88)) !important;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+body.hype-halloween-live .v14-spotlight {
+  background-image: linear-gradient(130deg,rgba(8,9,14,.88),rgba(5,6,11,.88)) !important;
+}
+@media (max-width: 720px) {
+  body.hype-halloween-live::before {
+    /* A foto e horizontal; focalizar a grande abobora sem esticar. */
+    background-image:
+      linear-gradient(180deg,rgba(3,5,10,.52),rgba(3,5,10,.32) 40%,rgba(3,5,10,.67)),
+      linear-gradient(90deg,rgba(3,5,10,.15),rgba(3,5,10,.38)),
+      url("assets/hype-halloween-bg-v178.webp") !important;
+    background-size: cover,cover,cover !important;
+    background-position: center,center,18% center !important;
+  }
+  body.hype-halloween-live .event-ambient {opacity:0 !important}
+  body.hype-halloween-live .purchase-copy,
+  body.hype-halloween-live .box {
+    background-image: linear-gradient(160deg,rgba(9,10,16,.96),rgba(6,7,12,.91)) !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
