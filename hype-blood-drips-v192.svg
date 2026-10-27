@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 140" preserveAspectRatio="none">
+<defs>
+  <linearGradient id="ruby" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#2c0307"/>
+    <stop offset=".19" stop-color="#770811"/>
+    <stop offset=".54" stop-color="#a2121d"/>
+    <stop offset=".79" stop-color="#6d0912"/>
+    <stop offset="1" stop-color="#310106"/>
+  </linearGradient>
+  <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ff9291" stop-opacity=".53"/>
+    <stop offset=".28" stop-color="#c4333f" stop-opacity=".23"/>
+    <stop offset="1" stop-color="#ff9291" stop-opacity="0"/>
+  </linearGradient>
+</defs>
+<g fill="url(#ruby)" stroke="#370004" stroke-width=".65" opacity=".97">
+  <path d="M8 3 Q21 1 36 4 C44 9 44 21 42 31 C39 40 34 45 30 44 C27 43 27 37 29 30 L30 19 Q19 25 17 39 C13 65 10 73 5 73 C-2 72 6 51 6 37 Z"/>
+  <path d="M54 1 Q70 3 83 2 C82 13 85 28 80 45 C78 54 72 55 70 49 C68 45 73 30 69 26 C61 19 65 12 54 1 Z"/>
+  <path d="M96 2 L126 3 C122 20 130 41 123 69 C121 81 113 86 111 78 C108 68 115 51 111 40 C103 35 107 17 96 2 Z"/>
+  <path d="M143 2 Q165 -2 178 2 Q175 15 173 25 C171 44 182 62 175 77 C170 88 163 84 163 73 Q165 48 160 31 Q150 25 143 2 Z"/>
+  <path d="M193 3 Q214 0 226 5 Q225 15 223 21 C222 36 230 59 224 73 C220 86 213 80 213 70 L214 41 Q204 24 193 3 Z"/>
+  <path d="M239 3 Q261 0 278 3 C273 16 277 36 273 46 C269 55 263 49 264 43 L263 27 C252 24 251 12 239 3 Z"/>
+  <path d="M292 2 Q311 0 323 3 C321 18 327 39 321 58 C316 70 306 65 308 54 L310 30 Q302 22 292 2 Z"/>
+  <path d="M333 2 Q342 2 352 4 C351 18 356 31 354 44 Q350 58 344 54 Q340 52 344 38 Q344 21 333 2 Z"/>
+  <ellipse cx="114" cy="91" rx="4" ry="6"/><ellipse cx="174" cy="91" rx="2.8" ry="4.4"/><ellipse cx="321" cy="71" rx="2.8" ry="4.5"/>
+</g>
+<g fill="none" stroke="url(#shine)" stroke-width="2" stroke-linecap="round" opacity=".75">
+  <path d="M12 5 Q21 5 31 6"/><path d="M60 6 Q69 4 76 6"/><path d="M105 6 Q117 5 120 8"/>
+  <path d="M151 6 Q159 5 172 6"/><path d="M202 8 Q216 6 220 10"/><path d="M300 7 Q311 6 316 8"/>
+</g>
+</svg>

@@ -1,0 +1,53 @@
+/* HYPE Halloween v192 | Only public brand header; events and checkout unaffected */
+.brand-logo-wrap.page-brand{overflow:visible;position:relative;isolation:isolate}
+.hype-halloween-brand{
+  position:relative;isolation:isolate;display:block;
+  width:min(352px,86vw);margin:0 auto;padding:0;
+  line-height:0;overflow:visible;
+}
+.hype-halloween-brand .brand-logo{
+  width:100%;height:auto;display:block;position:relative;z-index:1;
+  filter:drop-shadow(0 10px 32px rgba(0,0,0,.47));
+}
+.hype-halloween-brand .hh192-blood{
+  position:absolute;z-index:3;left:8%;top:12%;
+  width:84%;height:55%;object-fit:fill;
+  display:block;pointer-events:none;user-select:none;opacity:.94;
+  filter:drop-shadow(0 2px 1px rgba(19,0,0,.85)) drop-shadow(0 1px 6px rgba(95,1,9,.20));
+}
+.hype-halloween-brand .hh192-web{
+  position:absolute;z-index:2;top:-13%;
+  display:block;width:35%;height:auto;
+  pointer-events:none;user-select:none;
+  opacity:.82;filter:drop-shadow(0 0 3px rgba(220,224,234,.22));
+}
+.hype-halloween-brand .hh192-web-left{left:-13%}
+.hype-halloween-brand .hh192-web-right{right:-13%;transform:scaleX(-1)}
+.hype-halloween-brand .hh192-spider{
+  position:absolute;z-index:4;top:17%;right:-4%;
+  width:1px;height:51%;transform-origin:top;
+  background:linear-gradient(rgba(216,217,222,.55),rgba(180,178,186,.15));
+  pointer-events:none;animation:hh192-sway 5s ease-in-out infinite alternate;
+}
+.hype-halloween-brand .hh192-spider-body{
+  position:absolute;left:-4px;bottom:-5px;
+  width:8px;height:12px;border-radius:48% 48% 52% 52%;
+  background:radial-gradient(circle at 45% 45%,#a32326 0 12%,#211419 25%,#080709 80%);
+  box-shadow:0 1px 3px #000;
+}
+.hype-halloween-brand .hh192-spider-body:before{
+  content:"";position:absolute;top:-3px;left:-7px;width:22px;height:14px;
+  background:linear-gradient(25deg,transparent 45%,#666069 47% 49%,transparent 51%) 0 0 / 100% 45% repeat-y;
+  opacity:.7;
+}
+@keyframes hh192-sway{0%{transform:rotate(-4deg)}100%{transform:rotate(4deg)}}
+@media(max-width:720px){
+  .hype-halloween-brand{width:min(340px,84vw)}
+  .hype-halloween-brand .hh192-web{top:-8%;width:31%}
+  .hype-halloween-brand .hh192-web-left{left:-8%}
+  .hype-halloween-brand .hh192-web-right{right:-8%}
+  .hype-halloween-brand .hh192-spider{right:0;top:15%;height:43%}
+}
+@media(prefers-reduced-motion:reduce){
+  .hype-halloween-brand .hh192-spider{animation:none!important}
+}
