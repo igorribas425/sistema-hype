@@ -49,7 +49,7 @@
       .then(response=>{if(!response.ok)throw new Error("Moldura indisponível");return response.text();})
       .then(uri=>{
         uri=uri.trim();
-        if(!/^data:image\/avif;base64,[A-Za-z0-9+/=]+$/.test(uri)||uri.length>12000)return;
+        if(!/^data:image\/avif;base64,[A-Za-z0-9+\/=]+$/.test(uri)||uri.length>12000)return;
         const frame=document.querySelector("#"+sceneId+" .hhw-frame");
         if(frame){frame.src=uri;frame.removeAttribute("data-hype-fallback");}
       })
