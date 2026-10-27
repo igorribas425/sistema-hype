@@ -1,0 +1,141 @@
+/* HYPE Halloween v175 — clean / premium. Efeitos nas laterais; flyers sempre legíveis.
+   Esta folha altera apenas aparência; não altera pagamentos, QR, promoters ou formulário. */
+
+/* Remove a arte gigante que estava atravessando fotografias e textos do evento. */
+#hypeHalloweenSceneV173 .hhw-frame,
+#hypeHalloweenSceneV173 .hhw-ember{display:none!important}
+
+/* Enquadramento leve, em vez de um painel vermelho sobre o site. */
+#hypeHalloweenSceneV173{
+  z-index:0!important;
+  pointer-events:none!important;
+  isolation:isolate;
+  overflow:hidden;
+}
+#hypeHalloweenSceneV173::before,
+#hypeHalloweenSceneV173::after{
+  content:"";
+  position:absolute;
+  pointer-events:none;
+  border-radius:19px;
+}
+#hypeHalloweenSceneV173::before{
+  inset:9px;
+  border:1px solid rgba(240,116,69,.26);
+  box-shadow:inset 0 0 12px rgba(250,114,63,.07),0 0 13px rgba(129,66,141,.07);
+}
+#hypeHalloweenSceneV173::after{
+  inset:14px;
+  border:1px solid rgba(207,136,184,.10);
+}
+
+/* Paleta elegante: preto principal e detalhes de Halloween em laranja queimado. */
+body.hype-halloween-live{
+  background:
+   radial-gradient(ellipse 30% 32% at 0% 8%,rgba(121,56,96,.08),transparent 100%),
+   radial-gradient(ellipse 29% 40% at 100% 80%,rgba(159,66,28,.08),transparent 100%),
+   #050505!important;
+}
+body.hype-halloween-live .page-shell{
+  position:relative;
+  z-index:3!important;
+}
+body.hype-halloween-live .event-card,
+body.hype-halloween-live .v14-spotlight,
+body.hype-halloween-live #ticketBox{
+  isolation:isolate;
+}
+body.hype-halloween-live .v14-spotlight{
+  border-color:rgba(230,105,63,.22)!important;
+  box-shadow:0 18px 50px rgba(0,0,0,.42),0 0 12px rgba(226,97,44,.045)!important;
+}
+body.hype-halloween-live .v14-lot-card{
+  border-color:rgba(255,255,255,.15)!important;
+}
+body.hype-halloween-live .v14-lot-card:hover{
+  border-color:rgba(237,117,73,.42)!important;
+}
+
+/* Bruxas e morcegos pequenos e transparentes, AO FUNDO, nunca sobre flyers. */
+#hypeHalloweenSceneV173 .hhw-fly{
+  opacity:.37!important;
+  filter:drop-shadow(0 0 3px rgba(210,75,45,.18))!important;
+}
+#hypeHalloweenSceneV173 .hhw-witch{
+  width:clamp(65px,6.2vw,110px)!important;
+}
+#hypeHalloweenSceneV173 .hhw-witch-one{
+  top:17%!important;
+  animation-duration:35s!important;
+}
+#hypeHalloweenSceneV173 .hhw-witch-two{
+  top:65%!important;
+  width:clamp(60px,5vw,85px)!important;
+  opacity:.26!important;
+  animation-duration:46s!important;
+}
+#hypeHalloweenSceneV173 .hhw-bat{
+  width:clamp(20px,2.4vw,38px)!important;
+  opacity:.4!important;
+}
+#hypeHalloweenSceneV173 .hhw-bat-two,
+#hypeHalloweenSceneV173 .hhw-bat-three{opacity:.23!important}
+
+/* Cartão interativo compacto, sem disputar atenção com a arte do evento. */
+#hypeHalloweenControlsV174{
+  border-color:rgba(246,130,84,.28)!important;
+  background:linear-gradient(115deg,#120d14 0%,#0d0b0f 65%,#140e16 100%)!important;
+  box-shadow:0 10px 30px rgba(0,0,0,.30)!important;
+  padding:15px 21px!important;
+  border-radius:18px!important;
+  grid-template-columns:minmax(0,1fr) 106px!important;
+}
+#hypeHalloweenControlsV174::after{
+  height:2px!important;
+  background:linear-gradient(90deg,transparent,rgba(254,154,90,.6),rgba(159,84,169,.5),transparent)!important;
+}
+#hypeHalloweenControlsV174 .hhx-eyebrow{color:#f4ac79!important}
+#hypeHalloweenControlsV174 .hhx-title{font-size:clamp(21px,2.6vw,30px)!important;line-height:1.08!important}
+#hypeHalloweenControlsV174 .hhx-title em{color:#ffa56b!important}
+#hypeHalloweenControlsV174 .hhx-sub{color:#bcb5be!important}
+#hypeHalloweenControlsV174 .hhx-visual{min-height:108px!important}
+#hypeHalloweenControlsV174 .hhx-witch{width:112px!important;height:108px!important}
+#hypeHalloweenControlsV174 .hhx-witch svg{width:111px!important}
+#hypeHalloweenControlsV174 .hhx-moon{
+  width:81px!important;
+  height:81px!important;
+  background:radial-gradient(circle at 32% 30%,#f6dab1,#d98655 45%,#7d455e 83%,#2c1a2f)!important;
+  box-shadow:0 0 16px rgba(235,113,66,.20)!important;
+}
+#hypeHalloweenControlsV174 .hhx-call{
+  background:linear-gradient(110deg,#d78f62,#af6e55)!important;
+  color:#170b0a!important;
+  border-color:rgba(235,169,131,.57)!important;
+}
+#hypeHalloweenControlsV174 .hhx-toggle{
+  background:#1a161d!important;
+  border-color:rgba(209,178,192,.21)!important;
+}
+@media(max-width:720px){
+  #hypeHalloweenSceneV173::before{inset:4px;border-radius:10px;border-color:rgba(231,121,81,.20)}
+  #hypeHalloweenSceneV173::after{display:none}
+  #hypeHalloweenSceneV173 .hhw-fly{opacity:.22!important}
+  #hypeHalloweenSceneV173 .hhw-witch{width:62px!important}
+  #hypeHalloweenSceneV173 .hhw-bat{width:24px!important}
+  #hypeHalloweenSceneV173 .hhw-witch-two,
+  #hypeHalloweenSceneV173 .hhw-bat-three,
+  #hypeHalloweenSceneV173 .hhw-bat-four{display:none!important}
+  #hypeHalloweenControlsV174{
+    padding:13px!important;
+    border-radius:15px!important;
+    grid-template-columns:minmax(0,1fr) 73px!important;
+  }
+  #hypeHalloweenControlsV174 .hhx-title{font-size:clamp(19px,5.3vw,25px)!important}
+  #hypeHalloweenControlsV174 .hhx-visual{min-height:92px!important}
+  #hypeHalloweenControlsV174 .hhx-witch{width:76px!important;height:90px!important}
+  #hypeHalloweenControlsV174 .hhx-witch svg{width:83px!important}
+  #hypeHalloweenControlsV174 .hhx-moon{width:61px!important;height:61px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  #hypeHalloweenSceneV173 .hhw-fly{display:none!important}
+}
