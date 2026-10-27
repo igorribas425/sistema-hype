@@ -1,0 +1,51 @@
+/* Freddy: detalhe temático discreto no checkout de Halloween.
+   Só aparece quando o evento selecionado é Halloween; sem tocar na compra. */
+#hypeFreddyTeaserV177{
+  display:none;
+  position:relative;
+  align-items:center;
+  isolation:isolate;
+  overflow:hidden;
+  min-height:138px;
+  margin-top:22px;
+  border:1px solid rgba(213,96,73,.29);
+  border-radius:18px;
+  background:linear-gradient(105deg,#190b0e 0%,#100a0e 46%,#09090d 100%);
+  box-shadow:0 16px 38px rgba(0,0,0,.18),inset 0 0 16px rgba(172,48,35,.05);
+  color:#fff;
+}
+body.hype-halloween-live #hypeFreddyTeaserV177{display:flex}
+#hypeFreddyTeaserV177::after{
+  content:"";position:absolute;right:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(transparent,#b85435,transparent);opacity:.75;
+}
+#hypeFreddyTeaserV177 .hype-freddy-photo{
+  display:block;flex:none;width:115px;height:138px;object-fit:cover;object-position:50% 18%;
+  filter:contrast(1.07) saturate(.78);
+  -webkit-mask-image:linear-gradient(90deg,#000 68%,transparent 100%);
+  mask-image:linear-gradient(90deg,#000 68%,transparent 100%);
+  transition:transform .35s ease;
+}
+#hypeFreddyTeaserV177:hover .hype-freddy-photo{transform:scale(1.045)}
+#hypeFreddyTeaserV177 .hype-freddy-copy{
+  position:relative;z-index:1;min-width:0;display:flex;flex-direction:column;gap:7px;
+  padding:14px 16px 14px 4px;
+}
+#hypeFreddyTeaserV177 .hype-freddy-label{
+  color:#eaa18d;font-size:10px;font-weight:900;letter-spacing:1.6px;line-height:1.3;
+}
+#hypeFreddyTeaserV177 .hype-freddy-title{
+  font-size:clamp(17px,1.7vw,23px);line-height:1.13;letter-spacing:-.45px;font-weight:950;
+}
+#hypeFreddyTeaserV177 .hype-freddy-caption{
+  color:#bcb6bb;font-size:11px;line-height:1.45;letter-spacing:0;
+}
+@media(max-width:650px){
+  #hypeFreddyTeaserV177{min-height:110px;margin-top:18px;border-radius:14px}
+  #hypeFreddyTeaserV177 .hype-freddy-photo{height:116px;width:94px}
+  #hypeFreddyTeaserV177 .hype-freddy-copy{padding:10px 12px 10px 0;gap:5px}
+  #hypeFreddyTeaserV177 .hype-freddy-label{font-size:9px;letter-spacing:1px}
+  #hypeFreddyTeaserV177 .hype-freddy-title{font-size:17px}
+  #hypeFreddyTeaserV177 .hype-freddy-caption{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){#hypeFreddyTeaserV177 .hype-freddy-photo{transition:none!important}}
