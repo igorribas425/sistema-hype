@@ -1,0 +1,193 @@
+/* HYPE PREMIUM INTRO V182 - imagens cinematográficas, layout responsivo isolado. */
+html.hi182-lock,body.hi182-lock{overflow:hidden!important}
+#hypeIntroV182{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;isolation:isolate;overflow:hidden;background:#070407;color:#ffdfac;overscroll-behavior:contain;font-family:Georgia,'Times New Roman',serif;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
+#hypeIntroV182,#hypeIntroV182 *{box-sizing:border-box}
+#hypeIntroV182 .hi182-surround{position:absolute;inset:-35px;background:linear-gradient(90deg,rgba(0,0,0,.73),rgba(0,0,0,.3) 40%,rgba(0,0,0,.3) 60%,rgba(0,0,0,.76)),url("assets/hype-intro-closed-v182.webp") center/cover no-repeat;filter:blur(26px) brightness(.53);transform:scale(1.09);pointer-events:none}
+#hypeIntroV182 .hi182-surround:after{content:"";position:absolute;inset:0;background:radial-gradient(circle,transparent 16%,#0009 100%)}
+#hypeIntroV182 .hi182-stage{position:relative;width:min(100vw,56.34dvh);height:100dvh;max-height:100%;min-width:0;overflow:hidden;background:#0d0809;box-shadow:0 0 120px #000d,0 0 0 1px #d5a3693b;isolation:isolate}
+#hypeIntroV182 .hi182-photo{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;object-position:center;user-select:none;-webkit-user-drag:none;pointer-events:none;will-change:opacity,transform}
+#hypeIntroV182 .hi182-closed{opacity:1;transform:scale(1);transition:opacity .82s cubic-bezier(.17,.67,.2,1),transform 1.5s ease}
+#hypeIntroV182 .hi182-open{opacity:0;transform:translateY(2%) scale(1.065);transition:opacity 1.04s ease,transform 1.25s cubic-bezier(.19,.68,.16,1)}
+#hypeIntroV182 .hi182-smoke{z-index:5;opacity:0;transform:scale(.7) rotate(-7deg);filter:blur(7px);transition:opacity .37s ease, transform 1.7s ease,filter .9s ease}
+#hypeIntroV182 .hi182-darken{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 52%,transparent 40%,rgba(0,0,0,.16) 80%,rgba(0,0,0,.33));z-index:6;opacity:.25;transition:opacity .5s}
+#hypeIntroV182 .hi182-glint{position:absolute;z-index:7;pointer-events:none;top:51%;left:51%;width:120px;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fc7b41aa,transparent 60%);mix-blend-mode:screen;filter:blur(15px);opacity:.32;transform:translate(-50%,-50%);animation:hi182-shimmer 4s ease-in-out infinite}
+@keyframes hi182-shimmer{0%,100%{opacity:.13;transform:translate(-50%,-50%) scale(.8)}50%{opacity:.44;transform:translate(-50%,-50%) scale(1.2)}}
+#hypeIntroV182 .hi182-hit{position:absolute;z-index:10;appearance:none;border:0;background:transparent;color:transparent;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
+#hypeIntroV182 .hi182-hit:focus-visible{outline:3px solid #ffe0a2;outline-offset:2px;background:rgba(255,194,81,.07)}
+#hypeIntroV182 .hi182-envelope-hit{left:13%;top:41%;width:75%;height:31%;border-radius:20px;touch-action:manipulation}
+#hypeIntroV182 .hi182-buy-hit{display:none;left:33%;top:54.7%;width:37%;height:6.8%;min-height:45px;touch-action:manipulation}
+#hypeIntroV182 .hi182-buy-hit:focus-visible{border-radius:8px}
+#hypeIntroV182 .hi182-skip{position:absolute;z-index:25;right:4%;bottom:max(3.5%,env(safe-area-inset-bottom));padding:11px 17px;min-height:43px;min-width:155px;border:1px solid #edbb76a8;border-radius:999px;background:rgba(11,8,9,.88);box-shadow:0 4px 21px #0009, inset 0 0 5px #f0b77311;font:500 clamp(11px,2vw,14px)/1.2 Arial,sans-serif;color:#fff0d8;cursor:pointer;text-align:center;touch-action:manipulation}
+#hypeIntroV182 .hi182-skip:focus-visible{outline:3px solid #ffe0a2;outline-offset:3px}
+#hypeIntroV182 .hi182-skip:hover{border-color:#ffd899;background:#211619}
+#hypeIntroV182 .hi182-caption{position:absolute;z-index:20;top:78%;left:5%;width:90%;text-align:center;pointer-events:none;color:#ffda9c;font:600 clamp(9px,2.1vw,13px)/1.4 Arial,sans-serif;letter-spacing:.16em;text-shadow:0 2px 18px #000;opacity:0;transition:opacity .3s}
+#hypeIntroV182 .hi182-sparks{position:absolute;inset:0;z-index:14;pointer-events:none;overflow:hidden}
+#hypeIntroV182 .hi182-spark{position:absolute;left:var(--x);top:var(--y);width:4px;height:4px;background:#ffc48a;border-radius:50%;box-shadow:0 0 8px #ff9f4e,0 0 19px #d85435;opacity:0;animation:hi182-particle var(--duration) ease-out var(--delay) forwards}
+@keyframes hi182-particle{0%{opacity:0;transform:translate(0,0) scale(.25)}30%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.12)}}
+#hypeIntroV182.hi182-opened .hi182-closed{opacity:0;transform:scale(1.09) translateY(1%)}
+#hypeIntroV182.hi182-opened .hi182-open{opacity:1;transform:translateY(0) scale(1)}
+#hypeIntroV182.hi182-opened .hi182-envelope-hit{display:none}
+#hypeIntroV182.hi182-opened .hi182-buy-hit{display:block}
+#hypeIntroV182.hi182-opened .hi182-glint{opacity:0;animation:none}
+#hypeIntroV182.hi182-exiting .hi182-smoke{opacity:.93;transform:scale(1.18) rotate(4deg);filter:blur(0)}
+#hypeIntroV182.hi182-exiting .hi182-darken{opacity:.67}
+#hypeIntroV182.hi182-exiting .hi182-stage{animation:hi182-smokeout 1.8s ease-in-out forwards}
+@keyframes hi182-smokeout{0%,35%{opacity:1}78%{opacity:.85}100%{opacity:0}}
+#hypeIntroV182.hi182-exiting .hi182-hit,#hypeIntroV182.hi182-exiting .hi182-skip{pointer-events:none}
+#hypeIntroV182.hi182-gone{opacity:0;pointer-events:none;transition:opacity .3s}
+@media(min-aspect-ratio:4/3){#hypeIntroV182 .hi182-stage{border-left:1px solid #b88c524d;border-right:1px solid #b88c524d}}
+@media(max-width:500px){#hypeIntroV182 .hi182-stage{width:100vw;height:100dvh;box-shadow:none}#hypeIntroV182 .hi182-photo{object-fit:cover;object-position:center}#hypeIntroV182 .hi182-skip{font-size:12px;right:4%;bottom:max(4%,env(safe-area-inset-bottom));min-height:44px;padding:10px 14px;min-width:148px}#hypeIntroV182 .hi182-envelope-hit{left:12%;top:40.5%;width:77%;height:31%}#hypeIntroV182 .hi182-buy-hit{left:31%;top:54.4%;width:40%;height:7%}}
+@media(prefers-reduced-motion:reduce){#hypeIntroV182 *,#hypeIntroV182 *:before,#hypeIntroV182 *:after{animation-duration:.01ms!important;transition-duration:.01ms!important}#hypeIntroV182 .hi182-sparks{display:none}}
+
+
+/* HYPE v183 – corrige focos automáticos, bordas fantasmas e a troca brusca de fumaça.
+   Somente o overlay: não mexer em ingressos, pagamento nem promoter. */
+#hypeIntroV182 .hi182-stage{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+}
+#hypeIntroV182 .hi182-photo{border:0!important;outline:0!important;box-shadow:none!important}
+#hypeIntroV182 .hi182-smoke{display:none!important}
+/* Destaque acessível somente quando o visitante usa teclado, nunca foco automático. */
+#hypeIntroV182 .hi182-hit:focus{outline:none;background:transparent}
+#hypeIntroV182 .hi182-hit:focus-visible{outline:2px solid rgba(255,219,162,.85);outline-offset:2px;background:rgba(0,0,0,.06)}
+/* Unifica o rodapé do cenário, removendo a aparência de retângulo sob "Pular". */
+#hypeIntroV182 .hi182-stage::after{
+  content:"";
+  position:absolute;
+  z-index:8;
+  left:0;right:0;bottom:0;height:23%;
+  background:linear-gradient(to bottom,rgba(5,4,7,0) 0%,rgba(5,4,7,.20) 37%,rgba(5,4,7,.58) 74%,rgba(5,4,7,.80) 100%);
+  pointer-events:none;
+}
+#hypeIntroV182 .hi183-fog{
+  position:absolute;inset:0;z-index:18;overflow:hidden;pointer-events:none;
+  opacity:0;isolation:isolate;mix-blend-mode:screen;
+}
+#hypeIntroV182 .hi183-plume{
+  position:absolute;
+  left:var(--left);top:var(--top);
+  width:var(--w);height:var(--h);
+  border-radius:50%;
+  opacity:0;
+  background:
+    radial-gradient(ellipse at 37% 44%,rgba(240,231,224,.66) 0%,rgba(201,198,200,.38) 18%,rgba(132,130,140,.26) 42%,rgba(87,78,92,.11) 60%,transparent 76%);
+  filter:blur(clamp(14px,3vw,36px));
+  transform:translate(-50%,-50%) rotate(var(--angle)) scale(.18);
+  will-change:transform,opacity;
+}
+#hypeIntroV182 .hi183-fog::before{
+  content:"";
+  position:absolute;inset:0;z-index:1;
+  background:
+    radial-gradient(ellipse at 48% 45%,rgba(234,222,214,.36),transparent 45%),
+    radial-gradient(ellipse at 63% 64%,rgba(216,219,223,.30),transparent 43%);
+  opacity:0;filter:blur(18px);
+}
+#hypeIntroV182.hi182-exiting .hi183-fog{opacity:1;animation:hi183-fogfade 1.72s ease-out both}
+#hypeIntroV182.hi182-exiting .hi183-plume{
+  animation:hi183-plume 1.7s cubic-bezier(.17,.68,.24,.97) var(--delay) both;
+}
+#hypeIntroV182.hi182-exiting .hi183-fog::before{animation:hi183-mist 1.6s ease-out both}
+#hypeIntroV182.hi182-exiting .hi182-stage{animation:none!important}
+#hypeIntroV182.hi182-exiting .hi182-open,
+#hypeIntroV182.hi182-exiting .hi182-closed{
+  opacity:0!important;
+  transition:opacity 950ms ease 250ms!important;
+}
+#hypeIntroV182.hi182-exiting .hi182-hit{display:none!important}
+#hypeIntroV182.hi182-exiting .hi182-glint{opacity:0!important;animation:none!important}
+#hypeIntroV182.hi182-exiting{animation:hi183-reveal 1.75s ease-in-out both}
+@keyframes hi183-plume{
+  0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--angle)) scale(.18)}
+  28%{opacity:.65}
+  50%{opacity:.88}
+  82%{opacity:.55}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(calc(var(--angle) + 30deg)) scale(2.65)}
+}
+@keyframes hi183-fogfade{0%{opacity:0}24%,65%{opacity:1}100%{opacity:0}}
+@keyframes hi183-mist{0%{opacity:0}30%,62%{opacity:.75}100%{opacity:0}}
+@keyframes hi183-reveal{0%,40%{opacity:1}75%{opacity:.72}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){
+  #hypeIntroV182.hi182-exiting,
+  #hypeIntroV182.hi182-exiting .hi183-fog,
+  #hypeIntroV182.hi182-exiting .hi183-plume{animation:none!important}
+}
+
+
+/* v184: fumaça localizada, sem tela cinza, sem quadros ou sobreposição ao checkout */
+#hypeIntroV182 .hi183-fog{display:none!important}
+#hypeIntroV182.hi182-exiting,
+#hypeIntroV182.hi182-exiting .hi182-stage{animation:none!important}
+#hypeIntroV182.hi182-exiting{
+  opacity:1!important;
+  transition:none!important;
+}
+#hypeIntroV182.hi182-exiting .hi182-open{
+  opacity:1!important;
+  transition:none!important;
+}
+#hypeIntroV182.hi182-exiting .hi182-closed{
+  opacity:0!important;
+  transition:none!important;
+}
+#hypeIntroV182.hi182-exiting .hi182-darken{opacity:.20!important}
+#hypeIntroV182.hi182-exiting .hi182-glint{opacity:0!important}
+#hypeIntroV182.hi182-exiting .hi182-hit{display:none!important}
+#hypeIntroV182.hi182-exiting .hi182-skip{
+  opacity:0!important;
+  visibility:hidden!important;
+  transition:opacity .15s!important;
+}
+#hypeIntroV182 .hi184-smoke-layer{
+  position:absolute;inset:0;z-index:18;pointer-events:none;overflow:hidden;
+  opacity:0;isolation:isolate;
+}
+#hypeIntroV182 .hi184-smoke-wisp{
+  position:absolute;
+  left:var(--sx);top:var(--sy);width:var(--sw);height:var(--sh);
+  border-radius:50%;opacity:0;
+  background:radial-gradient(ellipse at 47% 50%,
+    rgba(241,234,225,.46) 0%,
+    rgba(194,185,190,.28) 20%,
+    rgba(128,117,122,.14) 42%,
+    rgba(56,47,59,.07) 59%,
+    transparent 74%);
+  filter:blur(clamp(12px,4vw,30px));
+  transform:translate(-50%,-50%) rotate(var(--rot)) scale(.25);
+  will-change:transform,opacity;
+}
+#hypeIntroV182 .hi184-smoke-layer:after{
+  content:"";position:absolute;inset:24% 8% 16%;
+  background:radial-gradient(ellipse at 50% 55%,rgba(175,150,151,.13),transparent 57%);
+  filter:blur(30px);opacity:0;
+}
+#hypeIntroV182.hi182-exiting .hi184-smoke-layer{opacity:1}
+#hypeIntroV182.hi182-exiting .hi184-smoke-wisp{
+  animation:hi184-swirl 1.35s cubic-bezier(.18,.45,.32,1) var(--delay) both;
+}
+#hypeIntroV182.hi182-exiting .hi184-smoke-layer:after{animation:hi184-haze 1.27s ease-out both}
+#hypeIntroV182.hi184-revealing{
+  opacity:0!important;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .48s ease-out,visibility .48s ease-out!important;
+}
+#hypeIntroV182.hi184-skipping .hi184-smoke-layer{display:none!important}
+@keyframes hi184-swirl{
+  0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--rot)) scale(.20)}
+  22%{opacity:.28}
+  45%{opacity:.59}
+  73%{opacity:.39}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(calc(var(--rot) + 37deg)) scale(2.1)}
+}
+@keyframes hi184-haze{
+  0%{opacity:0}
+  45%{opacity:.45}
+  100%{opacity:0}
+}
+@media(prefers-reduced-motion:reduce){
+  #hypeIntroV182 .hi184-smoke-layer{display:none!important}
+  #hypeIntroV182.hi184-revealing{transition:none!important}
+}
