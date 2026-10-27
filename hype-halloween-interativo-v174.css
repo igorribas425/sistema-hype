@@ -1,0 +1,34 @@
+/* HYPE Halloween: interações acessíveis sem tocar no checkout */
+#hypeHalloweenControlsV174{display:none;position:relative;overflow:hidden;isolation:isolate;margin:0 0 8px;padding:18px 22px;border-radius:20px;border:1px solid rgba(255,103,49,.48);background:radial-gradient(ellipse at 90% 35%,rgba(127,32,39,.45),transparent 48%),linear-gradient(110deg,#1b080b,#09060b 65%,#1b0a16);box-shadow:0 0 25px rgba(203,28,17,.15),inset 0 0 20px rgba(205,46,31,.07);grid-template-columns:minmax(0,1fr) 128px;gap:12px;align-items:center}
+body.hype-halloween-live #hypeHalloweenControlsV174{display:grid}
+#hypeHalloweenControlsV174:after{content:"";position:absolute;bottom:0;left:0;width:100%;height:3px;background:linear-gradient(90deg,transparent,#e73a1b,#a43a8c,transparent)}
+#hypeHalloweenControlsV174 .hhx-copy{position:relative;z-index:2}
+#hypeHalloweenControlsV174 .hhx-eyebrow{display:block;margin-bottom:6px;color:#ffb58b;font-size:10px;letter-spacing:2px;font-weight:950;text-transform:uppercase}
+#hypeHalloweenControlsV174 .hhx-title{font-size:clamp(22px,3.2vw,36px)!important;line-height:1.03!important;font-weight:950!important;letter-spacing:-.7px!important;margin:0 0 8px!important;color:#fff!important;text-transform:uppercase;text-shadow:0 0 14px rgba(255,90,54,.22)}
+#hypeHalloweenControlsV174 .hhx-title em{font-style:normal;color:#ff905c}
+#hypeHalloweenControlsV174 .hhx-sub{color:#e1c7c5;font-size:12px!important;line-height:1.4!important;margin:0!important}
+#hypeHalloweenControlsV174 .hhx-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+#hypeHalloweenControlsV174 button{min-height:39px;cursor:pointer;font-family:inherit;font-weight:900;border-radius:10px;-webkit-tap-highlight-color:transparent}
+#hypeHalloweenControlsV174 button:focus-visible{outline:3px solid #ffca71;outline-offset:3px}
+#hypeHalloweenControlsV174 .hhx-call{padding:0 13px;border:1px solid #fd9f68;background:linear-gradient(115deg,#f98b4a,#e04d29);color:#240808;font-size:11px;letter-spacing:.3px;transition:transform .2s,filter .2s}
+#hypeHalloweenControlsV174 .hhx-call:hover{transform:translateY(-2px);filter:brightness(1.08)}
+#hypeHalloweenControlsV174 .hhx-toggle{padding:0 11px;border:1px solid rgba(252,172,152,.35);color:#fbd4cc;background:#240f17;font-size:10px}
+#hypeHalloweenControlsV174 .hhx-visual{position:relative;min-height:132px;display:grid;place-items:center}
+#hypeHalloweenControlsV174 .hhx-moon{position:absolute;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#ffe6a7,#fb9a55 38%,#df3622 77%,#6b193e);box-shadow:0 0 30px rgba(239,62,31,.4);animation:hhxBreathe 3s ease-in-out infinite alternate}
+#hypeHalloweenControlsV174 .hhx-witch{position:relative;width:136px;height:130px;display:grid;place-items:center;border:0;background:none;transition:transform .2s}
+#hypeHalloweenControlsV174 .hhx-witch:hover{transform:translateY(-4px) rotate(-3deg)}
+#hypeHalloweenControlsV174 .hhx-witch svg{width:132px;max-width:none;filter:drop-shadow(0 7px 6px #110309);animation:hhxFloat 2.8s ease-in-out infinite alternate}
+#hypeHalloweenControlsV174 .hhx-hint{position:absolute;bottom:-3px;font-size:9px;color:#ffcfb3;letter-spacing:.4px}
+#hypeHalloweenControlsV174 .hhx-status{margin-top:5px;font-size:11px;color:#ffb28c;font-weight:750;min-height:0}
+#hypeHalloweenControlsV174 .hhx-magic{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:5}
+#hypeHalloweenControlsV174 .hhx-star{position:absolute;top:var(--y);left:var(--x);width:8px;height:8px;border-radius:50%;background:#ffe7a4;box-shadow:0 0 12px #ff802e;animation:hhxSpark .85s ease-out forwards}
+#hypeHalloweenControlsV174 .hhx-swarm{position:absolute;top:var(--y);left:var(--x);font-size:clamp(16px,2vw,28px);animation:hhxSwarm 1.7s ease-out forwards;pointer-events:none;z-index:6;filter:drop-shadow(0 0 5px #e53)}
+#hypeHalloweenControlsV174.hhx-enchanted{border-color:#d67acf;box-shadow:0 0 35px rgba(180,47,185,.36)}
+#hypeHalloweenControlsV174.hhx-enchanted .hhx-moon{filter:hue-rotate(72deg)}
+body.hhx-paused #hypeHalloweenSceneV173 .hhw-fly,body.hhx-paused #hypeHalloweenSceneV173 .hhw-ember,body.hhx-paused #hypeHalloweenControlsV174 .hhx-moon,body.hhx-paused #hypeHalloweenControlsV174 .hhx-witch svg{animation-play-state:paused!important}
+@keyframes hhxBreathe{to{transform:scale(1.07);filter:brightness(1.15)}}
+@keyframes hhxFloat{to{transform:translateY(-9px) rotate(4deg)}}
+@keyframes hhxSpark{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+@keyframes hhxSwarm{to{transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(.5);opacity:0}}
+@media(max-width:650px){#hypeHalloweenControlsV174{padding:15px 13px;grid-template-columns:minmax(0,1fr) 82px;border-radius:15px;gap:5px}#hypeHalloweenControlsV174 .hhx-eyebrow{font-size:9px;letter-spacing:.7px}#hypeHalloweenControlsV174 .hhx-title{font-size:clamp(19px,5.6vw,27px)!important}#hypeHalloweenControlsV174 .hhx-sub{font-size:11px!important}#hypeHalloweenControlsV174 .hhx-visual{min-height:105px}#hypeHalloweenControlsV174 .hhx-moon{width:75px;height:75px}#hypeHalloweenControlsV174 .hhx-witch{width:85px;height:101px}#hypeHalloweenControlsV174 .hhx-witch svg{width:95px}#hypeHalloweenControlsV174 .hhx-hint{font-size:8px}#hypeHalloweenControlsV174 .hhx-call,#hypeHalloweenControlsV174 .hhx-toggle{min-height:34px;padding:0 8px;font-size:9px}}
+@media(prefers-reduced-motion:reduce){#hypeHalloweenControlsV174 .hhx-moon,#hypeHalloweenControlsV174 .hhx-witch svg{animation:none!important}#hypeHalloweenControlsV174 .hhx-star,#hypeHalloweenControlsV174 .hhx-swarm{display:none!important}}
