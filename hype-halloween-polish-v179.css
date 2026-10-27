@@ -1,0 +1,77 @@
+/* HYPE Halloween v179 – reparo visual para desktop e celular.
+ * Evita esticar a miniatura do fundo (480px) para 2K, melhora enquadramento
+ * e protege os textos. Somente o evento Halloween; nunca altera o checkout. */
+body.hype-halloween-live {
+  background: #060912 !important;
+}
+body.hype-halloween-live::before {
+  content:"" !important;
+  display:block !important;
+  position:fixed !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100vh !important;
+  height:100dvh !important;
+  z-index:0 !important;
+  pointer-events:none !important;
+  opacity:1 !important;
+  background-color:#050913 !important;
+  background-image:
+    linear-gradient(90deg,rgba(3,5,12,.84),rgba(3,5,12,.18) 28%,rgba(3,5,12,.17) 66%,rgba(3,5,12,.84)),
+    linear-gradient(180deg,rgba(5,7,12,.16) 0%,rgba(5,7,12,.05) 43%,rgba(3,5,10,.91) 94%),
+    url("assets/hype-halloween-bg-v178.webp") !important;
+  /* A versão anterior usava cover e ampliava a miniatura 4 vezes. */
+  background-size:cover,cover,min(1250px,92vw) auto !important;
+  background-position:center,center,40% 13vh !important;
+  background-repeat:no-repeat !important;
+  transition:none !important;
+}
+body.hype-halloween-live .event-ambient {opacity:.035 !important}
+body.hype-halloween-live .page-shell {position:relative;z-index:3 !important}
+body.hype-halloween-live .event-card,
+body.hype-halloween-live .purchase-copy,
+body.hype-halloween-live .box,
+body.hype-halloween-live .v14-spotlight {
+  border-color:rgba(230,154,114,.16) !important;
+  box-shadow:0 20px 56px rgba(0,0,0,.55) !important;
+}
+body.hype-halloween-live .purchase-copy,
+body.hype-halloween-live #ticketBox > .box {
+  background:linear-gradient(150deg,rgba(8,11,18,.96),rgba(5,7,13,.93)) !important;
+}
+body.hype-halloween-live .v14-spotlight {
+  background:linear-gradient(135deg,rgba(8,10,16,.97),rgba(4,6,11,.91)) !important;
+}
+body.hype-halloween-live .event-card {
+  background:linear-gradient(145deg,#111217,#07090f) !important;
+}
+body.hype-halloween-live #hypeHalloweenSceneV173 .hhw-bat,
+body.hype-halloween-live #hypeHalloweenSceneV173 .hhw-witch{
+  opacity:.16 !important;
+  filter:none !important;
+}
+@media (min-width:1600px) {
+  body.hype-halloween-live::before {
+    background-size:cover,cover,1250px auto !important;
+  }
+}
+@media (max-width:720px) {
+  body.hype-halloween-live::before {
+    background-image:
+      linear-gradient(180deg,rgba(3,5,11,.13),rgba(3,5,11,.42) 45%,#050810 92%),
+      linear-gradient(90deg,rgba(3,5,10,.08),rgba(3,5,10,.12)),
+      url("assets/hype-halloween-bg-v178.webp") !important;
+    background-size:cover,cover,100% auto !important;
+    background-position:center,center,center 76px !important;
+  }
+  body.hype-halloween-live .purchase-copy,
+  body.hype-halloween-live #ticketBox > .box {
+    background:rgba(7,9,16,.97) !important;
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+  }
+  body.hype-halloween-live .event-ambient {opacity:0!important}
+}
+@media (prefers-reduced-motion:reduce) {
+  body.hype-halloween-live::before {transition:none !important}
+}
