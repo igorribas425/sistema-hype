@@ -1,0 +1,155 @@
+/* HYPE Halloween v195 | Morcegos e aranhas vetoriais realmente animados, sem imagens para os animais. */
+.brand-logo-wrap.page-brand.hh194-host {
+  position:relative;
+  isolation:isolate;
+  overflow:visible;
+  width:min(410px,86vw);
+  min-width:0;
+  margin:32px auto 6px;
+  --hh194-travel:min(570px,calc(86vw + 115px));
+}
+.brand-logo-wrap.page-brand.hh194-host>.brand-logo{
+  position:relative;
+  z-index:2;
+  display:block;
+  width:100%;
+  max-width:none;
+  height:auto;
+  object-fit:contain;
+}
+.hh194-scene {
+  position:absolute;
+  z-index:3;
+  inset:0;
+  overflow:visible;
+  pointer-events:none;
+  contain:layout style;
+}
+/* Small moving bats, independent wing and flight cycles. */
+.hh194-bat{
+  position:absolute;
+  left:-18%;
+  top:var(--bat-top);
+  width:var(--bat-size);
+  height:auto;
+  aspect-ratio:120/65;
+  z-index:2;
+  opacity:.92;
+  will-change:transform;
+  animation:hh194-flight var(--flight) linear infinite;
+  animation-delay:var(--start);
+  filter:drop-shadow(0 1px 2px #070307) drop-shadow(0 0 4px rgba(193,40,49,.42));
+}
+.hh194-bat svg{display:block;width:100%;height:100%;overflow:visible;perspective:140px}
+.hh194-bat .hh194-wing{
+  transform-box:view-box;
+  transform-origin:60px 33px;
+  animation:hh194-wing-left var(--wing-beat) ease-in-out infinite;
+}
+.hh194-bat .hh194-wing-right{
+  animation-name:hh194-wing-right;
+}
+.hh194-bat--1{--bat-top:-17%;--bat-size:50px;--flight:10.3s;--start:-3.1s;--wing-beat:.33s}
+.hh194-bat--2{--bat-top:1%;--bat-size:34px;--flight:13.4s;--start:-8.7s;--wing-beat:.27s;opacity:.7}
+.hh194-bat--3{--bat-top:-6%;--bat-size:27px;--flight:15.8s;--start:-12.3s;--wing-beat:.36s;opacity:.66}
+@keyframes hh194-flight{
+  0%{transform:translate3d(-24px,7px,0) rotate(-8deg) scale(.68);opacity:0}
+  7%{opacity:.92}
+  25%{transform:translate3d(calc(var(--hh194-travel) * .24),-8px,0) rotate(7deg) scale(.87)}
+  55%{transform:translate3d(calc(var(--hh194-travel) * .55),12px,0) rotate(-4deg) scale(1)}
+  78%{transform:translate3d(calc(var(--hh194-travel) * .77),-9px,0) rotate(6deg) scale(.9);opacity:.86}
+  100%{transform:translate3d(var(--hh194-travel),-24px,0) rotate(-8deg) scale(.68);opacity:0}
+}
+@keyframes hh194-wing-left{
+  0%,100%{transform:rotate(-14deg) scaleY(.44) skewY(-4deg)}
+  47%{transform:rotate(3deg) scaleY(1.09) skewY(3deg)}
+}
+@keyframes hh194-wing-right{
+  0%,100%{transform:rotate(14deg) scaleY(.44) skewY(4deg)}
+  47%{transform:rotate(-3deg) scaleY(1.09) skewY(-3deg)}
+}
+/* Each spider's silk line grows and retracts with the spider attached to its tip. */
+.hh194-spider-line{
+  position:absolute;
+  z-index:4;
+  top:-10%;
+  left:var(--spider-x);
+  width:1px;
+  height:15px;
+  pointer-events:none;
+  transform-origin:top center;
+  animation:hh194-spider-drop var(--descent) ease-in-out infinite;
+  animation-delay:var(--offset);
+}
+.hh194-spider-line::before{
+  content:"";
+  position:absolute;inset:0;
+  width:1px;
+  background:linear-gradient(to bottom,rgba(202,205,212,.27),rgba(244,238,233,.84) 73%,rgba(193,192,200,.64));
+  box-shadow:0 0 2px rgba(255,255,255,.29);
+}
+.hh194-spider-line svg{
+  position:absolute;
+  left:-24px;
+  bottom:-31px;
+  width:48px;
+  height:48px;
+  overflow:visible;
+  transform-origin:top center;
+  animation:hh194-spider-sway 3.4s ease-in-out infinite alternate;
+  filter:drop-shadow(0 4px 7px rgba(0,0,0,.92)) drop-shadow(0 0 4px rgba(141,37,38,.32));
+}
+.hh194-spider-line .hh194-leg{
+  transform-box:fill-box;
+  transform-origin:center center;
+  animation:hh194-leg-twitch 1.8s ease-in-out infinite alternate;
+}
+.hh194-spider-line .hh194-legs-right{animation-delay:-.8s}
+.hh194-spider--left{--spider-x:4%;--descent:9.2s;--offset:-1s}
+.hh194-spider--right{--spider-x:96%;--descent:10.7s;--offset:-5.4s}
+.hh194-spider--right svg{animation-delay:-1.4s}
+@keyframes hh194-spider-drop{
+  0%,8%{height:20px}
+  36%,61%{height:145px}
+  90%,100%{height:28px}
+}
+@keyframes hh194-spider-sway{
+  0%{transform:rotate(-8deg) translateX(-1px)}
+  100%{transform:rotate(7deg) translateX(2px)}
+}
+@keyframes hh194-leg-twitch{
+  0%,65%,100%{transform:rotate(0deg)}
+  79%{transform:rotate(-5deg)}
+}
+@media(max-width:720px){
+  .brand-logo-wrap.page-brand.hh194-host{width:min(380px,86vw);margin-top:30px;margin-bottom:8px}
+  .hh194-bat--1{--bat-size:42px;--bat-top:-14%}
+  .hh194-bat--2{--bat-size:30px;--bat-top:0%}
+  .hh194-bat--3{--bat-size:24px;--bat-top:-5%}
+  .hh194-spider--left{--spider-x:3%}
+  .hh194-spider--right{--spider-x:97%}
+  .hh194-spider-line svg{width:44px;height:44px;left:-22px;bottom:-29px}
+  @keyframes hh194-spider-drop{0%,8%{height:16px}36%,61%{height:112px}90%,100%{height:20px}}
+}
+@media(prefers-reduced-motion:reduce){
+  .hh194-bat{animation:none!important;opacity:0!important}
+  .hh194-spider-line{animation:none!important;height:32px!important}
+  .hh194-spider-line svg,.hh194-spider-line .hh194-leg{animation:none!important}
+}
+
+/* v195: deeper glossy abdomen, anatomically articulated legs and more natural silk. */
+.hh194-spider-line::before{
+  background:linear-gradient(180deg,rgba(202,205,212,.22),rgba(246,243,239,.83) 64%,rgba(204,198,205,.55));
+  box-shadow:0 0 2px rgba(255,255,255,.26);
+}
+.hh194-spider-line .hh194-leg{
+  stroke:#261b20;
+  stroke-width:2.6;
+  filter:drop-shadow(0 1px 1px rgba(117,71,69,.22));
+}
+.hh194-spider--left{--spider-x:5%}
+.hh194-spider--right{--spider-x:95%}
+@media(max-width:720px){
+  .hh194-spider--left{--spider-x:5%}
+  .hh194-spider--right{--spider-x:95%}
+}
