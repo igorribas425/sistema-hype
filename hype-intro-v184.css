@@ -170,9 +170,8 @@ html.hi182-lock,body.hi182-lock{overflow:hidden!important}
 #hypeIntroV182.hi182-exiting .hi184-smoke-layer:after{animation:hi184-haze 1.27s ease-out both}
 #hypeIntroV182.hi184-revealing{
   opacity:0!important;
-  visibility:hidden;
   pointer-events:none;
-  transition:opacity .48s ease-out,visibility .48s ease-out!important;
+  transition:opacity .48s ease-out!important;
 }
 #hypeIntroV182.hi184-skipping .hi184-smoke-layer{display:none!important}
 @keyframes hi184-swirl{
