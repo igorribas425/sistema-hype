@@ -63,9 +63,10 @@
     const select = $('v49ListEvent');
     if (!select) return;
     const configured = listSettings.length ? listSettings : events();
-    const list = configured.filter(event => event && event.active !== false);
+    const list = window.HypeVisibleOperationalEventsV202?.(configured) || configured.filter(event => event && event.active !== false);
     const idOf = event => Number(event.event_id || event.id || 0);
-    const selected = Number(selectedId || state()?.selectedEventId || list[0] && idOf(list[0]) || 0);
+    const preferred = Number(selectedId || state()?.selectedEventId || 0);
+    const selected = list.some(event=>idOf(event)===preferred) ? preferred : Number(list[0] && idOf(list[0]) || 0);
     select.innerHTML = list.length
       ? list.map(event => `<option value="${idOf(event)}" ${idOf(event) === selected ? 'selected' : ''}>${esc(event.event_name || event.name || 'Evento')} ${event.event_date ? `• ${esc(event.event_date)}` : ''}</option>`).join('')
       : '<option value="">Nenhum evento ativo</option>';

@@ -74,20 +74,32 @@
   }
   function renderEvents() {
     const submit = $('guestSubmit');
-    // Lista pública: trabalha somente com o BAILE DA JESSY (sábado 10/10).
-    const saturday = events
-      .filter(row => Number(row.event_id) === 19 || String(row.event_date || '') === '2026-10-10')
-      .sort((a,b) => Number(b.event_id || 0) - Number(a.event_id || 0))[0]
-      || events[0]
-      || null;
-    events = saturday ? [saturday] : [];
-    selectedEventId = saturday ? Number(saturday.event_id) : 0;
-    if (submit) submit.disabled = !saturday;
+    // Cadastro público mostra as festas atuais e futuras, nunca festas encerradas.
+    const p = new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',
+      year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',
+      minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date()).reduce((o,x)=>{
+        if(x.type!=='literal')o[x.type]=x.value; return o;
+      },{});
+    const today=[p.year,p.month,p.day].join('-');
+    const yesterdayDate=new Date(today+'T12:00:00Z');
+    yesterdayDate.setUTCDate(yesterdayDate.getUTCDate()-1);
+    const yesterday=yesterdayDate.toISOString().slice(0,10);
+    const before8=Number(p.hour||0)<8;
+    events=events.filter(row=>{
+      if(row.active===false)return false;
+      const day=String(row.event_date||'').slice(0,10);
+      return /^\d{4}-\d{2}-\d{2}$/.test(day) &&
+        (day>=today||(before8&&day===yesterday));
+    }).sort((a,b)=>String(a.event_date).localeCompare(String(b.event_date)));
+    const preferred=new URLSearchParams(location.search).get('event');
+    const chosen=events.find(row=>Number(row.event_id)===Number(preferred)) || events[0] || null;
+    selectedEventId=chosen?Number(chosen.event_id):0;
+    if (submit) submit.disabled = !chosen;
     renderSelectedEvent();
     const cover = $('guestEventCover');
     if (cover) {
-      if (saturday?.cover_image) {
-        cover.src = saturday.cover_image;
+      if (chosen?.cover_image) {
+        cover.src = chosen.cover_image;
         cover.hidden = false;
       } else {
         cover.hidden = true;

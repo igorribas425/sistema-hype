@@ -76,8 +76,10 @@
       let events=[];
       try { events=arr(await rpc('staff_list_raffle_events_v23',auth())); }
       catch(e){ events=arr(await rpc('staff_list_events_v13',auth())); }
-      if(!events.length){ sel.innerHTML='<option value="">Nenhum evento encontrado</option>'; return; }
-      const selected=Number((typeof HYPE!=='undefined' ? HYPE.selectedEventId : 0) || events[0].id);
+      events=window.HypeVisibleOperationalEventsV202?.(events)||events.filter(e=>e.active!==false);
+      if(!events.length){ sel.innerHTML='<option value="">Nenhuma festa atual</option>'; return; }
+      const preferred=Number(typeof HYPE!=='undefined' ? HYPE.selectedEventId : 0);
+      const selected=events.some(e=>Number(e.id)===preferred)?preferred:Number(events[0].id);
       sel.innerHTML=events.map(ev=>`<option value="${Number(ev.id)}" ${Number(ev.id)===selected?'selected':''}>${esc(ev.name||'Evento')} ${ev.event_date?`- ${esc(ev.event_date)}`:''}</option>`).join('');
       restoreDraft();
       await load();

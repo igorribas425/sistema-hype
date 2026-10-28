@@ -171,6 +171,19 @@ function hypeClientVisibleEventsV37() {
   return events.filter(hypeEventStillPublicV37);
 }
 
+/* HYPE V202: seletor de operação mostra apenas festas em andamento ou futuras.
+   Festa anterior permanece disponível no histórico, sem exclusão de dados. */
+function hypeVisibleOperationalEventsV202(events) {
+  return (Array.isArray(events) ? events : [])
+    .filter(e => e && Number(e.event_id || e.id) &&
+      e.active !== false && /^\d{4}-\d{2}-\d{2}$/.test(String(e.event_date || "").slice(0,10)) &&
+      hypeEventStillPublicV37(e))
+    .sort((a,b) =>
+      String(a.event_date).localeCompare(String(b.event_date)) ||
+      Number(a.sort_order || 0) - Number(b.sort_order || 0));
+}
+window.HypeVisibleOperationalEventsV202=hypeVisibleOperationalEventsV202;
+
 function hypeChooseClientEventV37(events, promoterLink = {}) {
   const visible = Array.isArray(events) ? events.filter(hypeEventStillPublicV37) : [];
   if (!visible.length) return null;
@@ -2058,11 +2071,13 @@ function renderAdminEvents() {
 
   const events = HYPE.adminEvents || HYPE.events || [];
   const showingArchived=Boolean(HYPE.showArchivedEventsV171);
-  const visibleEvents=showingArchived?events:events.filter(e=>e.active!==false);
-  const archivedCount=events.filter(e=>e.active===false).length;
+  const operational=hypeVisibleOperationalEventsV202(events);
+  const operationalIds=new Set(operational.map(e=>Number(e.id)));
+  const visibleEvents=showingArchived?events:operational;
+  const archivedCount=events.filter(e=>!operationalIds.has(Number(e.id))).length;
   const archiveToggle=archivedCount
     ? '<div style="grid-column:1/-1;padding:6px 0 13px"><button class="btn-action" onclick="hypeToggleArchivedEventsV171()">'+
-      (showingArchived?'OCULTAR ARQUIVADOS':'VER '+archivedCount+' EVENTO(S) ANTERIOR(ES)')+'</button></div>'
+      (showingArchived?'OCULTAR FESTAS ANTERIORES':'VER '+archivedCount+' FESTA(S) ANTERIOR(ES)')+'</button></div>'
     : '';
   const selected = events.find(e => Number(e.id) === Number(HYPE.selectedEventId));
   const selectedName = document.getElementById("adminSelectedEventName");
@@ -3014,7 +3029,7 @@ async function portariaLoadEvents() {
   if (!select) return;
   try {
     const rows = await (async()=>{ try { return await sbRpc('public_events_v13'); } catch(_) { return await sbRpc('public_events'); } })();
-    const events = Array.isArray(rows) ? rows : [];
+    const events = hypeVisibleOperationalEventsV202(Array.isArray(rows) ? rows : []);
     HYPE.portariaEvents = events;
     if (!events.length) {
       select.innerHTML = '<option value="">Nenhum evento ativo</option>';
@@ -3022,8 +3037,7 @@ async function portariaLoadEvents() {
       return;
     }
 
-    const today = new Date();
-    const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const todayKey = hypeSaoPauloNowPartsV37().date;
     let chosen = events.find(e => String(e.event_date || '').slice(0,10) === todayKey);
     if (!chosen) {
       const future = events.filter(e => e.event_date && String(e.event_date).slice(0,10) >= todayKey)
@@ -3658,15 +3672,20 @@ async function togglePromoterV16(id) {
 function renderV16Dashboard() {
   const panel=document.getElementById("v16DashboardPanel"); if(!panel)return;
   const eventSelect=document.getElementById("v16DashboardEvent");
-  const events=HYPE.adminEvents?.length ? HYPE.adminEvents : HYPE.events || [];
+  const allEvents=HYPE.adminEvents?.length ? HYPE.adminEvents : HYPE.events || [];
+  const history=Boolean(HYPE.showFinanceHistoryV202);
+  const events=history?allEvents:hypeVisibleOperationalEventsV202(allEvents);
   if(eventSelect){
-    // Mostra a festa ativa ao abrir o painel, mantendo o histórico consultável.
     const firstDashboard=eventSelect.dataset.hypeDashboardInitializedV170 !== "1";
-    const activeDashboardEvent=events.find(e=>e.active!==false);
-    const currentValue=firstDashboard ? String(activeDashboardEvent?.id || HYPE.selectedEventId || "all") : (eventSelect.value || "all");
+    const firstId=hypeVisibleOperationalEventsV202(allEvents)[0]?.id || events[0]?.id || 0;
+    const currentValue=firstDashboard ? String(firstId) : String(eventSelect.value || firstId);
     eventSelect.dataset.hypeDashboardInitializedV170="1";
-    eventSelect.innerHTML='<option value="all">TODOS OS EVENTOS</option>'+events.map(e=>`<option value="${Number(e.id)}">${hypeEscape(e.name||"Evento")}</option>`).join("");
-    eventSelect.value=[...eventSelect.options].some(o=>o.value===currentValue)?currentValue:"all";
+    eventSelect.innerHTML=(history?'<option value="all">TODOS OS EVENTOS (HISTÓRICO)</option>':'')+
+      events.map(e=>`<option value="${Number(e.id)}">${hypeEscape(e.name||"Evento")}</option>`).join("");
+    if(!events.length)eventSelect.innerHTML='<option value="">Nenhuma festa atual</option>';
+    eventSelect.value=[...eventSelect.options].some(o=>o.value===currentValue)
+      ?currentValue:String(firstId||"");
+    if(eventSelect.value==="" && eventSelect.options.length)eventSelect.selectedIndex=0;
   }
   const eventId=eventSelect?.value||"all";
   const list=(HYPE.tickets||[]).filter(t=>eventId==="all"||Number(t.event_id)===Number(eventId));

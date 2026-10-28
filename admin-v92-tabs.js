@@ -272,16 +272,46 @@
       [...(HYPE?.adminEvents || []),...(HYPE?.events || [])].forEach(e=>{
         if(e?.id!=null) map.set(Number(e.id),e);
       });
-      events=[...map.values()].sort((a,b)=>String(b.event_date||'').localeCompare(String(a.event_date||'')));
+      events=[...map.values()].sort((a,b)=>String(a.event_date||'').localeCompare(String(b.event_date||'')));
     } catch (_) {}
-    // Ao iniciar um novo evento, o financeiro abre no evento ativo.
-    // O histórico continua disponível em TODOS OS EVENTOS quando selecionado.
+    const showHistory=Boolean(HYPE?.showFinanceHistoryV202);
+    const operational=window.HypeVisibleOperationalEventsV202?.(events) || events.filter(e=>e.active!==false);
+    const shown=showHistory?events:operational;
     const firstLoad=select.dataset.hypeFinanceInitializedV170 !== '1';
-    const activeEvent=events.find(e=>e.active!==false);
-    const current=firstLoad?String(activeEvent?.id || 'all'):(select.value || 'all');
+    const firstId=operational[0]?.id || shown[0]?.id || 0;
+    const current=firstLoad?String(firstId):(select.value || String(firstId));
     select.dataset.hypeFinanceInitializedV170='1';
-    select.innerHTML='<option value="all">TODOS OS EVENTOS</option>'+events.map(e=>`<option value="${Number(e.id)}">${esc(e.event_date || '')} • ${esc(e.name || 'Evento HYPE')}</option>`).join('');
-    select.value=[...select.options].some(o=>o.value===current)?current:'all';
+    select.innerHTML=(showHistory?'<option value="all">TODOS OS EVENTOS (HISTÓRICO)</option>':'')+
+      shown.map(e=>`<option value="${Number(e.id)}">${esc(e.event_date || '')} • ${esc(e.name || 'Evento HYPE')}</option>`).join('');
+    if(!shown.length)select.innerHTML='<option value="">Nenhuma festa atual</option>';
+    select.value=[...select.options].some(o=>o.value===current)?current:String(firstId||'');
+    if(select.value==='' && select.options.length)select.selectedIndex=0;
+    const button=$('hypeFinanceHistoryToggleV202');
+    if(button)button.textContent=showHistory?'OCULTAR HISTÓRICO FINANCEIRO':'VER HISTÓRICO FINANCEIRO';
+  }
+
+  async function toggleFinanceHistory() {
+    const button=$('hypeFinanceHistoryToggleV202');
+    const previous=Boolean(HYPE.showFinanceHistoryV202);
+    const currentSelection=$('v94SalesEvent')?.value || '';
+    if(button)button.disabled=true;
+    HYPE.showFinanceHistoryV202=!previous;
+    HYPE.showClientHistoryV171=!previous;
+    try {
+      if(typeof loadStaffTickets==='function')await loadStaffTickets('');
+      // Continuar na festa selecionada, exceto quando o usuário optar por TODOS.
+      renderSales();
+      if(previous===false && currentSelection==='all')$('v94SalesEvent').value='all';
+      if(typeof renderClientsTable==='function')renderClientsTable();
+      if(typeof renderV16Dashboard==='function')renderV16Dashboard();
+    } catch(err) {
+      HYPE.showFinanceHistoryV202=previous;
+      HYPE.showClientHistoryV171=previous;
+      renderSales();
+      alert(err?.message || 'Não foi possível consultar o histórico financeiro.');
+    } finally {
+      if(button)button.disabled=false;
+    }
   }
 
   function renderSales() {
@@ -420,6 +450,6 @@
     if(event.target?.id==='v16DashboardEvent') setTimeout(renderSalesV94,0);
   });
 
-  window.HypeAdminTabsV92={setTab,refreshPeople,renderPortariaPeople,renderListPeople,refreshSales,renderSales};
+  window.HypeAdminTabsV92={setTab,refreshPeople,renderPortariaPeople,renderListPeople,refreshSales,renderSales,toggleFinanceHistory};
   document.addEventListener('DOMContentLoaded',()=>setTimeout(init,450));
 })();

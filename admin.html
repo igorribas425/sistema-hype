@@ -533,13 +533,13 @@ html,body{max-width:100%;overflow-x:hidden}
     <p style="font-size:11px;color:var(--muted);line-height:1.65;margin:6px 0 14px">* Taxas do Asaas estimadas com base no extrato informado (R$ 0,99 de PIX + R$ 0,99 de mensageria por cobrança paga). Confira os descontos reais no extrato do Asaas. Este painel mostra somente os ingressos ainda existentes no Supabase, e não o saldo acumulado da conta Asaas.</p>
     <div class="v94-sales-event-head">
       <label for="v94SalesEvent">FILTRAR VALORES</label>
-      <select id="v94SalesEvent" onchange="HypeAdminTabsV92?.renderSales?.()"><option value="all">TODOS OS EVENTOS</option></select>
+      <select id="v94SalesEvent" onchange="HypeAdminTabsV92?.renderSales?.()"><option value="">Carregando festa atual...</option></select><button id="hypeFinanceHistoryToggleV202" class="btn-action" type="button" onclick="HypeAdminTabsV92?.toggleFinanceHistory?.()" style="margin-top:8px">VER HISTÓRICO FINANCEIRO</button>
     </div>
     <div id="v94SalesByEvent" class="v94-sales-by-event"></div>
   </section>
 
   <section class="panel-box v16-dashboard" id="v16DashboardPanel">
-    <div class="v16-dashboard-head"><div><h3>📊 DASHBOARD DE VENDAS</h3><p>Resumo por evento, gênero, entradas e promoters.</p></div><select id="v16DashboardEvent" onchange="renderV16Dashboard()"><option value="all">TODOS OS EVENTOS</option></select></div>
+    <div class="v16-dashboard-head"><div><h3>📊 DASHBOARD DE VENDAS</h3><p>Resumo por evento, gênero, entradas e promoters.</p></div><select id="v16DashboardEvent" onchange="renderV16Dashboard()"><option value="">Carregando festa atual...</option></select></div>
     <div class="v16-dashboard-grid">
       <div><span>PAGO</span><b id="v16DashSold">0</b></div>
       <div><span>FREE</span><b id="v16DashFree">0</b></div>
@@ -861,10 +861,10 @@ Bruna Santos"></textarea>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
-<script src="app.js?v=20261028-festa-correta-v200"></script>
+<script src="app.js?v=20261028-ativos-v202"></script>
 <script src="promoter-global-v16-8.js?v=20261026-ranking-zerado-v171"></script>
 <script src="hype-qrcode.js?v=20261001-v49"></script>
-<script src="hype-v49-registration-admin.js?v=20261003-v100"></script>
+<script src="hype-v49-registration-admin.js?v=20261028-lista-ativos-v202"></script>
 <script>
 /* HYPE V24 // correção da sessão do Admin
    - JavaScript incorporado no próprio admin.html: não depende de v21-admin.js.
@@ -922,16 +922,16 @@ Bruna Santos"></textarea>
     select.disabled=true;
     select.innerHTML='<option value="">Carregando eventos...</option>';
     try{
-      let list=await fetchRaffleEventsV23();
-      list=arr(list).slice().sort((a,b)=>String(a?.event_date||'9999-12-31').localeCompare(String(b?.event_date||'9999-12-31'))||Number(a?.id||0)-Number(b?.id||0));
+      const allEvents=arr(await fetchRaffleEventsV23());
+      // Não sobrescrever os eventos do Admin com a lista filtrada do sorteio.
+      let list=window.HypeVisibleOperationalEventsV202?.(allEvents) || allEvents.filter(e=>e.active!==false);
+      list=list.slice().sort((a,b)=>String(a?.event_date||'9999-12-31').localeCompare(String(b?.event_date||'9999-12-31'))||Number(a?.id||0)-Number(b?.id||0));
       if(!list.length){
-        HYPE.adminEvents=[];
         raffleEventId=0;
-        select.innerHTML='<option value="">Nenhum evento cadastrado para sorteio</option>';
-        if(label) label.textContent='Cadastre um evento para configurar o sorteio.';
+        select.innerHTML='<option value="">Nenhuma festa atual para sorteio</option>';
+        if(label) label.textContent='Não há festa atual para configurar sorteio.';
         return 0;
       }
-      HYPE.adminEvents=list;
       select.innerHTML=list.map(e=>`<option value="${Number(e.id)}">${esc(eventLabel(e))}</option>`).join('');
       let chosen=before;
       if(!list.some(e=>Number(e.id)===chosen)) chosen=Number(HYPE.selectedEventId||list[0]?.id||0);
@@ -1092,8 +1092,8 @@ Bruna Santos"></textarea>
   <script src="admin-v34.js?v=20261028-hide-finished-v201"></script>
   <script src="hype-push-config.js?v=116"></script>
   <script src="hype-v38-chat.js?v=117"></script>
-  <script src="hype-v408-lista-admin.js?v=20261003-v71"></script>
-  <script src="admin-v92-tabs.js?v=20261026-financeiro-e-cards-v171"></script>
+  <script src="hype-v408-lista-admin.js?v=20261028-lista-ativos-v202"></script>
+  <script src="admin-v92-tabs.js?v=20261028-financeiro-ativos-v202"></script>
   <script src="admin-v103-customers.js?v=20261023-genero-feminino-masculino-v118"></script>
   <script src="admin-v95-hub.js?v=20261028-portaria-filter-v201"></script>
   <!-- Chamados da portaria desativados a pedido do ADM; chat HYPE e demais recursos preservados. -->
