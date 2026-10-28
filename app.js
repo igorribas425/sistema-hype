@@ -868,7 +868,7 @@ async function loadStaffTickets(search = "") {
   const status = document.getElementById("adminOrdersStatus");
   if (status) {
     const visibleCount = HYPE.tickets.length + HYPE.guestLists.length;
-    const scopeLabel = includeHistory ? "incluindo histórico" : "da festa atual";
+    const scopeLabel = includeHistory ? "incluindo histórico" : "da festa atual — "+hypeTicketEventNameV200(activeEventId);
     status.textContent = `${visibleCount} registro(s) ${scopeLabel} • atualizado ${new Date().toLocaleTimeString("pt-BR", {hour:"2-digit",minute:"2-digit",second:"2-digit"})}`;
     status.className = "admin-sync-status ok";
   }
@@ -1979,14 +1979,33 @@ function adminEventDateLabel(e) {
 }
 
 
-// HYPE V171: novo fechamento por festa. Os ingressos antigos continuam no banco,
-// acessíveis por "VER HISTÓRICO", sem somar nos números do evento atual.
+// HYPE V200: próxima festa (não a data mais distante), respeitando a madrugada.
+ // Preserva o histórico dos eventos e não altera vendas ou ingressos.
 function hypeActiveEventIdV171() {
-  const all=[...(HYPE.adminEvents||[]),...(HYPE.events||[])];
-  const current=all.filter(e=>e&&e.id&&e.active!==false)
-    .sort((a,b)=>String(b.event_date||"").localeCompare(String(a.event_date||"")))[0];
-  return Number(current?.id || HYPE.selectedEventId || 0);
+  const records = new Map();
+  // Lista administrativa tem prioridade sobre versões públicas do mesmo evento.
+  for (const e of [...(HYPE.events || []), ...(HYPE.adminEvents || [])]) {
+    if (e && Number(e.id)) records.set(Number(e.id), e);
+  }
+  const active = [...records.values()].filter(e => e.active !== false && /^\d{4}-\d{2}-\d{2}$/.test(String(e.event_date || "").slice(0, 10)));
+  const now = hypeSaoPauloNowPartsV37();
+  const available = active.filter(e => {
+    const day = String(e.event_date).slice(0, 10);
+    return day >= now.date ||
+      (hypeAddDaysToDateKeyV37(day, 1) === now.date && now.minutes < 8 * 60);
+  }).sort((a,b) => String(a.event_date).localeCompare(String(b.event_date)) || Number(a.sort_order||0)-Number(b.sort_order||0));
+  if (available.length) return Number(available[0].id);
+  // Sem festa futura, exibir a última que aconteceu (em vez de uma tela vazia).
+  const recent = active.sort((a,b) => String(b.event_date).localeCompare(String(a.event_date)));
+  return Number(recent[0]?.id || HYPE.selectedEventId || 0);
 }
+
+function hypeTicketEventNameV200(eventId) {
+  const all = [...(HYPE.adminEvents||[]), ...(HYPE.events||[])];
+  const selected=all.find(e => Number(e.id)===Number(eventId));
+  return selected?.name ? String(selected.name) : 'festa atual';
+}
+
 async function hypeToggleClientHistoryV171() {
   const previous=Boolean(HYPE.showClientHistoryV171);
   HYPE.showClientHistoryV171=!previous;
@@ -2483,7 +2502,7 @@ async function renderClientsTable() {
   if(historyToggle)historyToggle.textContent=showHistory?"OCULTAR HISTÓRICO":"VER HISTÓRICO ANTERIOR";
   const ticketStatus=document.getElementById("adminOrdersStatus");
   if(ticketStatus){
-    ticketStatus.textContent=records.length+" registro(s) "+(showHistory?"incluindo histórico":"do evento atual")+" • atualizado "+new Date().toLocaleTimeString("pt-BR");
+    ticketStatus.textContent=records.length+" registro(s) "+(showHistory?"incluindo histórico":"do evento atual — "+hypeTicketEventNameV200(activeEventId))+" • atualizado "+new Date().toLocaleTimeString("pt-BR");
     ticketStatus.className="admin-sync-status ok";
   }
   if (!list.length) tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">${showHistory?"Nenhum cliente encontrado.":"Nenhum ingresso nesta festa ainda. O histórico das festas anteriores está preservado."}</td></tr>`;
