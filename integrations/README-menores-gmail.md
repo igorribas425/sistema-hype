@@ -1,16 +1,31 @@
-# HYPE — Gmail das autorizações de menores (integração separada)
+# HYPE — Envio de autorizações de menores (Resend)
 
-**Não edite nem substitua o Google Apps Script existente dos ingressos.** Esta integração usa um script NOVO, na mesma conta Gmail.
+Atualizado em 28/10/2026. O método ativo para e-mails de menores é **Resend**, independentemente do Google Apps Script antigo.
 
-1. Entre em https://script.google.com/ com a conta Gmail que já usa para enviar os ingressos da Hype. Clique em **Novo projeto**.
-2. Nome: **HYPE — Notificações de menores**. Apague apenas o código vazio deste **novo** projeto e cole o arquivo [hype-minor-gmail.gs](./hype-minor-gmail.gs).
-3. Em **Configurações do projeto → Propriedades do script**, crie `HYPE_MINOR_EMAIL_SECRET` com um segredo aleatório de no mínimo 40 caracteres (use 64 caracteres hexadecimais gerados em um gerenciador de senhas). Não publique nem envie o segredo em mensagens ou no GitHub.
-4. Em **Implantar → Nova implantação → Aplicativo da Web**, escolha **Executar como: Eu** e **Quem tem acesso: Qualquer pessoa**, autorize o uso do Gmail e copie o endereço terminado em `/exec`.
-5. No painel Supabase do projeto Hype, abra **Edge Functions → Secrets** e cadastre `HYPE_MINOR_APPS_SCRIPT_URL` = a URL `/exec` do **novo script**, e `HYPE_MINOR_EMAIL_SECRET` = o mesmo segredo da etapa 3.
-6. No Admin da Hype, use **Testes fictícios → Ver teste → Simular conferido**. O painel deve registrar a aceitação do e-mail para os dois Gmails. Confira a entrada e spam em ambos.
+## Funcionamento
+- O Admin aprova ou recusa a autorização.
+- A função `hype-minor-notify` gera o PDF completo quando o cadastro é aprovado, incluindo fotos, documentos, assinatura e QR Code.
+- A função `hype-minor-email` (versão 8 no Supabase) envia pelo Resend para os endereços do responsável e do adolescente.
+- Aprovados: PDF anexado aos e-mails. Recusados: notificação sem PDF.
+- A aceitação do provedor é registrada em `email_notified_at`. Falhas ficam em `email_notification_error`; aceitar o envio não comprova recebimento na caixa de entrada.
+- Os documentos originais e a autorização continuam sendo verificados presencialmente. Autorização não é ingresso e não libera entrada automaticamente.
 
-O fluxo real exige **16 ou 17 anos na data do evento**, selfie e documento do adolescente, documentos/assinatura do responsável e aprovação do Admin. O link exclusivo é válido 72 horas e cria um ingresso Pista de R$ 30,00 após o pagamento. O Gmail de autorização é separado do Gmail de QR Code que já existe.
+## Configuração
+A função usa os mesmos segredos Resend já utilizados no envio dos ingressos:
+- `RESEND_API_KEY` (com alternativa legada `HYPE_RESEND_API_KEY`)
+- `RESEND_FROM_EMAIL` (com alternativa `HYPE_NOTIFICATION_FROM`)
 
-Os dois Gmails são preenchidos no cadastro real. A demonstração utiliza os endereços de teste configurados na função de demonstração. **Nunca use imagens reais de documentos em testes fictícios.**
+Configure e confira esses segredos somente em **Supabase > Edge Functions > Secrets**. O endereço remetente deve pertencer a um domínio verificado no Resend. Não publique credenciais no repositório, em páginas HTML ou em mensagens.
 
-Observação: a resposta `accepted` significa que o Google Apps Script/Gmail aceitou o envio, **não prova entrega em caixa de entrada**. Confira os dois endereços.
+A função aceita chamadas internas autenticadas com `SUPABASE_SERVICE_ROLE_KEY`. Não acesse nem exponha esta chave no navegador.
+
+## Teste e reenvio
+1. Abra Admin > Menores de idade.
+2. Utilize o fluxo de teste fictício ou um cadastro autorizado e conferido. Verifique o destinatário antes de iniciar.
+3. Confira no Admin a confirmação de envio e no Resend os eventos de aceitação, entrega ou rejeição.
+4. Os erros antigos não são reenviados automaticamente. Para reenvio manual, confira primeiro ambos os endereços, especialmente os que foram devolvidos.
+
+## Código e legado
+Código atual: `supabase/functions/hype-minor-email/index.ts`.
+
+O antigo `integrations/hype-minor-gmail.gs` continua no repositório só para histórico. **A função de envio de menores não faz chamadas ao Gmail Apps Script e não usa mais a cota diária do Gmail.** Não apague o script de ingressos, pois ele é independente.
