@@ -3,7 +3,7 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const URL='https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minors-authorization';
-let loading=false,rows=[],events=[],openedId=null;
+let loading=false,rows=[],events=[],openedId=null,showOldEventsV203=false;
 function credentials(){
  try{if(typeof HYPE!=='undefined'&&HYPE.user&&HYPE.pass&&['admin','gerente'].includes(HYPE.role))
  return {username:HYPE.user,password:HYPE.pass};}catch(_){}
@@ -34,9 +34,15 @@ async function load(){
   rows=data.rows||[];events=data.events||[];
   const select=$('minorAdminEvent'),previous=select.value;
   select.replaceChildren();
-  const all=document.createElement('option');all.value='';all.textContent='Gerais e por evento';select.appendChild(all);
-  events.forEach(ev=>{const opt=document.createElement('option');opt.value=String(ev.id);opt.textContent=ev.name+' — '+ev.event_date;select.appendChild(opt);});
+  const all=document.createElement('option');all.value='';all.textContent='GERAL • TODAS AS AUTORIZAÇÕES';select.appendChild(all);
+  // Preserva acesso documental em GERAL, mas não mistura festas antigas no seletor padrão.
+  const currentEvents=window.HypeVisibleOperationalEventsV202?.(events)||
+    events.filter(ev=>ev.active!==false);
+  const visible=showOldEventsV203?events:currentEvents;
+  visible.forEach(ev=>{const opt=document.createElement('option');opt.value=String(ev.id);opt.textContent=ev.name+' — '+ev.event_date;select.appendChild(opt);});
   if([...select.options].some(x=>x.value===previous))select.value=previous;
+  const btn=$('minorHistoryToggleV203');
+  if(btn)btn.textContent=showOldEventsV203?'OCULTAR FESTAS ANTERIORES':'VER EVENTOS ANTERIORES';
   render();
   status(rows.length+' declaração(ões) carregada(s). Confira documento original e regras de entrada.');
  }catch(e){status('Erro: '+e.message,true);}
@@ -368,6 +374,11 @@ async function purge(){
 }
 function init(){
  $('minorRefresh')?.addEventListener('click',load);
+ $('minorHistoryToggleV203')?.addEventListener('click',()=>{
+   showOldEventsV203=!showOldEventsV203;
+   if(!showOldEventsV203 && $('minorAdminEvent'))$('minorAdminEvent').value='';
+   load();
+ });
  $('minorAdminEvent')?.addEventListener('change',load);
  $('minorPurge')?.addEventListener('click',purge);
 }

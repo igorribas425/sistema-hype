@@ -44,7 +44,7 @@
       return;
     }
     if (hidden) hidden.value = String(row.event_id);
-    if (event) event.innerHTML = `<strong>${esc(row.event_name || 'HYPE • SÁBADO')}</strong>${row.event_date ? `${esc(row.event_date)}` : ''}${row.venue ? ` • ${esc(row.venue)}` : ''}${row.description ? `<br><br>${esc(row.description)}` : ''}`;
+    if (event) event.innerHTML = `<strong>${esc(row.event_name || 'HYPE LOUNGE CLUB')}</strong>${row.event_date ? `${esc(row.event_date)}` : ''}${row.venue ? ` • ${esc(row.venue)}` : ''}${row.description ? `<br><br>${esc(row.description)}` : ''}`;
     document.querySelectorAll('.event-choice').forEach(button => {
       button.classList.toggle('active', Number(button.dataset.eventId) === Number(selectedEventId));
       button.setAttribute('aria-checked', Number(button.dataset.eventId) === Number(selectedEventId) ? 'true' : 'false');
