@@ -1,0 +1,20 @@
+/* HYPE v199 — tema Halloween apenas no evento de sexta 30/10/2026.
+   Na festa de domingo, sábado ou outros eventos: arte/checkout normais.
+   Estes estilos não modificam a operação de pagamentos, lotes e promoters. */
+body:not(.hh196-halloween) .hh194-scene,
+body:not(.hh196-halloween) .hh198-ornament{
+  display:none!important;
+}
+body.hh196-halloween .hh194-scene{display:block!important;}
+body:not(.hh196-halloween) .page-brand .brand-logo{
+  filter:drop-shadow(0 10px 24px rgba(255,255,255,.09))!important;
+}
+body:not(.hh196-halloween) .page-brand{isolation:auto;}
+body:not(.hh196-halloween) .page-brand .brand-logo{
+  width:min(320px,80vw)!important;
+}
+@media(max-width:720px){
+  body:not(.hh196-halloween) .page-brand .brand-logo{
+    width:min(280px,76vw)!important;
+  }
+}
