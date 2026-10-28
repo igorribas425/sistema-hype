@@ -36,21 +36,35 @@
     return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   }
 
+
+  // V201: esconder festas passadas na seleção da Portaria, sem apagar histórico.
+  // Horário de encerramento visual: 08h de Brasília no dia seguinte.
+  function portariaVisibleEventsV201(events, now=new Date()) {
+    const p=new Intl.DateTimeFormat('en-CA',{
+      timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit',
+      hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+    }).formatToParts(now).reduce((o,x)=>{
+      if(x.type!=='literal')o[x.type]=x.value;
+      return o;
+    },{});
+    const today=[p.year,p.month,p.day].join('-');
+    const dayBefore=new Date(today+'T12:00:00Z');
+    dayBefore.setUTCDate(dayBefore.getUTCDate()-1);
+    const yesterday=dayBefore.toISOString().slice(0,10);
+    const before8=(Number(p.hour||0)*60+Number(p.minute||0))<480;
+    return (Array.isArray(events)?events:[])
+      .filter(e=>{
+        if(!e||!Number(e.id)||e.active===false)return false;
+        const day=String(e.event_date||'').slice(0,10);
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return false;
+        return day>=today||(before8&&day===yesterday);
+      })
+      .sort((a,b)=>String(a.event_date).localeCompare(String(b.event_date))||
+        Number(a.sort_order||0)-Number(b.sort_order||0));
+  }
+
   function selectSmartEvent(events) {
-    const preferred = Number(HYPE?.selectedEventId || 0);
-    if (preferred && events.some(e => Number(e.id) === preferred)) return preferred;
-
-    const now = new Date();
-    const day = new Date(now);
-    if (now.getHours() < 8) day.setDate(day.getDate() - 1);
-    const key = `${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`;
-    const same = events.find(e => String(e.event_date || '').slice(0,10) === key);
-    if (same) return Number(same.id);
-
-    const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-    const future = events.filter(e => String(e.event_date || '') >= today)
-      .sort((a,b)=>String(a.event_date||'').localeCompare(String(b.event_date||'')));
-    return Number((future[0] || events[0] || {}).id || 0);
+    return Number(events[0]?.id || 0);
   }
 
   async function loadEvents() {
@@ -65,12 +79,13 @@
         events = arr(HYPE.events || []);
       }
     }
+    events = portariaVisibleEventsV201(events);
     V34.events = events;
     const select = $('v34EventSelect');
     if (!select) return;
     select.innerHTML = events.length
       ? events.map(e => `<option value="${Number(e.id)}">${esc(fmtDate(e.event_date))} • ${esc(e.name || 'Evento HYPE')}</option>`).join('')
-      : '<option value="">Nenhum evento encontrado</option>';
+      : '<option value="">Nenhuma festa atual ou futura</option>';
 
     const chosen = V34.eventId && events.some(e=>Number(e.id)===Number(V34.eventId))
       ? Number(V34.eventId)
@@ -486,6 +501,7 @@
 
   window.HypeV34 = {
     changeEvent,
+    loadEvents:()=>loadEvents(),
     refreshLive:()=>refreshLive(false),
     loadSurveyAttendees:()=>loadSurveyAttendees(true),
     refreshSurveyReport,

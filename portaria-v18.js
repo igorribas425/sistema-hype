@@ -273,6 +273,33 @@
     }
   }
 
+
+  // V201: esconder festas passadas na seleção da Portaria, sem apagar histórico.
+  // Horário de encerramento visual: 08h de Brasília no dia seguinte.
+  function portariaVisibleEventsV201(events, now=new Date()) {
+    const p=new Intl.DateTimeFormat('en-CA',{
+      timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit',
+      hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+    }).formatToParts(now).reduce((o,x)=>{
+      if(x.type!=='literal')o[x.type]=x.value;
+      return o;
+    },{});
+    const today=[p.year,p.month,p.day].join('-');
+    const dayBefore=new Date(today+'T12:00:00Z');
+    dayBefore.setUTCDate(dayBefore.getUTCDate()-1);
+    const yesterday=dayBefore.toISOString().slice(0,10);
+    const before8=(Number(p.hour||0)*60+Number(p.minute||0))<480;
+    return (Array.isArray(events)?events:[])
+      .filter(e=>{
+        if(!e||!Number(e.id)||e.active===false)return false;
+        const day=String(e.event_date||'').slice(0,10);
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return false;
+        return day>=today||(before8&&day===yesterday);
+      })
+      .sort((a,b)=>String(a.event_date).localeCompare(String(b.event_date))||
+        Number(a.sort_order||0)-Number(b.sort_order||0));
+  }
+
   async function loadEvents() {
     const select = $('eventSelect');
     if (!select) return;
@@ -293,9 +320,9 @@
     let rows;
     try { rows = await rpc('public_events_v13'); }
     catch (_) { rows = await rpc('public_events'); }
-    state.events = normalizeRows(rows);
+    state.events = portariaVisibleEventsV201(normalizeRows(rows));
     if (!state.events.length) {
-      select.innerHTML='<option>Nenhum evento ativo</option>';
+      select.innerHTML='<option value="">Nenhuma festa atual ou futura</option>';
       state.eventId=null;
       return;
     }

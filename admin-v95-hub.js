@@ -82,6 +82,7 @@
         await window.HypeAdminTabsV92?.refreshPeople?.(true);
         await window.HypeV49Registration?.loadListSettings?.();
       } else if (key === 'portaria') {
+        await window.HypeV34?.loadEvents?.();
         await window.HypeAdminTabsV92?.refreshPeople?.(true);
         await window.HypeV34?.refreshLive?.();
       } else if (key === 'clientes') {
