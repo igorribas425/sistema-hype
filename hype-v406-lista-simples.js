@@ -189,9 +189,10 @@
       const input=$('searchInput');
       if(input) input.value='';
       const results=$('results');
-      if(results) results.innerHTML=`<div class="empty">✅ ${esc(profileRow.name||'Nome')} entrou pela Lista HYPE. Pronto para o próximo QR.</div>`;
+      if(results) results.innerHTML=`<div class="empty">✅ ${esc(profileRow.name||'Nome')} entrou como ${profileRow.source==='Promoter'?'CONVIDADO PROMOTER':'LISTA HYPE'}. Pronto para o próximo QR.</div>`;
       showProfile(profileRow,profileToken,'success');
       if(window.HypePortaria?.refresh) window.HypePortaria.refresh(false).catch(()=>{});
+      if(profileRow.source==='Promoter')window.HypeDoorPromoterV206?.load?.().catch(()=>{});
     }catch(err){
       console.warn('[HYPE V106][confirma Lista]',err);
       showProfile(profileRow,profileToken,'denied',err.message||'Erro ao confirmar entrada.');
@@ -284,7 +285,7 @@
     }
     const mismatch=eventMismatch ? `<br><b>Selecione ${esc(row.remote_event_name||'o evento correto')}${row.remote_event_date?` • ${esc(fmt(row.remote_event_date))}`:''} acima para liberar.</b>` : '';
     const fromPortaria=String(row.source||'').toLowerCase().includes('portaria');
-    const sourceLabel=fromPortaria?'CADASTRO PORTARIA':'LISTA SIMPLES';
+    const sourceLabel=row.source==='Promoter'?'CONVIDADO PROMOTER':(fromPortaria?'CADASTRO PORTARIA':'LISTA SIMPLES');
     const contact=[
       row.phone?`📱 ${esc(row.phone)}`:'',
       row.email?`📧 ${esc(row.email)}`:'',

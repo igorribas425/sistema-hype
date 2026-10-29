@@ -17,7 +17,7 @@ async function load(){
   const guests=Array.isArray(data)?data:(data?[data]:[]);
   const entered=guests.filter(g=>g.status==='Entrou').length;
   const waiting=guests.filter(g=>g.status==='Liberado').length;
-  summary.textContent='✅ Check-ins: '+entered+' • Ainda sem entrar: '+waiting+' • Total aprovado: '+guests.length;
+  summary.textContent='✅ QR de convidados confirmados: '+entered+' • Aprovados sem check-in: '+waiting+' • Total: '+guests.length;
   out.innerHTML=guests.length?guests.map(g=>'<article style="padding:12px;margin:10px 0;border:1px solid #423a48;border-radius:12px;background:#0d0b11">'+
    '<strong>'+esc(g.name)+'</strong><div style="font-size:12px;color:#bbb4be">Promoter: '+esc(g.promoter_name||g.promoter_code)+'</div>'+
    '<div style="font-size:12px;color:'+(g.status==='Entrou'?'#9defb9':'#f5d69a')+'">'+
