@@ -1,3 +1,12 @@
+
+function hypeMailCoverUrlV172(cover: unknown, eventId: unknown): string {
+  const raw=String(cover || "");
+  if (!raw.startsWith("data:image/")) return raw;
+  const id=Number(eventId);
+  const base=Deno.env.get("SUPABASE_URL") || "";
+  if (!base || !Number.isInteger(id) || id<=0) return "";
+  return base.replace(/\/$/,"")+"/functions/v1/event-cover?event_id="+encodeURIComponent(String(id));
+}
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
 const DEFAULT_ORIGINS = ["https://hypeloungeclub.com.br", "https://www.hypeloungeclub.com.br"];
@@ -39,22 +48,58 @@ function officialUrl(value: string, requiredPath?: RegExp) {
 }
 
 async function postMail(payload: Record<string, unknown>) {
-  const appsScriptUrl = Deno.env.get("HYPE_APPS_SCRIPT_URL");
+  // Ingressos, FREE e lista de convidados usam Resend após configurar
+  // RESEND_API_KEY + RESEND_FROM_EMAIL. Até lá mantém o legado do Gmail.
+  if(payload.payment_status==="Pago" && payload.ticket_code && payload.qr_token){
+    const url=Deno.env.get("SUPABASE_URL")||"";
+    const service=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
+    if(!url||!service)throw new Error("Serviço interno de e-mail indisponível");
+    const response=await fetch(url+"/functions/v1/hype-resend-ticket",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+service},
+      body:JSON.stringify(payload),signal:AbortSignal.timeout(22000)
+    });
+    const result=await response.json().catch(()=>({}));
+    if(result.configured===false && payload.guest_promoter===true) throw new Error("Resend indisponível para convidado promoter.");
+    if(result.configured!==false){
+      if(!response.ok||result.ok!==true)
+        throw new Error(String(result.error||"Resend recusou o ingresso"));
+      return result;
+    }
+  }
+  const appsScriptUrl = "https://script.google.com/macros/s/AKfycbxgovFRJvAtUq5GSFgGMiGKuzRyod9O0Ld8wG-jxRtpqByhNvSI8r_LDTLhmVJkb6Rc/exec";
   const webhookSecret = Deno.env.get("HYPE_WEBHOOK_SECRET");
   if (!appsScriptUrl || !webhookSecret) {
     throw new Error("HYPE_APPS_SCRIPT_URL/HYPE_WEBHOOK_SECRET não configurados.");
   }
-  const response = await fetch(appsScriptUrl, {
-    method: "POST",
-    redirect: "follow",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ secret: webhookSecret, ...payload }),
-  });
+  const requestBody = JSON.stringify({ secret: webhookSecret, ...payload });
+  let target = appsScriptUrl;
+  let method = "POST";
+  let response: Response | null = null;
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    response = await fetch(target, {
+      method,
+      redirect: "manual",
+      headers: method === "POST" ? { "Content-Type": "application/json" } : undefined,
+      body: method === "POST" ? requestBody : undefined,
+    });
+    if (![301, 302, 303, 307, 308].includes(response.status)) break;
+    const location = response.headers.get("location");
+    if (!location) throw new Error("Google Apps Script redirecionou sem informar o destino.");
+    target = new URL(location, target).toString();
+    // ContentService redirects its JSON body to a one-time URL. 3xx codes
+    // other than 307/308 intentionally switch the follow-up to GET.
+    method = [307, 308].includes(response.status) ? method : "GET";
+  }
+  if (!response) throw new Error("Não foi possível conectar ao Apps Script.");
   const text = await response.text();
   let data: any = null;
   try { data = JSON.parse(text); } catch (_) { /* handled below */ }
   if (!response.ok || data?.ok !== true) {
-    throw new Error(data?.erro || data?.error || text || "Gmail recusou o envio.");
+    if (!data && /<html[\s>]/i.test(text)) {
+      throw new Error(`Apps Script não retornou JSON (HTTP ${response.status}). Confira a implantação pública e a URL /exec.`);
+    }
+    throw new Error(data?.erro || data?.error || text.slice(0, 500) || "Gmail recusou o envio.");
   }
   return data;
 }
@@ -136,7 +181,7 @@ async function sendApprovedGuestListEmail(supabase: any, req: Request, body: any
   if (!Number.isInteger(listId) || listId <= 0) return json(req, { ok: false, error: "list_id inválido." }, 400);
 
   const candidateResult = await supabase.from("guest_list_simple_v406")
-    .select("id,event_id,name,cpf,phone,gender,email,instagram,status,email_sent_at,email_error")
+    .select("id,event_id,name,cpf,phone,gender,email,instagram,status,email_sent_at,email_error,qr_token,source,promoter_code")
     .eq("id", listId).maybeSingle();
   if (candidateResult.error) throw new Error(candidateResult.error.message);
   const candidate = candidateResult.data;
@@ -157,18 +202,30 @@ async function sendApprovedGuestListEmail(supabase: any, req: Request, body: any
   if (!eventResult.data) return json(req, { ok: false, error: "Evento não encontrado." }, 404);
 
   try {
+    const qrToken = String(candidate.qr_token || "").trim();
+    if (!qrToken) throw new Error("QR da Lista HYPE não foi gerado.");
+
+    // A Lista usa o mesmo modelo visual do ingresso para que o e-mail
+    // já leve um QR Code pronto para leitura rápida na Portaria.
     await postMail({
-      action: "guest_list_approved",
+      payment_status: "Pago",
       email,
       customer_name: candidate.name,
-      gender: candidate.gender || "",
-      instagram: candidate.instagram || "",
       event_name: eventResult.data.name || "HYPE LOUNGE CLUB",
       artist_name: eventResult.data.artist_name || "",
       event_date: eventResult.data.event_date || "",
       opening_time: eventResult.data.opening_time || "",
       venue: eventResult.data.venue || "",
-      event_cover_image: eventResult.data.cover_image || "",
+      event_cover_image: hypeMailCoverUrlV172(eventResult.data.cover_image, candidate.event_id),
+      lot_name: candidate.source === "Promoter" ? "Convidado Promoter" : "Lista HYPE",
+      sector: candidate.source === "Promoter" ? "Convidado Promoter" : "Lista",
+      gender: candidate.gender || "",
+      price: 0,
+      ticket_code: `LISTA-${candidate.id}`,
+      qr_token: qrToken,
+      guest_list: true,
+      guest_promoter: candidate.source === "Promoter",
+      guest_list_message: candidate.source === "Promoter" ? "Convite HYPE aprovado. Apresente o QR Code e seu documento na portaria. QR individual e válido para somente uma entrada." : "Nome aprovado na Lista HYPE. Apresente este QR Code na Portaria.",
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Gmail recusou o envio.";
@@ -184,6 +241,89 @@ async function sendApprovedGuestListEmail(supabase: any, req: Request, body: any
   return json(req, { ok: true, email_sent: true, email, email_sent_at: sentAt });
 }
 
+
+async function sendFreeTicketAutoEmail(supabase: any, req: Request, body: any) {
+  const ticketId = Number(body?.ticket_id || 0);
+  const qrToken = String(body?.qr_token || "").trim();
+  if (!Number.isInteger(ticketId) || ticketId <= 0 || !qrToken) {
+    return json(req, { ok: false, error: "Ingresso FREE inválido." }, 400);
+  }
+
+  const ticketResult = await supabase.from("tickets").select(
+    "id,event_id,lot_id,ticket_code,qr_token,customer_name,email,cpf,gender,price,payment_status,email_sent_at",
+  ).eq("id", ticketId).maybeSingle();
+  if (ticketResult.error) throw new Error(ticketResult.error.message);
+  const ticket: any = ticketResult.data;
+  if (!ticket || String(ticket.qr_token || "") !== qrToken) {
+    return json(req, { ok: false, error: "Ingresso FREE não autorizado." }, 403);
+  }
+
+  if (ticket.payment_status !== "Pago" || Number(ticket.price || 0) !== 0 ||
+      String(ticket.gender || "").trim().toLowerCase() !== "feminino") {
+    return json(req, { ok: false, error: "Este ingresso não é Feminino FREE liberado." }, 409);
+  }
+
+  const cpfDigits = String(ticket.cpf || "").replace(/\D/g, "");
+  if (cpfDigits.length !== 11) {
+    return json(req, { ok: false, error: "Ingresso FREE sem CPF válido." }, 409);
+  }
+
+  const email = String(ticket.email || "").trim().toLowerCase();
+  if (!validEmail(email)) {
+    return json(req, { ok: false, error: "Cliente sem e-mail válido." }, 400);
+  }
+  if (ticket.email_sent_at) {
+    return json(req, { ok: true, already_sent: true, email_sent_at: ticket.email_sent_at });
+  }
+
+  const [eventResult, lotResult] = await Promise.all([
+    supabase.from("events").select("name,artist_name,event_date,opening_time,venue,cover_image")
+      .eq("id", ticket.event_id).maybeSingle(),
+    supabase.from("ticket_lots").select("name,sector").eq("id", ticket.lot_id).maybeSingle(),
+  ]);
+  if (eventResult.error || lotResult.error) {
+    throw new Error(eventResult.error?.message || lotResult.error?.message);
+  }
+
+  await postMail({
+    payment_status: "Pago",
+    email,
+    customer_name: ticket.customer_name,
+    event_name: eventResult.data?.name || "HYPE LOUNGE CLUB",
+    artist_name: eventResult.data?.artist_name || "",
+    event_date: eventResult.data?.event_date || "",
+    opening_time: eventResult.data?.opening_time || "",
+    venue: eventResult.data?.venue || "",
+    event_cover_image: hypeMailCoverUrlV172(eventResult.data?.cover_image, ticket.event_id),
+    lot_name: lotResult.data?.name || "Feminino FREE",
+    sector: lotResult.data?.sector || "",
+    gender: ticket.gender || "Feminino",
+    price: 0,
+    ticket_code: ticket.ticket_code,
+    qr_token: ticket.qr_token || ticket.ticket_code,
+  });
+
+  const sentAt = new Date().toISOString();
+  const update = await supabase.from("tickets").update({
+    email_sent_at: sentAt,
+  }).eq("id", ticket.id).is("email_sent_at", null);
+  if (update.error) throw new Error(update.error.message);
+
+  // Falha no log nunca pode transformar e-mail aceito pelo Resend em erro.
+  try {
+    const audit=await supabase.from("audit_logs").insert({
+      action: "INGRESSO_FREE_EMAIL_AUTOMATICO",
+      ticket_id: ticket.id,
+      metadata: { email, event_id: ticket.event_id, gender: ticket.gender },
+    });
+    if(audit.error) console.warn("[HYPE][free-email] Log não registrado");
+  } catch (_) {
+    console.warn("[HYPE][free-email] Log indisponível");
+  }
+
+  return json(req, { ok: true, email_sent: true, email_sent_at: sentAt });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   if (req.method !== "POST") return json(req, { ok: false, error: "Método não permitido." }, 405);
@@ -197,6 +337,13 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceRole, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
+
+
+
+
+    if (action === "free_ticket_auto") {
+      return await sendFreeTicketAutoEmail(supabase, req, body);
+    }
 
     if (action === "guest_list_approved") {
       return await sendApprovedGuestListEmail(supabase, req, body);
@@ -302,23 +449,41 @@ Deno.serve(async (req) => {
       supabase.from("ticket_lots").select("name,sector").eq("id", ticket.lot_id).maybeSingle(),
     ]);
     if (eventResult.error || lotResult.error) throw new Error(eventResult.error?.message || lotResult.error?.message);
-    await postMail({
-      payment_status: "Pago",
-      email,
-      customer_name: ticket.customer_name,
-      event_name: eventResult.data?.name || "HYPE LOUNGE CLUB",
-      artist_name: eventResult.data?.artist_name || "",
-      event_date: eventResult.data?.event_date || "",
-      opening_time: eventResult.data?.opening_time || "",
-      venue: eventResult.data?.venue || "",
-      event_cover_image: eventResult.data?.cover_image || "",
-      lot_name: lotResult.data?.name || "Ingresso",
-      sector: lotResult.data?.sector || "",
-      gender: ticket.gender || "",
-      price: Number(ticket.price || 0),
-      ticket_code: ticket.ticket_code,
-      qr_token: ticket.qr_token || ticket.ticket_code,
-    });
+    try {
+      await postMail({
+        payment_status: "Pago",
+        email,
+        customer_name: ticket.customer_name,
+        event_name: eventResult.data?.name || "HYPE LOUNGE CLUB",
+        artist_name: eventResult.data?.artist_name || "",
+        event_date: eventResult.data?.event_date || "",
+        opening_time: eventResult.data?.opening_time || "",
+        venue: eventResult.data?.venue || "",
+        event_cover_image: hypeMailCoverUrlV172(eventResult.data?.cover_image, ticket.event_id),
+        lot_name: lotResult.data?.name || "Ingresso",
+        sector: lotResult.data?.sector || "",
+        gender: ticket.gender || "",
+        price: Number(ticket.price || 0),
+        ticket_code: ticket.ticket_code,
+        qr_token: ticket.qr_token || ticket.ticket_code,
+      });
+    } catch (mailError) {
+      const detail = String(mailError instanceof Error ? mailError.message : mailError).slice(0, 350);
+      const quota = /quota|limit|too many|maximum number|limite|excedid|muitas solicita|muitas vezes|mesmo dia|serviço chamado|service invoked|daily email|429/i.test(detail);
+      console.error("[HYPE][ticket-email] Falha no provedor de email", { ticket_id: ticket.id, quota, detail });
+      try {
+        await supabase.from("audit_logs").insert({
+          staff_user_id: staff.id || null,
+          action: "INGRESSO_EMAIL_FALHOU",
+          ticket_id: ticket.id,
+          metadata: { erro: detail, provider: "google_apps_script", quota },
+        });
+      } catch (_) {}
+      // Nunca marcar email_sent_at quando o provedor falhar.
+      throw new Error(quota
+        ? "O Gmail atingiu um limite temporário de envio. O ingresso está pago; use ACESSAR INGRESSO e tente reenviar depois."
+        : "Falha no envio do ingresso: " + detail);
+    }
     const sentAt = new Date().toISOString();
     const update = await supabase.from("tickets").update({ email_sent_at: sentAt }).eq("id", ticket.id);
     if (update.error) throw new Error(update.error.message);
@@ -330,6 +495,9 @@ Deno.serve(async (req) => {
     });
     return json(req, { ok: true, email_sent: true, email_sent_at: sentAt });
   } catch (error) {
-    return json(req, { ok: false, error: error instanceof Error ? error.message : "Erro ao enviar e-mail." }, 500);
+    const message = error instanceof Error ? error.message : "Erro ao enviar e-mail.";
+    const limited = /Gmail atingiu um limite temporário|limite diário|serviço chamado muitas vezes|service invoked too many/i.test(message);
+    return json(req, { ok: false, error: message, reason: limited ? "EMAIL_DAILY_QUOTA" : "EMAIL_PROVIDER_ERROR" }, limited ? 429 : 500);
   }
 });
+
