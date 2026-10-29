@@ -1110,6 +1110,14 @@ Bruna Santos"></textarea>
 .m120-warning{border:1px solid #a34c5c;background:#32151c;padding:12px;border-radius:12px;color:#ffe0e4;font-size:12px}
 .m120-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
 .m120-toolbar select{background:#171219;color:white;padding:10px;border:1px solid #583846;border-radius:10px;min-height:44px;max-width:100%}
+/* Pesquisa local de autorizações reais; os dados permanecem protegidos pelo acesso ADM/gerente. */
+#hypeMinorsAdminPanel .m120-search-box{display:flex;flex-wrap:wrap;gap:9px;align-items:stretch;margin:12px 0 4px;min-width:0;max-width:100%}
+#hypeMinorsAdminPanel .m120-search-input{display:block!important;flex:1 1 250px!important;min-width:0!important;width:100%!important;max-width:100%!important;min-height:46px!important;box-sizing:border-box!important;padding:12px 14px!important;border:1px solid #86526a!important;border-radius:10px!important;background:#1b141d!important;color:#fff!important;font-size:15px!important}
+#hypeMinorsAdminPanel .m120-search-input::placeholder{color:#b5a7b0}
+#hypeMinorsAdminPanel .m120-search-input:focus{outline:2px solid #fb769f;outline-offset:1px}
+#hypeMinorsAdminPanel .m120-search-clear{flex:0 0 auto;min-width:96px}
+#hypeMinorsAdminPanel .m120-search-meta{margin:4px 0 12px;font-size:12px;color:#c6b9c3;line-height:1.5}
+@media(max-width:620px){#hypeMinorsAdminPanel .m120-search-box{flex-direction:column}#hypeMinorsAdminPanel .m120-search-clear{width:100%}}
 .m120-counts{display:flex;gap:10px;flex-wrap:wrap}
 .m120-counts span{padding:7px 12px;border:1px solid #47313b;border-radius:999px;font-size:12px}
 .m120-card{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:12px;margin:9px 0;background:#171118;border:1px solid #432735;border-radius:12px}
@@ -1168,11 +1176,17 @@ Bruna Santos"></textarea>
   <div id="m128List"></div><div id="m128Detail" hidden style="padding:14px;background:#161018;border:1px solid #75415a;border-radius:12px;margin-top:12px"></div>
 </section>
 <div style="border-top:1px solid #4e3442;padding-top:14px;margin-top:18px"><strong style="font-size:17px">Autorizações reais</strong><p style="font-size:12px;color:#c9adb9;margin:6px 0 11px">Somente cadastros verdadeiros com análise de documentos.</p></div>
+<label for="minorAdminSearch" style="display:block;font-size:13px;font-weight:800;margin:12px 0 6px;color:#f2d6e0">🔎 PESQUISAR AUTORIZAÇÃO DE MENOR</label>
+<div class="m120-search-box">
+  <input id="minorAdminSearch" class="m120-search-input" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Nome do menor, responsável ou protocolo" aria-label="Pesquisar autorizações reais por nome ou protocolo" aria-controls="minorAdminList">
+  <button id="minorAdminSearchClear" class="m120-btn m120-ghost m120-search-clear" type="button" disabled>LIMPAR BUSCA</button>
+</div>
+<p id="minorAdminSearchCount" class="m120-search-meta" role="status" aria-live="polite">Use a pesquisa para encontrar uma autorização.</p>
 <div id="minorAdminList"></div><div id="minorAdminDetail" hidden></div>
 </section>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
-<script src="admin-menores-v120.js?v=20261028-historico-manual-v203"></script>
+<script src="admin-menores-v120.js?v=20261029-pesquisa-menores-v121"></script>
 <script src="admin-menores-demo-v128.js?v=20261024-qr-local-v146"></script>
 
 
