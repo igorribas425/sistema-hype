@@ -1191,7 +1191,17 @@ Bruna Santos"></textarea>
 </style>
 <section id="v206PromoterInviteAdminPanel">
 <h2>📋 LISTA/PROMOTER</h2>
-<p style="color:#b9b6bf;font-size:13px">Cada promoter recebe um link de convidados. O convidado faz o cadastro com selfie, o Admin analisa, e somente após aprovação o QR Code chega no e-mail. A portaria lê, exibe o perfil e confirma o check-in.</p>
+<p style="color:#b9b6bf;font-size:13px">O promoter faz um cadastro NOVO, separado das vendas, e recebe seu próprio link de convidados. O convidado preenche dados e selfie; o Admin avalia e envia QR individual após aprovação. A portaria utiliza a mesma câmera que lê ingressos pagos.</p>
+<div style="margin:14px 0;padding:15px;background:#21151f;border:1px solid #725866;border-radius:14px">
+ <strong>📋 Link único de cadastro dos promoters de convidados</strong>
+ <p style="color:#c7bcc6;font-size:12px">Compartilhe este link com os promoters. Cada um se cadastra novamente e recebe seu link particular. Ninguém ganha convite automaticamente por ter cadastro de vendas.</p>
+ <p style="color:#a7f3c6;font-size:13px;overflow-wrap:anywhere">https://hypeloungeclub.com.br/promoter-convite.html</p>
+ <div style="display:flex;flex-wrap:wrap;gap:9px">
+  <button type="button" class="btn-action" onclick="HypePromoterInvitesV206.copyRegistration()">📋 COPIAR CADASTRO</button>
+  <button type="button" class="btn-action" onclick="HypePromoterInvitesV206.shareRegistration()">COMPARTILHAR</button>
+  <a class="btn-action" href="./promoter-convite.html" target="_blank" rel="noopener">ABRIR CADASTRO</a>
+ </div>
+</div>
 <p style="color:#f0c6d1;font-size:12px">Quem não entrar até o fim da festa aparece como não compareceu no histórico. Esse convite não vira ingresso pago e não libera automaticamente entrada.</p>
 <div class="v206-tools">
 <select id="v206Event"><option value="">Carregando festas...</option></select>
@@ -1201,9 +1211,9 @@ Bruna Santos"></textarea>
 </div>
 <div id="v206Stats" class="v206-stats"></div>
 <p id="v206StatusText" role="status" style="color:#c4c2c7;font-size:12px">Selecione a festa para consultar os convites.</p>
-<h3>Links para convidar</h3><div id="v206PromoterLinks"></div>
+<h3>Promoters cadastrados na Lista/Promoter</h3><p style="color:#bdb6bf;font-size:12px">Aqui aparecem os promoters que fizeram o novo cadastro. Os links pessoais não ficam expostos no Admin.</p><div id="v206PromoterLinks"></div>
 <h3 style="margin-top:25px">Cadastros dos convidados</h3><div id="v206Guests"></div>
 </section>
-<script src="admin-promoter-invites-v206.js?v=20261028-v206"></script>
+<script src="admin-promoter-invites-v206.js?v=20261028-v207"></script>
 </body>
 </html>

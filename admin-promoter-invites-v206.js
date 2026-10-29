@@ -20,12 +20,16 @@ async function rpc(name,params){
  return arr(data);
 }
 const status=message=>{if($('v206StatusText'))$('v206StatusText').textContent=message;};
-const inviteLink=code=>'https://hypeloungeclub.com.br/lista-promoter.html?promoter='+encodeURIComponent(String(code||''));
+const registrationUrl='https://hypeloungeclub.com.br/promoter-convite.html';
 let events=[],promoters=[],guests=[];
-async function copy(code){
- const link=inviteLink(code);
- try{await navigator.clipboard.writeText(link);}catch(_){const txt=document.createElement('textarea');txt.value=link;document.body.append(txt);txt.select();document.execCommand('copy');txt.remove();}
- status('Link do promoter '+code+' copiado.');
+async function copyRegistration(){
+ try{await navigator.clipboard.writeText(registrationUrl);}
+ catch(_){const t=document.createElement('textarea');t.value=registrationUrl;document.body.append(t);t.select();document.execCommand('copy');t.remove();}
+ status('Link geral de cadastro copiado.');
+}
+async function shareRegistration(){
+ if(navigator.share){try{await navigator.share({title:'Cadastro Promoter de Convidados HYPE',url:registrationUrl});return;}catch(_){}}
+ return copyRegistration();
 }
 function metric(label,n){return '<div><small>'+esc(label)+'</small><b>'+Number(n||0)+'</b></div>';}
 function render(){
@@ -39,9 +43,14 @@ function render(){
   metric('APROVADOS',by('Liberado')+by('Entrou'))+metric('CHECK-IN',by('Entrou'))+
   metric('NÃO COMPARECERAM',missing);
  const links=$('v206PromoterLinks');
- if(links)links.innerHTML=promoters.filter(p=>p.active!==false).map(p=>
-  '<div class="v206-row"><div><strong>'+esc(p.name)+'</strong><small>Código '+esc(p.code)+'</small><small>'+esc(inviteLink(p.code))+'</small></div><button type="button" class="btn-action" data-copy="'+esc(p.code)+'">📋 COPIAR LINK DE CONVITE</button></div>'
- ).join('')||'<p>Nenhum promoter ativo cadastrado.</p>';
+ if(links)links.innerHTML=promoters.map(p=>
+  '<div class="v206-row"><div><strong>'+esc(p.name)+'</strong>'+
+  '<small>'+(p.active!==false?'CADASTRO ATIVO':'CADASTRO DESATIVADO')+
+  ' • Convidados: '+Number(p.total_invites||0)+' • Check-ins: '+Number(p.checkins||0)+'</small>'+
+  '<small>Cadastro exclusivo de convidados, independente da área de vendas.</small></div>'+
+  (HYPE?.role==='admin'?'<button class="btn-action" data-toggle="'+Number(p.id)+'">'+
+  (p.active!==false?'DESATIVAR':'REATIVAR')+'</button>':'')+'</div>'
+ ).join('')||'<p>Nenhum promoter de convidados cadastrado. Compartilhe o link geral de cadastro acima.</p>';
  const out=$('v206Guests');if(!out)return;
  out.innerHTML=list.map(g=>{
  const noShow=g.status==='Liberado'&&eventFinishedV206(g.event_date);
@@ -75,7 +84,7 @@ async function load(){
   const oldEvent=$('v206Event')?.value||'',oldPromoter=$('v206Promoter')?.value||'';
   const [eventsRaw,promos]=await Promise.all([
    rpc('staff_list_events_v13',auth()),
-   rpc('staff_list_promoters_global_v16',auth())
+   rpc('staff_list_invite_promoters_v207',auth())
   ]);
   events=eventsRaw;promoters=promos;
   const sel=$('v206Event'),ps=$('v206Promoter');
@@ -127,9 +136,9 @@ function init(){
  $('v206Promoter')?.addEventListener('change',render);
  $('v206Status')?.addEventListener('change',render);
  $('v206PromoterInviteAdminPanel')?.addEventListener('click',e=>{
-  const target=e.target.closest('[data-copy],[data-photo],[data-approve],[data-reject],[data-email]');
+  const target=e.target.closest('[data-toggle],[data-photo],[data-approve],[data-reject],[data-email]');
   if(!target)return;
-  if(target.dataset.copy)copy(target.dataset.copy);
+  if(target.dataset.toggle)togglePromoter(Number(target.dataset.toggle));
   else if(target.dataset.photo)window.HypeV49Registration?.openPhoto?.(Number(target.dataset.photo));
   else if(target.dataset.approve)review(Number(target.dataset.approve),'aprovar');
   else if(target.dataset.reject)review(Number(target.dataset.reject),'recusar');
@@ -137,5 +146,12 @@ function init(){
  });
 }
 document.addEventListener('DOMContentLoaded',init);
-window.HypePromoterInvitesV206={load,refreshGuests};
+async function togglePromoter(id){
+ if(HYPE?.role!=='admin')return alert('Somente Admin pode alterar promoters.');
+ const p=promoters.find(p=>Number(p.id)===id);if(!p)return;
+ const enable=p.active===false;if(!confirm((enable?'Reativar':'Desativar')+' '+p.name+'?'))return;
+ try{await rpc('staff_set_invite_promoter_active_v207',{...auth(),p_id:id,p_active:enable});await load();}
+ catch(err){alert('Falha ao alterar promoter: '+String(err.message||err));}
+}
+window.HypePromoterInvitesV206={load,refreshGuests,copyRegistration,shareRegistration};
 })();
