@@ -17,7 +17,7 @@
     <div class="brand"><img src="logo-hype.png" alt="HYPE Lounge Club"></div>
     <div class="eyebrow">CADASTRO OFICIAL</div>
     <h1 class="title">Seja promoter HYPE</h1>
-    <p class="sub">Cadastre-se e receba dois links: vendas de ingressos e convites para a Lista/Promoter, sujeitos à aprovação do Admin.</p>
+    <p class="sub">Preencha seus dados e receba seu link permanente para vender ingressos nos eventos HYPE.</p>
     <section class="panel">
       <p class="hint">O CPF identifica seu cadastro. Se você já estiver cadastrado, o mesmo link será mostrado novamente.</p>
       <form id="promoterForm" novalidate>
@@ -31,15 +31,10 @@
       </form>
       <div id="promoterStatus" class="status" role="status" aria-live="polite"></div>
       <div id="promoterResult" class="result"><strong>Seu link de vendas está pronto:</strong><code id="promoterSalesLink"></code><div class="result-actions"><button id="promoterCopy" class="btn" type="button">COPIAR LINK</button><button id="promoterShare" class="btn" type="button">COMPARTILHAR</button><button id="promoterOpenSales" class="btn" type="button">ABRIR INGRESSOS</button></div></div>
-      <div id="promoterInviteResult" class="result" style="display:none;margin-top:14px">
-       <strong>Seu link para convidar pessoas:</strong><code id="promoterInviteLink"></code>
-       <div class="result-actions"><button id="promoterInviteCopy" class="btn" type="button">COPIAR CONVITE</button><button id="promoterInviteShare" class="btn" type="button">COMPARTILHAR</button><button id="promoterInviteOpen" class="btn" type="button">ABRIR LISTA</button></div>
-       <p class="hint">O convidado envia dados e selfie; o Admin decide quem recebe QR.</p>
-      </div>
     </section>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=20261001-v49"></script>
-  <script src="promoter-v49.js?v=20261028-v206"></script>
+  <script src="promoter-v49.js?v=20261028-v207-sales"></script>
 </body>
 </html>

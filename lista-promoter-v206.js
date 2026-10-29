@@ -113,7 +113,7 @@
     if (!client) return status('Não foi possível conectar ao cadastro HYPE.', 'error');
     try {
       if(!/^[A-Z0-9][A-Z0-9_-]{1,62}$/.test(promoterCode))throw Error('Use um link enviado por um promoter HYPE.');
-       const checked=await client.rpc('promoter_public_status_v55',{p_code:promoterCode});
+       const checked=await client.rpc('public_invite_promoter_status_v207',{p_code:promoterCode});
        if(checked.error)throw checked.error;
        const promoter=rows(checked.data)[0];
        if(!promoter||promoter.active===false)throw Error('Este link de promoter foi desativado.');
