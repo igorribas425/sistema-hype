@@ -48,13 +48,37 @@ async function load(){
  }catch(e){status('Erro: '+e.message,true);}
  finally{loading=false;}
 }
+function normalizedSearch(value){
+ return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+}
+function filteredMinorRows(){
+ const terms=normalizedSearch($('minorAdminSearch')?.value||'').split(' ').filter(Boolean);
+ if(!terms.length)return rows;
+ return rows.filter(row=>{
+  const content=normalizedSearch([row.minor_name,row.guardian_name,row.id].join(' '));
+  return terms.every(term=>content.includes(term));
+ });
+}
 function render(){
  const container=$('minorAdminList');container.replaceChildren();
  $('minorCountPending').textContent=String(rows.filter(r=>r.status==='pendente').length);
  $('minorCountChecked').textContent=String(rows.filter(r=>r.status==='conferido').length);
  $('minorCountRejected').textContent=String(rows.filter(r=>r.status==='recusado').length);
- if(!rows.length){container.appendChild(text('p','Nenhuma autorização encontrada.','m120-empty'));return;}
- for(const row of rows){
+ const matches=filteredMinorRows();
+ const searchActive=Boolean(normalizedSearch($('minorAdminSearch')?.value));
+ const count=$('minorAdminSearchCount');
+ if(count)count.textContent=searchActive
+   ?'Resultados da pesquisa: '+matches.length+' de '+rows.length+' autorização(ões).'
+   :'Exibindo '+rows.length+' autorização(ões) do filtro de evento selecionado.';
+ const clear=$('minorAdminSearchClear');
+ if(clear)clear.disabled=!searchActive;
+ if(!matches.length){
+  container.appendChild(text('p',searchActive
+    ?'Nenhuma autorização corresponde à pesquisa. Tente o nome do menor, do responsável ou o protocolo.'
+    :'Nenhuma autorização encontrada no filtro selecionado.','m120-empty'));
+  return;
+ }
+ for(const row of matches){
   const card=document.createElement('article');card.className='m120-card';
   const content=document.createElement('div');content.className='m120-card-content';
   const h=text('strong',row.minor_name,'m120-name');
@@ -373,6 +397,12 @@ async function purge(){
  try{const result=await rpc('purge');status('Registros vencidos excluídos: '+result.removed);await load();}catch(e){status('Falha ao limpar registros: '+e.message,true);}
 }
 function init(){
+ $('minorAdminSearch')?.addEventListener('input',render);
+ $('minorAdminSearchClear')?.addEventListener('click',()=>{
+   const field=$('minorAdminSearch');
+   if(field){field.value='';field.focus();}
+   render();
+ });
  $('minorRefresh')?.addEventListener('click',load);
  $('minorHistoryToggleV203')?.addEventListener('click',()=>{
    showOldEventsV203=!showOldEventsV203;
