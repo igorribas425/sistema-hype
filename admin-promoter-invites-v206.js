@@ -53,21 +53,29 @@ function render(){
  ).join('')||'<p>Nenhum promoter de convidados cadastrado. Compartilhe o link geral de cadastro acima.</p>';
  const out=$('v206Guests');if(!out)return;
  out.innerHTML=list.map(g=>{
- const noShow=g.status==='Liberado'&&eventFinishedV206(g.event_date);
- const label=noShow?'NÃO COMPARECEU':g.status==='Liberado'?'APROVADO • SEM CHECK-IN':g.status==='Entrou'?'✅ CHECK-IN FEITO':g.status;
- const mail=g.email_sent_at?'QR aceito pelo e-mail em '+new Date(g.email_sent_at).toLocaleString('pt-BR'):
-  g.email_error?'Falha no envio: '+g.email_error:'QR ainda não enviado';
- const actions=g.status==='Pendente'
-  ?'<button type="button" class="btn-action btn-confirm" data-approve="'+g.list_id+'">✓ APROVAR</button><button type="button" class="btn-action btn-del" data-reject="'+g.list_id+'">RECUSAR</button>'
-  :g.status==='Liberado'&&g.email?'<button type="button" class="btn-action" data-email="'+g.list_id+'">📧 '+(g.email_sent_at?'REENVIAR QR':'ENVIAR QR')+'</button>':'';
- return '<div class="v206-row"><div><strong>'+esc(g.name)+'</strong>'+
+ const checked=Boolean(g.entered_at||g.status==='Entrou');
+ const noShow=!checked&&g.status==='Liberado'&&eventFinishedV206(g.event_date);
+ const checkStatus=checked?'✅ FEZ CHECK-IN':noShow?'❌ NÃO COMPARECEU':'⏳ NÃO FEZ CHECK-IN';
+ const bg=checked?'#123d29':noShow?'#451d25':'#352a1b';
+ const fg=checked?'#9cf3bd':noShow?'#ffd0d6':'#ffdfa4';
+ const tm=g.entered_at?' • '+new Date(g.entered_at).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}):'';
+ const mail=g.email_sent_at?'📨 Resend aceitou envio em '+new Date(g.email_sent_at).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})+' (entrega ao Gmail não confirmada)':
+  g.email_error?'⚠️ Falha no e-mail: '+g.email_error:'📩 QR ainda não enviado';
+ const approve=g.status==='Pendente'?
+ '<button type="button" class="btn-action btn-confirm" data-approve="'+g.list_id+'">✓ APROVAR</button><button type="button" class="btn-action btn-del" data-reject="'+g.list_id+'">RECUSAR</button>':
+ g.status==='Liberado'&&g.email?'<button type="button" class="btn-action" data-email="'+g.list_id+'">📧 '+(g.email_sent_at?'REENVIAR QR':'ENVIAR QR')+'</button>':'';
+ const remove=HYPE?.role!=='admin'?'':checked?
+ '<small style="font-size:11px;color:#b5b5bd">🔒 Histórico de check-in protegido</small>':
+ '<button type="button" class="btn-action btn-del" data-delete="'+g.list_id+'">🗑️ EXCLUIR CADASTRO</button>';
+ return '<div class="v206-row"><div style="flex:1;min-width:0"><strong>'+esc(g.name)+'</strong>'+
+ '<div style="display:block;background:'+bg+';color:'+fg+';font-weight:900;font-size:13px;border-radius:9px;padding:9px 12px;margin:9px 0">'+esc(checkStatus+tm)+'</div>'+
  '<small>🎤 Promoter: '+esc(g.promoter_name||g.promoter_code)+' • '+esc(g.event_name)+' ('+esc(g.event_date)+')</small>'+
- '<small>'+esc(label)+' • '+esc(g.gender||'')+'</small>'+
+ '<small>Situação: '+esc(g.status)+' • '+esc(g.gender||'')+'</small>'+
  '<small>CPF: '+esc(g.cpf||'')+' • WhatsApp: '+esc(g.phone||'')+'</small>'+
  '<small>E-mail: '+esc(g.email||'')+' • Instagram: '+esc(g.instagram||'')+'</small>'+
  '<small>'+esc(mail)+'</small></div><div class="v206-actions">'+
- (g.photo_path?'<button type="button" class="btn-action" data-photo="'+g.list_id+'">📷 SELFIE</button>':'')+actions+
- '</div></div>';
+ (g.photo_path?'<button type="button" class="btn-action" data-photo="'+g.list_id+'">📷 SELFIE</button>':'')+
+ approve+remove+'</div></div>';
  }).join('')||'<div class="v206-row">Nenhum convidado para este filtro.</div>';
 }
 async function refreshGuests(){
@@ -131,18 +139,40 @@ async function manualEmail(id){
  try{await sendQr(id,true);status('Solicitação de QR aceita pelo Resend.');await refreshGuests();}
  catch(err){alert('Falha no envio: '+String(err.message||err));await refreshGuests();}
 }
+async function deleteGuest(id){
+ if(HYPE?.role!=='admin')return alert('Somente o Admin pode excluir cadastros.');
+ const guest=guests.find(g=>Number(g.list_id)===id);
+ if(!guest)return;
+ if(guest.status==='Entrou'||guest.entered_at)return alert('Esse convidado fez check-in. O histórico precisa ser preservado.');
+ if(!confirm('Excluir definitivamente o cadastro de '+guest.name+'? A selfie será apagada e o QR ficará inválido. Não altera ingressos comprados nem clientes. Esta ação não pode ser desfeita.'))return;
+ const button=$('v206Guests')?.querySelector('[data-delete="'+id+'"]');
+ if(button){button.disabled=true;button.textContent='EXCLUINDO...';}
+ try{
+  const response=await fetch(cfg.url+'/functions/v1/promoter-guest-delete',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({username:HYPE.user,password:HYPE.pass,list_id:id,confirm_delete:true})
+  });
+  const body=await response.json().catch(()=>({}));
+  if(!response.ok||body.ok!==true)throw Error(body.error||'Exclusão não confirmada pelo servidor');
+  await refreshGuests();status('Cadastro excluído e QR revogado.'+(body.photo_cleanup_pending?' Verifique a limpeza da selfie.':''));
+ }catch(err){
+  alert('Não foi possível excluir: '+String(err.message||err));
+  if(button){button.disabled=false;button.textContent='🗑️ EXCLUIR CADASTRO';}
+ }
+}
 function init(){
  $('v206Event')?.addEventListener('change',refreshGuests);
  $('v206Promoter')?.addEventListener('change',render);
  $('v206Status')?.addEventListener('change',render);
  $('v206PromoterInviteAdminPanel')?.addEventListener('click',e=>{
-  const target=e.target.closest('[data-toggle],[data-photo],[data-approve],[data-reject],[data-email]');
+  const target=e.target.closest('[data-toggle],[data-photo],[data-approve],[data-reject],[data-email],[data-delete]');
   if(!target)return;
   if(target.dataset.toggle)togglePromoter(Number(target.dataset.toggle));
   else if(target.dataset.photo)window.HypeV49Registration?.openPhoto?.(Number(target.dataset.photo));
   else if(target.dataset.approve)review(Number(target.dataset.approve),'aprovar');
   else if(target.dataset.reject)review(Number(target.dataset.reject),'recusar');
   else if(target.dataset.email)manualEmail(Number(target.dataset.email));
+  else if(target.dataset.delete)deleteGuest(Number(target.dataset.delete));
  });
 }
 document.addEventListener('DOMContentLoaded',init);
