@@ -35,8 +35,11 @@ function metric(label,n){return '<div><small>'+esc(label)+'</small><b>'+Number(n
 function render(){
  const promoter=$('v206Promoter')?.value||'',filter=$('v206Status')?.value||'';
  const list=guests.filter(g=>(!promoter||g.promoter_code===promoter)&&
-   (!filter||(filter==='Ausente'?(g.status==='Liberado'&&eventFinishedV206(g.event_date)):g.status===filter)));
- const by=key=>guests.filter(g=>g.status===key).length;
+  (!filter||filter==='Arquivados'||(
+   filter==='Ausente'?(g.status==='Liberado'&&eventFinishedV206(g.event_date)):
+   filter==='SemCheckin'?(g.status==='Liberado'&&!g.entered_at):g.status===filter
+  )));
+  const by=key=>guests.filter(g=>g.status===key).length;
  const missing=guests.filter(g=>g.status==='Liberado'&&eventFinishedV206(g.event_date)).length;
  const cards=$('v206Stats');if(cards)cards.innerHTML=
   metric('CADASTRADOS',guests.length)+metric('PENDENTES',by('Pendente'))+
@@ -64,10 +67,11 @@ function render(){
  const approve=g.status==='Pendente'?
  '<button type="button" class="btn-action btn-confirm" data-approve="'+g.list_id+'">✓ APROVAR</button><button type="button" class="btn-action btn-del" data-reject="'+g.list_id+'">RECUSAR</button>':
  g.status==='Liberado'&&g.email?'<button type="button" class="btn-action" data-email="'+g.list_id+'">📧 '+(g.email_sent_at?'REENVIAR QR':'ENVIAR QR')+'</button>':'';
- const remove=HYPE?.role!=='admin'?'':checked?
- '<small style="font-size:11px;color:#b5b5bd">🔒 Histórico de check-in protegido</small>':
- '<button type="button" class="btn-action btn-del" data-delete="'+g.list_id+'">🗑️ EXCLUIR CADASTRO</button>';
- return '<div class="v206-row"><div style="flex:1;min-width:0"><strong>'+esc(g.name)+'</strong>'+
+ const archived=Boolean(g.promoter_archived_at);
+  const remove=HYPE?.role!=='admin'?'':archived?
+   '<small style="color:#b5b5bd">🗃️ ARQUIVADO • histórico preservado</small>':
+   '<button type="button" class="btn-action btn-del" data-delete="'+g.list_id+'">🗃️ EXCLUIR DA LISTA</button>';
+  return '<div class="v206-row"><div style="flex:1;min-width:0"><strong>'+esc(g.name)+'</strong>'+
  '<div style="display:block;background:'+bg+';color:'+fg+';font-weight:900;font-size:13px;border-radius:9px;padding:9px 12px;margin:9px 0">'+esc(checkStatus+tm)+'</div>'+
  '<small>🎤 Promoter: '+esc(g.promoter_name||g.promoter_code)+' • '+esc(g.event_name)+' ('+esc(g.event_date)+')</small>'+
  '<small>Situação: '+esc(g.status)+' • '+esc(g.gender||'')+'</small>'+
@@ -81,7 +85,7 @@ function render(){
 async function refreshGuests(){
  try{
   const eid=Number($('v206Event')?.value||0);
-  guests=await rpc('staff_promoter_guests_v206',{...auth(),p_event_id:eid||null});
+  guests=await rpc('staff_promoter_guests_v209',{...auth(),p_event_id:eid||null,p_archived_only:$('v206Status')?.value==='Arquivados'});
   render();status(guests.length+' convidado(s) consultado(s).');
  }catch(err){status('Erro ao carregar convidados: '+String(err.message||err));}
 }
@@ -140,30 +144,31 @@ async function manualEmail(id){
  catch(err){alert('Falha no envio: '+String(err.message||err));await refreshGuests();}
 }
 async function deleteGuest(id){
- if(HYPE?.role!=='admin')return alert('Somente o Admin pode excluir cadastros.');
+ if(HYPE?.role!=='admin')return alert('Somente o Admin pode retirar cadastros da lista.');
  const guest=guests.find(g=>Number(g.list_id)===id);
- if(!guest)return;
- if(guest.status==='Entrou'||guest.entered_at)return alert('Esse convidado fez check-in. O histórico precisa ser preservado.');
- if(!confirm('Excluir definitivamente o cadastro de '+guest.name+'? A selfie será apagada e o QR ficará inválido. Não altera ingressos comprados nem clientes. Esta ação não pode ser desfeita.'))return;
+ if(!guest||guest.promoter_archived_at)return;
+ const entered=guest.status==='Entrou'||Boolean(guest.entered_at);
+ const explanation=entered?'O registro e o horário do check-in serão preservados.':
+  'O QR aprovado será cancelado, impedindo entrada pelo convite.';
+ const message='Excluir '+guest.name+' da lista ativa?\n\n'+explanation+
+ '\n\nVocê poderá consultar a ficha em ARQUIVADOS. Confirma?';
+ if(!confirm(message))return;
  const button=$('v206Guests')?.querySelector('[data-delete="'+id+'"]');
- if(button){button.disabled=true;button.textContent='EXCLUINDO...';}
+ if(button){button.disabled=true;button.textContent='ARQUIVANDO...';}
  try{
-  const response=await fetch(cfg.url+'/functions/v1/promoter-guest-delete',{
-   method:'POST',headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({username:HYPE.user,password:HYPE.pass,list_id:id,confirm_delete:true})
-  });
-  const body=await response.json().catch(()=>({}));
-  if(!response.ok||body.ok!==true)throw Error(body.error||'Exclusão não confirmada pelo servidor');
-  await refreshGuests();status('Cadastro excluído e QR revogado.'+(body.photo_cleanup_pending?' Verifique a limpeza da selfie.':''));
+  const result=await rpc('staff_promoter_guest_archive_v209',{...auth(),p_list_id:id,p_archive:true});
+  if(!result[0]?.ok)throw Error(result[0]?.message||'Falha ao arquivar cadastro.');
+  await refreshGuests();
+  status('Convidado retirado da lista ativa, com histórico preservado.');
  }catch(err){
-  alert('Não foi possível excluir: '+String(err.message||err));
-  if(button){button.disabled=false;button.textContent='🗑️ EXCLUIR CADASTRO';}
+  alert('Não foi possível retirar da lista: '+String(err.message||err));
+  if(button){button.disabled=false;button.textContent='🗃️ EXCLUIR DA LISTA';}
  }
 }
 function init(){
  $('v206Event')?.addEventListener('change',refreshGuests);
  $('v206Promoter')?.addEventListener('change',render);
- $('v206Status')?.addEventListener('change',render);
+ $('v206Status')?.addEventListener('change',refreshGuests);
  $('v206PromoterInviteAdminPanel')?.addEventListener('click',e=>{
   const target=e.target.closest('[data-toggle],[data-photo],[data-approve],[data-reject],[data-email],[data-delete]');
   if(!target)return;

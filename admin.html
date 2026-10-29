@@ -1206,14 +1206,14 @@ Bruna Santos"></textarea>
 <div class="v206-tools">
 <select id="v206Event"><option value="">Carregando festas...</option></select>
 <select id="v206Promoter"><option value="">TODOS OS PROMOTERS</option></select>
-<select id="v206Status"><option value="">TODOS OS STATUS</option><option value="Pendente">PENDENTES</option><option value="Liberado">APROVADOS</option><option value="Entrou">CHECK-IN FEITO</option><option value="Cancelado">RECUSADOS</option><option value="Ausente">NÃO COMPARECEU</option></select>
+<select id="v206Status"><option value="">TODOS OS STATUS</option><option value="Pendente">PENDENTES</option><option value="Liberado">APROVADOS</option><option value="Entrou">CHECK-IN FEITO</option><option value="Cancelado">RECUSADOS</option><option value="Ausente">NÃO COMPARECEU</option><option value="SemCheckin">APROVADOS SEM CHECK-IN</option><option value="Arquivados">🗃️ ARQUIVADOS</option></select>
 <button class="btn-action" type="button" onclick="HypePromoterInvitesV206.load()">↻ ATUALIZAR</button>
 </div>
 <div id="v206Stats" class="v206-stats"></div>
 <p id="v206StatusText" role="status" style="color:#c4c2c7;font-size:12px">Selecione a festa para consultar os convites.</p>
 <h3>Promoters cadastrados na Lista/Promoter</h3><p style="color:#bdb6bf;font-size:12px">Aqui aparecem os promoters que fizeram o novo cadastro. Os links pessoais não ficam expostos no Admin.</p><div id="v206PromoterLinks"></div>
-<h3 style="margin-top:25px">Cadastros dos convidados</h3><div id="v206Guests"></div>
+<h3 style="margin-top:25px">Cadastros dos convidados</h3><p style="font-size:12px;color:#beb9c0">Cada pessoa mostra FEZ CHECK-IN, NÃO FEZ CHECK-IN ou NÃO COMPARECEU, com horário real. EXCLUIR DA LISTA cancela QR não utilizado, mas preserva as informações na área ARQUIVADOS.</p><div id="v206Guests"></div>
 </section>
-<script src="admin-promoter-invites-v206.js?v=20261028-v207"></script>
+<script src="admin-promoter-invites-v206.js?v=20261029-v209-checkin"></script>
 </body>
 </html>

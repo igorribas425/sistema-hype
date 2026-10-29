@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
+const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
+test('checkin card and saved time',()=>{const s=read('admin-promoter-invites-v206.js');assert.match(s,/✅ FEZ CHECK-IN/);assert.match(s,/⏳ NÃO FEZ CHECK-IN/);assert.match(s,/entered_at/);});
+test('archive safe and access to history',()=>{const s=read('admin-promoter-invites-v206.js');assert.match(s,/staff_promoter_guest_archive_v209/);assert.match(s,/staff_promoter_guests_v209/);assert.match(s,/if\(!confirm\(message\)\)return/);assert.doesNotMatch(s,/promoter-guest-delete/);assert.match(read('admin.html'),/value="Arquivados"/);});
