@@ -6,6 +6,7 @@
   const rows = data => Array.isArray(data) ? data : (data ? [data] : []);
   const digits = value => String(value || '').replace(/\D/g, '');
   let salesUrl = '';
+  let inviteUrl='';
   function showStatus(message, kind) {
     const box = $('promoterStatus');
     if (!box) return;
@@ -58,6 +59,8 @@
         return;
       }
       salesUrl = row.sales_url;
+      inviteUrl=row.promoter_code?`https://hypeloungeclub.com.br/lista-promoter.html?promoter=${encodeURIComponent(row.promoter_code)}`:'';
+      if(inviteUrl){$('promoterInviteLink').textContent=inviteUrl;$('promoterInviteResult').style.display='block';}
       $('promoterSalesLink').textContent = salesUrl;
       $('promoterResult').classList.add('show');
       showStatus(row.message || 'Cadastro aprovado.', 'ok');
@@ -67,6 +70,16 @@
       button.disabled = false; button.textContent = 'GERAR MEU LINK DE VENDAS';
     }
   }
+  async function invitation(type){
+   if(!inviteUrl)return;
+   if(type==='open'){location.href=inviteUrl;return;}
+   if(type==='share'&&navigator.share){try{await navigator.share({title:'Convite HYPE',url:inviteUrl});return;}catch(_){}}
+   try{await navigator.clipboard.writeText(inviteUrl);}catch(_){const box=document.createElement('textarea');box.value=inviteUrl;document.body.append(box);box.select();document.execCommand('copy');box.remove();}
+   showStatus('Link de convidados copiado!','ok');
+  }
+  $('promoterInviteCopy')?.addEventListener('click',()=>invitation('copy'));
+  $('promoterInviteShare')?.addEventListener('click',()=>invitation('share'));
+  $('promoterInviteOpen')?.addEventListener('click',()=>invitation('open'));
   $('promoterCpf')?.addEventListener('input', event => formatCpf(event.currentTarget));
   $('promoterPhone')?.addEventListener('input', event => formatPhone(event.currentTarget));
   $('promoterForm')?.addEventListener('submit', submit);

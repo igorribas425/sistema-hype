@@ -165,7 +165,8 @@
                 <div style="margin-top:7px;font-size:10px;color:#777;word-break:break-all">${esc(promoterLink(p))}</div>
               </div>
               <div style="display:flex;gap:7px;flex-wrap:wrap">
-                <button class="btn-action" type="button" onclick="copyPromoterLinkV168(${Number(p.id)})">🔗 COPIAR LINK</button>
+                <button class="btn-action" type="button" onclick="copyPromoterLinkV168(${Number(p.id)})">🎟️ LINK DE VENDAS</button>
+                <button class="btn-action" type="button" onclick="copyPromoterInviteV206(${Number(p.id)})">📋 LINK DE CONVIDADOS</button>
                 <button class="btn-action" type="button" onclick="openPromoterSalesV168(${Number(p.id)})">🎟️ ABRIR INGRESSOS</button>
                 <button class="btn-action" type="button" onclick="togglePromoterV168(${Number(p.id)})">${p.active ? 'DESATIVAR' : 'ATIVAR'}</button>
                 <button class="btn-action btn-del" type="button" onclick="deletePromoterV168(${Number(p.id)})">🗑️ EXCLUIR</button>
@@ -179,6 +180,14 @@
     }
   }
 
+  window.copyPromoterInviteV206=async function(id){
+    const promoter=(window.__HYPE_V168_PROMOTERS||[]).find(p=>Number(p.id)===Number(id));
+    if(!promoter)return alert('Promoter não encontrado.');
+    if(promoter.active===false)return alert('Promoter desativado.');
+    const url='https://hypeloungeclub.com.br/lista-promoter.html?promoter='+encodeURIComponent(promoter.code);
+    try{await navigator.clipboard.writeText(url);}catch(_){const el=document.createElement('textarea');el.value=url;document.body.append(el);el.select();document.execCommand('copy');el.remove();}
+    if(typeof hypeNotify==='function')hypeNotify('Link de convites copiado.');
+  };
   window.createPromoterV16 = async function() {
     if (HYPE?.role !== 'admin') return alert('Somente o Admin pode gerenciar promoters.');
     const input = document.getElementById('v16PromoterName');
