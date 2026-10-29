@@ -254,46 +254,6 @@
     };
   }
 
-  // Leitura exclusivamente administrativa de movimentações bancárias já realizadas.
-  // Não reduz faturamento por evento nem altera tabelas de ingressos.
-  async function refreshFinancialWithdrawalsV210() {
-    const panel=$('v210FinanceLedger');
-    if(!panel)return;
-    if(HYPE?.role!=='admin' || !HYPE?.user || !HYPE?.pass) {
-      panel.hidden=true;
-      return;
-    }
-    panel.hidden=false;
-    const notice=$('v210FinancialStatus');
-    if(notice)notice.textContent='Consultando retiradas registradas...';
-    try {
-      const rows=await sbRpc('staff_list_hype_finance_movements_v210', {
-        p_username:HYPE.user,p_password:HYPE.pass
-      });
-      if(!Array.isArray(rows))throw new Error('Resposta inválida do controle financeiro.');
-      const cents=v=>Math.round((Number(v)||0)*100);
-      const total=rows.reduce((sum,r)=>sum+(r.movement_type==='estorno_retirada'?-cents(r.amount):cents(r.amount)),0);
-      const totalEl=$('v210FinanceWithdrawalTotal');
-      if(totalEl)totalEl.textContent=brl(total/100);
-      const entries=$('v210FinanceEntries');
-      if(entries)entries.innerHTML=rows.map(r=>{
-        const withdrawal=r.movement_type==='retirada';
-        const date=r.occurred_at?new Date(r.occurred_at).toLocaleString('pt-BR',{
-          timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'
-        }):'Data não informada';
-        return '<div class="v210-finance-entry"><div><b>'+
-          (withdrawal?'Retirada do banco':'Estorno de retirada')+
-          '</b><small>'+esc(date)+' • '+esc(r.description||'Movimentação registrada')+
-          '</small></div><strong>'+(withdrawal?'−':'+')+esc(brl(r.amount))+'</strong></div>';
-      }).join('')||'<p>Nenhuma retirada registrada.</p>';
-      if(notice)notice.textContent=rows.length+' movimentação(ões) registrada(s), preservadas no histórico.';
-    } catch(err) {
-      if(notice)notice.textContent='Não foi possível consultar as retiradas: '+String(err?.message||err);
-      const entries=$('v210FinanceEntries');
-      if(entries)entries.textContent='';
-    }
-  }
-
   function getSalesRows() {
     let tickets=[], guests=[];
     try {
@@ -414,7 +374,6 @@
       }
     } catch (_) {}
     renderSales();
-    await refreshFinancialWithdrawalsV210();
     try { if(typeof renderV16Dashboard==='function') renderV16Dashboard(); } catch (_) {}
   }
 
