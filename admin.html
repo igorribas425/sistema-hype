@@ -1188,6 +1188,29 @@ Bruna Santos"></textarea>
 #v206PromoterInviteAdminPanel .v206-stats{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
 #v206PromoterInviteAdminPanel .v206-stats>div{background:#18161f;border:1px solid #35303b;border-radius:11px;padding:10px;min-width:125px}
 #v206PromoterInviteAdminPanel .v206-stats b{display:block;font-size:22px}
+/* Lista/Promoter: cartões responsivos sem esmagar os dados do convidado. */
+#v206PromoterInviteAdminPanel,
+#v206PromoterInviteAdminPanel .v206-row,
+#v206PromoterInviteAdminPanel .v206-actions{box-sizing:border-box;min-width:0;max-width:100%}
+#v206Guests .v206-row{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:10px;overflow:hidden}
+#v206Guests .v206-row>div:first-child{flex:0 0 auto!important;width:100%;min-width:0!important;max-width:100%}
+#v206Guests .v206-row strong{display:block;font-size:17px;line-height:1.4;overflow-wrap:anywhere}
+#v206Guests .v206-row small{font-size:13px;line-height:1.55;white-space:normal;overflow-wrap:anywhere}
+#v206Guests .v206-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));width:100%;gap:9px;margin-top:4px}
+#v206Guests .v206-actions .btn-action{width:100%;min-width:0;min-height:44px;white-space:normal;overflow-wrap:anywhere;text-align:center}
+#v206PromoterLinks .v206-row>div:first-child{flex:1 1 230px;min-width:0}
+@media(max-width:640px){
+ #v206PromoterInviteAdminPanel{width:100%;padding:12px;margin:12px auto 70px}
+ #v206PromoterInviteAdminPanel .v206-row{padding:12px}
+ #v206PromoterInviteAdminPanel .v206-tools{flex-direction:column;align-items:stretch}
+ #v206PromoterInviteAdminPanel .v206-tools select,
+ #v206PromoterInviteAdminPanel .v206-tools>.btn-action{flex:0 0 auto;width:100%;max-width:100%}
+ #v206PromoterInviteAdminPanel .v206-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ #v206PromoterInviteAdminPanel .v206-stats>div{min-width:0}
+ #v206PromoterLinks .v206-row{flex-direction:column;align-items:stretch}
+ #v206PromoterLinks .v206-row>div:first-child{flex:0 0 auto;width:100%}
+ #v206PromoterLinks .v206-row>.btn-action{width:100%}
+}
 </style>
 <section id="v206PromoterInviteAdminPanel">
 <h2>📋 LISTA/PROMOTER</h2>
