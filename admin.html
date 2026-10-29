@@ -510,7 +510,20 @@ html,body{max-width:100%;overflow-x:hidden}
     <div class="stat-card blue"><span>Pendente em R$</span><h3 id="pendingValue">R$ 0,00</h3></div>
   </div>
 
-  <section class="panel-box" id="v94SalesFinancePanel">
+  <style id="v210FinanceLedgerStyle">
+#v210FinanceLedger{margin:14px 0 18px;padding:15px;border:1px solid #514150;border-radius:13px;background:#19131b;color:#f7f4f7;box-sizing:border-box;min-width:0}
+#v210FinanceLedger h4{margin:0 0 6px;font-size:16px}
+#v210FinanceLedger p{margin:6px 0 10px;color:#bdb6c2;font-size:12px;line-height:1.5}
+#v210FinanceLedger .v210-finance-head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+#v210FinanceLedger .v210-finance-head strong{font-size:23px;white-space:nowrap}
+#v210FinanceLedger .v210-finance-entry{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;padding:10px 0;border-top:1px solid #413840}
+#v210FinanceLedger .v210-finance-entry b{display:block}
+#v210FinanceLedger .v210-finance-entry small{display:block;color:#aaa3ae;margin-top:4px;font-size:12px;overflow-wrap:anywhere}
+#v210FinanceLedger .v210-finance-entry>strong{font-size:16px;white-space:nowrap}
+#v210FinancialStatus{font-size:12px;color:#cfbdc9;margin:8px 0}
+@media(max-width:600px){#v210FinanceLedger{padding:12px}#v210FinanceLedger .v210-finance-head strong{font-size:21px}}
+</style>
+<section class="panel-box" id="v94SalesFinancePanel">
     <div class="v92-people-head">
       <div>
         <h3>💰 FINANCEIRO — BRUTO E TAXAS</h3>
@@ -518,7 +531,19 @@ html,body{max-width:100%;overflow-x:hidden}
       </div>
       <button class="btn-action" type="button" onclick="HypeAdminTabsV92?.refreshSales?.()">↻ ATUALIZAR</button>
     </div>
-    <div class="v94-sales-grid">
+    <div id="v210FinanceLedger" hidden aria-live="polite">
+  <div class="v210-finance-head">
+    <div>
+      <h4>💸 RETIRADAS E MOVIMENTAÇÕES INFORMADAS</h4>
+      <p>Controle geral da conta, independente do filtro por festa.</p>
+    </div>
+    <strong id="v210FinanceWithdrawalTotal">R$ 0,00</strong>
+  </div>
+  <div id="v210FinancialStatus" role="status">Consultando movimentações...</div>
+  <div id="v210FinanceEntries"></div>
+  <p>Essas movimentações não alteram as vendas, os ingressos nem os QR Codes. O registro é informativo e deve ser conciliado com o extrato bancário; não representa o saldo real da conta.</p>
+</div>
+<div class="v94-sales-grid">
       <div class="v94-sales-card main"><span>BRUTO DOS INGRESSOS PAGOS (BANCO)</span><b id="v94Revenue">R$ 0,00</b><small>Somatório de tickets.price no Supabase; já inclui a taxa do checkout</small></div>
       <div class="v94-sales-card"><span>TAXA DE SERVIÇO NO SITE</span><b id="v106ServiceFee">R$ 0,00</b><small>Incluída no bruto, não é outro desconto</small></div>
       <div class="v94-sales-card"><span>TAXA PIX ASAAS (ESTIMADA)</span><b id="v106AsaasPixFee">R$ 0,00</b><small>R$ 0,99 por ingresso pago via Asaas</small></div>
@@ -1094,7 +1119,7 @@ Bruna Santos"></textarea>
   <script src="hype-push-config.js?v=116"></script>
   <script src="hype-v38-chat.js?v=117"></script>
   <script src="hype-v408-lista-admin.js?v=20261028-lista-ativos-v202"></script>
-  <script src="admin-v92-tabs.js?v=20261028-financeiro-ativos-v202"></script>
+  <script src="admin-v92-tabs.js?v=20261029-retiradas-v210"></script>
   <script src="admin-v103-customers.js?v=20261023-genero-feminino-masculino-v118"></script>
   <script src="admin-v95-hub.js?v=20261028-convidados-v206"></script>
   <!-- Chamados da portaria desativados a pedido do ADM; chat HYPE e demais recursos preservados. -->
