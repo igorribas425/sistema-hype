@@ -140,7 +140,7 @@
         </div>`;
     modal.innerHTML=`
       <section class="hlp-card ${esc(mode)}">
-        <div class="hlp-kicker">LISTA HYPE • PERFIL DA PESSOA</div>
+        <div class="hlp-kicker">${String(row.source||"")==="Promoter"?"CONVIDADO PROMOTER":"LISTA HYPE"} • PERFIL DA PESSOA</div>
         ${successMark}
         <div class="hlp-title">${esc(row.name||'Nome')}</div>
         <div class="hlp-status ${esc(mode)}">${esc(statusText)}</div>

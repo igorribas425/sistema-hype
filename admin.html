@@ -404,6 +404,7 @@ html,body{max-width:100%;overflow-x:hidden}
       <button class="v95-home-card" type="button" data-v95-open="financeiro"><span class="v95-icon">💰</span><b>Financeiro</b><small>Vendas, caixa e valores acumulados</small></button>
       <button class="v95-home-card" type="button" data-v95-open="promoters"><span class="v95-icon">🎯</span><b>Promoters</b><small>Equipe, links, vendas e cupons</small></button>
       <button class="v95-home-card" type="button" data-v95-open="lista"><span class="v95-icon">📋</span><b>Lista / FREE</b><small>Fotos, aprovações e nomes liberados</small></button>
+      <button class="v95-home-card" type="button" data-v95-open="listapromoter"><span class="v95-icon">🪪</span><b>Lista/Promoter</b><small>Convites, selfies, QR e presença</small></button>
       <button class="v95-home-card" type="button" data-v95-open="portaria"><span class="v95-icon">🚪</span><b>Portaria</b><small>Entradas e movimento da noite</small></button>
       <button class="v95-home-card" type="button" data-v95-open="clientes"><span class="v95-icon">🎟️</span><b>Clientes</b><small>Ingressos, pagamentos e busca</small></button>
       <button class="v95-home-card" type="button" data-v95-open="cadastros"><span class="v95-icon">👥</span><b>Cadastros</b><small>Histórico permanente, frequência e bloqueios</small></button>
@@ -862,7 +863,7 @@ Bruna Santos"></textarea>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
 <script src="app.js?v=20261028-ativos-v202"></script>
-<script src="promoter-global-v16-8.js?v=20261026-ranking-zerado-v171"></script>
+<script src="promoter-global-v16-8.js?v=20261028-convidados-v206"></script>
 <script src="hype-qrcode.js?v=20261001-v49"></script>
 <script src="hype-v49-registration-admin.js?v=20261028-lista-ativos-v202"></script>
 <script>
@@ -1095,7 +1096,7 @@ Bruna Santos"></textarea>
   <script src="hype-v408-lista-admin.js?v=20261028-lista-ativos-v202"></script>
   <script src="admin-v92-tabs.js?v=20261028-financeiro-ativos-v202"></script>
   <script src="admin-v103-customers.js?v=20261023-genero-feminino-masculino-v118"></script>
-  <script src="admin-v95-hub.js?v=20261028-portaria-filter-v201"></script>
+  <script src="admin-v95-hub.js?v=20261028-convidados-v206"></script>
   <!-- Chamados da portaria desativados a pedido do ADM; chat HYPE e demais recursos preservados. -->
 <style id="hypeMinorsAdminStyle">
 #hypeMinorsAdminPanel{display:none!important;max-width:1050px;margin:16px auto 60px;background:#0e0b10;border:1px solid #713448;border-radius:19px;padding:18px;color:#fff}
@@ -1174,5 +1175,35 @@ Bruna Santos"></textarea>
 <script src="admin-menores-v120.js?v=20261028-historico-manual-v203"></script>
 <script src="admin-menores-demo-v128.js?v=20261024-qr-local-v146"></script>
 
+
+<style id="v206AdminStyles">
+#v206PromoterInviteAdminPanel{display:none;background:#0e0e12;border:1px solid #38343b;border-radius:17px;padding:18px;margin:12px auto 70px;max-width:1250px;color:#fff}
+#v206PromoterInviteAdminPanel.v95-show{display:block}
+#v206PromoterInviteAdminPanel .v206-tools{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}
+#v206PromoterInviteAdminPanel select{background:#09090c;border:1px solid #34343a;border-radius:9px;color:white;min-height:42px;max-width:350px;flex:1;padding:8px}
+#v206PromoterInviteAdminPanel .v206-row{padding:13px;border:1px solid #37323b;border-radius:11px;background:#131117;margin:9px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:11px;flex-wrap:wrap}
+#v206PromoterInviteAdminPanel .v206-row strong{color:white}
+#v206PromoterInviteAdminPanel .v206-row small{display:block;color:#b6b3bd;line-height:1.6;margin-top:3px;overflow-wrap:anywhere}
+#v206PromoterInviteAdminPanel .v206-actions{display:flex;flex-wrap:wrap;gap:6px}
+#v206PromoterInviteAdminPanel .v206-stats{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+#v206PromoterInviteAdminPanel .v206-stats>div{background:#18161f;border:1px solid #35303b;border-radius:11px;padding:10px;min-width:125px}
+#v206PromoterInviteAdminPanel .v206-stats b{display:block;font-size:22px}
+</style>
+<section id="v206PromoterInviteAdminPanel">
+<h2>📋 LISTA/PROMOTER</h2>
+<p style="color:#b9b6bf;font-size:13px">Cada promoter recebe um link de convidados. O convidado faz o cadastro com selfie, o Admin analisa, e somente após aprovação o QR Code chega no e-mail. A portaria lê, exibe o perfil e confirma o check-in.</p>
+<p style="color:#f0c6d1;font-size:12px">Quem não entrar até o fim da festa aparece como não compareceu no histórico. Esse convite não vira ingresso pago e não libera automaticamente entrada.</p>
+<div class="v206-tools">
+<select id="v206Event"><option value="">Carregando festas...</option></select>
+<select id="v206Promoter"><option value="">TODOS OS PROMOTERS</option></select>
+<select id="v206Status"><option value="">TODOS OS STATUS</option><option value="Pendente">PENDENTES</option><option value="Liberado">APROVADOS</option><option value="Entrou">CHECK-IN FEITO</option><option value="Cancelado">RECUSADOS</option><option value="Ausente">NÃO COMPARECEU</option></select>
+<button class="btn-action" type="button" onclick="HypePromoterInvitesV206.load()">↻ ATUALIZAR</button>
+</div>
+<div id="v206Stats" class="v206-stats"></div>
+<p id="v206StatusText" role="status" style="color:#c4c2c7;font-size:12px">Selecione a festa para consultar os convites.</p>
+<h3>Links para convidar</h3><div id="v206PromoterLinks"></div>
+<h3 style="margin-top:25px">Cadastros dos convidados</h3><div id="v206Guests"></div>
+</section>
+<script src="admin-promoter-invites-v206.js?v=20261028-v206"></script>
 </body>
 </html>

@@ -21,6 +21,11 @@
       subtitle: 'Aprovação de fotos, nomes liberados e lista do evento',
       ids: ['v92ListPeoplePanel','v408SimpleListAdmin']
     },
+    listapromoter: {
+      title: 'Lista/Promoter',
+      subtitle: 'Links de convites, selfie, aprovação, QR e faltas por festa',
+      ids: ['v206PromoterInviteAdminPanel']
+    },
     portaria: {
       title: 'Portaria',
       subtitle: 'Entradas, movimento da noite e quem já entrou',
@@ -81,6 +86,8 @@
       } else if (key === 'lista') {
         await window.HypeAdminTabsV92?.refreshPeople?.(true);
         await window.HypeV49Registration?.loadListSettings?.();
+      } else if (key === 'listapromoter') {
+        await window.HypePromoterInvitesV206?.load?.();
       } else if (key === 'portaria') {
         await window.HypeV34?.loadEvents?.();
         await window.HypeAdminTabsV92?.refreshPeople?.(true);
