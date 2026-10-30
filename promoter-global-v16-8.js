@@ -74,7 +74,7 @@
     let blockedBox = document.getElementById('promoterInvalidBox');
     if (code && HYPE?.promoterLinkInvalid) {
       if (status) {
-        status.textContent = '❌ Este link de promoter foi excluído ou desativado.';
+        status.textContent = code.startsWith('CONV-') ? '❌ Este é um código da Lista/Promoter, não um link de vendas. Peça o link oficial de ingressos.' : '❌ Este link de vendas não foi validado. Solicite o link oficial atualizado do promoter.';
         status.className = 'v16-coupon-status error';
       }
       if (!blockedBox && form?.parentNode) {
@@ -84,7 +84,7 @@
         form.parentNode.insertBefore(blockedBox, form);
       }
       if (blockedBox) {
-        blockedBox.innerHTML = '❌ <strong>LINK DE PROMOTER ENCERRADO</strong><br><span style="font-weight:600;font-size:12px">Este promoter foi excluído ou desativado. Este link não pode mais gerar compras.</span>';
+        blockedBox.innerHTML = code.startsWith('CONV-') ? '❌ <strong>LINK DE CONVIDADOS, NÃO DE VENDAS</strong><br><span style="font-weight:600;font-size:12px">Este código pertence à Lista/Promoter. Peça o link oficial de ingressos para comprar pelo promoter.</span>' : '❌ <strong>LINK DE VENDAS NÃO VALIDADO</strong><br><span style="font-weight:600;font-size:12px">O link pode estar antigo, inativo ou temporariamente indisponível. Peça o link atualizado à equipe HYPE.</span>';
         blockedBox.style.display = 'block';
       }
       if (form) {
