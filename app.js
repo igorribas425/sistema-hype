@@ -2601,7 +2601,7 @@ async function sendTicketEmail(id, force = false) {
   if (force) {
     await loadStaffTickets(document.getElementById("searchInput")?.value || "");
     renderClientsTable();
-    hypeNotify(data?.already_sent ? "O ingresso já havia sido enviado." : "📧 Ingresso reenviado com sucesso.");
+    hypeNotify(data?.already_sent ? "O Resend já tinha aceitado esse envio." : "📧 Resend aceitou o reenvio. Entrega no Gmail ainda não confirmada.");
   }
 
   return data;
@@ -2616,8 +2616,8 @@ async function resendTicketEmailFromAdmin(id) {
     const detail = String(error?.message || error || "Falha no serviço de e-mail.");
     console.warn("[HYPE][reenvio QR]", { ticketId: Number(id), erro: detail });
     hypeNotify("❌ Não foi possível reenviar: " + detail);
-    alert("O ingresso continua válido e pago, mas o e-mail não foi enviado.\n\n" +
-      detail + "\n\nEnquanto isso, utilize ACESSAR INGRESSO no site para visualizar o QR Code.");
+    alert("O ingresso continua confirmado e o QR Code permanece válido, mas o e-mail não foi aceito pelo serviço.\n\n" +
+      detail + "\n\nNão é necessário comprar novamente. Use CONSULTAR INGRESSO no site com o código ou localize o titular na Portaria com documento.");
     return { ok: false, error: detail };
   }
 }
@@ -2639,11 +2639,11 @@ async function setPayment(id, status) {
         hypeNotify(
           emailResult?.already_sent
             ? "Pagamento confirmado. O ingresso já havia sido enviado por e-mail."
-            : "✅ Pagamento confirmado e ingresso enviado por e-mail."
+            : "✅ Ingresso confirmado e envio aceito pelo Resend. A entrega no e-mail ainda não foi confirmada."
         );
       } catch (emailErr) {
         alert(
-          "O pagamento foi CONFIRMADO, mas o e-mail não foi enviado.\n\n" +
+          "O ingresso está CONFIRMADO, mas o e-mail não foi enviado.\n\n" +
           hypeUserMessage(emailErr, "Erro no envio.") +
           "\n\nUse o botão 📧 REENVIAR depois de corrigir o envio."
         );
