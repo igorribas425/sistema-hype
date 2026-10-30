@@ -22,6 +22,8 @@ async function rpc(name,params){
 const status=message=>{if($('v206StatusText'))$('v206StatusText').textContent=message;};
 const registrationUrl='https://hypeloungeclub.com.br/promoter-convite.html';
 let events=[],promoters=[],guests=[];
+const recentlyResentIds=new Set();
+const sendingIds=new Set();
 async function copyRegistration(){
  try{await navigator.clipboard.writeText(registrationUrl);}
  catch(_){const t=document.createElement('textarea');t.value=registrationUrl;document.body.append(t);t.select();document.execCommand('copy');t.remove();}
@@ -62,7 +64,7 @@ function render(){
  const bg=checked?'#123d29':noShow?'#451d25':'#352a1b';
  const fg=checked?'#9cf3bd':noShow?'#ffd0d6':'#ffdfa4';
  const tm=g.entered_at?' • '+new Date(g.entered_at).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}):'';
- const mail=g.email_sent_at?'📨 Resend aceitou envio em '+new Date(g.email_sent_at).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})+' (entrega ao Gmail não confirmada)':
+ const mail=g.email_sent_at?(recentlyResentIds.has(Number(g.list_id))?'✅ REENVIO ACEITO pelo Resend em ':'📨 Último envio/reenvio aceito pelo Resend em ')+new Date(g.email_sent_at).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})+' (entrega ao destinatário ainda não confirmada)':
   g.email_error?'⚠️ Falha no e-mail: '+g.email_error:'📩 QR ainda não enviado';
  const approve=g.status==='Pendente'?
  '<button type="button" class="btn-action btn-confirm" data-approve="'+g.list_id+'">✓ APROVAR</button><button type="button" class="btn-action btn-del" data-reject="'+g.list_id+'">RECUSAR</button>':
@@ -120,6 +122,7 @@ async function sendQr(id,force=false){
  });
  const body=await reply.json().catch(()=>({}));
  if(!reply.ok||body.ok!==true)throw Error(body.error||'Resend recusou o QR.');
+ if(force&&body.already_sent)throw Error('O servidor não confirmou um novo reenvio. Verifique a operação antes de tentar novamente.');
  return body;
 }
 async function review(id,decision){
@@ -139,9 +142,27 @@ async function review(id,decision){
  }catch(err){alert('Não foi possível analisar: '+String(err.message||err));}
 }
 async function manualEmail(id){
- if(!confirm('Enviar/reenviar o QR de convidado para o e-mail cadastrado?'))return;
- try{await sendQr(id,true);status('Solicitação de QR aceita pelo Resend.');await refreshGuests();}
- catch(err){alert('Falha no envio: '+String(err.message||err));await refreshGuests();}
+ if(sendingIds.has(id))return;
+ const guest=guests.find(g=>Number(g.list_id)===id);
+ if(!guest||guest.status!=='Liberado'||!guest.email)return;
+ if(!confirm('Reenviar o mesmo QR de convidado para '+guest.email+'? O Resend poderá aceitar o envio, mas a entrega depende do e-mail destinatário.'))return;
+ sendingIds.add(id);
+ const button=$('v206Guests')?.querySelector('[data-email="'+id+'"]');
+ if(button){button.disabled=true;button.textContent='⏳ REENVIANDO...';}
+ try{
+  const result=await sendQr(id,true);
+  recentlyResentIds.add(id);
+  await refreshGuests();
+  const receivedTime=result.email_sent_at?new Date(result.email_sent_at).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}):'agora';
+  status('✅ Reenvio aceito pelo Resend para '+guest.name+' em '+receivedTime+'. Entrega na caixa de entrada ainda não confirmada.');
+ }catch(err){
+  await refreshGuests();
+  status('❌ Reenvio NÃO confirmado para '+guest.name+': '+String(err.message||err));
+  alert('Falha no reenvio: '+String(err.message||err));
+ }finally{
+  sendingIds.delete(id);
+  if(button&&button.isConnected){button.disabled=false;button.textContent='📧 REENVIAR QR';}
+ }
 }
 async function deleteGuest(id){
  if(HYPE?.role!=='admin')return alert('Somente o Admin pode retirar cadastros da lista.');
