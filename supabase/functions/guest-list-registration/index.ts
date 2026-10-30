@@ -53,6 +53,59 @@ function requiredText(form: FormData, name: string, maxLength: number) {
   return String(form.get(name) || "").trim().slice(0, maxLength);
 }
 
+function mailEsc(value: unknown) {
+  return String(value??"").replace(/[&<>"']/g,(x)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[x]||x));
+}
+async function sendAlreadyHasTicketNotice(supabase:any,eventId:number,cpf:string,enteredEmail:string) {
+  // A verificação do CPF + e-mail da compra e o intervalo anti-spam são atômicos no banco.
+  // Não envia para e-mail novo informado por terceiros e não expõe o ingresso ao formulário.
+  const {data,error}=await supabase.rpc("hype_claim_ticket_list_notice_v230",{
+    p_event_id:eventId,p_cpf:cpf,p_email:enteredEmail
+  });
+  if(error){console.warn("[HYPE][lista-aviso] Falha ao verificar duplicidade");return;}
+  const ticket=firstRow(data);
+  if(!ticket?.claimed || !ticket?.ticket_id || !ticket?.destination)return;
+  let status="failed",providerId="",reason="";
+  try{
+    const key=Deno.env.get("BREVO_API_KEY")||"";
+    const from=Deno.env.get("BREVO_FROM_EMAIL")||Deno.env.get("RESEND_FROM_EMAIL")||"";
+    if(!key||!from)throw new Error("Brevo não configurado");
+    const eventName=String(ticket.event_name||"a festa da HYPE").slice(0,130);
+    const customer=String(ticket.full_name||"Cliente HYPE").slice(0,140);
+    const site="https://hypeloungeclub.com.br/cliente.html?event="+encodeURIComponent(String(eventId));
+    const html="<div style='font-family:Arial,sans-serif;max-width:620px;margin:auto;background:#111015;color:#fff;padding:25px;border-radius:16px'>"+
+      "<div style='font-weight:800;font-size:23px;letter-spacing:3px'>HYPE <span style='color:#ed3886'>LOUNGE</span> CLUB</div>"+
+      "<h2 style='margin-top:25px'>Você já garantiu seu ingresso! 🎟️</h2>"+
+      "<p>Olá, "+mailEsc(customer)+"!</p>"+
+      "<p>Recebemos uma tentativa de cadastro na Lista FREE ou Lista/Promoter para <b>"+mailEsc(eventName)+"</b>."+
+      " Identificamos que você <b>já possui um ingresso confirmado</b> para esta festa.</p>"+
+      "<p>Por isso, não é necessário entrar em outra lista e nenhum segundo QR Code será criado.</p>"+
+      "<p>Se precisar consultar seu ingresso original, acesse o site da HYPE. Caso não consiga abrir o QR, apresente seu nome completo e documento na portaria para conferência do cadastro.</p>"+
+      "<p style='margin:26px 0'><a href='"+site+"' style='background:#e6337e;color:white;padding:13px 17px;text-decoration:none;border-radius:9px;font-weight:bold'>CONSULTAR MEU INGRESSO</a></p>"+
+      "<p style='font-size:12px;color:#bcb6c0'>Este aviso é informativo; não cancela nem altera seu ingresso. Não é um novo ingresso ou QR Code.</p></div>";
+    const response=await fetch("https://api.brevo.com/v3/smtp/email",{
+      method:"POST",
+      headers:{"api-key":key,"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify({
+        sender:{name:"HYPE Lounge Club",email:from},
+        to:[{email:String(ticket.destination).trim().toLowerCase()}],
+        subject:"HYPE | Você já possui ingresso para "+eventName,
+        htmlContent:html
+      }),signal:AbortSignal.timeout(16000)
+    });
+    const body=await response.json().catch(()=>({}));
+    if(!response.ok||!body?.messageId)throw Error("Brevo: HTTP "+response.status);
+    status="sent";providerId=String(body.messageId).slice(0,180);
+  }catch(err){
+    reason=String(err instanceof Error?err.message:err).slice(0,180);
+    console.warn("[HYPE][lista-aviso] Brevo não aceitou envio",{status:reason});
+  }
+  const {error:saveError}=await supabase.from("hype_ticket_list_notice_v230").update({
+    status,sent_at:status==="sent"?new Date().toISOString():null,provider_id:providerId||null,error:reason||null
+  }).eq("ticket_id",ticket.ticket_id).eq("event_id",eventId);
+  if(saveError)console.warn("[HYPE][lista-aviso] Falha ao atualizar histórico");
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   if (req.method !== "POST") return json(req, { ok: false, error: "Método não permitido." }, 405);
@@ -109,6 +162,16 @@ Deno.serve(async (req: Request) => {
     if (result.error) throw new Error(result.error.message);
     const row = firstRow(result.data) || {};
     if (row.ok !== true) throw new Error(row.message || "Não foi possível concluir o cadastro.");
+    // Quando o CPF já tem ingresso pago, não gera outro QR e envia orientação
+    // apenas para o e-mail que coincide com o da compra. Nunca manda para um e-mail arbitrário.
+    if (row.status === "Confirmado" || String(row.message||"").includes("ja enviou um cadastro")) {
+      await sendAlreadyHasTicketNotice(supabase,eventId,cpf,email);
+      // A selfie desse pedido duplicado não precisa ficar armazenada.
+      if (uploadedPath) {
+        await supabase.storage.from(BUCKET).remove([uploadedPath]).catch(()=>undefined);
+        uploadedPath="";
+      }
+    }
 
     return json(req, {
       ok: true,
