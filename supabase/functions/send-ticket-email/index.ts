@@ -476,13 +476,13 @@ Deno.serve(async (req) => {
           staff_user_id: staff.id || null,
           action: "INGRESSO_EMAIL_FALHOU",
           ticket_id: ticket.id,
-          metadata: { erro: detail, provider: "google_apps_script", quota },
+          metadata: { erro: detail, provider: detail.toLowerCase().includes("resend") ? "resend" : "legacy_google", quota },
         });
       } catch (_) {}
       // Nunca marcar email_sent_at quando o provedor falhar.
       throw new Error(quota
-        ? "O Gmail atingiu um limite temporário de envio. O ingresso está pago; use ACESSAR INGRESSO e tente reenviar depois."
-        : "Falha no envio do ingresso: " + detail);
+        ? "O Resend atingiu um limite de envio (cota diária ou limite temporário). Confira o plano Resend da HYPE antes de reenviar. Seu ingresso continua confirmado e o QR Code pode ser consultado na Portaria."
+        : "Falha no envio do ingresso pelo provedor: " + detail);
     }
     const sentAt = new Date().toISOString();
     const update = await supabase.from("tickets").update({ email_sent_at: sentAt }).eq("id", ticket.id);
@@ -496,7 +496,7 @@ Deno.serve(async (req) => {
     return json(req, { ok: true, email_sent: true, email_sent_at: sentAt });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erro ao enviar e-mail.";
-    const limited = /Gmail atingiu um limite temporário|limite diário|serviço chamado muitas vezes|service invoked too many/i.test(message);
+    const limited = /Resend atingiu um limite de envio|limite diário|quota|rate.?limit|too many|serviço chamado muitas vezes|service invoked too many|429/i.test(message);
     return json(req, { ok: false, error: message, reason: limited ? "EMAIL_DAILY_QUOTA" : "EMAIL_PROVIDER_ERROR" }, limited ? 429 : 500);
   }
 });
