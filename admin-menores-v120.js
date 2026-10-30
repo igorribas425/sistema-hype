@@ -4,6 +4,63 @@
 const $=id=>document.getElementById(id);
 const URL='https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minors-authorization';
 let loading=false,rows=[],events=[],openedId=null,showOldEventsV203=false;
+let bulkMinorRunning=false,bulkMinorStop=false;
+const bulkMinorFinished=new Set();
+const bulkMinorPause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function updateMinorBulkButton(){
+ const btn=$('minorResendAll'),stop=$('minorResendAllStop');
+ const eligible=filteredMinorRows().filter(r=>r.status==='conferido' && (!r.expires_at||Date.parse(r.expires_at)>Date.now()));
+ const pending=eligible.filter(r=>!bulkMinorFinished.has(r.id));
+ if(btn){btn.disabled=bulkMinorRunning||!pending.length||!credentials();btn.textContent=bulkMinorRunning?'⏳ ENVIANDO LOTE...':'📧 REENVIAR PARA TODOS ('+pending.length+')';}
+ if(stop)stop.hidden=!bulkMinorRunning;
+}
+function writeMinorBulkProgress(message,bad=false){
+ const el=$('minorResendAllProgress');
+ if(el){el.textContent=message;el.style.color=bad?'#ffafbc':'#b8efd6';}
+}
+async function resendAllMinors(){
+ if(bulkMinorRunning||!credentials())return;
+ const candidates=filteredMinorRows().filter(r=>r.status==='conferido' &&
+   (!r.expires_at||Date.parse(r.expires_at)>Date.now()) && !bulkMinorFinished.has(r.id));
+ if(!candidates.length){writeMinorBulkProgress('Não há autorizações conferidas para reenviar neste filtro.');return;}
+ const message='REENVIAR '+candidates.length+' autorização(ões) conferida(s) dos filtros atuais?\n\nCada envio inclui PDF com documentos e dados pessoais do menor e responsável para os dois e-mails cadastrados. Algumas pessoas já receberam o documento e receberão outro.\n\nOs envios serão feitos um a um; mantenha a aba aberta. Confirma?';
+ if(!confirm(message))return;
+ if(candidates.length>20&&!confirm('Confirma o reenvio em massa de '+candidates.length+' autorizações reais? As entregas podem sofrer atrasos e haverá mais de um e-mail por autorização.'))return;
+ bulkMinorRunning=true;bulkMinorStop=false;updateMinorBulkButton();
+ const selected=$('minorAdminEvent'),search=$('minorAdminSearch');
+ if(selected)selected.disabled=true;
+ if(search)search.disabled=true;
+ let accepted=0,failed=0,attempted=0,rateLimited=false;
+ const failures=[];
+ for(const row of candidates){
+  if(bulkMinorStop)break;
+  attempted++;
+  writeMinorBulkProgress('Enviando PDF '+attempted+'/'+candidates.length+' • aceitos: '+accepted+' • falhas: '+failed+' • '+row.minor_name);
+  try{
+   const result=await sendNotification(row.id);
+   if(!result.emailSent)throw Error(result.emailError||'Resend não confirmou envio.');
+   bulkMinorFinished.add(row.id);
+   accepted++;
+  }catch(err){
+   failed++;const reason=String(err.message||err).slice(0,140);
+   failures.push(row.minor_name+': '+reason);
+   if(/429|rate.?limit|too many|muitas vezes|limite de envio/i.test(reason)){rateLimited=true;break;}
+  }
+  updateMinorBulkButton();
+  if(!bulkMinorStop)await bulkMinorPause(1400);
+ }
+ bulkMinorRunning=false;
+ if(selected)selected.disabled=false;
+ if(search)search.disabled=false;
+ updateMinorBulkButton();
+ const remaining=candidates.length-attempted;
+ writeMinorBulkProgress('Resultado do lote: '+accepted+' aceito(s) pelo Resend; '+failed+' falha(s); '+remaining+' não tentado(s).'+
+  (bulkMinorStop?' Interrompido pelo operador.':'')+
+  (rateLimited?' Limite temporário detectado; interrompido para não sobrecarregar o provedor.':'')+
+  (failures.length?' Falhas: '+failures.slice(0,5).join(' | '):'')+
+  ' Aceite NÃO confirma entrega na caixa de entrada.',failed>0);
+ await load();
+}
 function credentials(){
  try{if(typeof HYPE!=='undefined'&&HYPE.user&&HYPE.pass&&['admin','gerente'].includes(HYPE.role))
  return {username:HYPE.user,password:HYPE.pass};}catch(_){}
@@ -44,6 +101,7 @@ async function load(){
   const btn=$('minorHistoryToggleV203');
   if(btn)btn.textContent=showOldEventsV203?'OCULTAR FESTAS ANTERIORES':'VER EVENTOS ANTERIORES';
   render();
+  updateMinorBulkButton();
   status(rows.length+' declaração(ões) carregada(s). Confira documento original e regras de entrada.');
  }catch(e){status('Erro: '+e.message,true);}
  finally{loading=false;}
@@ -72,6 +130,7 @@ function render(){
    :'Exibindo '+rows.length+' autorização(ões) do filtro de evento selecionado.';
  const clear=$('minorAdminSearchClear');
  if(clear)clear.disabled=!searchActive;
+ updateMinorBulkButton();
  if(!matches.length){
   container.appendChild(text('p',searchActive
     ?'Nenhuma autorização corresponde à pesquisa. Tente o nome do menor, do responsável ou o protocolo.'
@@ -397,6 +456,8 @@ async function purge(){
  try{const result=await rpc('purge');status('Registros vencidos excluídos: '+result.removed);await load();}catch(e){status('Falha ao limpar registros: '+e.message,true);}
 }
 function init(){
+ $('minorResendAll')?.addEventListener('click',resendAllMinors);
+ $('minorResendAllStop')?.addEventListener('click',()=>{bulkMinorStop=true;writeMinorBulkProgress('Interrompendo após a tentativa atual...');});
  $('minorAdminSearch')?.addEventListener('input',render);
  $('minorAdminSearchClear')?.addEventListener('click',()=>{
    const field=$('minorAdminSearch');
