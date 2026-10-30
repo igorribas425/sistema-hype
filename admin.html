@@ -1180,7 +1180,7 @@ Bruna Santos"></textarea>
  <button type="button" id="minorResendAll" class="m120-btn m120-green" disabled>📧 REENVIAR PARA TODOS OS CONFERIDOS</button>
  <button type="button" id="minorResendAllStop" class="m120-btn m120-ghost" hidden>⏹ PARAR REENVIOS</button>
 </div>
-<p style="font-size:12px;color:#cdb9c7;line-height:1.5">Reenvia o PDF de autorizações reais conferidas, ainda válidas e visíveis no filtro/pesquisa. Inclui documentos pessoais; confira os e-mails. Pode duplicar mensagens já entregues. Envio individual com confirmação e progresso.</p>
+<p style="font-size:12px;color:#cdb9c7;line-height:1.5">Reenvia o PDF de autorizações reais conferidas, ainda válidas e visíveis no filtro/pesquisa. Inclui documentos pessoais; confira os e-mails. Pode duplicar mensagens já entregues. Se a cota do Resend estiver em 100%, NÃO use este botão; aumente o plano ou aguarde o limite renovar. A tentativa coletiva para ao primeiro erro de cota.</p>
 <p id="minorResendAllProgress" role="status" aria-live="polite" style="font-size:13px;color:#b8efd6;overflow-wrap:anywhere"></p>
 <label for="minorAdminSearch" style="display:block;font-size:13px;font-weight:800;margin:12px 0 6px;color:#f2d6e0">🔎 PESQUISAR AUTORIZAÇÃO DE MENOR</label>
 <div class="m120-search-box">
@@ -1192,7 +1192,7 @@ Bruna Santos"></textarea>
 </section>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
-<script src="admin-menores-v120.js?v=20261030-reenvio-todos-v123"></script>
+<script src="admin-menores-v120.js?v=20261030-cota-resend-v124"></script>
 <script src="admin-menores-demo-v128.js?v=20261024-qr-local-v146"></script>
 
 
@@ -1255,13 +1255,13 @@ Bruna Santos"></textarea>
 <button class="btn-action" type="button" id="v206ResendAll" disabled>📧 REENVIAR QR PARA TODOS</button>
 <button class="btn-action" type="button" id="v206ResendAllStop" hidden>⏹ PARAR REENVIOS</button>
 </div>
-<p style="font-size:12px;color:#c9c1cf;line-height:1.55;margin:8px 0">Reenvia apenas convidados aprovados e sem check-in da festa e promoter selecionados (qualquer filtro de status). Selecione uma festa específica. QR Codes existentes serão mantidos. Pode duplicar e-mails já entregues.</p>
+<p style="font-size:12px;color:#c9c1cf;line-height:1.55;margin:8px 0">Reenvia apenas convidados aprovados e sem check-in da festa e promoter selecionados (qualquer filtro de status). Selecione uma festa específica. QR Codes existentes serão mantidos. Pode duplicar e-mails já entregues. Se o Resend atingiu 100% da cota diária, NÃO reenvie em massa: aumente o limite ou aguarde a renovação.</p>
 <p id="v206BulkStatus" role="status" aria-live="polite" style="font-size:13px;color:#b8efd6;overflow-wrap:anywhere"></p>
 <div id="v206Stats" class="v206-stats"></div>
 <p id="v206StatusText" role="status" style="color:#c4c2c7;font-size:12px">Selecione a festa para consultar os convites.</p>
 <h3>Promoters cadastrados na Lista/Promoter</h3><p style="color:#bdb6bf;font-size:12px">Aqui aparecem os promoters que fizeram o novo cadastro. Os links pessoais não ficam expostos no Admin.</p><div id="v206PromoterLinks"></div>
 <h3 style="margin-top:25px">Cadastros dos convidados</h3><p style="font-size:12px;color:#beb9c0">Cada pessoa mostra FEZ CHECK-IN, NÃO FEZ CHECK-IN ou NÃO COMPARECEU, com horário real. EXCLUIR DA LISTA cancela QR não utilizado, mas preserva as informações na área ARQUIVADOS.</p><div id="v206Guests"></div>
 </section>
-<script src="admin-promoter-invites-v206.js?v=20261030-reenvio-todos-v211"></script>
+<script src="admin-promoter-invites-v206.js?v=20261030-cota-resend-v212"></script>
 </body>
 </html>
