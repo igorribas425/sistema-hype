@@ -1526,7 +1526,9 @@ async function autoSendFreeTicketEmail(entry) {
 }
 
 function renderFreeEntry(entry) {
-  window.__hypeTicketOpened = false;
+  // O ingresso FREE já está marcado Pago no banco; mostrar seu QR imediatamente.
+  // Não depender da entrega por e-mail nem exigir uma segunda ação do comprador.
+  window.__hypeTicketOpened = true;
   fillTicketCard(entry);
   const form = document.getElementById("ticketForm");
   const pixArea = document.getElementById("pixArea");
@@ -1536,14 +1538,13 @@ function renderFreeEntry(entry) {
   if (form) form.style.display = "none";
   if (pixArea) pixArea.style.display = "none";
   if (manualArea) manualArea.style.display = "none";
-  if (card) card.style.display = "none";
-  if (successArea) successArea.style.display = "block";
-  const title = successArea?.querySelector("h3");
-  const text = successArea?.querySelector("p");
-  if (title) title.textContent = `INGRESSO ${String(entry.gender || "").toUpperCase() || "FREE"} FREE ✅`;
-  if (text) text.textContent = "Nenhum PIX foi gerado. Seu ingresso já está liberado.";
-  const email = document.getElementById("paymentSuccessEmail");
-  if (email) email.textContent = "🎟️ Clique em ACESSAR MEU INGRESSO para abrir o QR Code.";
+  if (successArea) successArea.style.display = "none";
+  if (card) {
+    card.style.display = "block";
+    requestAnimationFrame(() => card.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+  const emailNotice = document.getElementById("ticketEmailNotice");
+  if (emailNotice) emailNotice.textContent = "✅ Ingresso FREE confirmado! Este QR Code já é válido na portaria. Você pode tirar um print para apresentar com seu documento. Envio por e-mail em processamento.";
 }
 
 async function createPixOrder(e) {
@@ -1633,16 +1634,16 @@ async function createPixOrder(e) {
       renderFreeEntry(entry);
       try {
         const emailResult = await autoSendFreeTicketEmail(entry);
-        const emailNotice = document.getElementById("paymentSuccessEmail");
+        const emailNotice = document.getElementById("ticketEmailNotice");
         if (emailNotice && (emailResult?.email_sent || emailResult?.already_sent)) {
-          emailNotice.textContent = "📧 Ingresso enviado para o Gmail. Se não aparecer, confira Spam/Lixo eletrônico. Na Portaria, apresente o QR Code.";
+          emailNotice.textContent = "✅ Ingresso FREE e QR Code liberados! O Resend aceitou o envio do e-mail, mas a entrega ainda não está confirmada. Salve este QR Code ou apresente seu documento na portaria.";
         }
         hypeNotify(`Ingresso ${entry.gender || gender || "FREE"} FREE ${entry.ticket_code} liberado e enviado por e-mail.`);
       } catch (emailErr) {
         console.warn("[HYPE][free-email]", emailErr);
-        const emailNotice = document.getElementById("paymentSuccessEmail");
+        const emailNotice = document.getElementById("ticketEmailNotice");
         if (emailNotice) {
-          emailNotice.textContent = "⚠️ Ingresso liberado. O envio automático por e-mail falhou, mas você pode acessar o ingresso nesta tela.";
+          emailNotice.textContent = "⚠️ O e-mail não pôde ser enviado agora, mas seu ingresso FREE e QR Code já estão liberados! Salve um print do QR Code ou apresente seu nome e documento na portaria.";
         }
         hypeNotify(`Ingresso ${entry.gender || gender || "FREE"} FREE ${entry.ticket_code} liberado.`);
       }
