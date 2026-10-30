@@ -135,7 +135,7 @@ function render(){
  '<button type="button" class="btn-action btn-confirm" data-approve="'+g.list_id+'">✓ APROVAR</button><button type="button" class="btn-action btn-del" data-reject="'+g.list_id+'">RECUSAR</button>':
  g.status==='Liberado'&&g.email?'<button type="button" class="btn-action" data-email="'+g.list_id+'">📧 '+(g.email_sent_at?'REENVIAR QR':'ENVIAR QR')+'</button>':'';
  const archived=Boolean(g.promoter_archived_at);
- const mailButton=HYPE?.role==='admin'&&!archived?approve:'';
+ const mailButton=HYPE?.role==='admin'&&!archived&&g.status==='Liberado'?approve:'';
  const decisionButtons=g.status==='Pendente'?approve:'';
  const remove=HYPE?.role!=='admin'?'':archived?
    '<small style="color:#b5b5bd">🗃️ ARQUIVADO • histórico preservado</small>':
