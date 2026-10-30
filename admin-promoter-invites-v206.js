@@ -72,7 +72,7 @@ async function resendAllPromoter(){
    accepted++;
   }catch(err){
    failed++;const reason=String(err.message||err).slice(0,130);failures.push(row.name+': '+reason);
-   if(/429|rate.?limit|too many|muitas vezes|limite de envio/i.test(reason)){rateLimited=true;break;}
+   if(/429|rate.?limit|too many|muitas vezes|limite de envio|daily.{0,25}(quota|limit)|quota.{0,25}(exceed|reach|limit)|limite di[aá]rio|cota (di[aá]ria|esgotada)|quota exceeded|daily sending/i.test(reason)){rateLimited=true;break;}
   }finally{sendingIds.delete(Number(row.list_id));}
   updatePromoterBulkUI();
   if(!bulkPromoterStop)await bulkPromoterPause(1400);
@@ -83,7 +83,7 @@ async function resendAllPromoter(){
  updatePromoterBulkUI();
  bulkPromoterProgress('Resultado: '+accepted+' aceito(s) pelo Resend • '+failed+' falha(s) • '+(candidates.length-attempted)+' não tentado(s).'+
   (bulkPromoterStop?' Interrompido pelo operador.':'')+
-  (rateLimited?' Limite temporário do provedor detectado.':'')+
+  (rateLimited?' Cota diária ou limite de envio detectado. Lote interrompido; confira o plano do Resend.':'')+
   (failures.length?' Falhas: '+failures.slice(0,5).join(' | '):'')+
   ' Aceite NÃO confirma entrega no Gmail.',failed>0);
  status('Reenvio coletivo concluído. Confira o resultado abaixo e os horários atualizados na lista.');
