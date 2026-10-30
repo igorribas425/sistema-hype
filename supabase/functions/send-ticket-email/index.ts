@@ -47,9 +47,75 @@ function officialUrl(value: string, requiredPath?: RegExp) {
   }
 }
 
+// Notificações sem QR: Brevo também atende pesquisa pós-evento e convites dos leitores.
+// Ingressos e lista seguem pelo serviço de QR que usa o mesmo BREVO_API_KEY.
+function brevoHtmlEscape(value:unknown):string{
+ return String(value??"").replace(/[&<>"']/g,(ch)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]||ch));
+}
+async function sendBrevoGenericEmail(to:string,subject:string,html:string){
+ const key=Deno.env.get("BREVO_API_KEY")||"";
+ const sender=Deno.env.get("BREVO_FROM_EMAIL")||Deno.env.get("RESEND_FROM_EMAIL")||"";
+ if(!key||!validEmail(sender))throw Error("BREVO_API_KEY ou remetente BREVO_FROM_EMAIL ausente ou inválido");
+ if(!validEmail(to))throw Error("Destinatário inválido");
+ const response=await fetch("https://api.brevo.com/v3/smtp/email",{
+  method:"POST",headers:{"api-key":key,"Content-Type":"application/json","Accept":"application/json"},
+  body:JSON.stringify({sender:{name:"HYPE Lounge Club",email:sender},to:[{email:to}],subject,htmlContent:html}),
+  signal:AbortSignal.timeout(19000)
+ });
+ const answer=await response.json().catch(()=>({}));
+ if(!response.ok||!answer?.messageId)throw Error("Brevo: "+String(answer.message||answer.code||response.status).slice(0,170));
+ return String(answer.messageId);
+}
+async function brevoGenericHypeMail(payload:Record<string,unknown>){
+ const action=String(payload.action||"");
+ if(action==="reader_link"){
+  const email=String(payload.email||"").trim().toLowerCase();
+  const link=String(payload.reader_link||"").trim();
+  const name=String(payload.reader_label||"Leitor da Portaria").slice(0,80);
+  if(!officialUrl(link,/\/leitor\.html$/i)||!validEmail(email))throw Error("Link do leitor ou destinatário inválido");
+  const subject="HYPE | Acesso ao leitor da portaria";
+  const html="<div style='font:16px/1.65 Arial,sans-serif;max-width:580px;margin:auto;padding:24px'>"+
+   "<h2>HYPE LOUNGE CLUB</h2><p>Acesso para "+brevoHtmlEscape(name)+"</p>"+
+   "<p><a href='"+brevoHtmlEscape(link)+"'>ABRIR LEITOR DA PORTARIA</a></p>"+
+   "<p>Esse link é exclusivo para a equipe autorizada. Não compartilhe.</p></div>";
+  const id=await sendBrevoGenericEmail(email,subject,html);
+  return {ok:true,provider:"brevo",provider_id:id};
+ }
+ if(action==="survey_batch"){
+  const input=Array.isArray(payload.recipients)?payload.recipients:[];
+  if(input.length>100)throw Error("Lote de pesquisa acima de 100 destinatários");
+  const results:any[]=[];
+  for(const item of input){
+   const row=item&&typeof item==="object"?item as Record<string,unknown>:{};
+   const invite_token=String(row.invite_token||"");
+   const email=String(row.email||"").trim().toLowerCase();
+   const link=String(row.survey_link||"").trim();
+   const validLink=officialUrl(link,/\/pesquisa\.html$/i);
+   if(!validEmail(email)||!validLink||!validLink.searchParams.get("token")){
+    results.push({ok:false,invite_token,error:"Pesquisa ou destinatário inválido"});continue;
+   }
+   const name=brevoHtmlEscape(String(row.customer_name||"Convidado HYPE").slice(0,120));
+   const event=brevoHtmlEscape(String(row.event_name||"Evento HYPE").slice(0,120));
+   const date=brevoHtmlEscape(String(row.event_date||"").slice(0,30));
+   const html="<div style='font:16px/1.65 Arial,sans-serif;max-width:580px;margin:auto;padding:24px'>"+
+    "<h2>HYPE LOUNGE CLUB</h2><p>Olá, "+name+"!</p><p>Obrigado por participar de "+event+
+    (date?" ("+date+")":"")+". Sua opinião ajuda a melhorar nossas festas.</p>"+
+    "<p><a href='"+brevoHtmlEscape(link)+"'>AVALIAR MINHA EXPERIÊNCIA</a></p></div>";
+   try{await sendBrevoGenericEmail(email,"HYPE | Como foi sua experiência?",html);results.push({ok:true,invite_token});}
+   catch(e){
+    const msg=String(e instanceof Error?e.message:e).slice(0,150);
+    results.push({ok:false,invite_token,error:msg});
+    if(/429|rate.?limit|quota|limite/i.test(msg))break;
+   }
+  }
+  return {ok:true,provider:"brevo",results};
+ }
+ throw Error("Tipo de notificação Brevo não autorizado");
+}
 async function postMail(payload: Record<string, unknown>) {
-  // Ingressos, FREE e lista de convidados usam Resend após configurar
-  // RESEND_API_KEY + RESEND_FROM_EMAIL. Até lá mantém o legado do Gmail.
+  // Ingressos, FREE e Lista/Promoter vão para a função de QR.
+  // Quando BREVO_API_KEY estiver configurada, ela usa Brevo; sem a chave
+  // mantém a integração anterior para não interromper a portaria.
   if(payload.payment_status==="Pago" && payload.ticket_code && payload.qr_token){
     const url=Deno.env.get("SUPABASE_URL")||"";
     const service=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
@@ -67,6 +133,8 @@ async function postMail(payload: Record<string, unknown>) {
       return result;
     }
   }
+  // Ao configurar BREVO_API_KEY, todos os envios restantes deixam de usar o Apps Script.
+  if(Deno.env.get("BREVO_API_KEY"))return await brevoGenericHypeMail(payload);
   const appsScriptUrl = "https://script.google.com/macros/s/AKfycbxgovFRJvAtUq5GSFgGMiGKuzRyod9O0Ld8wG-jxRtpqByhNvSI8r_LDTLhmVJkb6Rc/exec";
   const webhookSecret = Deno.env.get("HYPE_WEBHOOK_SECRET");
   if (!appsScriptUrl || !webhookSecret) {
