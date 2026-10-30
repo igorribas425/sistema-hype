@@ -21,6 +21,19 @@ async function rpc(name,params){
 }
 const status=message=>{if($('v206StatusText'))$('v206StatusText').textContent=message;};
 const registrationUrl='https://hypeloungeclub.com.br/promoter-convite.html';
+const hypeOfficialListUrl='https://hypeloungeclub.com.br/lista.html';
+async function copyHypeList(){
+ try{await navigator.clipboard.writeText(hypeOfficialListUrl);}
+ catch(_){const t=document.createElement('textarea');t.value=hypeOfficialListUrl;document.body.append(t);t.select();document.execCommand('copy');t.remove();}
+ status('Link oficial da Lista HYPE copiado. Esse cadastro não usa link pessoal de promoter.');
+}
+async function shareHypeList(){
+ if(navigator.share){
+  try{await navigator.share({title:'Lista Oficial HYPE Lounge Club',text:'Entre na lista oficial da HYPE e aguarde sua aprovação:',url:hypeOfficialListUrl});return;}
+  catch(err){if(err?.name==='AbortError')return;}
+ }
+ await copyHypeList();
+}
 let events=[],promoters=[],guests=[];
 const recentlyResentIds=new Set();
 const sendingIds=new Set();
@@ -278,5 +291,5 @@ async function togglePromoter(id){
  try{await rpc('staff_set_invite_promoter_active_v207',{...auth(),p_id:id,p_active:enable});await load();}
  catch(err){alert('Falha ao alterar promoter: '+String(err.message||err));}
 }
-window.HypePromoterInvitesV206={load,refreshGuests,copyRegistration,shareRegistration};
+window.HypePromoterInvitesV206={load,refreshGuests,copyRegistration,shareRegistration,copyHypeList,shareHypeList};
 })();
