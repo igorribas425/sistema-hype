@@ -105,7 +105,7 @@ function showNotificationResult(data){
  const root=$('minorAdminDetail');if(!root)return;
  const box=document.createElement('div');box.className='m120-warning';
  const ok=Boolean(data.emailSent);
- box.append(text('strong',ok?'✅ Pedido de envio aceito pelo Gmail. Isso não garante entrega: confira os destinatários, Spam e eventuais devoluções.':'⚠️ Análise registrada, mas o e-mail com PDF não foi confirmado.'));
+ box.append(text('strong',ok?'✅ Resend aceitou a solicitação de envio do PDF. Isso NÃO confirma entrega na caixa de entrada: confira os destinatários, Spam e o status no painel Resend.':'⚠️ Análise registrada, mas o e-mail com PDF não foi confirmado.'));
  if(!ok){
   box.append(text('p',String(data.emailError||'Verifique o serviço de envio.')));
   box.append(text('p','Use o botão BAIXAR PDF COMPLETO no Admin e envie o documento manualmente aos dois destinatários enquanto corrige o Gmail.'));
@@ -197,7 +197,7 @@ async function detail(id){
   fields.forEach(([k,v])=>{list.append(text('dt',k),text('dd',String(v||'—')));});
   el.appendChild(list);
   if(r.email_notification_error&&!r.email_notified_at){
-    const bad=text('p','⚠️ ENTREGA DO GMAIL NÃO CONFIRMADA: '+r.email_notification_error,'m120-warning');
+    const bad=text('p','⚠️ ENVIO DO PDF NÃO CONFIRMADO: '+r.email_notification_error,'m120-warning');
     bad.id='minorEmailDeliveryAlert';
     bad.style.cssText='border:1px solid #b45373;background:#341b28;padding:14px;border-radius:12px';
     el.append(bad);
@@ -324,7 +324,7 @@ async function detail(id){
         catch(err) { delivery={emailSent:false,emailError:err.message}; }
         await load();
         if(openedId===id){await detail(id);showNotificationResult(delivery);}
-        status(delivery.emailSent?'Pedido de envio aceito pelo Gmail. Confirme recebimento e eventuais devoluções.':'Autorização aprovada, mas o PDF não foi enviado: '+String(delivery.emailError||'Falha desconhecida'),!delivery.emailSent);
+        status(delivery.emailSent?'Resend aceitou o envio. Entrega aos destinatários ainda não confirmada.':'Autorização aprovada, mas o PDF não foi enviado: '+String(delivery.emailError||'Falha desconhecida'),!delivery.emailSent);
       }else{
         let delivery;
         try{delivery=await sendNotification(id);}
@@ -371,7 +371,7 @@ async function detail(id){
       try{
         const result=await sendNotification(r.id);
         showNotificationResult(result);
-        status(result.emailSent?"Envio aceito pelo Gmail, mas entrega ainda não confirmada.":"Envio do PDF não confirmado: "+String(result.emailError||"Erro desconhecido"),!result.emailSent);
+        status(result.emailSent?"Resend aceitou o envio do PDF, mas a entrega ainda não foi confirmada.":"Envio do PDF não confirmado: "+String(result.emailError||"Erro desconhecido"),!result.emailSent);
       }catch(e){status("Erro no envio do PDF: "+e.message,true);}
       finally{resend.disabled=false;resend.textContent="📧 REENVIAR PDF AOS DOIS GMAILS";}
     });
