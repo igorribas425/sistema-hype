@@ -24,6 +24,70 @@ const registrationUrl='https://hypeloungeclub.com.br/promoter-convite.html';
 let events=[],promoters=[],guests=[];
 const recentlyResentIds=new Set();
 const sendingIds=new Set();
+const bulkPromoterFinished=new Set();
+let bulkPromoterRunning=false,bulkPromoterStop=false;
+const bulkPromoterPause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function bulkPromoterCandidates(){
+ const eid=Number($('v206Event')?.value||0);
+ const promoter=$('v206Promoter')?.value||'';
+ if(!eid)return [];
+ return guests.filter(g=>Number(g.event_id)===eid&&g.status==='Liberado'&&!g.entered_at&&
+  !g.promoter_archived_at&&g.email&&(!promoter||g.promoter_code===promoter)&&!bulkPromoterFinished.has(Number(g.list_id)));
+}
+function updatePromoterBulkUI(){
+ const btn=$('v206ResendAll'),stop=$('v206ResendAllStop');
+ const valid=Number($('v206Event')?.value||0)>0;
+ if(btn){btn.disabled=bulkPromoterRunning||!valid||HYPE?.role!=='admin'||!bulkPromoterCandidates().length;
+  btn.textContent=bulkPromoterRunning?'⏳ REENVIANDO...':'📧 REENVIAR QR PARA TODOS ('+bulkPromoterCandidates().length+')';
+  btn.title=valid?'Somente aprovados sem check-in da festa e promoter selecionados.':'Selecione uma festa específica para não reenviar convites antigos.';}
+ if(stop)stop.hidden=!bulkPromoterRunning;
+}
+function bulkPromoterProgress(message,bad=false){
+ const el=$('v206BulkStatus');
+ if(el){el.textContent=message;el.style.color=bad?'#ffb6c5':'#b8efd6';}
+}
+async function resendAllPromoter(){
+ if(bulkPromoterRunning||HYPE?.role!=='admin')return;
+ const eid=Number($('v206Event')?.value||0);
+ if(!eid){bulkPromoterProgress('Selecione uma festa específica para reenviar; não é permitido o histórico inteiro.',true);return;}
+ const candidates=bulkPromoterCandidates();
+ if(!candidates.length){bulkPromoterProgress('Nenhum convidado aprovado, sem check-in e com e-mail, neste filtro.');return;}
+ const chosen=events.find(ev=>Number(ev.id)===eid);
+ if(!confirm('REENVIAR '+candidates.length+' QR Code(s) individuais da festa '+(chosen?.name||('#'+eid))+'?\n\nApenas convidados aprovados e ainda sem check-in; cancelados e arquivados ficam de fora. Alguns destinatários podem receber novamente uma mensagem que já chegou.\n\nOs e-mails são enviados um a um. Confirma?'))return;
+ if(candidates.length>20&&!confirm('Confirmar reenvio coletivo de '+candidates.length+' mensagens? O Resend pode aplicar atraso ou limite de envio.'))return;
+ bulkPromoterRunning=true;bulkPromoterStop=false;updatePromoterBulkUI();
+ const filters=[$('v206Event'),$('v206Promoter'),$('v206Status')];
+ filters.forEach(el=>{if(el)el.disabled=true;});
+ let accepted=0,failed=0,attempted=0,rateLimited=false;
+ const failures=[];
+ for(const row of candidates){
+  if(bulkPromoterStop)break;
+  attempted++;
+  bulkPromoterProgress('Reenviando '+attempted+'/'+candidates.length+' • aceitos: '+accepted+' • falhas: '+failed+' • '+row.name);
+  sendingIds.add(Number(row.list_id));
+  try{
+   await sendQr(Number(row.list_id),true);
+   bulkPromoterFinished.add(Number(row.list_id));
+   recentlyResentIds.add(Number(row.list_id));
+   accepted++;
+  }catch(err){
+   failed++;const reason=String(err.message||err).slice(0,130);failures.push(row.name+': '+reason);
+   if(/429|rate.?limit|too many|muitas vezes|limite de envio/i.test(reason)){rateLimited=true;break;}
+  }finally{sendingIds.delete(Number(row.list_id));}
+  updatePromoterBulkUI();
+  if(!bulkPromoterStop)await bulkPromoterPause(1400);
+ }
+ bulkPromoterRunning=false;
+ filters.forEach(el=>{if(el)el.disabled=false;});
+ await refreshGuests();
+ updatePromoterBulkUI();
+ bulkPromoterProgress('Resultado: '+accepted+' aceito(s) pelo Resend • '+failed+' falha(s) • '+(candidates.length-attempted)+' não tentado(s).'+
+  (bulkPromoterStop?' Interrompido pelo operador.':'')+
+  (rateLimited?' Limite temporário do provedor detectado.':'')+
+  (failures.length?' Falhas: '+failures.slice(0,5).join(' | '):'')+
+  ' Aceite NÃO confirma entrega no Gmail.',failed>0);
+ status('Reenvio coletivo concluído. Confira o resultado abaixo e os horários atualizados na lista.');
+}
 async function copyRegistration(){
  try{await navigator.clipboard.writeText(registrationUrl);}
  catch(_){const t=document.createElement('textarea');t.value=registrationUrl;document.body.append(t);t.select();document.execCommand('copy');t.remove();}
@@ -56,6 +120,7 @@ function render(){
   (HYPE?.role==='admin'?'<button class="btn-action" data-toggle="'+Number(p.id)+'">'+
   (p.active!==false?'DESATIVAR':'REATIVAR')+'</button>':'')+'</div>'
  ).join('')||'<p>Nenhum promoter de convidados cadastrado. Compartilhe o link geral de cadastro acima.</p>';
+ updatePromoterBulkUI();
  const out=$('v206Guests');if(!out)return;
  out.innerHTML=list.map(g=>{
  const checked=Boolean(g.entered_at||g.status==='Entrou');
@@ -70,7 +135,9 @@ function render(){
  '<button type="button" class="btn-action btn-confirm" data-approve="'+g.list_id+'">✓ APROVAR</button><button type="button" class="btn-action btn-del" data-reject="'+g.list_id+'">RECUSAR</button>':
  g.status==='Liberado'&&g.email?'<button type="button" class="btn-action" data-email="'+g.list_id+'">📧 '+(g.email_sent_at?'REENVIAR QR':'ENVIAR QR')+'</button>':'';
  const archived=Boolean(g.promoter_archived_at);
-  const remove=HYPE?.role!=='admin'?'':archived?
+ const mailButton=HYPE?.role==='admin'&&!archived?approve:'';
+ const decisionButtons=g.status==='Pendente'?approve:'';
+ const remove=HYPE?.role!=='admin'?'':archived?
    '<small style="color:#b5b5bd">🗃️ ARQUIVADO • histórico preservado</small>':
    '<button type="button" class="btn-action btn-del" data-delete="'+g.list_id+'">🗃️ EXCLUIR DA LISTA</button>';
   return '<div class="v206-row"><div style="flex:1;min-width:0"><strong>'+esc(g.name)+'</strong>'+
@@ -81,7 +148,7 @@ function render(){
  '<small>E-mail: '+esc(g.email||'')+' • Instagram: '+esc(g.instagram||'')+'</small>'+
  '<small>'+esc(mail)+'</small></div><div class="v206-actions">'+
  (g.photo_path?'<button type="button" class="btn-action" data-photo="'+g.list_id+'">📷 SELFIE</button>':'')+
- approve+remove+'</div></div>';
+ decisionButtons+mailButton+remove+'</div></div>';
  }).join('')||'<div class="v206-row">Nenhum convidado para este filtro.</div>';
 }
 async function refreshGuests(){
@@ -142,7 +209,7 @@ async function review(id,decision){
  }catch(err){alert('Não foi possível analisar: '+String(err.message||err));}
 }
 async function manualEmail(id){
- if(sendingIds.has(id))return;
+ if(bulkPromoterRunning||sendingIds.has(id))return;
  const guest=guests.find(g=>Number(g.list_id)===id);
  if(!guest||guest.status!=='Liberado'||!guest.email)return;
  if(!confirm('Reenviar o mesmo QR de convidado para '+guest.email+'? O Resend poderá aceitar o envio, mas a entrega depende do e-mail destinatário.'))return;
@@ -187,6 +254,8 @@ async function deleteGuest(id){
  }
 }
 function init(){
+ $('v206ResendAll')?.addEventListener('click',resendAllPromoter);
+ $('v206ResendAllStop')?.addEventListener('click',()=>{bulkPromoterStop=true;bulkPromoterProgress('Interrompendo após o envio atual...');});
  $('v206Event')?.addEventListener('change',refreshGuests);
  $('v206Promoter')?.addEventListener('change',render);
  $('v206Status')?.addEventListener('change',refreshGuests);
