@@ -529,7 +529,7 @@ function hypeApplyPromoterLinkV16() {
   let blockedBox = document.getElementById("promoterInvalidBox");
   if (activeCode && HYPE.promoterLinkInvalid) {
     if (status) {
-      status.textContent = "❌ Este link de promoter foi excluído ou desativado.";
+      status.textContent = activeCode.startsWith("CONV-") ? "❌ Este é um código da Lista/Promoter, não um link de vendas. Peça o link oficial de ingressos." : "❌ Este link de vendas não foi validado. Solicite o link oficial atualizado do promoter.";
       status.className = "v16-coupon-status error";
     }
     if (!blockedBox && form?.parentNode) {
@@ -539,7 +539,7 @@ function hypeApplyPromoterLinkV16() {
       form.parentNode.insertBefore(blockedBox, form);
     }
     if (blockedBox) {
-      blockedBox.innerHTML = "❌ <strong>LINK DE PROMOTER ENCERRADO</strong><br><span style=\"font-weight:600;font-size:12px\">Este promoter foi excluído ou desativado. Este link não pode mais gerar compras.</span>";
+      blockedBox.innerHTML = activeCode.startsWith("CONV-") ? "❌ <strong>LINK DE CONVIDADOS, NÃO DE VENDAS</strong><br><span style=\"font-weight:600;font-size:12px\">Este código pertence à Lista/Promoter. Para comprar ou retirar ingresso pelo link de promoter, peça o link de vendas oficial.</span>" : "❌ <strong>LINK DE VENDAS NÃO VALIDADO</strong><br><span style=\"font-weight:600;font-size:12px\">O código pode estar antigo, inativo ou temporariamente indisponível. Peça o link de vendas atualizado à equipe HYPE.</span>";
       blockedBox.style.display = "block";
     }
     if (form) {
@@ -1368,7 +1368,7 @@ async function createManualOrder(e) {
     const promoterOk = await hypeValidatePromoterLinkV56(HYPE.promoterLinkCode);
     if (!promoterOk) {
       hypeApplyPromoterLinkV16();
-      return alert("Este link de promoter foi excluído ou desativado. Ele não pode mais gerar compras.");
+      return alert(String(HYPE.promoterLinkCode||"").toUpperCase().startsWith("CONV-") ? "Este é um link da Lista/Promoter, não um link de vendas. Peça o link oficial de ingressos." : "Não foi possível validar este link de vendas. Peça o link atualizado do promoter ou tente novamente.");
     }
   }
 
@@ -1574,7 +1574,7 @@ async function createPixOrder(e) {
     const promoterOk = await hypeValidatePromoterLinkV56(HYPE.promoterLinkCode);
     if (!promoterOk) {
       hypeApplyPromoterLinkV16();
-      return alert("Este link de promoter foi excluído ou desativado. Ele não pode mais gerar compras.");
+      return alert(String(HYPE.promoterLinkCode||"").toUpperCase().startsWith("CONV-") ? "Este é um link da Lista/Promoter, não um link de vendas. Peça o link oficial de ingressos." : "Não foi possível validar este link de vendas. Peça o link atualizado do promoter ou tente novamente.");
     }
   }
 
