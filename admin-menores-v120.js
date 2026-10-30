@@ -44,7 +44,7 @@ async function resendAllMinors(){
   }catch(err){
    failed++;const reason=String(err.message||err).slice(0,140);
    failures.push(row.minor_name+': '+reason);
-   if(/429|rate.?limit|too many|muitas vezes|limite de envio/i.test(reason)){rateLimited=true;break;}
+   if(/429|rate.?limit|too many|muitas vezes|limite de envio|daily.{0,25}(quota|limit)|quota.{0,25}(exceed|reach|limit)|limite di[aá]rio|cota (di[aá]ria|esgotada)|quota exceeded|daily sending/i.test(reason)){rateLimited=true;break;}
   }
   updateMinorBulkButton();
   if(!bulkMinorStop)await bulkMinorPause(1400);
@@ -56,7 +56,7 @@ async function resendAllMinors(){
  const remaining=candidates.length-attempted;
  writeMinorBulkProgress('Resultado do lote: '+accepted+' aceito(s) pelo Resend; '+failed+' falha(s); '+remaining+' não tentado(s).'+
   (bulkMinorStop?' Interrompido pelo operador.':'')+
-  (rateLimited?' Limite temporário detectado; interrompido para não sobrecarregar o provedor.':'')+
+  (rateLimited?' Cota/limite de envio detectado. O lote foi interrompido; consulte o plano do Resend antes de tentar novamente.':'')+
   (failures.length?' Falhas: '+failures.slice(0,5).join(' | '):'')+
   ' Aceite NÃO confirma entrega na caixa de entrada.',failed>0);
  await load();
