@@ -1636,7 +1636,7 @@ async function createPixOrder(e) {
         const emailResult = await autoSendFreeTicketEmail(entry);
         const emailNotice = document.getElementById("ticketEmailNotice");
         if (emailNotice && (emailResult?.email_sent || emailResult?.already_sent)) {
-          emailNotice.textContent = "✅ Ingresso FREE e QR Code liberados! O Resend aceitou o envio do e-mail, mas a entrega ainda não está confirmada. Salve este QR Code ou apresente seu documento na portaria.";
+          emailNotice.textContent = "✅ Ingresso FREE e QR Code liberados! O serviço aceitou o envio do e-mail, mas a entrega ainda não está confirmada. Salve este QR Code ou apresente seu documento na portaria.";
         }
         hypeNotify(`Ingresso ${entry.gender || gender || "FREE"} FREE ${entry.ticket_code} liberado e enviado por e-mail.`);
       } catch (emailErr) {
@@ -1722,7 +1722,9 @@ function hypeGetClientOrderV168() {
 }
 async function hypeRecoverClientOrderV168(inputCode=null) {
   const saved=inputCode?null:hypeGetClientOrderV168();
-  const code=String(inputCode||saved?.ticket_code||"").trim().toUpperCase();
+  // Link individual do Brevo: recuperar no banco sem gerar outro Pix ou ingresso.
+  const linkedCode=inputCode?null:new URLSearchParams(location.search).get("ticket");
+  const code=String(inputCode||linkedCode||saved?.ticket_code||"").trim().toUpperCase();
   if(!/^HYPE-[A-Z0-9]{6,24}$/.test(code))return false;
   // Não mostrar ingresso com dados locais: apenas após consulta do Supabase.
   const rows=await sbRpc("public_get_ticket",{p_code:code});
@@ -1809,23 +1811,24 @@ async function refreshCurrentOrderStatus(showMessage = true) {
       if (manualArea) manualArea.style.display = "none";
       if (pixArea) pixArea.style.display = "none";
 
-      // Primeiro mostra uma confirmação clara. O cliente decide quando abrir o ingresso.
-      if (!window.__hypeTicketOpened) {
-        if (successArea) successArea.style.display = "block";
-        if (card) card.style.display = "none";
-      }
+      // Depois do Pix confirmado, abrir o QR automaticamente como no ingresso FREE.
+      const needsReveal = !window.__hypeTicketOpened || card?.style.display !== "block";
+      window.__hypeTicketOpened = true;
+      if (successArea) successArea.style.display = "none";
+      if (card) card.style.display = "block";
+      if (needsReveal && card) requestAnimationFrame(() => card.scrollIntoView({behavior:"smooth",block:"start"}));
 
       const successEmail = document.getElementById("paymentSuccessEmail");
       if (successEmail) {
         const isFreeConfirmed = Number(entry.price || 0) <= 0;
         successEmail.textContent = mergedEntry.email_sent
-          ? "📧 Seu ingresso já foi enviado para o Gmail. Confira também Spam/Lixo eletrônico e apresente o QR Code na Portaria."
+          ? "📧 O serviço aceitou o envio do e-mail, mas a entrega não está confirmada. Seu QR já está na tela: salve um print."
           : isFreeConfirmed
-            ? "📧 Ingresso FREE liberado. Normalmente o Gmail chega em menos de 1 minuto. Confira também Spam/Lixo eletrônico e apresente o QR Code na Portaria."
-            : "⚠️ PAGAMENTO CONFIRMADO! O Gmail está temporariamente indisponível. Toque em ACESSAR MEU INGRESSO para apresentar o QR Code na Portaria.";
+            ? "🎟️ FREE confirmado! Seu QR já aparece na tela; o e-mail pode chegar depois."
+            : "✅ PIX CONFIRMADO! O QR já aparece nesta página, mesmo que o e-mail demore. Salve um print.";
       }
 
-      if (showMessage||firstConfirmation) hypeNotify(Number(entry.price || 0) <= 0 ? "Ingresso FREE liberado!" : "✅ PIX CONFIRMADO! Toque em ACESSAR MEU INGRESSO.");
+      if (showMessage||firstConfirmation) hypeNotify(Number(entry.price || 0) <= 0 ? "Ingresso FREE liberado! QR exibido na tela." : "✅ PIX CONFIRMADO! Seu QR está disponível na tela.");
     } else if (showMessage) {
       hypeNotify("Pagamento ainda não foi confirmado.");
     }
@@ -1861,6 +1864,9 @@ function fillTicketCard(entry) {
   const qr = document.getElementById("ticketQrImg");
   if (qr) {
     const code=String(entry.qr_token||entry.ticket_code||"").trim();
+    // Não regenerar o mesmo QR a cada segundo enquanto se verifica o Pix.
+    if(qr.dataset.hypeRenderedCode===code && qr.getAttribute("src"))return;
+    if(code) qr.dataset.hypeRenderedCode=code;
     if(code&&window.QRCode?.toDataURL){
       // Gerar QR localmente para o ingresso não depender do Gmail nem de um
       // site externo de QR Code quando a rede do cliente oscilar.
@@ -2601,7 +2607,7 @@ async function sendTicketEmail(id, force = false) {
   if (force) {
     await loadStaffTickets(document.getElementById("searchInput")?.value || "");
     renderClientsTable();
-    hypeNotify(data?.already_sent ? "O Resend já tinha aceitado esse envio." : "📧 Resend aceitou o reenvio. Entrega no Gmail ainda não confirmada.");
+    hypeNotify(data?.already_sent ? "O serviço já havia aceitado esse envio." : "📧 E-mail aceito para envio. A entrega na caixa de entrada ainda não está confirmada.");
   }
 
   return data;
