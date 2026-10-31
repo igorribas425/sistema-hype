@@ -165,6 +165,22 @@ input:focus,select:focus{border-color:var(--event-accent)!important;box-shadow:0
 .payment-success h3{font-size:22px;color:var(--green);margin-bottom:7px}
 .payment-success p{font-size:13px;color:#f4f4f5;line-height:1.5}
 .payment-success small{display:block;color:var(--muted);margin:9px 0 14px;line-height:1.5}
+.ticket-entry-fallback{
+  display:block;
+  margin:0 0 18px;
+  padding:17px 16px;
+  text-align:left;
+  background:linear-gradient(135deg,rgba(232,164,36,.16),rgba(232,164,36,.06));
+  border:2px solid rgba(246,188,76,.7);
+  border-radius:14px;
+  color:#fff3d2;
+  box-shadow:0 8px 30px rgba(0,0,0,.16);
+}
+.ticket-entry-fallback[hidden]{display:none!important}
+.ticket-entry-fallback strong{display:block;color:#ffe19b;font-size:16px;font-weight:900;line-height:1.35;margin-bottom:9px}
+.ticket-entry-fallback p{margin:0 0 9px;font-size:14px;line-height:1.6}
+.ticket-entry-fallback .ticket-entry-action{font-weight:900;color:#fff;font-size:15px}
+.ticket-entry-fallback small{display:block;font-size:12px;color:#f6dfbd;line-height:1.5}
 .ticket-email-notice{
   margin:12px 0 0;
   padding:10px 12px;
@@ -608,7 +624,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <div class="success-icon">✅</div>
         <h3>PAGAMENTO CONFIRMADO</h3>
         <p>Seu ingresso HYPE está liberado.</p>
-        <small id="paymentSuccessEmail">📧 Você pode receber a cobrança do Asaas separadamente. O ingresso HYPE é outro e-mail. Se ele não aparecer, confira Spam/Lixo eletrônico e clique abaixo para ver seu QR Code agora.</small>
+        <small id="paymentSuccessEmail">📧 O envio dos ingressos por e-mail está apresentando falhas. Se o seu ingresso não chegar, informe o nome completo usado na compra e apresente documento com foto na portaria para conferência do pagamento. Não compre novamente.</small>
         <button id="hypeOpenPaidTicketBtn" class="btn" onclick="openPaidTicket()">🎟️ ACESSAR MEU INGRESSO</button>
         <small style="display:block;margin-top:8px;color:#e9dce1;font-size:11px">Salve uma captura de tela do ingresso para apresentar com seu documento na portaria, mesmo que o e-mail demore.</small>
       </div>
@@ -628,6 +644,12 @@ html,body{max-width:100%;overflow-x:hidden}
 
       <div class="ticket-card" id="ticketCard">
         <h2>🎟️ INGRESSO OFICIAL</h2>
+        <div class="ticket-entry-fallback" id="ticketEntryFallbackNotice" hidden role="status" aria-live="polite">
+          <strong>✅ COMPRA CONFIRMADA — ENTRADA PELO NOME</strong>
+          <p>Estamos enfrentando problemas no envio dos ingressos por e-mail. <b>Seu ingresso pago continua registrado no sistema da HYPE.</b></p>
+          <p class="ticket-entry-action">Se não receber o QR Code, basta informar seu NOME COMPLETO na portaria e apresentar um DOCUMENTO COM FOTO.</p>
+          <small>Nossa equipe localizará o cadastro e confirmará o pagamento antes de autorizar a entrada, respeitando as regras do evento. Não precisa comprar outro ingresso. Se o QR aparecer abaixo, salve um print.</small>
+        </div>
         <div class="ticket-info">
           <p><span>Titular:</span> <strong id="tClientName" style="color:#fff"></strong></p>
           <p><span>WhatsApp:</span> <strong id="tClientPhone" style="color:#fff"></strong></p>
@@ -661,7 +683,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
-<script src="app.js?v=20261030-qr-automatico-v231"></script>
+<script src="app.js?v=20261030-aviso-portaria-pagamento-v234"></script>
 <script src="cliente-menor-v120.js?v=20261024-iphone-same-tab-v156"></script>
 <script src="promoter-global-v16-8.js?v=20261030-promoter-link-tipo-v58"></script>
 <script src="v18-client.js?v=20260902-v20"></script>
