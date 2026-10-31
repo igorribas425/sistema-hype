@@ -1175,7 +1175,13 @@ Bruna Santos"></textarea>
   <p id="m128Status" role="status" style="color:#c5f2d4;font-size:12px">Abra esta aba com acesso ADM.</p>
   <div id="m128List"></div><div id="m128Detail" hidden style="padding:14px;background:#161018;border:1px solid #75415a;border-radius:12px;margin-top:12px"></div>
 </section>
-<div style="border-top:1px solid #4e3442;padding-top:14px;margin-top:18px"><strong style="font-size:17px">Autorizações reais</strong><p style="font-size:12px;color:#c9adb9;margin:6px 0 11px">Somente cadastros verdadeiros com análise de documentos.</p></div>
+<div style="border-top:1px solid #4e3442;padding-top:14px;margin-top:18px">
+ <div class="m120-head" style="align-items:center;gap:10px">
+  <div><strong style="font-size:17px">⏳ Autorizações de menores</strong>
+  <p style="font-size:12px;color:#c9adb9;margin:6px 0 11px">Exibindo primeiro apenas os PENDENTES. Os conferidos e recusados continuam salvos.</p></div>
+  <button type="button" id="minorAdminShowAllToggleV234" class="m120-btn m120-ghost" aria-pressed="false" aria-controls="minorAdminList">📂 VER TODOS OS STATUS</button>
+ </div>
+</div>
 <div class="m120-toolbar" style="margin:12px 0;gap:10px;align-items:center">
  <button type="button" id="minorResendAll" class="m120-btn m120-green" disabled>📧 REENVIAR PARA TODOS OS CONFERIDOS</button>
  <button type="button" id="minorResendAllStop" class="m120-btn m120-ghost" hidden>⏹ PARAR REENVIOS</button>
@@ -1192,7 +1198,7 @@ Bruna Santos"></textarea>
 </section>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
-<script src="admin-menores-v120.js?v=20261030-lote-protegido-v233"></script>
+<script src="admin-menores-v120.js?v=20261031-apenas-pendentes-v234"></script>
 <script src="admin-menores-demo-v128.js?v=20261024-qr-local-v146"></script>
 
 
