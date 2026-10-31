@@ -165,10 +165,15 @@ function hypeEventStillPublicV37(event) {
   return now.minutes < 8 * 60;
 }
 
+function hypeListOnlyEventV235(event) {
+  // Festa de convidados da Lista/Promoter: não anunciar como ingresso à venda.
+  // Deve permanecer visível no ADM e na Portaria para a conferência.
+  return /\(Lista\/Promoter\)/i.test(String(event?.name || ""));
+}
 function hypeClientVisibleEventsV37() {
   const events = Array.isArray(HYPE.events) ? HYPE.events : [];
   if (!hypeIsClientPageV37()) return events;
-  return events.filter(hypeEventStillPublicV37);
+  return events.filter(e => !hypeListOnlyEventV235(e) && hypeEventStillPublicV37(e));
 }
 
 /* HYPE V202: seletor de operação mostra apenas festas em andamento ou futuras.
@@ -185,7 +190,9 @@ function hypeVisibleOperationalEventsV202(events) {
 window.HypeVisibleOperationalEventsV202=hypeVisibleOperationalEventsV202;
 
 function hypeChooseClientEventV37(events, promoterLink = {}) {
-  const visible = Array.isArray(events) ? events.filter(hypeEventStillPublicV37) : [];
+  const visible = Array.isArray(events)
+    ? events.filter(e => !hypeListOnlyEventV235(e) && hypeEventStillPublicV37(e))
+    : [];
   if (!visible.length) return null;
 
   if (promoterLink?.eventId) {
