@@ -1821,11 +1821,9 @@ async function refreshCurrentOrderStatus(showMessage = true) {
       const successEmail = document.getElementById("paymentSuccessEmail");
       if (successEmail) {
         const isFreeConfirmed = Number(entry.price || 0) <= 0;
-        successEmail.textContent = mergedEntry.email_sent
-          ? "📧 O serviço aceitou o envio do e-mail, mas a entrega não está confirmada. Seu QR já está na tela: salve um print."
-          : isFreeConfirmed
-            ? "🎟️ FREE confirmado! Seu QR já aparece na tela; o e-mail pode chegar depois."
-            : "✅ PIX CONFIRMADO! O QR já aparece nesta página, mesmo que o e-mail demore. Salve um print.";
+        successEmail.textContent = isFreeConfirmed
+          ? "🎟️ FREE confirmado! Salve um print do QR e apresente documento na portaria."
+          : "✅ PIX CONFIRMADO! Os e-mails estão apresentando falhas. Se não receber o QR, informe seu NOME COMPLETO na portaria e apresente DOCUMENTO COM FOTO; a equipe conferirá o pagamento no sistema. Não compre novamente.";
       }
 
       if (showMessage||firstConfirmation) hypeNotify(Number(entry.price || 0) <= 0 ? "Ingresso FREE liberado! QR exibido na tela." : "✅ PIX CONFIRMADO! Seu QR está disponível na tela.");
@@ -1854,11 +1852,16 @@ function fillTicketCard(entry) {
   set("tTicketStatus", entry.payment_status === "Pago" ? (Number(entry.price || 0) <= 0 ? "CONFIRMADO (FREE ✅)" : "CONFIRMADO (PAGO ✅)") : entry.payment_status === "Cancelado" ? "CANCELADO ❌" : "Pendente de Confirmação ADM");
   set("tTicketId", entry.ticket_code || `#${entry.id}`);
 
+  // Aviso somente quando houver ingresso PAGO e valor positivo confirmado
+  // pelo Supabase; nunca mostrar como liberado durante PIX pendente/cancelado.
+  const fallbackNotice = document.getElementById("ticketEntryFallbackNotice");
+  if (fallbackNotice) fallbackNotice.hidden = !(entry.payment_status === "Pago" && Number(entry.price || 0) > 0);
+
   const emailNotice = document.getElementById("ticketEmailNotice");
   if (emailNotice) {
-    emailNotice.textContent = Boolean(entry.email_sent_at||entry.email_sent)
-      ? "📧 Envio de e-mail registrado. Apresente este QR Code na Portaria."
-      : "⚠️ E-mail temporariamente indisponível. Este QR Code é seu ingresso válido; apresente na Portaria.";
+    emailNotice.textContent = entry.payment_status === "Pago" && Number(entry.price || 0) > 0
+      ? "📧 Os e-mails podem falhar ou atrasar. Se não receber o QR, informe seu nome completo e apresente documento com foto na portaria para conferência do pagamento. Não compre novamente."
+      : "🎟️ Se tiver o QR Code, salve um print e apresente na portaria com documento.";
   }
 
   const qr = document.getElementById("ticketQrImg");
