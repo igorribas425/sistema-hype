@@ -5,15 +5,24 @@
  const ENDPOINT='https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minors-authorization';
  const canvas=$('signature'),ctx=canvas.getContext('2d',{willReadFrequently:true});
  let drawing=false,signed=false,photoUrl='',documentUrl='',minorFaceUrl='',minorDocumentUrl='';
+ let photosProcessing=0;
 
  function message(text,ok=false){
    const el=$('feedback');el.textContent=text;el.className=ok?'ok':'bad';el.scrollIntoView({behavior:'smooth',block:'center'});
  }
  async function rpc(data){
-   const resp=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-   const body=await resp.json().catch(()=>({}));
-   if(!resp.ok||body.ok!==true)throw new Error(body.error||'Não foi possível comunicar com a HYPE.');
-   return body;
+   const ctrl=new AbortController(), timer=setTimeout(()=>ctrl.abort(),60000);
+   try{
+     const resp=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),signal:ctrl.signal});
+     const body=await resp.json().catch(()=>({}));
+     if(!resp.ok||body.ok!==true)throw new Error(body.error||'Não foi possível concluir o cadastro. Confira os dados.');
+     if(!body.protocol)throw new Error('O servidor não confirmou o protocolo. Confira no ADM antes de reenviar.');
+     return body;
+   }catch(err){
+     if(err?.name==='AbortError')throw new Error('O envio demorou muito. Confira o cadastro com a HYPE antes de tentar de novo; ele pode ter sido recebido.');
+     if(err instanceof TypeError)throw new Error('Falha de conexão. Confira no ADM antes de reenviar para evitar duplicidade.');
+     throw err;
+   }finally{clearTimeout(timer);}
  }
  function setupCanvas(){
    canvas.width=960;canvas.height=240;
@@ -88,19 +97,17 @@
    message(err?.message||'Não foi possível carregar a foto.');
  }
  $('guardianPhoto').addEventListener('change',async()=>{
-   try{
-     photoUrl=await compressPhoto($('guardianPhoto').files[0]);
-     $('photoPreview').src=photoUrl;$('photoPreview').style.display='block';
-   }catch(err){photoUrl='';$('photoPreview').style.display='none';photoError('guardianPhoto',err);}
+   photoUrl='';photosProcessing++;
+   try{photoUrl=await compressPhoto($('guardianPhoto').files[0]);$('photoPreview').src=photoUrl;$('photoPreview').style.display='block';}
+   catch(err){photoUrl='';$('photoPreview').style.display='none';photoError('guardianPhoto',err);}
+   finally{photosProcessing--;}
  });
  $('guardianDocument').addEventListener('change',async()=>{
-   documentUrl='';
+   documentUrl='';photosProcessing++;
    $('documentPreview').style.display='none';
-   try{
-     documentUrl=await compressPhoto($('guardianDocument').files[0],'documento');
-     $('documentPreview').src=documentUrl;
-     $('documentPreview').style.display='block';
-   }catch(err){photoError('guardianDocument',err);}
+   try{documentUrl=await compressPhoto($('guardianDocument').files[0],'documento');$('documentPreview').src=documentUrl;$('documentPreview').style.display='block';}
+   catch(err){photoError('guardianDocument',err);}
+   finally{photosProcessing--;}
  });
 
  function updateMinorAge(){
@@ -117,14 +124,16 @@
  }
  $('minorBirth').addEventListener('change',updateMinorAge);
  $('minorFacePhoto').addEventListener('change',async()=>{
-   minorFaceUrl='';
+   minorFaceUrl='';photosProcessing++;
    try{minorFaceUrl=await chooseMinorPhoto('minorFacePhoto','minorFacePreview','selfie');}
    catch(err){photoError('minorFacePhoto',err);}
+   finally{photosProcessing--;}
  });
  $('minorDocumentPhoto').addEventListener('change',async()=>{
-   minorDocumentUrl='';
+   minorDocumentUrl='';photosProcessing++;
    try{minorDocumentUrl=await chooseMinorPhoto('minorDocumentPhoto','minorDocumentPreview','documento');}
    catch(err){photoError('minorDocumentPhoto',err);}
+   finally{photosProcessing--;}
  });
  async function chooseMinorPhoto(inputId,previewId,kind){
    const img=$(previewId);img.style.display='none';
@@ -155,9 +164,15 @@
      if(typeof field.setSelectionRange==='function')field.setSelectionRange(cursor,cursor);
    });
  });
+ $('minorForm').addEventListener('invalid',e=>{
+   $('minorSubmitProgress').textContent='⚠️ Preencha os campos obrigatórios e marque os termos. O cadastro ainda não foi enviado.';
+ },true);
  $('minorForm').addEventListener('submit',async e=>{
    e.preventDefault();
    const btn=$('sendForm');
+   if(btn.disabled)return;
+   if(photosProcessing>0)return message('Aguarde as quatro fotos terminarem de processar antes de enviar.');
+   if(!e.currentTarget.reportValidity())return message('Preencha os campos obrigatórios e aceite os termos.');
    if(!await updateMinorAge())return message('A autorização geral é para quem já tem 16 ou 17 anos.');
    if(!minorFaceUrl)return message('Tire uma selfie nítida do rosto do próprio menor.');
    if(!minorDocumentUrl)return message('Envie uma foto legível do documento do próprio menor.');
@@ -177,18 +192,22 @@
      attend:$('checkAttend').checked,noAlcohol:$('checkAlcohol').checked,
      privacy:$('checkPrivacy').checked,guardianConfirmed:$('checkGuardian').checked
    };
-   btn.disabled=true;btn.textContent='ENVIANDO COM SEGURANÇA...';
+   btn.disabled=true;btn.textContent='⏳ ENVIANDO... NÃO FECHE A PÁGINA';
+   $('minorSubmitProgress').textContent='⏳ Enviando as fotos, os documentos e a assinatura. Aguarde a confirmação com protocolo...';
    try{
      const response=await rpc(form);
+     $('minorSubmitProgress').textContent='';
      $('minorForm').hidden=true;
      const box=$('feedback');
      box.className='ok';box.replaceChildren();
      const top=document.createElement('strong');top.textContent='✅ Declaração recebida. Protocolo: '+response.protocol;
-     const sub=document.createElement('p');sub.textContent='Cadastro enviado para análise da HYPE. Aguarde o resultado nos Gmails informados. Se aprovado, a autorização poderá ser apresentada nas festas da HYPE enquanto o adolescente tiver 16 ou 17 anos, sujeita às regras de cada evento. O ingresso de R$ 30,00 será comprado presencialmente. Este protocolo NÃO é ingresso e não libera entrada.';
+     const sub=document.createElement('p');sub.textContent='Cadastro recebido no sistema e aguardando análise. Salve o protocolo ou tire um print. O e-mail pode falhar, mas isso não apaga o cadastro. Após aprovação, apresente documentos originais na portaria para conferência. Esta autorização NÃO é ingresso e NÃO libera entrada automaticamente.';
      const back=document.createElement('a');back.href='./cliente.html';back.textContent='← Voltar ao site HYPE (compra normal apenas para maiores)';
      box.append(top,sub,back);box.scrollIntoView({behavior:'smooth',block:'start'});
-   }catch(err){message('❌ '+(err.message||err));}
-   finally{btn.disabled=false;btn.textContent='ENVIAR AUTORIZAÇÃO PARA ANÁLISE';}
+   }catch(err){
+     $('minorSubmitProgress').textContent='❌ Envio não confirmado. Leia o motivo abaixo e consulte a HYPE antes de repetir.';
+     message('❌ '+(err.message||err));
+   }finally{btn.disabled=false;btn.textContent='ENVIAR AUTORIZAÇÃO PARA ANÁLISE';}
  });
  updateMinorAge();
 })();
