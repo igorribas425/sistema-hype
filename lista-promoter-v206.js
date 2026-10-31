@@ -292,7 +292,7 @@
       const response = await fetch(edgeUrl, {method: 'POST', body: payload});
       const body = await response.json().catch(() => ({}));
       if (!response.ok || body.ok !== true) throw new Error(body.error || body.message || 'Não foi possível concluir o cadastro.');
-      status('Cadastro recebido! Aguarde a análise da Hype. Se aprovado, seu QR individual será enviado por e-mail. Confira também a aba Promoções e o Spam.', 'ok');
+      status('Cadastro recebido para a festa selecionada. Aguarde a análise da HYPE. Se aprovado e o QR não chegar no e-mail, apresente nome completo e documento na portaria para conferência da aprovação.', 'ok');
       const cta = $('guestTicketCta');
       const panel = $('guestForm')?.closest('.panel');
       if (panel) panel.style.display = 'none';
