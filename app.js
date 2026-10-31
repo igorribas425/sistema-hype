@@ -2645,7 +2645,7 @@ async function setPayment(id, status) {
         hypeNotify(
           emailResult?.already_sent
             ? "Pagamento confirmado. O ingresso já havia sido enviado por e-mail."
-            : "✅ Ingresso confirmado e envio aceito pelo Resend. A entrega no e-mail ainda não foi confirmada."
+            : "✅ Ingresso confirmado e envio aceito pelo serviço de e-mail. A entrega no destinatário ainda não foi confirmada."
         );
       } catch (emailErr) {
         alert(
