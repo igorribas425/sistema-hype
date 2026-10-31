@@ -38,7 +38,7 @@ async function resendAllMinors(){
   writeMinorBulkProgress('Enviando PDF '+attempted+'/'+candidates.length+' • aceitos: '+accepted+' • falhas: '+failed+' • '+row.minor_name);
   try{
    const result=await sendNotification(row.id);
-   if(!result.emailSent)throw Error(result.emailError||'Resend não confirmou envio.');
+   if(!result.emailSent)throw Error(result.emailError||'Brevo não confirmou envio.');
    bulkMinorFinished.add(row.id);
    accepted++;
   }catch(err){
@@ -54,9 +54,9 @@ async function resendAllMinors(){
  if(search)search.disabled=false;
  updateMinorBulkButton();
  const remaining=candidates.length-attempted;
- writeMinorBulkProgress('Resultado do lote: '+accepted+' aceito(s) pelo Resend; '+failed+' falha(s); '+remaining+' não tentado(s).'+
+ writeMinorBulkProgress('Resultado do lote: '+accepted+' envio(s) aceito(s) pelo serviço de e-mail; '+failed+' falha(s); '+remaining+' não tentado(s).'+
   (bulkMinorStop?' Interrompido pelo operador.':'')+
-  (rateLimited?' Cota/limite de envio detectado. O lote foi interrompido; consulte o plano do Resend antes de tentar novamente.':'')+
+  (rateLimited?' Cota/limite de envio detectado. O lote foi interrompido; consulte o plano do Brevo antes de tentar novamente.':'')+
   (failures.length?' Falhas: '+failures.slice(0,5).join(' | '):'')+
   ' Aceite NÃO confirma entrega na caixa de entrada.',failed>0);
  await load();
@@ -164,7 +164,7 @@ function showNotificationResult(data){
  const root=$('minorAdminDetail');if(!root)return;
  const box=document.createElement('div');box.className='m120-warning';
  const ok=Boolean(data.emailSent);
- box.append(text('strong',ok?'✅ Resend aceitou a solicitação de envio do PDF. Isso NÃO confirma entrega na caixa de entrada: confira os destinatários, Spam e o status no painel Resend.':'⚠️ Análise registrada, mas o e-mail com PDF não foi confirmado.'));
+ box.append(text('strong',ok?'✅ Brevo aceitou a solicitação de envio do PDF. Isso NÃO confirma entrega na caixa de entrada: confira os destinatários, Spam e o status no painel Brevo.':'⚠️ Análise registrada, mas o e-mail com PDF não foi confirmado.'));
  if(!ok){
   box.append(text('p',String(data.emailError||'Verifique o serviço de envio.')));
   box.append(text('p','Use o botão BAIXAR PDF COMPLETO no Admin e envie o documento manualmente aos dois destinatários enquanto corrige o Gmail.'));
@@ -383,7 +383,7 @@ async function detail(id){
         catch(err) { delivery={emailSent:false,emailError:err.message}; }
         await load();
         if(openedId===id){await detail(id);showNotificationResult(delivery);}
-        status(delivery.emailSent?'Resend aceitou o envio. Entrega aos destinatários ainda não confirmada.':'Autorização aprovada, mas o PDF não foi enviado: '+String(delivery.emailError||'Falha desconhecida'),!delivery.emailSent);
+        status(delivery.emailSent?'Brevo aceitou o envio. Entrega aos destinatários ainda não confirmada.':'Autorização aprovada, mas o PDF não foi enviado: '+String(delivery.emailError||'Falha desconhecida'),!delivery.emailSent);
       }else{
         let delivery;
         try{delivery=await sendNotification(id);}
@@ -430,7 +430,7 @@ async function detail(id){
       try{
         const result=await sendNotification(r.id);
         showNotificationResult(result);
-        status(result.emailSent?"Resend aceitou o envio do PDF, mas a entrega ainda não foi confirmada.":"Envio do PDF não confirmado: "+String(result.emailError||"Erro desconhecido"),!result.emailSent);
+        status(result.emailSent?"Brevo aceitou o envio do PDF, mas a entrega ainda não foi confirmada.":"Envio do PDF não confirmado: "+String(result.emailError||"Erro desconhecido"),!result.emailSent);
       }catch(e){status("Erro no envio do PDF: "+e.message,true);}
       finally{resend.disabled=false;resend.textContent="📧 REENVIAR PDF AOS DOIS GMAILS";}
     });
