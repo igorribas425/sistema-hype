@@ -30,7 +30,8 @@ async function resendAllMinors(){
  const selected=$('minorAdminEvent'),search=$('minorAdminSearch');
  if(selected)selected.disabled=true;
  if(search)search.disabled=true;
- let accepted=0,failed=0,attempted=0,rateLimited=false;
+ let accepted=0,failed=0,attempted=0,rateLimited=false,consecutiveErrors=0,stoppedForErrors=false;
+ const MAX_BATCH_ERRORS=5;
  const failures=[];
  for(const row of candidates){
   if(bulkMinorStop)break;
@@ -41,10 +42,14 @@ async function resendAllMinors(){
    if(!result.emailSent)throw Error(result.emailError||'Brevo não confirmou envio.');
    bulkMinorFinished.add(row.id);
    accepted++;
+   consecutiveErrors=0;
   }catch(err){
-   failed++;const reason=String(err.message||err).slice(0,140);
+   failed++;consecutiveErrors++;
+   const reason=String(err.message||err).slice(0,140);
    failures.push(row.minor_name+': '+reason);
+   writeMinorBulkProgress('Falha '+failed+' de '+attempted+' tentativa(s). Motivo: '+reason+' • A HYPE interromperá o lote após 5 erros ou 3 consecutivos.',true);
    if(/429|rate.?limit|too many|muitas vezes|limite de envio|daily.{0,25}(quota|limit)|quota.{0,25}(exceed|reach|limit)|limite di[aá]rio|cota (di[aá]ria|esgotada)|quota exceeded|daily sending/i.test(reason)){rateLimited=true;break;}
+   if(failed>=MAX_BATCH_ERRORS||consecutiveErrors>=3){stoppedForErrors=true;break;}
   }
   updateMinorBulkButton();
   if(!bulkMinorStop)await bulkMinorPause(1400);
@@ -57,6 +62,7 @@ async function resendAllMinors(){
  writeMinorBulkProgress('Resultado do lote: '+accepted+' envio(s) aceito(s) pelo serviço de e-mail; '+failed+' falha(s); '+remaining+' não tentado(s).'+
   (bulkMinorStop?' Interrompido pelo operador.':'')+
   (rateLimited?' Cota/limite de envio detectado. O lote foi interrompido; consulte o plano do Brevo antes de tentar novamente.':'')+
+  (stoppedForErrors?' SEGURANÇA: lote interrompido por muitas falhas; corrija a causa antes de tentar novamente.':'')+
   (failures.length?' Falhas: '+failures.slice(0,5).join(' | '):'')+
   ' Aceite NÃO confirma entrega na caixa de entrada.',failed>0);
  await load();
