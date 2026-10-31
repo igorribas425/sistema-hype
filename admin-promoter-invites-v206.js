@@ -67,7 +67,7 @@ async function resendAllPromoter(){
  if(!candidates.length){bulkPromoterProgress('Nenhum convidado aprovado, sem check-in e com e-mail, neste filtro.');return;}
  const chosen=events.find(ev=>Number(ev.id)===eid);
  if(!confirm('REENVIAR '+candidates.length+' QR Code(s) individuais da festa '+(chosen?.name||('#'+eid))+'?\n\nApenas convidados aprovados e ainda sem check-in; cancelados e arquivados ficam de fora. Alguns destinatários podem receber novamente uma mensagem que já chegou.\n\nOs e-mails são enviados um a um. Confirma?'))return;
- if(candidates.length>20&&!confirm('Confirmar reenvio coletivo de '+candidates.length+' mensagens? O Resend pode aplicar atraso ou limite de envio.'))return;
+ if(candidates.length>20&&!confirm('Confirmar reenvio coletivo de '+candidates.length+' mensagens? O Brevo pode aplicar atraso ou limite de envio.'))return;
  bulkPromoterRunning=true;bulkPromoterStop=false;updatePromoterBulkUI();
  const filters=[$('v206Event'),$('v206Promoter'),$('v206Status')];
  filters.forEach(el=>{if(el)el.disabled=true;});
@@ -94,9 +94,9 @@ async function resendAllPromoter(){
  filters.forEach(el=>{if(el)el.disabled=false;});
  await refreshGuests();
  updatePromoterBulkUI();
- bulkPromoterProgress('Resultado: '+accepted+' aceito(s) pelo Resend • '+failed+' falha(s) • '+(candidates.length-attempted)+' não tentado(s).'+
+ bulkPromoterProgress('Resultado: '+accepted+' envio(s) aceito(s) pelo serviço de e-mail • '+failed+' falha(s) • '+(candidates.length-attempted)+' não tentado(s).'+
   (bulkPromoterStop?' Interrompido pelo operador.':'')+
-  (rateLimited?' Cota diária ou limite de envio detectado. Lote interrompido; confira o plano do Resend.':'')+
+  (rateLimited?' Cota diária ou limite de envio detectado. Lote interrompido; confira o plano do Brevo.':'')+
   (failures.length?' Falhas: '+failures.slice(0,5).join(' | '):'')+
   ' Aceite NÃO confirma entrega no Gmail.',failed>0);
  status('Reenvio coletivo concluído. Confira o resultado abaixo e os horários atualizados na lista.');
@@ -142,7 +142,7 @@ function render(){
  const bg=checked?'#123d29':noShow?'#451d25':'#352a1b';
  const fg=checked?'#9cf3bd':noShow?'#ffd0d6':'#ffdfa4';
  const tm=g.entered_at?' • '+new Date(g.entered_at).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}):'';
- const mail=g.email_sent_at?(recentlyResentIds.has(Number(g.list_id))?'✅ REENVIO ACEITO pelo Resend em ':'📨 Último envio/reenvio aceito pelo Resend em ')+new Date(g.email_sent_at).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})+' (entrega ao destinatário ainda não confirmada)':
+ const mail=g.email_sent_at?(recentlyResentIds.has(Number(g.list_id))?'✅ REENVIO ACEITO pelo Brevo em ':'📨 Último envio/reenvio aceito pelo serviço de e-mail em ')+new Date(g.email_sent_at).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})+' (entrega ao destinatário ainda não confirmada)':
   g.email_error?'⚠️ Falha no e-mail: '+g.email_error:'📩 QR ainda não enviado';
  const approve=g.status==='Pendente'?
  '<button type="button" class="btn-action btn-confirm" data-approve="'+g.list_id+'">✓ APROVAR</button><button type="button" class="btn-action btn-del" data-reject="'+g.list_id+'">RECUSAR</button>':
@@ -201,8 +201,8 @@ async function sendQr(id,force=false){
   body:JSON.stringify({action:'guest_list_approved',username:HYPE.user,password:HYPE.pass,list_id:id,force})
  });
  const body=await reply.json().catch(()=>({}));
- if(!reply.ok||body.ok!==true)throw Error(body.error||'Resend recusou o QR.');
- if(force&&body.already_sent)throw Error('O servidor não confirmou um novo reenvio. Verifique a operação antes de tentar novamente.');
+ if(!reply.ok||body.ok!==true)throw Error(body.error||'Brevo recusou o QR.');
+ if(force&&body.already_sent)throw Error('O servidor não confirmou um novo reenvio. Verifique os registros no painel do Brevo antes de tentar novamente.');
  return body;
 }
 async function review(id,decision){
@@ -215,8 +215,8 @@ async function review(id,decision){
   if(decision==='aprovar'){
    try{
     await sendQr(id,false);
-    status('Convite aprovado e QR aceito pelo Resend. Entrega sujeita ao provedor.');
-   }catch(err){alert('Cadastro aprovado, mas o QR não foi confirmado pelo Resend: '+err.message+'. Use ENVIAR QR para tentar novamente.');}
+    status('Convite aprovado e QR aceito pelo Brevo. Entrega sujeita ao provedor.');
+   }catch(err){alert('Cadastro aprovado, mas o QR não foi confirmado pelo Brevo: '+err.message+'. Use ENVIAR QR para tentar novamente.');}
   }else status('Convite recusado.');
   await refreshGuests();
  }catch(err){alert('Não foi possível analisar: '+String(err.message||err));}
@@ -225,7 +225,7 @@ async function manualEmail(id){
  if(bulkPromoterRunning||sendingIds.has(id))return;
  const guest=guests.find(g=>Number(g.list_id)===id);
  if(!guest||guest.status!=='Liberado'||!guest.email)return;
- if(!confirm('Reenviar o mesmo QR de convidado para '+guest.email+'? O Resend poderá aceitar o envio, mas a entrega depende do e-mail destinatário.'))return;
+ if(!confirm('Reenviar o mesmo QR de convidado para '+guest.email+'? O Brevo poderá aceitar o envio, mas a entrega depende do e-mail destinatário.'))return;
  sendingIds.add(id);
  const button=$('v206Guests')?.querySelector('[data-email="'+id+'"]');
  if(button){button.disabled=true;button.textContent='⏳ REENVIANDO...';}
@@ -234,7 +234,7 @@ async function manualEmail(id){
   recentlyResentIds.add(id);
   await refreshGuests();
   const receivedTime=result.email_sent_at?new Date(result.email_sent_at).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}):'agora';
-  status('✅ Reenvio aceito pelo Resend para '+guest.name+' em '+receivedTime+'. Entrega na caixa de entrada ainda não confirmada.');
+  status('✅ Reenvio aceito pelo Brevo para '+guest.name+' em '+receivedTime+'. Entrega na caixa de entrada ainda não confirmada.');
  }catch(err){
   await refreshGuests();
   status('❌ Reenvio NÃO confirmado para '+guest.name+': '+String(err.message||err));
