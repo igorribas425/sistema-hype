@@ -73,6 +73,11 @@ Deno.serve(async(req:Request)=>{
       }
     }catch(_){}
     const heading=isGuest?"LISTA HYPE APROVADA":"INGRESSO CONFIRMADO";
+    // Link individual: bilhete pago/FREE é consultado pelo código, não cria outro Pix.
+    // Convidados da lista usam o PNG anexado, sem novo cadastro.
+    const accessUrl=isGuest?"https://hypeloungeclub.com.br/lista.html":
+      "https://hypeloungeclub.com.br/cliente.html?ticket="+encodeURIComponent(code);
+    const accessLabel=isGuest?"ABRIR SITE DA LISTA HYPE":"ABRIR MEU QR CODE NO SITE";
     const subject=(isGuest?"Lista HYPE aprovada - ":"Ingresso confirmado - ")+event;
     const details=(label,value)=>
       value?"<tr><td style='padding:8px 4px;color:#c1b9c6;font:14px Arial,sans-serif;width:38%;vertical-align:top'>"+esc(label)+"</td><td style='padding:8px 4px;color:#ffffff;font:bold 15px Arial,sans-serif;overflow-wrap:anywhere;word-break:break-word'>"+esc(value)+"</td></tr>":"";
@@ -110,12 +115,12 @@ Deno.serve(async(req:Request)=>{
       +"</div>"
       +"<p style='color:#d4cbd8;font-size:13px;line-height:1.6;margin:22px 12px 10px'>"+(message?esc(message):"Apresente este QR Code junto com seu documento na portaria.")+"</p>"
       +"<p style='color:#9f96a4;font-size:12px;margin:5px 12px 17px'>O QR Code &eacute; individual. N&atilde;o compartilhe com outras pessoas.</p>"
-      +"<a href='https://hypeloungeclub.com.br/cliente.html' style='display:inline-block;background:#ef367b;padding:14px 23px;border-radius:9px;color:#ffffff;text-decoration:none;font:bold 13px Arial,sans-serif;letter-spacing:1px'>ACESSAR MEU INGRESSO</a>"
-      +"<p style='color:#aa9fac;font-size:12px;margin:18px 10px 8px'>Se a imagem do QR n&atilde;o aparecer, use o arquivo PNG anexado a este e-mail.</p>"
+      +"<a href='"+esc(accessUrl)+"' style='display:inline-block;background:#ef367b;padding:14px 23px;border-radius:9px;color:#ffffff;text-decoration:none;font:bold 13px Arial,sans-serif;letter-spacing:1px'>"+accessLabel+"</a>"
+      +"<p style='color:#aa9fac;font-size:12px;margin:18px 10px 8px'>Se a imagem do QR n&atilde;o aparecer, abra o PNG anexado. Para ingressos pagos e FREE, use tamb&eacute;m o bot&atilde;o acima para abrir o QR diretamente no site. N&atilde;o compre novamente.</p>"
       +"</td></tr>"
       +"<tr><td style='text-align:center;padding:20px 20px 26px;color:#827b8a;font-size:11px'>HYPE LOUNGE CLUB &bull; Ingresso oficial</td></tr>"
       +"</table></body></html>";
-    const plain=heading+"\n\n"+name+"\nEvento: "+event+"\nData: "+eventDay+"\nLocal: "+venue+"\nCategoria: "+lot+"\nSetor: "+sector+"\nGênero: "+gender+"\nValor: "+priceLabel+"\nCódigo: "+code+"\n\nApresente o QR Code PNG anexo com seu documento. Acesse https://hypeloungeclub.com.br/cliente.html\n";
+    const plain=heading+"\n\n"+name+"\nEvento: "+event+"\nData: "+eventDay+"\nLocal: "+venue+"\nCategoria: "+lot+"\nSetor: "+sector+"\nGênero: "+gender+"\nValor: "+priceLabel+"\nCódigo: "+code+"\n\nApresente o QR Code PNG anexo com seu documento. Acesse "+accessUrl+"\n";
     const payload:any={
       from,to:[email],subject,html,text:plain,
       attachments:[{filename:"QR-"+code.replace(/[^A-Z0-9-]/gi,"")+".png",content:base64,content_type:"image/png",content_id:"hype-ticket-qr"}]
@@ -125,7 +130,12 @@ Deno.serve(async(req:Request)=>{
     if(brevoKey){
       // No Brevo o QR individual segue como arquivo PNG anexado.
       // A imagem embutida pode ser ocultada por alguns clientes de e-mail; o anexo continua disponível.
-      const brevoHtml=html.replace("cid:hype-ticket-qr","data:image/png;base64,"+base64);
+      // Alguns webmails (incluindo Gmail) ocultam imagens data: em HTML.
+      // O QR continua no PNG real anexo, e o link do e-mail abre o ingresso no site.
+      const brevoHtml=html.replace(
+        "<img src='cid:hype-ticket-qr' alt='QR Code oficial do ingresso HYPE' width='270' height='270' style='width:270px;height:270px;max-width:100%;display:block;border:0'>",
+        "<div style='width:270px;min-height:120px;padding:22px 8px;box-sizing:border-box;color:#15121d;text-align:center;font:bold 16px/1.5 Arial,sans-serif'>QR Code no arquivo PNG anexado e acesso ao ingresso pelo bot&atilde;o abaixo.</div>"
+      );
       const brevoPayload:any={
         sender:{name:"HYPE Lounge Club",email:brevoFrom},
         to:[{email,name}],
