@@ -3,7 +3,7 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const URL='https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minors-authorization';
-let loading=false,rows=[],events=[],openedId=null,showOldEventsV203=false;
+let loading=false,rows=[],events=[],openedId=null,showOldEventsV203=false,showAllMinorRowsV234=false;
 let bulkMinorRunning=false,bulkMinorStop=false;
 const bulkMinorFinished=new Set();
 const bulkMinorPause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -128,19 +128,37 @@ function render(){
  $('minorCountPending').textContent=String(rows.filter(r=>r.status==='pendente').length);
  $('minorCountChecked').textContent=String(rows.filter(r=>r.status==='conferido').length);
  $('minorCountRejected').textContent=String(rows.filter(r=>r.status==='recusado').length);
- const matches=filteredMinorRows();
  const searchActive=Boolean(normalizedSearch($('minorAdminSearch')?.value));
+ // A pesquisa procura em todos os status. Sem pesquisa, deixar apenas as
+ // autorizações pendentes visíveis até que o ADM peça para ver as demais.
+ const allMatches=filteredMinorRows();
+ const pendingCount=rows.filter(r=>r.status==='pendente').length;
+ const matches=(showAllMinorRowsV234||searchActive)
+   ?allMatches
+   :allMatches.filter(r=>r.status==='pendente');
  const count=$('minorAdminSearchCount');
  if(count)count.textContent=searchActive
-   ?'Resultados da pesquisa: '+matches.length+' de '+rows.length+' autorização(ões).'
-   :'Exibindo '+rows.length+' autorização(ões) do filtro de evento selecionado.';
+   ?'Pesquisa em todos os status: '+matches.length+' de '+rows.length+' autorização(ões).'
+   :showAllMinorRowsV234
+     ?'Exibindo todas as '+rows.length+' autorizações do evento/filtro selecionado.'
+     :'Exibindo só '+matches.length+' pendente(s). '+(rows.length-matches.length)+' conferida(s)/recusada(s) recolhida(s).';
+ const toggle=$('minorAdminShowAllToggleV234');
+ if(toggle){
+   toggle.textContent=showAllMinorRowsV234
+     ?'⏳ MOSTRAR SÓ PENDENTES ('+pendingCount+')'
+     :'📂 VER TODOS OS STATUS ('+rows.length+')';
+   toggle.setAttribute('aria-pressed',String(showAllMinorRowsV234));
+   toggle.title=searchActive?'Sua pesquisa já inclui todos os status.':'Alternar visualização; nenhum cadastro será excluído.';
+ }
  const clear=$('minorAdminSearchClear');
  if(clear)clear.disabled=!searchActive;
  updateMinorBulkButton();
  if(!matches.length){
   container.appendChild(text('p',searchActive
     ?'Nenhuma autorização corresponde à pesquisa. Tente o nome do menor, do responsável ou o protocolo.'
-    :'Nenhuma autorização encontrada no filtro selecionado.','m120-empty'));
+    :!showAllMinorRowsV234 && rows.length
+      ?'✅ Nenhuma autorização pendente neste filtro. Use VER TODOS OS STATUS para consultar os conferidos e recusados.'
+      :'Nenhuma autorização encontrada no filtro selecionado.','m120-empty'));
   return;
  }
  for(const row of matches){
@@ -465,6 +483,10 @@ function init(){
  $('minorResendAll')?.addEventListener('click',resendAllMinors);
  $('minorResendAllStop')?.addEventListener('click',()=>{bulkMinorStop=true;writeMinorBulkProgress('Interrompendo após a tentativa atual...');});
  $('minorAdminSearch')?.addEventListener('input',render);
+ $('minorAdminShowAllToggleV234')?.addEventListener('click',()=>{
+   showAllMinorRowsV234=!showAllMinorRowsV234;
+   render();
+ });
  $('minorAdminSearchClear')?.addEventListener('click',()=>{
    const field=$('minorAdminSearch');
    if(field){field.value='';field.focus();}
