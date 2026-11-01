@@ -293,7 +293,7 @@
     if(!eventMismatch && !cancelado){
       if(!entrou && !late){
         btn=`<button class="btn green" onclick="HypeListaSimples.enter(${Number(row.list_id)})">✅ CONFIRMAR ENTRADA</button>`;
-      }else if(!saiu){
+      }else if(entrou && !saiu){
         btn=`<button class="btn red" onclick="HypeV60Exit.openGuest(${Number(row.list_id)}, '${esc(String(row.name||'Nome')).replace(/'/g,'&#039;')}')">🚪 SAÍDA + FEEDBACK</button>`;
       }
     }
@@ -307,7 +307,7 @@
       row.payment_method?`Forma registrada: ${esc(row.payment_method)}`:''
     ].filter(Boolean).join('<br>');
     const exitInfo=row.final_exit_at?`<br>Saiu ${esc(fmt(row.final_exit_at))}`:'';
-    return `<article class="ticket ${cls}"><div><span class="sector">${sourceLabel}</span><h2>${esc(row.name||'Nome')}</h2><div class="meta">Sem cobrança na Portaria${contact?`<br>${contact}`:''}${row.remote_event_name?`<br>Evento do cadastro: ${esc(row.remote_event_name)}`:''}<br>${row.created_at?`Adicionado ${esc(fmt(row.created_at))}`:''}${row.entered_at?`<br>Entrou ${esc(fmt(row.entered_at))}`:''}${exitInfo}${mismatch}</div></div><div class="ticket-actions"><div class="state ${cancelado||saiu||eventMismatch?'danger':'good'}">${esc(state)}</div>${btn}</div></article>`;
+    return `<article class="ticket ${cls}"><div><span class="sector">${sourceLabel}</span><h2>${esc(row.name||'Nome')}</h2><div class="meta">Sem cobrança na Portaria${contact?`<br>${contact}`:''}${row.remote_event_name?`<br>Evento do cadastro: ${esc(row.remote_event_name)}`:''}<br>${row.created_at?`Adicionado ${esc(fmt(row.created_at))}`:''}${row.entered_at?`<br>Entrou ${esc(fmt(row.entered_at))}`:''}${exitInfo}${mismatch}</div></div><div class="ticket-actions"><div class="state ${cancelado||saiu||eventMismatch||late?'danger':'good'}">${esc(state)}</div>${btn}</div></article>`;
   }
 
   async function processQr(rawCode){
