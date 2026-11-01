@@ -31,6 +31,14 @@
   }
   function deviceKey(){ return localStorage.getItem(DEVICE_KEY) || ''; }
   function eventId(){ return Number(($('eventSelect')?.value || 0)); }
+  // V260: regra especial apenas para listas da festa Beijo Proibido 01/11.
+  // Janela automática 00h–07h de 02/11, horário de Brasília.
+  function hypeListaAtrasadaV260(row){
+    const id=Number(row?.event_id || eventId());
+    const now=Date.now();
+    return id===26 && now>=Date.parse('2026-11-02T03:00:00Z') && now<Date.parse('2026-11-02T10:00:00Z');
+  }
+  const HYPE_LISTA_ATRASO_MSG_V260='CHEGOU ATRASADO — LISTA VÁLIDA ATÉ 00H. PROCURE A EQUIPE DA PORTARIA.';
   function out(html,targetId='v406ListResult',append=false){
     const box=$(targetId);
     if(!box) return;
@@ -116,13 +124,14 @@
 
   function showProfile(row, token, mode='pending', message=''){
     mountProfile();
+    if(mode==='pending' && hypeListaAtrasadaV260(row)) mode='late';
     profileRow=row||null;
     profileToken=String(token||profileToken||'');
     profileBusy=false;
     const modal=$('hypeListProfile');
     if(!modal || !row) return;
     const usedAt=row.entered_at ? fmt(row.entered_at) : '';
-    const statusText=mode==='pending'
+    const statusText=mode==='late' ? HYPE_LISTA_ATRASO_MSG_V260 : mode==='pending'
       ? 'CONFIRA OS DADOS E CONFIRME A ENTRADA'
       : mode==='used'
         ? `QR JÁ UTILIZADO${usedAt?' • ENTROU '+usedAt:''}`
@@ -166,6 +175,10 @@
 
   async function confirmProfile(){
     if(profileBusy || !profileRow?.list_id) return;
+    if(hypeListaAtrasadaV260(profileRow)){
+      showProfile(profileRow,profileToken,'late',HYPE_LISTA_ATRASO_MSG_V260);
+      return;
+    }
     profileBusy=true;
     const btn=$('hypeListProfileConfirm');
     if(btn){ btn.disabled=true; btn.textContent='CONFIRMANDO...'; }
@@ -274,10 +287,11 @@
     const rowEventId=Number(row.event_id || 0);
     const eventMismatch=Boolean(rowEventId && rowEventId!==eventId());
     const cls=cancelado||saiu?'bad':'ok';
-    const state=cancelado?'CANCELADO':saiu?'SAÍDA CONFIRMADA':entrou?'DENTRO':(eventMismatch?'OUTRO EVENTO':'LISTA LIBERADA');
+    const late=hypeListaAtrasadaV260(row) && !entrou;
+    const state=cancelado?'CANCELADO':saiu?'SAÍDA CONFIRMADA':entrou?'DENTRO':(eventMismatch?'OUTRO EVENTO':late?'CHEGOU ATRASADO — LISTA ATÉ 00H':'LISTA LIBERADA');
     let btn='';
     if(!eventMismatch && !cancelado){
-      if(!entrou){
+      if(!entrou && !late){
         btn=`<button class="btn green" onclick="HypeListaSimples.enter(${Number(row.list_id)})">✅ CONFIRMAR ENTRADA</button>`;
       }else if(!saiu){
         btn=`<button class="btn red" onclick="HypeV60Exit.openGuest(${Number(row.list_id)}, '${esc(String(row.name||'Nome')).replace(/'/g,'&#039;')}')">🚪 SAÍDA + FEEDBACK</button>`;
@@ -345,6 +359,7 @@
 
   async function enter(id){
     if(!id) return;
+    if(hypeListaAtrasadaV260()){flash(false,'CHEGOU ATRASADO',HYPE_LISTA_ATRASO_MSG_V260);return;}
     if(!confirm('Confirmar entrada deste nome da lista?')) return;
     try{
       const rows=arr(await rpc('portaria_guest_simple_enter_v406',{p_device_key:deviceKey(),p_list_id:Number(id)}));
