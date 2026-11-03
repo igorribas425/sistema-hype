@@ -812,8 +812,22 @@ async function loadStaffTickets(search = "") {
   // V172: o Admin busca somente a festa atual. A consulta histórica completa
   // fica reservada ao clique explícito em VER HISTÓRICO ANTERIOR.
   const activeEventId = hypeActiveEventIdV171();
-  const includeHistory = Boolean(HYPE.showClientHistoryV171 || !activeEventId);
+  const includeHistory = Boolean(HYPE.showClientHistoryV171);
   let rows = [];
+  if (!activeEventId && !includeHistory) {
+    // Nenhuma festa operacional: a visão atual deve estar vazia, nunca
+    // carregar tickets/listas históricos por falta de um event_id.
+    HYPE.tickets = [];
+    HYPE.guestLists = [];
+    HYPE.ticketLoadSource = "nenhuma-festa-atual-v263";
+    const status = document.getElementById("adminOrdersStatus");
+    if (status) {
+      status.textContent = "0 registro(s) da festa atual — nenhuma festa ativa • atualizado " +
+        new Date().toLocaleTimeString("pt-BR");
+      status.className = "admin-sync-status ok";
+    }
+    return HYPE.tickets;
+  }
   if (!includeHistory) {
     try {
       const current = await sbRpc("staff_list_tickets_current_v172", {
@@ -2025,9 +2039,9 @@ function hypeActiveEventIdV171() {
       (hypeAddDaysToDateKeyV37(day, 1) === now.date && now.minutes < 8 * 60);
   }).sort((a,b) => String(a.event_date).localeCompare(String(b.event_date)) || Number(a.sort_order||0)-Number(b.sort_order||0));
   if (available.length) return Number(available[0].id);
-  // Sem festa futura, exibir a última que aconteceu (em vez de uma tela vazia).
-  const recent = active.sort((a,b) => String(b.event_date).localeCompare(String(a.event_date)));
-  return Number(recent[0]?.id || HYPE.selectedEventId || 0);
+  // Sem evento ativo e atual/futuro: jamais reutilizar uma festa arquivada.
+  // O histórico continua disponível somente após o clique explícito.
+  return 0;
 }
 
 function hypeTicketEventNameV200(eventId) {
@@ -2525,7 +2539,7 @@ async function renderClientsTable() {
   const showHistory=Boolean(HYPE.showClientHistoryV171);
   const activeEventId=hypeActiveEventIdV171();
   const allRecords=[...(HYPE.tickets || []), ...(HYPE.guestLists || [])];
-  const records=(showHistory || !activeEventId ? allRecords : allRecords.filter(x=>Number(x.event_id)===activeEventId)).sort((a,b)=>{
+  const records=(showHistory ? allRecords : activeEventId ? allRecords.filter(x=>Number(x.event_id)===activeEventId) : []).sort((a,b)=>{
     const time = item => new Date(item.entered_at || item.paid_at || item.purchased_at || item.created_at || 0).getTime() || 0;
     return time(b) - time(a);
   });
@@ -2534,7 +2548,7 @@ async function renderClientsTable() {
   if(historyToggle)historyToggle.textContent=showHistory?"OCULTAR HISTÓRICO":"VER HISTÓRICO ANTERIOR";
   const ticketStatus=document.getElementById("adminOrdersStatus");
   if(ticketStatus){
-    ticketStatus.textContent=records.length+" registro(s) "+(showHistory?"incluindo histórico":"do evento atual — "+hypeTicketEventNameV200(activeEventId))+" • atualizado "+new Date().toLocaleTimeString("pt-BR");
+    ticketStatus.textContent=records.length+" registro(s) "+(showHistory?"incluindo histórico":activeEventId?"do evento atual — "+hypeTicketEventNameV200(activeEventId):"da festa atual — nenhuma festa ativa")+" • atualizado "+new Date().toLocaleTimeString("pt-BR");
     ticketStatus.className="admin-sync-status ok";
   }
   if (!list.length) tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">${showHistory?"Nenhum cliente encontrado.":"Nenhum ingresso nesta festa ainda. O histórico das festas anteriores está preservado."}</td></tr>`;
@@ -2573,10 +2587,14 @@ async function renderClientsTable() {
   const financeSelect=document.getElementById("v94SalesEvent");
   const financeReady=financeSelect?.dataset.hypeFinanceInitializedV170==="1";
   // "TODOS OS EVENTOS" é consulta opcional, não o fechamento inicial.
-  const financeId=financeReady && financeSelect.value==="all" ? 0 :
-    (financeReady?Number(financeSelect.value):activeEventId);
-  const scopedTickets=(HYPE.tickets||[]).filter(t=>!financeId||Number(t.event_id)===financeId);
-  const scopedGuests=(HYPE.guestLists||[]).filter(t=>!financeId||Number(t.event_id)===financeId);
+  const showFinanceHistory=Boolean(HYPE.showFinanceHistoryV202);
+  const financeAll=showFinanceHistory && financeReady && financeSelect.value==="all";
+  const financeSelected=financeReady ? Number(financeSelect.value) : 0;
+  const financeId=financeAll ? 0 : (financeSelected>0 ? financeSelected : activeEventId);
+  const scopedTickets=financeAll ? [...(HYPE.tickets||[])] :
+    (financeId>0 && (showFinanceHistory || activeEventId>0) ? (HYPE.tickets||[]).filter(t=>Number(t.event_id)===financeId) : []);
+  const scopedGuests=financeAll ? [...(HYPE.guestLists||[])] :
+    (financeId>0 && (showFinanceHistory || activeEventId>0) ? (HYPE.guestLists||[]).filter(t=>Number(t.event_id)===financeId) : []);
   const total = scopedTickets.length + scopedGuests.length;
   const paid = scopedTickets.filter(x=>x.payment_status==='Pago' && Number(x.price||0)>0).length;
   const free = scopedTickets.filter(x=>x.payment_status==='Pago' && Number(x.price||0)<=0).length;
@@ -3704,9 +3722,11 @@ function renderV16Dashboard() {
       ?currentValue:String(firstId||"");
     if(eventSelect.value==="" && eventSelect.options.length)eventSelect.selectedIndex=0;
   }
-  const eventId=eventSelect?.value||"all";
-  const list=(HYPE.tickets||[]).filter(t=>eventId==="all"||Number(t.event_id)===Number(eventId));
-  const guestList=(HYPE.guestLists||[]).filter(t=>eventId==="all"||Number(t.event_id)===Number(eventId));
+  const selectedValue=eventSelect?.value||"";
+  const historyAll=history && selectedValue==="all";
+  const eventId=historyAll ? 0 : (Number(selectedValue)||(!history?hypeActiveEventIdV171():0));
+  const list=(HYPE.tickets||[]).filter(t=>historyAll||(eventId>0&&Number(t.event_id)===eventId));
+  const guestList=(HYPE.guestLists||[]).filter(t=>historyAll||(eventId>0&&Number(t.event_id)===eventId));
   const confirmed=list.filter(t=>t.payment_status==="Pago");
   const paid=confirmed.filter(t=>Number(t.price||0)>0);
   const free=confirmed.filter(t=>Number(t.price||0)<=0);
