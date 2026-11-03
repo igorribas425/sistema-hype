@@ -316,10 +316,16 @@
 
   function renderSales() {
     fillSalesEventSelect();
-    const filter=$('v94SalesEvent')?.value || 'all';
+    const showHistory=Boolean(HYPE?.showFinanceHistoryV202);
+    const filter=$('v94SalesEvent')?.value || '';
+    const selectedEventId=Number(filter);
+    const allHistory=showHistory && filter==='all';
     const {tickets,guests}=getSalesRows();
-    const scopedTickets=tickets.filter(t=>filter==='all'||Number(t.event_id)===Number(filter));
-    const scopedGuests=guests.filter(g=>filter==='all'||Number(g.event_id)===Number(filter));
+    // Quando não há festa ativa, a seleção vazia NUNCA significa todos os eventos.
+    const scopedTickets=allHistory ? tickets :
+      (selectedEventId>0 ? tickets.filter(t=>Number(t.event_id)===selectedEventId) : []);
+    const scopedGuests=allHistory ? guests :
+      (selectedEventId>0 ? guests.filter(g=>Number(g.event_id)===selectedEventId) : []);
 
     const confirmed=scopedTickets.filter(t=>String(t.payment_status||'')==='Pago');
     const paid=confirmed.filter(t=>Number(t.price||0)>0);
