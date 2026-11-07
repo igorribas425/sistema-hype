@@ -116,11 +116,15 @@ function normalizedSearch(value){
  return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
 }
 function filteredMinorRows(){
- const terms=normalizedSearch($('malibuMinorAdminSearch')?.value||'').split(' ').filter(Boolean);
+ const query=normalizedSearch($('malibuMinorAdminSearch')?.value||'');
+ const isCpf=/^[0-9. -]+$/.test(query)&&query.replace(/\D/g,'').length>=8;
+ const terms=(isCpf?[query.replace(/\D/g,'')]:query.split(' ')).filter(Boolean);
  if(!terms.length)return rows;
  return rows.filter(row=>{
-  const content=normalizedSearch([row.minor_name,row.guardian_name,row.id].join(' '));
-  return terms.every(term=>content.includes(term));
+  const content=normalizedSearch([row.minor_name,row.guardian_name,row.id,row.minor_cpf,row.guardian_cpf].join(' '));
+  return terms.every(term=>isCpf
+    ?[row.minor_cpf,row.guardian_cpf].some(cpf=>String(cpf||'').replace(/\D/g,'').includes(term))
+    :content.includes(term));
  });
 }
 function render(){
