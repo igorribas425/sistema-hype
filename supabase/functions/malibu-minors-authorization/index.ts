@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
-const ORIGINS=new Set(["https://hypeloungeclub.com.br","https://www.hypeloungeclub.com.br"]);
+const ORIGINS=new Set(["https://hypeloungeclub.com.br","https://www.hypeloungeclub.com.br","https://malibu-menores.vercel.app"]);
 const TABLE="malibu_minor_authorizations_v1", BUCKET="malibu-guardian-private-v1";
 const str=(v:any,n=120)=>String(v??"").trim().slice(0,n);
 const digits=(v:any)=>String(v??"").replace(/\D/g,"");
