@@ -1,4 +1,4 @@
-/* HYPE V120 — Painel reservado ao ADM e gerente: autorizações de menores */
+/* Malibu — painel integrado ao ADM existente com dados isolados */
 (() => {
 'use strict';
 const $=id=>document.getElementById(id);
@@ -468,7 +468,7 @@ async function detail(id){
     pdf.addEventListener("click",()=>downloadAuthorizationPDF(r));
     buttons.append(pdf);
     const validator=document.createElement("a");
-    validator.href="malibu-menores-portaria.html?protocolo="+encodeURIComponent(r.id);
+    validator.href="https://malibu-menores.vercel.app/verificar.html?protocolo="+encodeURIComponent(r.id);
     validator.target="_blank";validator.rel="noopener noreferrer";
     validator.textContent="🔎 ABRIR CONFERÊNCIA DO QR";
     validator.className="m120-btn m120-ghost";
