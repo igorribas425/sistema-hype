@@ -412,6 +412,7 @@ html,body{max-width:100%;overflow-x:hidden}
       <button class="v95-home-card" type="button" data-v95-open="avaliacao"><span class="v95-icon">⭐</span><b>Avaliações</b><small>Feedbacks bons e ruins</small></button>
       <button class="v95-home-card" type="button" data-v95-open="ferramentas"><span class="v95-icon">🎁</span><b>Sorteio & Acessos</b><small>Sorteio e dispositivos da equipe</small></button>
       <button class="v95-home-card" type="button" data-v95-open="menores"><span class="v95-icon">🛡️</span><b>Menores de idade</b><small>Autorização dos pais, fotos e assinaturas</small></button>
+      <button class="v95-home-card" type="button" data-v95-open="malibumenores"><span class="v95-icon">🌙</span><b>Menores da Malibu</b><small>Autorizações, fotos, PDF e aprovação separada</small></button>
     </div>
   </section>
 
@@ -1279,5 +1280,52 @@ Bruna Santos"></textarea>
 <h3 style="margin-top:25px">Cadastros dos convidados</h3><p style="font-size:12px;color:#beb9c0">Cada pessoa mostra FEZ CHECK-IN, NÃO FEZ CHECK-IN ou NÃO COMPARECEU, com horário real. EXCLUIR DA LISTA cancela QR não utilizado, mas preserva as informações na área ARQUIVADOS.</p><div id="v206Guests"></div>
 </section>
 <script src="admin-promoter-invites-v206.js?v=20261030-brevo-texto-v232"></script>
+
+<style id="malibuMinorStyle">
+#malibuMinorsAdminPanel{display:none!important;max-width:1050px;margin:16px auto 65px;background:#100d19;border:1px solid #6e4aa1;border-radius:19px;padding:18px;color:#fff}
+#malibuMinorsAdminPanel.v95-show{display:block!important}
+#malibuMinorsAdminPanel h2{font-size:23px;margin:0 0 8px}
+#malibuMinorsAdminPanel small{color:#cbc0d6;line-height:1.5}
+#malibuMinorsAdminPanel .m120-search-box{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0}
+#malibuMinorsAdminPanel .m120-search-input{display:block!important;flex:1 1 250px!important;min-width:0!important;width:100%!important;max-width:100%!important;min-height:46px!important;padding:12px!important;border:1px solid #765da1!important;border-radius:10px!important;background:#1c172b!important;color:#fff!important;font-size:15px!important}
+#malibuMinorsAdminPanel .m120-search-meta{font-size:12px;color:#cbc0d6}
+#malibuMinorsAdminPanel .m120-check{display:grid!important;grid-template-columns:24px minmax(0,1fr)!important;gap:10px!important;width:100%!important}
+#malibuMinorsAdminPanel input[type="checkbox"]{appearance:auto!important;width:21px!important;height:21px!important;min-width:21px!important;max-width:21px!important;flex:0 0 21px!important;margin:0!important;padding:0!important}
+#malibuMinorsAdminPanel .m120-check>span,#malibuMinorsAdminPanel label>span{min-width:0!important;overflow-wrap:break-word!important;white-space:normal!important}
+#malibuMinorAdminDetail[hidden],#malibuMinorResendAllStop[hidden]{display:none!important}
+#malibuMinorAdminDetail{background:#1a1524;border:1px solid #6f4b9e;border-radius:13px;padding:15px;min-width:0;max-width:100%;margin-top:12px}
+#malibuMinorAdminDetail .m120-image-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))}
+#malibuMinorAdminDetail .m120-detail-grid{grid-template-columns:minmax(105px,.85fr) minmax(0,1.7fr)}
+#malibuMinorAdminDetail .m120-detail-grid dt,#malibuMinorAdminDetail .m120-detail-grid dd{min-width:0;overflow-wrap:anywhere}
+#malibuMinorsAdminPanel .m120-note{min-width:0}
+@media(max-width:620px){#malibuMinorsAdminPanel{padding:12px;width:100%;overflow-wrap:anywhere}#malibuMinorsAdminPanel .m120-search-box{flex-direction:column}#malibuMinorAdminDetail .m120-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:9px}#malibuMinorAdminDetail .m120-actions>*{width:100%;min-width:0;max-width:100%}}
+</style>
+<section id="malibuMinorsAdminPanel" aria-label="Menores da Malibu">
+ <div class="m120-head"><div><h2>🌙 Menores da Malibu</h2><small>Autorizações da Malibu, independentes das autorizações da Hype. Acesso de ADM e gerente.</small></div>
+ <a href="./autorizacao-malibu.html" target="_blank" rel="noopener" style="color:#d7bbff;font-weight:800;font-size:13px">🔗 LINK DE CADASTRO MALIBU</a></div>
+ <p class="m120-warning">⚠️ O formulário é uma declaração prévia, não um ingresso e não garante admissão. Conferir documentos originais, condições do evento e regras legais. É proibido fornecer álcool a menores de 18 anos.</p>
+ <div class="m120-counts"><span>⏳ Pendentes <b id="malibuMinorCountPending">0</b></span><span>✅ Conferidos <b id="malibuMinorCountChecked">0</b></span><span>⛔ Recusados <b id="malibuMinorCountRejected">0</b></span></div>
+ <div class="m120-toolbar">
+  <select id="malibuMinorAdminEvent" aria-label="Modalidade de autorização" hidden><option value="">GERAL • MALIBU</option></select>
+  <button id="malibuMinorHistoryToggleV203" class="m120-btn m120-ghost" type="button" hidden>Histórico</button>
+  <button id="malibuMinorRefresh" type="button" class="m120-btn">↻ ATUALIZAR</button>
+  <button id="malibuMinorPurge" type="button" class="m120-btn m120-ghost">🗑️ Limpar autorizações vencidas</button>
+ </div>
+ <p id="malibuMinorAdminStatus" role="status" style="color:#b9e7cb;font-size:13px">Entre com acesso ADM ou gerente.</p>
+ <div class="m120-head" style="margin:20px 0 8px"><div><strong style="font-size:17px">Autorizações Malibu</strong><p style="font-size:12px;color:#c9b8d8;margin:6px 0">Exibindo somente os pendentes por padrão. A pesquisa encontra os demais.</p></div>
+ <button id="malibuMinorAdminShowAllToggleV234" type="button" class="m120-btn m120-ghost">📂 VER TODOS OS STATUS</button></div>
+ <div class="m120-toolbar">
+  <button id="malibuMinorResendAll" type="button" class="m120-btn m120-green" disabled>📧 REENVIAR PDF PARA TODOS OS CONFERIDOS</button>
+  <button id="malibuMinorResendAllStop" type="button" class="m120-btn m120-ghost" hidden>⏹ PARAR</button></div>
+ <p style="font-size:12px;color:#bfb0d1">O reenvio usa o Brevo configurado no Supabase. Verifique os destinatários e o limite de envios antes de iniciar.</p>
+ <p id="malibuMinorResendAllProgress" role="status" style="font-size:13px;color:#b9e7cb"></p>
+ <label for="malibuMinorAdminSearch" style="font-weight:800;font-size:13px">🔎 PESQUISAR NOME, CPF OU PROTOCOLO</label>
+ <div class="m120-search-box"><input id="malibuMinorAdminSearch" class="m120-search-input" type="search" autocomplete="off" placeholder="Nome do menor, responsável ou protocolo">
+ <button id="malibuMinorAdminSearchClear" type="button" class="m120-btn m120-ghost" disabled>LIMPAR</button></div>
+ <p id="malibuMinorAdminSearchCount" class="m120-search-meta" role="status"></p>
+ <div id="malibuMinorAdminList"></div><div id="malibuMinorAdminDetail" hidden></div>
+</section>
+<script src="malibu-admin-menores-v1.js?v=20261107-v1"></script>
+
 </body>
 </html>
