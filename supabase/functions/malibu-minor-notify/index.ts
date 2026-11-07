@@ -1,5 +1,5 @@
 import {createClient} from "npm:@supabase/supabase-js@2.57.4";
-const origins=new Set(["https://hypeloungeclub.com.br","https://www.hypeloungeclub.com.br"]);
+const origins=new Set(["https://hypeloungeclub.com.br","https://www.hypeloungeclub.com.br","https://malibu-menores.vercel.app"]);
 function out(req:Request,data:any,status=200){const origin=req.headers.get("origin")||"";return new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json","Cache-Control":"no-store","Access-Control-Allow-Origin":origins.has(origin)?origin:"https://hypeloungeclub.com.br","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"content-type,apikey,authorization,x-client-info","Vary":"Origin"}});}
 Deno.serve(async(req:Request)=>{
  if(req.method==="OPTIONS")return new Response("ok",{headers:out(req,{}).headers});
