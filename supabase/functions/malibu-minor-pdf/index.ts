@@ -1,7 +1,7 @@
 import {createClient} from "npm:@supabase/supabase-js@2.57.4";
 import {PDFDocument,StandardFonts,rgb} from "npm:pdf-lib@1.17.1";
 import QRCode from "npm:qrcode@1.5.4";
-const origins=new Set(["https://hypeloungeclub.com.br","https://www.hypeloungeclub.com.br"]);
+const origins=new Set(["https://hypeloungeclub.com.br","https://www.hypeloungeclub.com.br","https://malibu-menores.vercel.app"]);
 function reply(req:Request,data:any,status=200){const origin=req.headers.get("origin")||"";return new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json","Cache-Control":"no-store","Access-Control-Allow-Origin":origins.has(origin)?origin:"https://hypeloungeclub.com.br","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"content-type,authorization,apikey,x-client-info","Vary":"Origin"}})}
 const text=(v:any,max=120)=>String(v??"").trim().slice(0,max).replace(/[\u{10000}-\u{10FFFF}]/gu,"").replace(/[\u200b-\u200f\u2028-\u202f]/g,"");
 const hex=(s:any)=>/^[a-f0-9]{8}-[a-f0-9-]{27,28}$/i.test(String(s||""));
@@ -95,7 +95,7 @@ Deno.serve(async req=>{
   page1.drawRectangle({x:42,y:251,width:511,height:52,color:rgb(.97,.91,.94),borderColor:burg,borderWidth:1});
   page1.drawText("AUTORIZAÇÃO CONFERIDA - NÃO É INGRESSO",{x:52,y:281,size:12,font:bold,color:burg});
   page1.drawText("A entrada depende de documentos originais e regras de cada festa.",{x:52,y:265,size:9,font,color:ink});
-  const qrUrl="https://hypeloungeclub.com.br/malibu-menores-portaria.html?protocolo="+id;
+  const qrUrl="https://malibu-menores.vercel.app/verificar.html?protocolo="+id;
   const qr=QRCode.create(qrUrl,{errorCorrectionLevel:"M"});
   const mod=qr.modules.size,unit=2.05,ox=43,oy=42;
   page1.drawRectangle({x:ox-8,y:oy-8,width:mod*unit+16,height:mod*unit+16,color:white});
