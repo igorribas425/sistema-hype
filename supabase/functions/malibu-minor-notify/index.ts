@@ -17,7 +17,7 @@ Deno.serve(async(req:Request)=>{
   const who=await db.rpc("verify_staff",{p_username:user,p_password:pass});
   const staff=Array.isArray(who.data)?who.data[0]:who.data;
   if(who.error||!staff||!["admin","gerente"].includes(staff.role))return out(req,{ok:false,error:"Sem permissão"},403);
-  const record=await db.from("hype_minor_authorizations_v120")
+  const record=await db.from("malibu_minor_authorizations_v1")
      .select("id,status,event_id,guardian_email,minor_email,minor_name,minor_birth_date,minor_face_photo_path,minor_document_path,guardian_document_path,checkout_ticket_id")
      .eq("id",id).maybeSingle();
   const a=record.data;
@@ -27,7 +27,7 @@ Deno.serve(async(req:Request)=>{
   if(!emails.every(emailGood))return out(req,{ok:false,error:"Faltam os dois Gmails na autorização. Solicite um novo cadastro."},409);
   const ev=a.event_id?await db.from("events").select("name,event_date,active").eq("id",a.event_id).maybeSingle():null;
   if(a.event_id&&(ev?.error||!ev?.data))throw Error("Evento indisponível");
-  const eventLabel=a.event_id?ev?.data?.name:"TODAS AS FESTAS HYPE";
+  const eventLabel=a.event_id?ev?.data?.name:"TODAS AS FESTAS MALIBU";
   const eventDate=a.event_id?ev?.data?.event_date:
     new Intl.DateTimeFormat("sv-SE",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
   let sent=false,mailError="",provider="";
@@ -40,14 +40,14 @@ Deno.serve(async(req:Request)=>{
       if(ed.getUTCMonth()<bd.getUTCMonth()||(ed.getUTCMonth()===bd.getUTCMonth()&&ed.getUTCDate()<bd.getUTCDate()))years--;
       if(![16,17].includes(years)||!a.minor_face_photo_path||!a.minor_document_path||!a.guardian_document_path)
         throw Error("Cadastro sem idade elegível ou sem fotos dos documentos.");
-      const fileResponse=await fetch(supabaseUrl+"/functions/v1/hype-minor-pdf",{
+      const fileResponse=await fetch(supabaseUrl+"/functions/v1/malibu-minor-pdf",{
         method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+role},
         body:JSON.stringify({id})});
       const file=await fileResponse.json().catch(()=>({}));
       if(!fileResponse.ok||!file.ok||!file.base64)throw Error(file.error||"Não foi possível gerar o PDF da autorização.");
       sendBody={...sendBody,filename:file.filename,pdfBase64:file.base64};
     }
-    const response=await fetch(supabaseUrl+"/functions/v1/hype-minor-email",{
+    const response=await fetch(supabaseUrl+"/functions/v1/malibu-minor-email",{
       method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+role},
       body:JSON.stringify(sendBody)
     });
@@ -55,7 +55,7 @@ Deno.serve(async(req:Request)=>{
     if(!response.ok||data.ok!==true)throw Error(data.error||"Serviço não confirmou o envio.");
     sent=true;provider=String(data.provider||"gmail").slice(0,30);
   }catch(e){mailError=e instanceof Error?e.message:"Falha de notificação";}
-  await db.from("hype_minor_authorizations_v120").update({
+  await db.from("malibu_minor_authorizations_v1").update({
     email_notified_at:sent?new Date().toISOString():null,email_notification_error:mailError||null
   }).eq("id",id);
   return out(req,{ok:true,emailSent:sent,emailError:mailError,emails,provider,
