@@ -39,7 +39,7 @@ Deno.serve(async req=>{
         return reply(req,{ok:false,error:"Acesso não autorizado"},403);
     }
   }
-  const q=await db.from("hype_minor_authorizations_v120").select("*").eq("id",id).maybeSingle();
+  const q=await db.from("malibu_minor_authorizations_v1").select("*").eq("id",id).maybeSingle();
   const a=q.data;
   if(q.error||!a)return reply(req,{ok:false,error:"Autorização não encontrada"},404);
   if(a.status!=="conferido")return reply(req,{ok:false,error:"Somente autorizações conferidas podem gerar documento"},409);
@@ -53,25 +53,25 @@ Deno.serve(async req=>{
   }
   const ev=a.event_id?await db.from("events").select("name,event_date").eq("id",a.event_id).maybeSingle():null;
   if(a.event_id&&(ev?.error||!ev?.data))throw Error("Evento indisponível");
-  const eventLabel=a.event_id?ev?.data?.name:"TODAS AS FESTAS HYPE";
+  const eventLabel=a.event_id?ev?.data?.name:"TODAS AS FESTAS MALIBU";
   const eventDate=a.event_id?ev?.data?.event_date:null;
   const today=new Intl.DateTimeFormat("sv-SE",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
   const birth=String(a.minor_birth_date||"");
   const years=Number(today.slice(0,4))-Number(birth.slice(0,4))-(today.slice(5)<birth.slice(5)?1:0);
   if(a.event_id===null&&(![16,17].includes(years)||(a.expires_at&&Date.parse(a.expires_at)<Date.now())))
     return reply(req,{ok:false,error:"Autorização geral vencida ao completar 18 anos."},410);
-  const bucket=db.storage.from("hype-guardian-private-v120");
+  const bucket=db.storage.from("malibu-guardian-private-v1");
   const paths=[a.minor_face_photo_path,a.minor_document_path,a.guardian_photo_path,a.guardian_document_path,a.signature_path];
   if(paths.some(p=>!p))return reply(req,{ok:false,error:"Selfie, documentos ou assinatura incompletos"},409);
   const images=await Promise.all(paths.map(p=>bucket.download(p)));
   if(images.some(v=>v.error||!v.data))return reply(req,{ok:false,error:"Não foi possível recuperar as fotos privadas"},500);
-  const pdf=await PDFDocument.create();pdf.setTitle("HYPE - Autorização de menor");pdf.setAuthor("HYPE Lounge Club");
+  const pdf=await PDFDocument.create();pdf.setTitle("MALIBU - Autorização de menor");pdf.setAuthor("MALIBU Lounge Club");
   const font=await pdf.embedFont(StandardFonts.Helvetica),bold=await pdf.embedFont(StandardFonts.HelveticaBold);
   const burg=rgb(.72,.12,.31),ink=rgb(.18,.14,.19),gray=rgb(.46,.40,.45),white=rgb(1,1,1);
   const page1=pdf.addPage([595.28,841.89]);
   function header(page:any,subtitle:string){
    page.drawRectangle({x:0,y:747,width:595.28,height:94,color:rgb(.11,.075,.13)});
-   page.drawText("HYPE LOUNGE CLUB",{x:42,y:799,size:24,font:bold,color:white});
+   page.drawText("MALIBU",{x:42,y:799,size:24,font:bold,color:white});
    page.drawText(subtitle,{x:42,y:776,size:12,font:bold,color:rgb(1,.69,.80)});
    page.drawRectangle({x:0,y:741,width:595.28,height:6,color:burg});
   }
@@ -87,15 +87,15 @@ Deno.serve(async req=>{
    ["Nome do responsável",a.guardian_name],["CPF do responsável",a.guardian_cpf],
    ["Nascimento responsável",fmt(a.guardian_birth_date)],["WhatsApp responsável",a.guardian_phone],
    ["Gmail do responsável",a.guardian_email],["Vínculo declarado",a.relation],
-   ["Analisado por",a.reviewed_by||"Equipe HYPE"],["Data da análise",a.reviewed_at?new Date(a.reviewed_at).toLocaleDateString("pt-BR",{timeZone:"UTC"}):"-"],
-   ["Ingresso", "Pista - R$ 30,00 (noite toda)"],
-   ["Pagamento","SOMENTE NA HYPE, NO EVENTO"]
+   ["Analisado por",a.reviewed_by||"Equipe MALIBU"],["Data da análise",a.reviewed_at?new Date(a.reviewed_at).toLocaleDateString("pt-BR",{timeZone:"UTC"}):"-"],
+   ["Ingresso", "Consultar na portaria"],
+   ["Pagamento","SOMENTE NA MALIBU, NO EVENTO"]
   ];
   let y=680;for(const [label,value] of data){row(page1,y,label,value);y-=23;}
   page1.drawRectangle({x:42,y:251,width:511,height:52,color:rgb(.97,.91,.94),borderColor:burg,borderWidth:1});
   page1.drawText("AUTORIZAÇÃO CONFERIDA - NÃO É INGRESSO",{x:52,y:281,size:12,font:bold,color:burg});
   page1.drawText("A entrada depende de documentos originais e regras de cada festa.",{x:52,y:265,size:9,font,color:ink});
-  const qrUrl="https://hypeloungeclub.com.br/menores-portaria.html?protocolo="+id;
+  const qrUrl="https://hypeloungeclub.com.br/malibu-menores-portaria.html?protocolo="+id;
   const qr=QRCode.create(qrUrl,{errorCorrectionLevel:"M"});
   const mod=qr.modules.size,unit=2.05,ox=43,oy=42;
   page1.drawRectangle({x:ox-8,y:oy-8,width:mod*unit+16,height:mod*unit+16,color:white});
@@ -123,9 +123,9 @@ Deno.serve(async req=>{
   photoBlock("DOCUMENTO DO RESPONSÁVEL",embedded[3],312,246,241,171);
   photoBlock("ASSINATURA DO RESPONSÁVEL",embedded[4],42,77,511,116);
   page2.drawText("Fotos e documentos sujeitos à conferência presencial dos originais.",{x:42,y:43,size:9,font,color:gray});
-  page2.drawText("Somente a HYPE pode validar a autorização. Este PDF não comprova pagamento.",{x:42,y:27,size:9,font:bold,color:burg});
+  page2.drawText("Somente a MALIBU pode validar a autorização. Este PDF não comprova pagamento.",{x:42,y:27,size:9,font:bold,color:burg});
   const bytes=await pdf.save({useObjectStreams:true});
   if(bytes.length>4200000)return reply(req,{ok:false,error:"PDF ultrapassou o tamanho permitido. Ajuste as fotos do cadastro."},413);
-  return reply(req,{ok:true,id,filename:"HYPE-AUTORIZACAO-"+id.slice(0,8)+".pdf",mime:"application/pdf",base64:asBase64(bytes),minorName:a.minor_name,eventName:eventLabel,guardianEmail:a.guardian_email,minorEmail:a.minor_email});
- }catch(err){console.error("[HYPE_MINOR_PDF]",err instanceof Error?err.message:String(err));return reply(req,{ok:false,error:"Não foi possível gerar o PDF desta autorização"},500)}
+  return reply(req,{ok:true,id,filename:"MALIBU-AUTORIZACAO-"+id.slice(0,8)+".pdf",mime:"application/pdf",base64:asBase64(bytes),minorName:a.minor_name,eventName:eventLabel,guardianEmail:a.guardian_email,minorEmail:a.minor_email});
+ }catch(err){console.error("[MALIBU_MINOR_PDF]",err instanceof Error?err.message:String(err));return reply(req,{ok:false,error:"Não foi possível gerar o PDF desta autorização"},500)}
 });
