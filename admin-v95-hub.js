@@ -60,6 +60,11 @@
       title: 'Menores de idade',
       subtitle: 'Declarações dos responsáveis, selfie, assinatura e análise de admissão',
       ids: ['hypeMinorsAdminPanel']
+    },
+    malibumenores: {
+      title: 'Menores da Malibu',
+      subtitle: 'Autorizações da Malibu, aprovação e PDF exclusivos',
+      ids: ['malibuMinorsAdminPanel']
     }
   };
 
@@ -107,6 +112,8 @@
       } else if (key === 'menores') {
         await window.HypeMinorAdminV120?.load?.();
         await window.HypeMinorDemoV128?.load?.();
+      } else if (key === 'malibumenores') {
+        await window.MalibuMinorAdminV1?.load?.();
       }
     } catch (err) {
       console.warn('[HYPE V95][refresh]', key, err);
