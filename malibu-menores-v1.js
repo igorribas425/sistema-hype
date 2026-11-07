@@ -202,8 +202,7 @@
      box.className='ok';box.replaceChildren();
      const top=document.createElement('strong');top.textContent='✅ Declaração recebida. Protocolo: '+response.protocol;
      const sub=document.createElement('p');sub.textContent='Cadastro recebido no sistema e aguardando análise. Salve o protocolo ou tire um print. O e-mail pode falhar, mas isso não apaga o cadastro. Após aprovação, apresente documentos originais na portaria para conferência. Esta autorização NÃO é ingresso e NÃO libera entrada automaticamente.';
-     const back=document.createElement('a');back.href='./cliente.html';back.textContent='← Voltar ao site MALIBU (compra normal apenas para maiores)';
-     box.append(top,sub,back);box.scrollIntoView({behavior:'smooth',block:'start'});
+     box.append(top,sub);box.scrollIntoView({behavior:'smooth',block:'start'});
    }catch(err){
      $('minorSubmitProgress').textContent='❌ Envio não confirmado. Leia o motivo abaixo e consulte a MALIBU antes de repetir.';
      message('❌ '+(err.message||err));
