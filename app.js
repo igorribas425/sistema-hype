@@ -1366,95 +1366,10 @@ function sendReceiptWhatsApp() {
   openOrderWhatsApp(entry);
 }
 
+// Compatibilidade com formulários antigos: todo checkout HYPE usa o PIX Asaas.
+// Não exigir chave PIX manual e não desviar venda para WhatsApp.
 async function createManualOrder(e) {
-  e.preventDefault();
-
-  // Autodeclaração de idade na compra. Análise do responsável ANTES de pagar.
-  // Esta verificação da página NÃO substitui controle documental na portaria.
-  const ageDeclaration = document.getElementById('clientAgeDeclaration');
-  if (!ageDeclaration || !ageDeclaration.value) {
-    alert('Selecione a declaração de idade antes de continuar.');
-    ageDeclaration?.focus();
-    return;
-  }
-  if (ageDeclaration.value === 'menor') {
-    const warning=document.getElementById('hypeMinorPurchaseWarning');
-    if(warning)warning.hidden=false;
-    alert('Ingressos para menores não podem ser pagos diretamente pelo site. Solicite a autorização dos pais e aguarde a análise da HYPE. A administração entrará em contato sobre pagamento e regras de entrada.');
-    warning?.scrollIntoView({behavior:'smooth',block:'center'});
-    return;
-  }
-
-  if (HYPE.promoterLinkCode) {
-    const promoterOk = await hypeValidatePromoterLinkV56(HYPE.promoterLinkCode);
-    if (!promoterOk) {
-      hypeApplyPromoterLinkV16();
-      return alert(String(HYPE.promoterLinkCode||"").toUpperCase().startsWith("CONV-") ? "Este é um link da Lista/Promoter, não um link de vendas. Peça o link oficial de ingressos." : "Não foi possível validar este link de vendas. Peça o link atualizado do promoter ou tente novamente.");
-    }
-  }
-
-  const lot = currentSelectedLot();
-  if (!lot) return alert("Escolha um ingresso disponível.");
-
-  const state = hypeStatus(lot);
-  if (!state.canBuy) return alert(`Este lote está ${state.label.toLowerCase()}.`);
-
-  if (!String(HYPE.pixKey || "").trim()) {
-    await loadPublicState().catch(() => {});
-    if (!String(HYPE.pixKey || "").trim()) {
-      return alert("PIX indisponível no momento. A HYPE precisa cadastrar a chave PIX no Admin.");
-    }
-  }
-
-  const name = document.getElementById("clientName")?.value.trim() || "";
-  const phone = document.getElementById("clientPhone")?.value.trim() || "";
-  const email = document.getElementById("clientEmail")?.value.trim() || "";
-  const cpf = document.getElementById("clientCpf")?.value.trim() || "";
-  const gender = document.getElementById("clientGender")?.value || "";
-
-  if (!name) return alert("Informe seu nome completo.");
-  if (normalizePhone(phone).length < 10) return alert("Informe um WhatsApp válido.");
-  if (!validEmail(email)) return alert("Informe um e-mail válido.");
-
-  const submit = document.querySelector('#ticketForm button[type="submit"]');
-  const oldText = submit?.textContent || "GERAR QR CODE PIX";
-  if (submit) {
-    submit.disabled = true;
-    submit.textContent = "CRIANDO PEDIDO...";
-  }
-
-  try {
-    const rows = await sbRpc("create_manual_order_v16", {
-      p_name: name,
-      p_phone: phone,
-      p_email: email,
-      p_cpf: cpf,
-      p_gender: gender,
-      p_lot_id: Number(lot.id),
-      p_coupon_code: null,
-      p_promoter_code: (document.getElementById("clientPromoter")?.value || "").trim().toUpperCase()
-    });
-
-    const entry = Array.isArray(rows) ? rows[0] : rows;
-    if (!entry?.id) throw new Error("Não foi possível criar o pedido.");
-
-    HYPE.currentEntryId = entry.id;
-    HYPE.currentEntryCode = entry.ticket_code;
-
-    window.__hypeCurrentManualEntry = entry;
-    await renderAdminPixPayment(entry);
-    hypeNotify(`Pedido ${entry.ticket_code} criado. PIX pronto para pagamento.`);
-  } catch (err) {
-    await loadPublicState().catch(() => {});
-    renderEventCarousel();
-    renderClientTickets();
-    alert(hypeUserMessage(err, "Não foi possível criar o pedido."));
-  } finally {
-    if (submit) {
-      submit.disabled = false;
-      submit.textContent = oldText;
-    }
-  }
+  return createPixOrder(e);
 }
 
 async function createAsaasPix(ticketId, ticketToken) {
