@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
+<!-- Clone Rogue em homologação: bloqueia conexão com a produção Hype. -->
+<script src="clone-isolation.js?v=20261109"></script>
+<script src="clone-brand.js?v=20261109"></script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -680,7 +684,7 @@ html,body{max-width:100%;overflow-x:hidden}
       <div class="v49-link-copy">
         <h4>Cadastro de promoter</h4>
         <p>Envie este link para o promoter preencher nome, CPF e WhatsApp. O cadastro cria um link permanente de vendas para todos os eventos.</p>
-        <div class="v49-link-row"><input id="v49PromoterPublicUrl" readonly value="https://hypeloungeclub.com.br/promoter.html"><button class="btn-action" type="button" onclick="HypeV49Registration.copyPromoterRegistrationLink()">COPIAR</button><button class="btn-action" type="button" onclick="HypeV49Registration.sharePromoterRegistrationLink()">COMPARTILHAR</button></div>
+        <div class="v49-link-row"><input id="v49PromoterPublicUrl" readonly value="https://rogue-vendas.vercel.app/promoter.html"><button class="btn-action" type="button" onclick="HypeV49Registration.copyPromoterRegistrationLink()">COPIAR</button><button class="btn-action" type="button" onclick="HypeV49Registration.sharePromoterRegistrationLink()">COMPARTILHAR</button></div>
       </div>
       <div class="v49-link-qr"><img id="v49PromoterPublicQr" alt="QR Code do cadastro de promoter"></div>
     </div>
@@ -774,7 +778,7 @@ Bruna Santos"></textarea>
         <div class="v50-settings"><div class="form-group" style="margin:0"><label>Limite de homens por festa</label><input id="v50MaleLimit" type="number" min="0" max="10000" step="1" value="10"></div><button id="v50ListSave" class="btn-action" type="button" onclick="HypeV49Registration.saveGuestListSettings()">SALVAR LIMITE EM TODAS</button></div>
         <div class="v49-link-status" id="v49ListStatus">Carregando status...</div>
         <div id="v50ListQuota" class="v49-link-status">Limite por evento: carregando...</div>
-        <div class="v49-link-row"><input id="v49ListPublicUrl" readonly value="https://hypeloungeclub.com.br/lista.html"><button class="btn-action" type="button" onclick="HypeV49Registration.copyListRegistrationLink()">COPIAR</button><button class="btn-action" type="button" onclick="HypeV49Registration.shareListRegistrationLink()">COMPARTILHAR</button></div>
+        <div class="v49-link-row"><input id="v49ListPublicUrl" readonly value="https://rogue-vendas.vercel.app/lista.html"><button class="btn-action" type="button" onclick="HypeV49Registration.copyListRegistrationLink()">COPIAR</button><button class="btn-action" type="button" onclick="HypeV49Registration.shareListRegistrationLink()">COMPARTILHAR</button></div>
         <button id="v49ListToggle" class="btn" type="button" onclick="HypeV49Registration.toggleGuestList()">LIBERAR CADASTRO</button>
       </div>
       <div class="v49-link-qr"><img id="v49ListPublicQr" alt="QR Code da lista pública"></div>
@@ -1246,7 +1250,7 @@ Bruna Santos"></textarea>
 <div style="margin:14px 0;padding:15px;background:#21151f;border:1px solid #725866;border-radius:14px">
  <strong>📋 Link único de cadastro dos promoters de convidados</strong>
  <p style="color:#c7bcc6;font-size:12px">Compartilhe este link com os promoters. Cada um se cadastra novamente e recebe seu link particular. Ninguém ganha convite automaticamente por ter cadastro de vendas.</p>
- <p style="color:#a7f3c6;font-size:13px;overflow-wrap:anywhere">https://hypeloungeclub.com.br/promoter-convite.html</p>
+ <p style="color:#a7f3c6;font-size:13px;overflow-wrap:anywhere">https://rogue-vendas.vercel.app/promoter-convite.html</p>
  <div style="display:flex;flex-wrap:wrap;gap:9px">
   <button type="button" class="btn-action" onclick="HypePromoterInvitesV206.copyRegistration()">📋 COPIAR CADASTRO</button>
   <button type="button" class="btn-action" onclick="HypePromoterInvitesV206.shareRegistration()">COMPARTILHAR</button>
@@ -1256,7 +1260,7 @@ Bruna Santos"></textarea>
 <div style="margin:14px 0;padding:15px;background:rgba(40,209,124,.065);border:1px solid rgba(40,209,124,.4);border-radius:14px;max-width:100%">
  <strong>✅ LINK OFICIAL DA LISTA HYPE — SEM PROMOTER</strong>
  <p style="color:#c7d9cf;font-size:12px;line-height:1.6;margin:8px 0">Use este endereço para convidar pessoas diretamente pela HYPE, sem vincular a um promoter. Os cadastros entram na <b>Lista Free/Convidados oficial</b> para análise do ADM, <b>não</b> no ranking individual da Lista/Promoter. Aprovação e QR Code seguem o fluxo normal da lista.</p>
- <p style="color:#a7f3c6;font-size:13px;overflow-wrap:anywhere;margin:9px 0">https://hypeloungeclub.com.br/lista.html</p>
+ <p style="color:#a7f3c6;font-size:13px;overflow-wrap:anywhere;margin:9px 0">https://rogue-vendas.vercel.app/lista.html</p>
  <div style="display:flex;flex-wrap:wrap;gap:9px">
   <button type="button" class="btn-action" onclick="HypePromoterInvitesV206.copyHypeList()">📋 COPIAR LINK DA HYPE</button>
   <button type="button" class="btn-action" onclick="HypePromoterInvitesV206.shareHypeList()">📤 COMPARTILHAR</button>
