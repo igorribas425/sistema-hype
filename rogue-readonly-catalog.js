@@ -6,7 +6,7 @@
  function status(root,title,detail){root.replaceChildren();const pane=node("div","event-empty");pane.style.cssText="padding:28px 26px;line-height:1.65;min-height:140px";const h=node("strong",null,title);h.style.cssText="font-size:19px;display:block;margin-bottom:8px";pane.append(h,node("span",null,detail));root.append(pane)}
  const money=n=>"R$ "+Number(n||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
  function dateBR(d){try{return new Date(String(d).slice(0,10)+"T12:00:00-03:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric"})}catch{return "Data a confirmar"}}
- const future=e=>{if(!e?.active)return false;const d=String(e.event_date||"").slice(0,10);return /^\\d{4}-\\d{2}-\\d{2}$/.test(d)&&new Date(d+"T23:59:59-03:00").getTime()>=Date.now()};
+ const future=e=>{if(!e?.active)return false;const d=String(e.event_date||"").slice(0,10);return /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(d)&&new Date(d+"T23:59:59-03:00").getTime()>=Date.now()};
  window.roguePreviewReadOnlyCatalog=async function(){
   hide("ticketBox");hide("v14Spotlight");hide("eventDots");
   const root=document.getElementById("eventCarousel");if(!root)return;
