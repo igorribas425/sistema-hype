@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<head>
+<!-- Clone Malibu em homologação: bloqueia conexão com a produção Hype. -->
+<script src="clone-isolation.js?v=20261109"></script>
+<script src="clone-brand.js?v=20261109"></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="no-referrer"><meta name="theme-color" content="#0d0b11">
 <title>MALIBU • Conferir autorização de menor</title>
 <style>
@@ -42,7 +46,7 @@ button:disabled{opacity:.5}.message{padding:12px;border:1px solid #6c4d61;border
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id);
-const url="https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/malibu-minors-authorization";
+const url="https://not-configured.invalid/functions/v1/malibu-minors-authorization";
 let stream=null,busy=false;
 const query=new URLSearchParams(location.search);
 $("protocol").value=query.get("protocolo")||"";
