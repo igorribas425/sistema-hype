@@ -76,7 +76,7 @@
     $('demoStatus').textContent=status;
     $('demoStatus').style.color=status==='PENDENTE'?'#fcd488':status==='CONFERIDO'?'#9ce0b6':'#ff9bac';
   }
-  const DEMO_ENDPOINT="https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minors-demo";
+  const DEMO_ENDPOINT="https://not-configured.invalid/functions/v1/hype-minors-demo";
   $('minorForm').addEventListener('submit',async e=>{
     e.preventDefault();
     const minor=$('minorCpf').value.replace(/\D/g,''),guardian=$('guardianCpf').value.replace(/\D/g,'');

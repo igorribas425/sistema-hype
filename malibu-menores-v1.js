@@ -2,7 +2,7 @@
 (() => {
  'use strict';
  const $=id=>document.getElementById(id);
- const ENDPOINT='https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/malibu-minors-authorization';
+ const ENDPOINT='https://not-configured.invalid/functions/v1/malibu-minors-authorization';
  const canvas=$('signature'),ctx=canvas.getContext('2d',{willReadFrequently:true});
  let drawing=false,signed=false,photoUrl='',documentUrl='',minorFaceUrl='',minorDocumentUrl='';
  let photosProcessing=0;

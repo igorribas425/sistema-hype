@@ -3,9 +3,9 @@
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id);
-const AUTH="https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minors-authorization";
+const AUTH="https://not-configured.invalid/functions/v1/hype-minors-authorization";
 const DEVICE_KEY="hype_portaria_device_key_v18";
-const PDF="https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minor-pdf";
+const PDF="https://not-configured.invalid/functions/v1/hype-minor-pdf";
 let rows=[],ready=false,busy=false,pdfUrl=null;
 const today=()=>new Intl.DateTimeFormat("sv-SE",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
 const years=(date,t)=>{if(!date)return-1;let y=Number(t.slice(0,4))-Number(date.slice(0,4));if(t.slice(5)<String(date).slice(5))y--;return y;};

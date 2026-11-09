@@ -2,7 +2,7 @@
 (() => {
 'use strict';
 const $=id=>document.getElementById(id);
-const URL='https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/malibu-minors-authorization';
+const URL='https://not-configured.invalid/functions/v1/malibu-minors-authorization';
 let loading=false,rows=[],events=[],openedId=null,showOldEventsV203=false,showAllMinorRowsV234=false;
 let bulkMinorRunning=false,bulkMinorStop=false;
 const bulkMinorFinished=new Set();
@@ -180,7 +180,7 @@ function render(){
 
 async function sendNotification(id){
  const creds=credentials();if(!creds)throw Error('Acesso restrito ao ADM.');
- const resp=await fetch('https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/malibu-minor-notify',{
+ const resp=await fetch('https://not-configured.invalid/functions/v1/malibu-minor-notify',{
    method:'POST',headers:{'Content-Type':'application/json'},
    body:JSON.stringify({id,...creds})
  });
@@ -226,7 +226,7 @@ async function downloadAuthorizationPDF(row){
  const panel=pdfMessage('⏳ Gerando PDF completo com fotos, documentos, assinatura e QR Code...');
  status('Gerando PDF completo com fotos, documentos e assinatura...');
  try{
-  const res=await fetch('https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/malibu-minor-pdf',{
+  const res=await fetch('https://not-configured.invalid/functions/v1/malibu-minor-pdf',{
    method:'POST',headers:{'Content-Type':'application/json'},
    body:JSON.stringify({id:row.id,...creds})
   });
