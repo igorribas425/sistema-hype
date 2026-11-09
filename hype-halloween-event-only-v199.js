@@ -1,7 +1,7 @@
 /* ROGUE — retira a troca automática de logotipo herdada do Halloween Hype.
    Este script opera APENAS no clone, não no site original. */
 (function(){'use strict';
-  var logo="assets/rogue-clone-logo.webp",alt="Rogue Lounge";
+  var logo="https://rogue-vendas.vercel.app/assets/rogue-logo.webp",alt="Rogue Lounge";
   function apply(){
     if(!document.body)return;
     document.body.classList.remove('hh196-halloween');
