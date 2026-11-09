@@ -67,7 +67,7 @@ Deno.serve(async(req:Request)=>{
     let cover="";
     try {
       const parsed=new URL(coverRaw);
-      const validHosts=["hypeloungeclub.com.br","www.hypeloungeclub.com.br","igorribas425.github.io","txxoqfcwqncqyiqgzboz.supabase.co"];
+      const validHosts=["rogue-vendas.vercel.app","rogue-vendas.vercel.app","igorribas425.github.io","etxvkvdsnqqdkonvbgzf.supabase.co"];
       if(parsed.protocol==="https:"&&validHosts.includes(parsed.hostname)&&!parsed.username&&!parsed.password){
         cover=parsed.toString();
       }
@@ -75,8 +75,8 @@ Deno.serve(async(req:Request)=>{
     const heading=isGuest?"LISTA HYPE APROVADA":"INGRESSO CONFIRMADO";
     // Link individual: bilhete pago/FREE é consultado pelo código, não cria outro Pix.
     // Convidados da lista usam o PNG anexado, sem novo cadastro.
-    const accessUrl=isGuest?"https://hypeloungeclub.com.br/lista.html":
-      "https://hypeloungeclub.com.br/cliente.html?ticket="+encodeURIComponent(code);
+    const accessUrl=isGuest?"https://rogue-vendas.vercel.app/lista.html":
+      "https://rogue-vendas.vercel.app/cliente.html?ticket="+encodeURIComponent(code);
     const accessLabel=isGuest?"ABRIR SITE DA LISTA HYPE":"ABRIR MEU QR CODE NO SITE";
     const subject=(isGuest?"Lista HYPE aprovada - ":"Ingresso confirmado - ")+event;
     const details=(label,value)=>
@@ -160,7 +160,7 @@ Deno.serve(async(req:Request)=>{
         "Se não conseguir abrir o anexo, use o botão acima para consultar o QR Code original no site. Não é necessário comprar outro ingresso.")+"</p>"+
         "<p style='color:#52525b;font-size:13px'>Este é um e-mail automático sobre seu ingresso da HYPE Lounge Club. "+
         "Por segurança, o QR Code é individual e válido conforme as regras do evento.</p>"+
-        "<p style='font-size:12px;color:#71717a'>HYPE Lounge Club | hypeloungeclub.com.br</p>"+
+        "<p style='font-size:12px;color:#71717a'>HYPE Lounge Club | rogue-vendas.vercel.app</p>"+
         "</main></body></html>";
       const brevoPayload:any={
         sender:{name:"HYPE Lounge Club",email:brevoFrom},

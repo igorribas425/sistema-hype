@@ -2,7 +2,7 @@
 (()=>{
  "use strict";
  const $=id=>document.getElementById(id);
- const API="https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minors-demo";
+ const API="https://etxvkvdsnqqdkonvbgzf.supabase.co/functions/v1/hype-minors-demo";
  let loading=false,rows=[],sample=null;
  function staff(){
    try{if(typeof HYPE!=='undefined'&&HYPE.user&&HYPE.pass&&["admin","gerente"].includes(HYPE.role))return {username:HYPE.user,password:HYPE.pass};}
@@ -35,7 +35,7 @@
    return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
  }
 
- function demoPortal(id){return "https://hypeloungeclub.com.br/menores-demo-validar.html?demo="+encodeURIComponent(id);}
+ function demoPortal(id){return "https://rogue-vendas.vercel.app/menores-demo-validar.html?demo="+encodeURIComponent(id);}
  function portraitSvg(minor){
    const name=minor?"Lucas Exemplo":"Mariana Exemplo";
    const b=minor?"#5b7798":"#a25a87",tone=minor?"#bcb3a9":"#ca9d98";

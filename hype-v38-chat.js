@@ -90,7 +90,7 @@
   }
 
   function pushFunctionUrl() {
-    return String(window.HYPE_CHAT_PUSH_FUNCTION_URL || 'https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-chat-push').replace(/\/$/, '');
+    return String(window.HYPE_CHAT_PUSH_FUNCTION_URL || 'https://etxvkvdsnqqdkonvbgzf.supabase.co/functions/v1/hype-chat-push').replace(/\/$/, '');
   }
 
   function edgeAuthProof() {
