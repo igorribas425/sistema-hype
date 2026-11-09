@@ -63,7 +63,7 @@ Deno.serve(async(req:Request)=>{
     return res({ok:true,accepted:true,recipient_count:recipients.length,provider:sent.provider,provider_id:sent.id});
   }
   const url=String(body.link||"");
-  if((kind==="approved"||kind==="demo")&&(!url.startsWith("https://hypeloungeclub.com.br/")&&!url.startsWith("https://www.hypeloungeclub.com.br/")))return res({ok:false,error:"Link oficial inválido"},400);
+  if((kind==="approved"||kind==="demo")&&(!url.startsWith("https://rogue-vendas.vercel.app/")&&!url.startsWith("https://rogue-vendas.vercel.app/")))return res({ok:false,error:"Link oficial inválido"},400);
   const minor=String(body.minorName||"Adolescente").slice(0,120);
   const event=String(body.eventName||"MALIBU Lounge Club").slice(0,120);
   const confirmed=kind==="demo"||kind==="approved";

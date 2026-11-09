@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
 const BUCKET = "hype-guest-photos-v50";
 const MAX_BYTES = 5 * 1024 * 1024;
-const DEFAULT_ORIGINS = ["https://hypeloungeclub.com.br", "https://www.hypeloungeclub.com.br"];
+const DEFAULT_ORIGINS = ["https://rogue-vendas.vercel.app", "https://rogue-vendas.vercel.app"];
 const MIME_EXTENSIONS: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -72,7 +72,7 @@ async function sendAlreadyHasTicketNotice(supabase:any,eventId:number,cpf:string
     if(!key||!from)throw new Error("Brevo não configurado");
     const eventName=String(ticket.event_name||"a festa da HYPE").slice(0,130);
     const customer=String(ticket.full_name||"Cliente HYPE").slice(0,140);
-    const site="https://hypeloungeclub.com.br/cliente.html?event="+encodeURIComponent(String(eventId));
+    const site="https://rogue-vendas.vercel.app/cliente.html?event="+encodeURIComponent(String(eventId));
     const html="<div style='font-family:Arial,sans-serif;max-width:620px;margin:auto;background:#111015;color:#fff;padding:25px;border-radius:16px'>"+
       "<div style='font-weight:800;font-size:23px;letter-spacing:3px'>HYPE <span style='color:#ed3886'>LOUNGE</span> CLUB</div>"+
       "<h2 style='margin-top:25px'>Você já garantiu seu ingresso! 🎟️</h2>"+

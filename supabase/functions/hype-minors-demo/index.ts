@@ -1,12 +1,12 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 /* HYPE — somente cenário sintético, isolado dos cadastros e ingressos reais */
-const ALLOWED=new Set(["https://hypeloungeclub.com.br","https://www.hypeloungeclub.com.br"]);
+const ALLOWED=new Set(["https://rogue-vendas.vercel.app","https://rogue-vendas.vercel.app"]);
 const TABLE="hype_minor_demo_v127";
 const RESP=(req:Request,payload:unknown,status=200)=>{
  const origin=req.headers.get("origin")||"";
  return new Response(JSON.stringify(payload),{status,headers:{
  "Content-Type":"application/json","Cache-Control":"no-store",
- "Access-Control-Allow-Origin":ALLOWED.has(origin)?origin:"https://hypeloungeclub.com.br",
+ "Access-Control-Allow-Origin":ALLOWED.has(origin)?origin:"https://rogue-vendas.vercel.app",
  "Access-Control-Allow-Methods":"OPTIONS,POST",
  "Access-Control-Allow-Headers":"content-type,authorization,apikey,x-client-info",
  "Vary":"Origin"

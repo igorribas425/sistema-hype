@@ -9,7 +9,7 @@ function hypeMailCoverUrlV172(cover: unknown, eventId: unknown): string {
 }
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
-const DEFAULT_ORIGINS = ["https://hypeloungeclub.com.br", "https://www.hypeloungeclub.com.br"];
+const DEFAULT_ORIGINS = ["https://rogue-vendas.vercel.app", "https://rogue-vendas.vercel.app"];
 
 function corsHeaders(req: Request) {
   const origins = new Set(
@@ -38,8 +38,8 @@ function officialUrl(value: string, requiredPath?: RegExp) {
   try {
     const url = new URL(value);
     if (url.protocol !== "https:") return null;
-    const allowed = url.hostname === "hypeloungeclub.com.br" ||
-      url.hostname === "www.hypeloungeclub.com.br" || url.hostname.endsWith(".github.io");
+    const allowed = url.hostname === "rogue-vendas.vercel.app" ||
+      url.hostname === "rogue-vendas.vercel.app" || url.hostname.endsWith(".github.io");
     if (!allowed || (requiredPath && !requiredPath.test(url.pathname))) return null;
     return url;
   } catch (_) {

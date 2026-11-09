@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
-const DEFAULT_ORIGINS = ["https://hypeloungeclub.com.br", "https://www.hypeloungeclub.com.br"];
+const DEFAULT_ORIGINS = ["https://rogue-vendas.vercel.app", "https://rogue-vendas.vercel.app"];
 
 function corsHeaders(req: Request) {
   const origins = new Set(
@@ -68,7 +68,7 @@ function bytesToB64url(value: ArrayBuffer | Uint8Array) {
 async function createVapidJwt(audience: string) {
   const publicKey = Deno.env.get("VAPID_PUBLIC_KEY") || "";
   const privateKey = Deno.env.get("VAPID_PRIVATE_KEY") || "";
-  const subject = Deno.env.get("VAPID_SUBJECT") || "mailto:contato@hypeloungeclub.com.br";
+  const subject = Deno.env.get("VAPID_SUBJECT") || "mailto:contato@rogue-vendas.vercel.app";
   if (!publicKey || !privateKey) throw new Error("VAPID não configurado.");
   const header = bytesToB64url(new TextEncoder().encode(JSON.stringify({ typ: "JWT", alg: "ES256" })));
   const payload = bytesToB64url(new TextEncoder().encode(JSON.stringify({
