@@ -1,12 +1,12 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
-const ORIGINS=new Set(["https://hypeloungeclub.com.br","https://www.hypeloungeclub.com.br","https://malibu-menores.vercel.app"]);
+const ORIGINS=new Set(["https://malibu-menores.vercel.app","https://malibu-menores.vercel.app","https://malibu-menores.vercel.app"]);
 const TABLE="malibu_minor_authorizations_v1", BUCKET="malibu-guardian-private-v1";
 const str=(v:any,n=120)=>String(v??"").trim().slice(0,n);
 const digits=(v:any)=>String(v??"").replace(/\D/g,"");
 function reply(req:Request,data:any,status=200){
  const origin=req.headers.get("origin")||"";
  return new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json","Cache-Control":"no-store",
-  "Access-Control-Allow-Origin":ORIGINS.has(origin)?origin:"https://hypeloungeclub.com.br",
+  "Access-Control-Allow-Origin":ORIGINS.has(origin)?origin:"https://malibu-menores.vercel.app",
   "Access-Control-Allow-Methods":"POST,OPTIONS",
   "Access-Control-Allow-Headers":"content-type,authorization,apikey,x-client-info","Vary":"Origin"}});
 }

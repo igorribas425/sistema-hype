@@ -1,8 +1,8 @@
 import {createClient} from "npm:@supabase/supabase-js@2.57.4";
 import {PDFDocument,StandardFonts,rgb} from "npm:pdf-lib@1.17.1";
 import QRCode from "npm:qrcode@1.5.4";
-const origins=new Set(["https://hypeloungeclub.com.br","https://www.hypeloungeclub.com.br","https://malibu-menores.vercel.app"]);
-function reply(req:Request,data:any,status=200){const origin=req.headers.get("origin")||"";return new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json","Cache-Control":"no-store","Access-Control-Allow-Origin":origins.has(origin)?origin:"https://hypeloungeclub.com.br","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"content-type,authorization,apikey,x-client-info","Vary":"Origin"}})}
+const origins=new Set(["https://malibu-menores.vercel.app","https://malibu-menores.vercel.app","https://malibu-menores.vercel.app"]);
+function reply(req:Request,data:any,status=200){const origin=req.headers.get("origin")||"";return new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json","Cache-Control":"no-store","Access-Control-Allow-Origin":origins.has(origin)?origin:"https://malibu-menores.vercel.app","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"content-type,authorization,apikey,x-client-info","Vary":"Origin"}})}
 const text=(v:any,max=120)=>String(v??"").trim().slice(0,max).replace(/[\u{10000}-\u{10FFFF}]/gu,"").replace(/[\u200b-\u200f\u2028-\u202f]/g,"");
 const hex=(s:any)=>/^[a-f0-9]{8}-[a-f0-9-]{27,28}$/i.test(String(s||""));
 function asBase64(bytes:Uint8Array){let out="";for(let i=0;i<bytes.length;i+=16384){out+=String.fromCharCode(...bytes.slice(i,i+16384));}return btoa(out)}
