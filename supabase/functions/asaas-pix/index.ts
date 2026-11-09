@@ -1,8 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
 const DEFAULT_ORIGINS = [
-  "https://hypeloungeclub.com.br",
-  "https://www.hypeloungeclub.com.br",
+  "https://malibu-menores.vercel.app",
+  "https://malibu-menores.vercel.app",
 ];
 
 function allowedOrigins() {
