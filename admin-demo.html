@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" type="image/svg+xml" href="/favicon-rogue-v2.svg?v=20261109demo">
+<title>Prévia ADM ROGUE Lounge</title>
+<style>
+:root{font-family:Inter,Arial,Helvetica,sans-serif;background:#050507;color:#f7f7fa;color-scheme:dark;}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 35% -15%,#27252c 0%,#0a090e 45%,#050507 95%);}
+header{max-width:1150px;margin:0 auto;padding:26px 20px 8px;text-align:center}
+header img{display:block;max-width:265px;width:min(70vw,265px);max-height:115px;object-fit:contain;margin:0 auto 4px;}
+.logoFallback{font-size:34px;font-weight:900;letter-spacing:.12em}
+.strap{color:#aaa5b1;font-weight:800;letter-spacing:.3em;font-size:10px;margin:8px 0 2px}
+h1{margin:7px 0;font-size:clamp(20px,3vw,29px)}
+.demoFlag{background:#191821;border:1px solid #36333d;border-radius:12px;padding:13px 16px;color:#d2d0d7;margin:16px auto 0;line-height:1.5;font-size:13px;max-width:900px}
+main{max-width:1150px;margin:0 auto;padding:24px 20px 80px}
+.toolbar{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-bottom:20px}
+.eyebrow{color:#aaa5b1;font-size:11px;font-weight:800;letter-spacing:.14em}
+h2{font-size:clamp(21px,3vw,30px);margin:6px 0}
+button{font:inherit;cursor:pointer}
+.back{padding:12px 16px;border-radius:11px;background:#1e1d23;border:1px solid #47454e;color:white;font-weight:700}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(225px,1fr));gap:16px}
+.tile{border-radius:20px;background:linear-gradient(145deg,#111015,#09090b);border:1px solid #333139;text-align:left;min-height:157px;padding:21px;display:flex;flex-direction:column;align-items:flex-start;color:#fff;gap:10px;transition:transform .14s,border-color .14s}
+.tile:hover,.tile:focus-visible{border-color:#aaa9b3;transform:translateY(-2px)}
+.tile .emoji{font-size:27px}.tile strong{font-size:20px}.tile small{color:#929099;line-height:1.45}
+[hidden]{display:none!important}
+.panel{background:linear-gradient(140deg,#111015,#09090c);border:1px solid #31303a;border-radius:20px;padding:24px;min-height:255px}
+.panel h3{font-size:22px;margin:0 0 14px}.state{border:1px dashed #52515b;padding:19px;border-radius:12px;color:#c0bec6;font-size:14px;line-height:1.6}
+.actions{margin-top:19px;display:flex;flex-wrap:wrap;gap:9px}
+.fakeButton{display:inline-block;border:1px solid #414048;border-radius:10px;color:#aaa9b2;padding:11px 15px;font-size:13px;background:#141318;cursor:not-allowed}
+footer{margin:45px auto 0;color:#77757f;text-align:center;font-size:12px;line-height:1.6}
+@media(max-width:540px){.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.tile{min-height:140px;padding:14px}.tile strong{font-size:15px}.tile small{font-size:11px}.toolbar{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<header>
+<img id="brandLogo" src="https://rogue-vendas.vercel.app/assets/rogue-logo.webp" alt="Logo Rogue Lounge">
+<div id="logoFallback" class="logoFallback" hidden>ROGUE</div>
+<p class="strap">ACESSO ADMINISTRATIVO</p>
+<h1>ADM // ROGUE LOUNGE</h1>
+<div class="demoFlag"><strong>PRÉVIA VISUAL — NÃO É UM LOGIN REAL.</strong> Navegue pelas abas para conferir o layout. Não há dados de clientes, pagamentos, QR Codes ou operações conectadas nesta demonstração.</div>
+</header>
+<main>
+<div class="toolbar"><div><div class="eyebrow">PAINEL ROGUE</div><h2 id="heading">O que você quer gerenciar?</h2></div><button class="back" id="home" hidden>← Voltar às abas</button></div>
+<div class="cards" id="cards"></div>
+<div class="panel" id="panel" hidden aria-live="polite">
+<h3 id="panelTitle"></h3>
+<p id="panelDescription" style="color:#a9a7b0;margin:0 0 22px"></p>
+<div class="state"><strong>Nenhum dado real carregado.</strong><div>Este módulo está representado apenas para revisão da interface. A integração com o banco exclusivo da Rogue e as permissões de acesso precisam ser homologadas antes do uso.</div></div>
+<div class="actions"><span class="fakeButton">Criar / editar — indisponível</span><span class="fakeButton">Aprovar / enviar — indisponível</span><span class="fakeButton">Exportar — indisponível</span></div>
+</div>
+<footer>Ambiente exclusivo de demonstração visual · Rogue Lounge · Não use para operar a portaria ou receber ingressos.</footer>
+</main>
+<script>
+(() => {
+const modules=[["financeiro","💰","Financeiro","Vendas, caixa, taxas, retiradas e relatórios"],["promoters","🎯","Promoters","Equipe, links individuais, ranking e vendas"],["lista","📋","Lista / FREE","Inscrição, fotos, pendências e aprovações"],["listapromoter","🪪","Lista / Promoter","Convidados, QR, aprovação e presença"],["portaria","🚪","Portaria","Leitura QR, pesquisa e registro de check-in"],["clientes","🎟️","Clientes","Ingressos, pagamentos e histórico"],["cadastros","👥","Cadastros","Histórico, frequência e bloqueios"],["eventos","🎤","Eventos","Datas, imagens, lotes e preços"],["avaliacao","⭐","Avaliações","Feedback dos participantes"],["ferramentas","🎁","Sorteio & Acessos","Dispositivos, sorteios e equipe"],["menores","🛡️","Menores de idade","Responsáveis, documentos, assinaturas e autorizações"],["vendas","🧾","Vendas manuais","Pedidos, revisão e liberação de ingresso"]];
+const cards=document.getElementById('cards'), panel=document.getElementById('panel'), heading=document.getElementById('heading'), home=document.getElementById('home');
+document.getElementById('brandLogo').onerror=function(){this.hidden=true;document.getElementById('logoFallback').hidden=false};
+for(const [id,emoji,title,desc] of modules){
+ const button=document.createElement('button');button.type='button';button.className='tile';button.innerHTML='<span class="emoji" aria-hidden="true">'+emoji+'</span><strong>'+title+'</strong><small>'+desc+'</small>';button.onclick=()=>show(id);cards.appendChild(button);
+}
+function show(id){const item=modules.find(x=>x[0]===id);if(!item)return;cards.hidden=true;panel.hidden=false;home.hidden=false;heading.textContent=item[2];document.getElementById('panelTitle').textContent=item[1]+' '+item[2];document.getElementById('panelDescription').textContent=item[3];history.replaceState(null,'','#'+id);window.scrollTo(0,0)}
+function showHome(){cards.hidden=false;panel.hidden=true;home.hidden=true;heading.textContent='O que você quer gerenciar?';history.replaceState(null,'',location.pathname);window.scrollTo(0,0)}
+home.onclick=showHome;
+const initial=location.hash.slice(1);if(initial)show(initial);
+})();
+</script>
+</body>
+</html>

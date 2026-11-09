@@ -268,12 +268,12 @@ function hypeCountdownText(ticket) {
 
 function sessionSave(user, pass, role) {
   HYPE.user = user; HYPE.pass = pass; HYPE.role = role;
-  sessionStorage.setItem("hype_staff", JSON.stringify({ user, pass, role }));
+  sessionStorage.setItem("rogue_staff", JSON.stringify({ user, pass, role }));
 }
 
 function sessionLoad() {
   try {
-    const data = JSON.parse(sessionStorage.getItem("hype_staff") || "null");
+    const data = JSON.parse(sessionStorage.getItem("rogue_staff") || "null");
     if (data?.user && data?.pass) {
       HYPE.user = data.user; HYPE.pass = data.pass; HYPE.role = data.role || null;
       return true;
@@ -284,7 +284,7 @@ function sessionLoad() {
 
 function sessionClear() {
   HYPE.user = HYPE.pass = HYPE.role = null;
-  sessionStorage.removeItem("hype_staff");
+  sessionStorage.removeItem("rogue_staff");
 }
 
 async function sbRpc(name, params = {}) {

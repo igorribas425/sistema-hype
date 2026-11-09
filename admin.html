@@ -391,9 +391,11 @@ html,body{max-width:100%;overflow-x:hidden}
   <div class="loginBox">
     <div class="brand-logo-wrap"><img src="https://rogue-vendas.vercel.app/assets/rogue-logo.webp" class="brand-logo" alt="Rogue Lounge"></div><h2 style="margin-bottom:5px;color:#fff">ADMIN // ROGUE LOUNGE</h2>
     <p style="color:var(--muted);font-size:12px;margin-bottom:20px">Acesso administrativo</p>
-    <input type="text" id="adminUser" placeholder="Utilizador" value="hype" style="margin-bottom:10px" onkeypress="if(event.key === 'Enter') checkLogin()">
+    <input type="text" id="adminUser" name="rogue_admin_user" placeholder="Usuário ADM Rogue" value="" autocomplete="off" autocapitalize="none" spellcheck="false" style="margin-bottom:10px" onkeypress="if(event.key === 'Enter') checkLogin()">
     <input type="password" id="adminPass" placeholder="Palavra-passe..." style="margin-bottom:12px" onkeypress="if(event.key === 'Enter') checkLogin()">
     <button class="btn" onclick="checkLogin()">ENTRAR NO PAINEL</button>
+    <p style="margin:13px 0 8px;color:#b4b4c0;font-size:12px;line-height:1.5">Acesso real da Rogue ainda não ativado. Não use a senha da Hype.</p>
+    <a href="admin-demo.html" style="display:block;border:1px solid rgba(255,255,255,.30);border-radius:10px;padding:12px;color:white;text-decoration:none;font-weight:800;font-size:13px">VER LAYOUT DO ADM — SEM LOGIN</a>
   </div>
 </div>
 
@@ -404,7 +406,7 @@ html,body{max-width:100%;overflow-x:hidden}
 
   <section class="v95-admin-home" id="v95AdminHome">
     <div class="v95-home-copy">
-      <strong>ADMIN HYPE</strong>
+      <strong>ADMIN ROGUE</strong>
       <span>Escolha o que você quer gerenciar.</span>
     </div>
     <div class="v95-home-grid">
