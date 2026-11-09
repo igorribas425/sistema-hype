@@ -3,8 +3,8 @@
    O SQL correspondente está em supabase_schema.sql.
 */
 
-const HYPE_EXPECTED_SUPABASE_URL = "https://txxoqfcwqncqyiqgzboz.supabase.co";
-const HYPE_EXPECTED_SUPABASE_KEY = "sb_publishable_dLUCTdk5joZpsHlMtpfTyA_TXF7ujCT";
+const HYPE_EXPECTED_SUPABASE_URL = "https://not-configured.invalid";
+const HYPE_EXPECTED_SUPABASE_KEY = ""; // Não reutilizar a chave da Hype
 
 const HYPE = {
   sb: null,
@@ -70,7 +70,7 @@ function updateServiceFeeInfo(ticketValue) {
 function hypeCfg() {
   const cfg = window.HYPE_SUPABASE_CONFIG || {};
   if (cfg.url !== HYPE_EXPECTED_SUPABASE_URL) {
-    return { url: HYPE_EXPECTED_SUPABASE_URL, anonKey: HYPE_EXPECTED_SUPABASE_KEY };
+    throw new Error("Clone MALIBU: URL Supabase incorreta. Operação bloqueada para proteger a Hype.");
   }
   if (!cfg.url || cfg.url.includes("COLE_AQUI") || !cfg.anonKey || cfg.anonKey.includes("COLE_AQUI")) {
     throw new Error("Configure supabase-config.js com a URL e a chave pública do seu projeto.");
@@ -1097,6 +1097,13 @@ async function refreshClientCatalogSafely() {
 }
 
 async function initClient() {
+  if (window.CLONE_ENV?.mode === "homologacao") {
+    const target = document.getElementById("eventCarousel");
+    if (target) target.innerHTML = '<div class="event-empty" style="padding:30px 25px"><strong style="display:block;font-size:20px;margin-bottom:8px">Prévia MALIBU — catálogo em homologação</strong><span>Esta é uma cópia visual do sistema original. Eventos, vendas, PIX, listas e cadastros permanecem desativados até a integração e os testes do banco exclusivo da casa.</span></div>';
+    const select = document.getElementById("ticketType");
+    if (select) { select.innerHTML = '<option>Ingresso indisponível nesta prévia</option>'; select.disabled = true; }
+    return;
+  }
   try {
     await loadPublicState();
     renderEventCarousel();
@@ -1209,7 +1216,7 @@ function updateClientTicketState() {
   }
 }
 
-const HYPE_WHATSAPP = "555496956070";
+const HYPE_WHATSAPP = ""; // Conta da casa ainda não configurada
 
 function normalizePhone(value) {
   return String(value || "").replace(/\D/g, "");
@@ -1248,7 +1255,7 @@ function openOrderWhatsApp(entry) {
 }
 
 /* Atendimento após gerar o QR Code PIX. Não altera confirmação do Asaas. */
-const HYPE_PIX_SUPPORT_WHATSAPP = "5554996776514";
+const HYPE_PIX_SUPPORT_WHATSAPP = ""; // Atendimento da casa pendente
 
 function hypeOpenPixSupportWhatsApp() {
   const entry = window.__hypeCurrentManualEntry || {};
@@ -1420,7 +1427,7 @@ function renderAsaasPayment(entry, payment) {
       recipientInfo.style.cssText = "margin:10px 0 14px;padding:13px 14px;border:1px solid rgba(40,209,124,.32);background:rgba(40,209,124,.08);border-radius:14px;font-size:12px;line-height:1.6;color:#d9f8e6;text-align:left";
       pixText.insertAdjacentElement("afterend", recipientInfo);
     }
-    recipientInfo.innerHTML = '<strong style="display:block;color:#a8f3c4;margin-bottom:4px">✅ PIX OFICIAL HYPE</strong>O recebedor poderá aparecer como <strong>IGOR ANDRIEL GARCIA RIBAS DE OLIVEIRA</strong>. Ele é responsável pelo <strong>financeiro</strong> e também é o <strong>desenvolvedor</strong> da HYPE Lounge Club.';
+    recipientInfo.innerHTML = '<strong style="display:block;color:#a8f3c4;margin-bottom:4px">✅ PIX MALIBU EM HOMOLOGAÇÃO</strong>A conta recebedora desta casa ainda precisa ser configurada e validada. Não faça pagamentos nesta prévia.';
   }
 
   if (qrImg) {
@@ -3321,9 +3328,9 @@ function hypeV14CurrentShareText() {
   return `${parts.join("\n")}\n${location.href}`;
 }
 
-const HYPE_V15_CONTACT_PHONE_DISPLAY = "(54) 9695-6070";
-const HYPE_V15_CONTACT_PHONE_WA = "555496956070";
-const HYPE_V15_MAP_URL = "https://maps.app.goo.gl/NxRfJDYs9iR2uk2v8";
+const HYPE_V15_CONTACT_PHONE_DISPLAY = "A configurar";
+const HYPE_V15_CONTACT_PHONE_WA = "";
+const HYPE_V15_MAP_URL = "";
 
 function hypeV14OpenWhatsAppContact() {
   const e = HYPE.event || {};
@@ -3602,7 +3609,7 @@ async function copyPromoterLinkV16(id) {
   const p = (HYPE.promoters || []).find(x => Number(x.id) === Number(id));
   if (!p) return alert("Promoter não encontrado.");
   if (!HYPE.selectedEventId) return alert("Selecione um evento.");
-  const url = new URL("https://hypeloungeclub.com.br/cliente.html");
+  const url = new URL("/cliente.html",location.origin);
   url.searchParams.set("event", String(Number(HYPE.selectedEventId)));
   url.searchParams.set("promoter", String(p.code || "").trim().toUpperCase());
   const link = url.toString();
