@@ -1098,6 +1098,7 @@ async function refreshClientCatalogSafely() {
 
 async function initClient() {
   if (window.CLONE_ENV?.mode === "homologacao") {
+    if (typeof window.roguePreviewReadOnlyCatalog === "function") return await window.roguePreviewReadOnlyCatalog();
     const target = document.getElementById("eventCarousel");
     if (target) target.innerHTML = '<div class="event-empty" style="padding:30px 25px"><strong style="display:block;font-size:20px;margin-bottom:8px">Prévia ROGUE — catálogo em homologação</strong><span>Esta é uma cópia visual do sistema original. Eventos, vendas, PIX, listas e cadastros permanecem desativados até a integração e os testes do banco exclusivo da casa.</span></div>';
     const select = document.getElementById("ticketType");
