@@ -20,8 +20,8 @@ async function rpc(name,params){
  return arr(data);
 }
 const status=message=>{if($('v206StatusText'))$('v206StatusText').textContent=message;};
-const registrationUrl='https://hypeloungeclub.com.br/promoter-convite.html';
-const hypeOfficialListUrl='https://hypeloungeclub.com.br/lista.html';
+const registrationUrl='https://rogue-vendas.vercel.app/promoter-convite.html';
+const hypeOfficialListUrl='https://rogue-vendas.vercel.app/lista.html';
 async function copyHypeList(){
  try{await navigator.clipboard.writeText(hypeOfficialListUrl);}
  catch(_){const t=document.createElement('textarea');t.value=hypeOfficialListUrl;document.body.append(t);t.select();document.execCommand('copy');t.remove();}

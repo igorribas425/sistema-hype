@@ -2,7 +2,7 @@
 (() => {
   'use strict';
 
-  const DOMAIN = 'https://hypeloungeclub.com.br';
+  const DOMAIN = 'https://rogue-vendas.vercel.app';
   const promoterUrl = `${DOMAIN}/promoter.html`;
   const listUrl = `${DOMAIN}/lista.html`;
   const $ = id => document.getElementById(id);

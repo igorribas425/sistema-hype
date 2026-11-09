@@ -2,7 +2,7 @@
    Requer as RPCs V16 existentes e o patch SQL SUPABASE_V16_7_PROMOTER_EXCLUIR.sql.
 */
 (() => {
-  const OFFICIAL_DOMAIN = 'https://hypeloungeclub.com.br';
+  const OFFICIAL_DOMAIN = 'https://rogue-vendas.vercel.app';
   let lastRenderedEventId = null;
   let rendering = false;
 

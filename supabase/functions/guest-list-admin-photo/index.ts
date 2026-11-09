@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
 const BUCKET = "hype-guest-photos-v50";
-const DEFAULT_ORIGINS = ["https://hypeloungeclub.com.br", "https://www.hypeloungeclub.com.br"];
+const DEFAULT_ORIGINS = ["https://rogue-vendas.vercel.app", "https://rogue-vendas.vercel.app"];
 
 function corsHeaders(req: Request) {
   const origins = new Set(

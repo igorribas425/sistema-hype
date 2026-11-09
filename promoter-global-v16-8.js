@@ -3,7 +3,7 @@
    Requer SUPABASE_V16_8_PROMOTER_GLOBAL.sql.
 */
 (() => {
-  const OFFICIAL_DOMAIN = 'https://hypeloungeclub.com.br';
+  const OFFICIAL_DOMAIN = 'https://rogue-vendas.vercel.app';
   let rendering = false;
   let lastLoadAt = 0;
 
