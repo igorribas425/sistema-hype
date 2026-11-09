@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta name="theme-color" content="#140c14">
+<head>
+<!-- Clone Rogue em homologação: sem chamadas à Hype. -->
+<script src="clone-isolation.js?v=20261109"></script>
+<script src="clone-brand.js?v=20261109"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta name="theme-color" content="#140c14">
 <title>HYPE • Conferência fictícia de autorização</title>
 <style>
 *{box-sizing:border-box}body{margin:0;padding:22px 14px 70px;background:radial-gradient(circle at top,#491b30,#09090d 60%);color:white;font:15px/1.5 system-ui,Arial}
@@ -22,7 +26,7 @@ const id=new URLSearchParams(location.search).get("demo")||"";
 const status=document.getElementById("status"),area=document.getElementById("details");
 if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id)){status.textContent="⛔ QR de demonstração inválido.";return;}
 try{
- const r=await fetch("https://txxoqfcwqncqyiqgzboz.supabase.co/functions/v1/hype-minors-demo",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"preview",id})});
+ const r=await fetch("https://etxvkvdsnqqdkonvbgzf.supabase.co/functions/v1/hype-minors-demo",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"preview",id})});
  const d=await r.json().catch(()=>({}));
  if(!r.ok||d.ok!==true||d.mode!=="demo")throw Error(d.error||"Demonstração não aprovada.");
  status.textContent="✅ TESTE FICTÍCIO CONFERIDO";
