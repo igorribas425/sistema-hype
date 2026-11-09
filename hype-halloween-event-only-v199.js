@@ -1,7 +1,7 @@
 /* MALIBU — retira a troca automática de logotipo herdada do Halloween Hype.
    Este script opera APENAS no clone, não no site original. */
 (function(){'use strict';
-  var logo="malibu-logo.svg",alt="Malibu Lounge";
+  var logo="/malibu-logo.svg",alt="Malibu Lounge";
   function apply(){
     if(!document.body)return;
     document.body.classList.remove('hh196-halloween');
