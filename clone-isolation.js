@@ -1,10 +1,17 @@
-/* Malibu — bloqueio de acesso cruzado. Não altera a HYPE original. */
+/* Homologação segura — não executa escrita em Supabase nem pagamentos. */
 (()=>{"use strict";
-const forbidden=new Set(["txxoqfcwqncqyiqgzboz.supabase.co","hypeloungeclub.com.br","www.hypeloungeclub.com.br"]);
-function block(url){try{const u=new URL(String(url?.url||url||""),location.href);return forbidden.has(u.hostname.toLowerCase())}catch{return false}}
-const originalFetch=window.fetch;
-if(originalFetch) window.fetch=function(input,init){if(block(input))return Promise.reject(new Error("Conexão com a HYPE bloqueada para este clone"));return originalFetch.call(this,input,init)};
-const oldOpen=XMLHttpRequest.prototype.open;
-XMLHttpRequest.prototype.open=function(method,url,...args){if(block(url))throw new Error("Conexão com HYPE bloqueada");return oldOpen.call(this,method,url,...args)};
-if(navigator.sendBeacon){const oldBeacon=navigator.sendBeacon.bind(navigator);try{navigator.sendBeacon=function(url,data){if(block(url))return false;return oldBeacon(url,data)}}catch{}}
+const blockedHosts=new Set(["txxoqfcwqncqyiqgzboz.supabase.co","hypeloungeclub.com.br","www.hypeloungeclub.com.br","api.asaas.com","api.brevo.com"]);
+const readOnly=true;
+function forbid(value,method){
+ try{const raw=typeof value==="string"?value:(value?.url||String(value||""));const url=new URL(raw,location.href),host=url.hostname.toLowerCase(),verb=String(method||"GET").toUpperCase();
+ if(blockedHosts.has(host))return true;
+ if(readOnly&&host.endsWith(".supabase.co")&&!["GET","HEAD","OPTIONS"].includes(verb))return true;
+ return false;}catch{return false}
+}
+const fetchOriginal=window.fetch;
+if(fetchOriginal)window.fetch=function(input,init){const method=init?.method||input?.method||"GET";if(forbid(input,method))return Promise.reject(new Error("Ambiente de homologação: solicitação bloqueada para proteger produção"));return fetchOriginal.call(this,input,init)};
+const xhrOpen=XMLHttpRequest.prototype.open;
+XMLHttpRequest.prototype.open=function(method,url,...rest){if(forbid(url,method))throw new Error("Ambiente de homologação: gravação bloqueada");return xhrOpen.call(this,method,url,...rest)};
+if(navigator.sendBeacon){const original=navigator.sendBeacon.bind(navigator);try{navigator.sendBeacon=function(url,data){if(forbid(url,"POST"))return false;return original(url,data)}}catch{}}
+document.addEventListener("click",e=>{const a=e.target?.closest?.("a[href]");if(a&&forbid(a.href,"GET"))e.preventDefault()},true);
 })();
