@@ -99,6 +99,12 @@ begin
   );
   if result.ok then raise exception 'Suspensão posterior ao recadastro foi desfeita'; end if;
 
+  -- A API pública antiga não pode cadastrar matrizes sem convite.
+  if has_function_privilege('anon','public.public_promoter_registration_submit_v49(text,text,text,text)','EXECUTE') then
+    raise exception 'Cadastro antigo ainda público'; end if;
+  if not has_function_privilege('service_role','public.public_promoter_registration_submit_v49(text,text,text,text)','EXECUTE') then
+    raise exception 'Service role perdeu acesso'; end if;
+
   -- Integridade e permissões.
   if (select count(*) from public.tickets)<>count_before
   then raise exception 'Histórico de ingressos alterado'; end if;
