@@ -7,6 +7,18 @@ create table if not exists public.promoter_matriz_recadastro_v251 (
   archived_at timestamptz not null default now(),
   reenrolled_at timestamptz
 );
+-- Convite privado: somente quem recebeu o link do ADM pode criar/recadastrar matriz.
+-- Token aleatório gerado pelo banco, nunca embutido nos arquivos públicos do site.
+create table if not exists private.hype_matriz_signup_invite_v251 (
+  id smallint primary key check(id=1),
+  invite_token text not null unique default encode(extensions.gen_random_bytes(32),'hex'),
+  created_at timestamptz not null default now()
+);
+alter table private.hype_matriz_signup_invite_v251 enable row level security;
+revoke all on table private.hype_matriz_signup_invite_v251 from public, anon, authenticated;
+insert into private.hype_matriz_signup_invite_v251(id) values(1)
+on conflict(id) do nothing;
+
 alter table public.promoter_matriz_recadastro_v251 enable row level security;
 revoke all on table public.promoter_matriz_recadastro_v251 from public, anon, authenticated;
 
@@ -30,12 +42,29 @@ $$;
 revoke all on function public.staff_matrizes_pendentes_v251(text,text) from public;
 grant execute on function public.staff_matrizes_pendentes_v251(text,text) to anon, authenticated;
 
+-- O link de convite é fornecido apenas ao admin autenticado no ADM.
+create or replace function public.staff_matriz_link_cadastro_v251(
+  p_username text, p_password text
+) returns text language plpgsql security definer set search_path = '' as $
+declare v_token text;
+begin
+  perform private.hype_require_staff(p_username,p_password,array['admin']);
+  select invite_token into v_token from private.hype_matriz_signup_invite_v251 where id=1;
+  if v_token is null then raise exception 'Convite indisponível'; end if;
+  return 'https://hypeloungeclub.com.br/promoter.html?convite='||v_token;
+end;
+$;
+revoke all on function public.staff_matriz_link_cadastro_v251(text,text) from public;
+grant execute on function public.staff_matriz_link_cadastro_v251(text,text)
+  to anon, authenticated;
+
 -- Cadastro ou recadastro de MATRIZ. As filiais continuam usando o fluxo V250.
 -- Retornar link antigo só depois da validação de CPF, nome e WhatsApp.
 -- Reativação permitida APENAS quando houve reinício planejado e o promoter
 -- estava ativo antes dele. Promoters desativados manualmente não são reativados.
 create or replace function public.public_matriz_cadastro_v251(
-  p_name text, p_cpf text, p_phone text, p_website text default ''
+  p_name text, p_cpf text, p_phone text, p_website text default '',
+  p_invite_token text default ''
 )
 returns table(ok boolean, message text, promoter_code text, sales_url text)
 language plpgsql
@@ -49,6 +78,13 @@ declare
   v_existing public.promoters_global_v16%rowtype;
   v_archive public.promoter_matriz_recadastro_v251%rowtype;
 begin
+  if not exists (
+    select 1 from private.hype_matriz_signup_invite_v251 i
+    where i.id=1 and i.invite_token=trim(coalesce(p_invite_token,''))
+  ) then
+    return query select false,'Use o convite oficial de matriz enviado pela HYPE.',null::text,null::text;
+    return;
+  end if;
   if trim(coalesce(p_website,''))<>'' then
     return query select false,'Não foi possível concluir o cadastro.',null::text,null::text;
     return;
@@ -114,8 +150,8 @@ begin
   from public.public_promoter_registration_submit_v49(p_name,p_cpf,p_phone,p_website) r;
 end;
 $$;
-revoke all on function public.public_matriz_cadastro_v251(text,text,text,text) from public;
-grant execute on function public.public_matriz_cadastro_v251(text,text,text,text)
+revoke all on function public.public_matriz_cadastro_v251(text,text,text,text,text) from public;
+grant execute on function public.public_matriz_cadastro_v251(text,text,text,text,text)
   to anon, authenticated;
 
 -- Reinício somente pelo ADM, nunca na instalação da migração.
@@ -135,6 +171,9 @@ begin
     raise exception 'Confirmação incorreta. Nenhum cadastro foi alterado.';
   end if;
   perform pg_advisory_xact_lock(hashtextextended('hype-v251-reinicio',0));
+  if exists(select 1 from public.promoter_matriz_recadastro_v251) then
+    raise exception 'Reinício já executado. Não repetir nem apagar a temporada atual.';
+  end if;
   insert into public.promoter_matriz_recadastro_v251(promoter_id,was_active,archived_at,reenrolled_at)
   select p.id,p.active,now(),null::timestamptz
     from public.promoters_global_v16 p
