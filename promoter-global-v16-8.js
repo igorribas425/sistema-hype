@@ -200,6 +200,19 @@
     box.innerHTML = '<div style="margin-top:12px;color:var(--muted);font-size:12px">Carregando promoters globais...</div>';
     try {
       const rows = await loadGlobalPromoters();
+      // Oculta apenas os promoters da temporada arquivada ainda não recadastrados.
+      // A base e seus vínculos históricos permanecem preservados no Supabase.
+      let pending = new Set();
+      try {
+        const archived = await sbRpc('staff_matrizes_pendentes_v251', {
+          p_username: HYPE.user, p_password: HYPE.pass
+        });
+        pending = new Set((Array.isArray(archived) ? archived : [])
+          .map(item => Number(item.promoter_id)));
+      } catch (error) {
+        console.warn('Cadastro V251 ainda não disponível:', error?.message || error);
+      }
+      const visibleRows = rows.filter(p => !pending.has(Number(p.id)));
       let branches = [];
       let branchError = '';
       try {
@@ -211,10 +224,11 @@
       } catch (error) {
         branchError = error?.message || 'Não foi possível carregar as filiais.';
       }
+      branches = branches.filter(b => !pending.has(Number(b.promoter_id)));
       window.__HYPE_V250_BRANCHES = branches;
-      renderBranchPanelV250(branches, rows, branchError);
+      renderBranchPanelV250(branches, visibleRows, branchError);
       const branchIds = new Set(branches.map(b => Number(b.promoter_id)));
-      const matrixRows = rows.filter(p => !branchIds.has(Number(p.id))).map(p => {
+      const matrixRows = visibleRows.filter(p => !branchIds.has(Number(p.id))).map(p => {
         const team = branches.filter(b => Number(b.matrix_id) === Number(p.id));
         return {
           ...p,
@@ -225,13 +239,13 @@
         };
       }).sort((a,b)=> b.groupRevenue-a.groupRevenue || b.groupPaid-a.groupPaid ||
         String(a.name).localeCompare(String(b.name),'pt-BR'));
-      window.__HYPE_V168_PROMOTERS = rows;
-      HYPE.promoters = rows;
+      window.__HYPE_V168_PROMOTERS = visibleRows;
+      HYPE.promoters = visibleRows;
       lastLoadAt = Date.now();
       box.dataset.globalLoaded = '1';
 
-      if (!rows.length) {
-        box.innerHTML = '<div style="margin-top:12px;padding:14px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-size:12px">Nenhum promoter gerado ainda. Crie uma vez e o mesmo link funcionará em todos os eventos.</div>';
+      if (!visibleRows.length) {
+        box.innerHTML = '<div style="margin-top:12px;padding:14px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-size:12px">Nenhuma matriz recadastrada ainda. Copie o link de cadastro e envie aos promoters que serão matrizes.</div>';
         return;
       }
 
