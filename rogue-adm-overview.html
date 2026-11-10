@@ -42,6 +42,38 @@ footer{text-align:center;font-size:12px;color:#817e85;margin:37px 0}
 .draft-submit:disabled{opacity:.6;cursor:wait}
 .draft-status{margin-top:15px;color:#c9d9c6;font-size:13px;line-height:1.5}
 .draft-status[data-error="true"]{color:#ffb2bc}
+
+/* Central de ícones adaptada da experiência V95 do ADM Hype. */
+.v95-admin-home{max-width:800px;margin:0 auto 28px}
+.v95-home-copy{padding:8px 2px 18px}
+.v95-home-copy strong{display:block;font-size:13px;letter-spacing:1.4px;color:#f5f5f7}
+.v95-home-copy span{display:block;margin-top:5px;color:#a4a1ab;font-size:12px}
+.v95-home-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.v95-home-card{appearance:none;text-align:left;min-height:159px;padding:20px;border-radius:22px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(145deg,#121115,#0a0a0d);color:#fff;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.03);transition:transform .16s ease,border-color .16s ease,background .16s ease}
+.v95-home-card:active{transform:scale(.985)}
+.v95-home-card:hover,.v95-home-card:focus-visible{border-color:rgba(238,213,170,.7);background:#18151a}
+.v95-icon{font-size:34px;line-height:1;margin-bottom:17px}
+.v95-home-card b{font-size:19px;line-height:1.15}
+.v95-home-card small{display:block;color:#aaa5ae;font-size:11px;line-height:1.45;margin-top:8px}
+.v95-section-bar{max-width:1060px;margin:0 auto 18px;display:flex;align-items:center;gap:13px;padding:11px 13px;border:1px solid #4e403a;border-radius:14px;background:#18151c;position:sticky;top:7px;z-index:800;backdrop-filter:blur(12px)}
+.v95-section-bar button{flex:0 0 auto;min-height:40px;border:1px solid #6c5a48;border-radius:10px;background:#2a2225;color:#fff;padding:0 13px;font-weight:850;font-size:12px;cursor:pointer}
+.v95-section-bar strong{display:block;font-size:16px}
+.v95-section-bar small{display:block;color:#bcb0b4;font-size:11px;margin-top:3px}
+[data-rogue-section][hidden],#v95AdminHome[hidden],#v95SectionBar[hidden]{display:none!important}
+.rogue-module{max-width:1060px;margin:0 auto}
+.rogue-summary{font-size:13px;color:#bcb5bd;margin:0 0 16px;line-height:1.5}
+.rogue-module .kpis{margin-top:7px}
+.rogue-module .panel{margin-top:16px}
+.rogue-module .grid .panel{margin-top:0}
+.rogue-ready-status{border-left:3px solid #e8d09c;padding-left:14px;margin-bottom:14px;color:#bcb5bd;font-size:13px;line-height:1.6}
+@media(max-width:640px){
+.v95-home-grid{gap:10px}
+.v95-home-card{min-height:138px;padding:16px;border-radius:18px}
+.v95-icon{font-size:30px;margin-bottom:14px}
+.v95-home-card b{font-size:17px}
+.v95-home-card small{font-size:10px}
+.v95-section-bar{top:5px}
+}
 @media(max-width:540px){.draft-fields{grid-template-columns:1fr}}
 #content[hidden]{display:none!important}
 @media(max-width:800px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}}
@@ -61,6 +93,33 @@ footer{text-align:center;font-size:12px;color:#817e85;margin:37px 0}
 <nav><a href="admin.html">← Login da Rogue</a><button id="refresh" type="button" disabled>↻ Atualizar dados</button></nav>
 <div id="state" class="status" role="status" aria-live="polite">Verificando sua sessão e as permissões do administrador Rogue...</div>
 <section id="content" hidden>
+<section class="v95-admin-home" id="v95AdminHome">
+    <div class="v95-home-copy">
+      <strong>ADMIN ROGUE</strong>
+      <span>Escolha o que você quer gerenciar.</span>
+    </div>
+    <div class="v95-home-grid">
+<button class="v95-home-card" type="button" data-rogue-open="resumo"><span class="v95-icon">📊</span><b>Visão geral</b><small>Números reais do banco da Rogue</small></button>
+      <button class="v95-home-card" type="button" data-rogue-open="financeiro"><span class="v95-icon">💰</span><b>Financeiro</b><small>Vendas, caixa e valores acumulados</small></button>
+      <button class="v95-home-card" type="button" data-rogue-open="promoters"><span class="v95-icon">🎯</span><b>Promoters</b><small>Equipe, links, vendas e cupons</small></button>
+      <button class="v95-home-card" type="button" data-rogue-open="lista"><span class="v95-icon">📋</span><b>Lista / FREE</b><small>Fotos, aprovações e nomes liberados</small></button>
+      <button class="v95-home-card" type="button" data-rogue-open="listapromoter"><span class="v95-icon">🪪</span><b>Lista/Promoter</b><small>Convites, selfies, QR e presença</small></button>
+      <button class="v95-home-card" type="button" data-rogue-open="portaria"><span class="v95-icon">🚪</span><b>Portaria</b><small>Entradas e movimento da noite</small></button>
+      <button class="v95-home-card" type="button" data-rogue-open="clientes"><span class="v95-icon">🎟️</span><b>Clientes</b><small>Ingressos, pagamentos e busca</small></button>
+      <button class="v95-home-card" type="button" data-rogue-open="cadastros"><span class="v95-icon">👥</span><b>Cadastros</b><small>Histórico permanente, frequência e bloqueios</small></button>
+      <button class="v95-home-card" type="button" data-rogue-open="eventos"><span class="v95-icon">🎤</span><b>Eventos</b><small>Festas, lotes, preços e horários</small></button>
+      <button class="v95-home-card" type="button" data-rogue-open="avaliacao"><span class="v95-icon">⭐</span><b>Avaliações</b><small>Feedbacks bons e ruins</small></button>
+      <button class="v95-home-card" type="button" data-rogue-open="ferramentas"><span class="v95-icon">🎁</span><b>Sorteio & Acessos</b><small>Sorteio e dispositivos da equipe</small></button>
+      <button class="v95-home-card" type="button" data-rogue-open="menores"><span class="v95-icon">🛡️</span><b>Menores de idade</b><small>Autorização dos pais, fotos e assinaturas</small></button>
+<button class="v95-home-card" type="button" data-rogue-open="vendasmanuais"><span class="v95-icon">🧾</span><b>Vendas manuais</b><small>Pedidos pendentes e confirmação</small></button>
+    </div>
+  </section>
+<div class="v95-section-bar" id="v95SectionBar" hidden>
+  <button id="v95BackHome" type="button">← INÍCIO</button>
+  <div><strong id="v95SectionTitle">Área</strong><small id="v95SectionSubtitle">Selecione um módulo</small></div>
+</div>
+<section class="rogue-module" data-rogue-section="resumo" hidden>
+<p class="rogue-summary">Indicadores reais do banco exclusivo da Rogue. Clique nas outras áreas para navegar como na central de ícones da Hype.</p>
 <div class="kpis">
 <div class="kpi"><h2>Eventos cadastrados</h2><div class="number" id="events_total">—</div></div>
 <div class="kpi"><h2>Eventos futuros ativos</h2><div class="number" id="events_future">—</div></div>
@@ -71,6 +130,9 @@ footer{text-align:center;font-size:12px;color:#817e85;margin:37px 0}
 <div class="kpi"><h2>Menores pendentes</h2><div class="number" id="minor_pending">—</div></div>
 <div class="kpi"><h2>Promoters cadastrados</h2><div class="number" id="promoters_total">—</div></div>
 </div>
+</section>
+<section class="rogue-module" data-rogue-section="eventos" hidden>
+<div class="rogue-ready-status">Eventos: listagem real e cadastro de rascunhos inativos. Publicação, lotes e vendas continuam bloqueados.</div>
 <div class="grid">
 <section class="panel"><h3>Eventos no banco da Rogue</h3><p class="note">Eventos antigos continuam preservados. Novos rascunhos não aparecem na venda.</p><div id="events">Buscando...</div></section>
 <section class="panel"><h3>Operação protegida</h3>
@@ -93,7 +155,109 @@ footer{text-align:center;font-size:12px;color:#817e85;margin:37px 0}
   </form>
 </section>
 </section>
-<footer>Rogue Lounge — ambiente de homologação. Rascunhos não estão disponíveis para vendas.</footer>
+<section class="rogue-module" data-rogue-section="financeiro" hidden>
+<div class="panel">
+<h3>Financeiro</h3>
+<p class="rogue-summary">Vendas, caixa e valores acumulados</p>
+<div class="kpis"><div class="kpi"><h2>Ingressos com status pago</h2><div class="number" data-rogue-stat="tickets_paid">—</div></div>
+<div class="kpi"><h2>Vendas manuais pendentes</h2><div class="number" data-rogue-stat="manual_pending">—</div></div></div>
+<p class="note" style="margin-top:16px">Esta consulta mostra quantidades reais. Caixa, retiradas, taxas, conciliação Pix e relatórios detalhados ainda não estão homologados.</p>
+<p class="rogue-ready-status" style="margin-top:18px">Módulo separado conforme o ADM da Hype. Funcionalidades operacionais em integração; nenhuma aprovação ou cobrança é efetuada nesta tela.</p>
+</div>
+</section>
+<section class="rogue-module" data-rogue-section="promoters" hidden>
+<div class="panel">
+<h3>Promoters</h3>
+<p class="rogue-summary">Equipe, links e rankings</p>
+<div class="kpis"><div class="kpi"><h2>Promoters cadastrados</h2><div class="number" data-rogue-stat="promoters_total">—</div></div></div>
+<p class="note" style="margin-top:16px">Os cadastros existentes estão preservados no banco da Rogue. Gestão de links e ranking por festa serão conectados em etapa própria.</p>
+<p class="rogue-ready-status" style="margin-top:18px">Módulo separado conforme o ADM da Hype. Funcionalidades operacionais em integração; nenhuma aprovação ou cobrança é efetuada nesta tela.</p>
+</div>
+</section>
+<section class="rogue-module" data-rogue-section="lista" hidden>
+<div class="panel">
+<h3>Lista / FREE</h3>
+<p class="rogue-summary">Fotos, aprovações e nomes liberados</p>
+<div class="kpis"><div class="kpi"><h2>Inscrições pendentes</h2><div class="number" data-rogue-stat="guest_pending">—</div></div></div>
+<p class="note" style="margin-top:16px">O total vem do cadastro de convidados. Aprovação e envio de QR Codes continuam desligados enquanto a integração de e-mails é validada.</p>
+<p class="rogue-ready-status" style="margin-top:18px">Módulo separado conforme o ADM da Hype. Funcionalidades operacionais em integração; nenhuma aprovação ou cobrança é efetuada nesta tela.</p>
+</div>
+</section>
+<section class="rogue-module" data-rogue-section="listapromoter" hidden>
+<div class="panel">
+<h3>Lista/Promoter</h3>
+<p class="rogue-summary">Convidados e QR por promoter</p>
+
+<p class="note" style="margin-top:16px">Esta área será conectada às inscrições vinculadas aos promoters. Ainda não há uma consulta separada de convidados por promoter nesta versão.</p>
+<p class="rogue-ready-status" style="margin-top:18px">Módulo separado conforme o ADM da Hype. Funcionalidades operacionais em integração; nenhuma aprovação ou cobrança é efetuada nesta tela.</p>
+</div>
+</section>
+<section class="rogue-module" data-rogue-section="portaria" hidden>
+<div class="panel">
+<h3>Portaria</h3>
+<p class="rogue-summary">Entradas e QR Code</p>
+
+<p class="note" style="margin-top:16px">A leitura de QR Code, check-in, bloqueio de duplicidade e dispositivos continuam protegidos e serão testados antes do uso na entrada.</p>
+<p class="rogue-ready-status" style="margin-top:18px">Módulo separado conforme o ADM da Hype. Funcionalidades operacionais em integração; nenhuma aprovação ou cobrança é efetuada nesta tela.</p>
+</div>
+</section>
+<section class="rogue-module" data-rogue-section="clientes" hidden>
+<div class="panel">
+<h3>Clientes</h3>
+<p class="rogue-summary">Ingressos, pagamentos e histórico</p>
+<div class="kpis"><div class="kpi"><h2>Ingressos registrados</h2><div class="number" data-rogue-stat="tickets_total">—</div></div>
+<div class="kpi"><h2>Ingressos pagos</h2><div class="number" data-rogue-stat="tickets_paid">—</div></div></div>
+<p class="note" style="margin-top:16px">As contagens são reais. A lista nominal, buscas por CPF e dados de pagamento não estão disponíveis na homologação atual.</p>
+<p class="rogue-ready-status" style="margin-top:18px">Módulo separado conforme o ADM da Hype. Funcionalidades operacionais em integração; nenhuma aprovação ou cobrança é efetuada nesta tela.</p>
+</div>
+</section>
+<section class="rogue-module" data-rogue-section="cadastros" hidden>
+<div class="panel">
+<h3>Cadastros</h3>
+<p class="rogue-summary">Histórico e frequência</p>
+
+<p class="note" style="margin-top:16px">O histórico de clientes permanece no banco da Rogue. A consulta individual e a gestão de bloqueios precisam de autorização específica.</p>
+<p class="rogue-ready-status" style="margin-top:18px">Módulo separado conforme o ADM da Hype. Funcionalidades operacionais em integração; nenhuma aprovação ou cobrança é efetuada nesta tela.</p>
+</div>
+</section>
+<section class="rogue-module" data-rogue-section="avaliacao" hidden>
+<div class="panel">
+<h3>Avaliações</h3>
+<p class="rogue-summary">Feedback dos participantes</p>
+
+<p class="note" style="margin-top:16px">As avaliações serão exibidas aqui após integração e validação dos módulos da Rogue.</p>
+<p class="rogue-ready-status" style="margin-top:18px">Módulo separado conforme o ADM da Hype. Funcionalidades operacionais em integração; nenhuma aprovação ou cobrança é efetuada nesta tela.</p>
+</div>
+</section>
+<section class="rogue-module" data-rogue-section="ferramentas" hidden>
+<div class="panel">
+<h3>Sorteio & Acessos</h3>
+<p class="rogue-summary">Equipe e dispositivos</p>
+
+<p class="note" style="margin-top:16px">Sorteios e dispositivos terão permissões específicas. Não é possível liberar ou excluir acessos nesta etapa.</p>
+<p class="rogue-ready-status" style="margin-top:18px">Módulo separado conforme o ADM da Hype. Funcionalidades operacionais em integração; nenhuma aprovação ou cobrança é efetuada nesta tela.</p>
+</div>
+</section>
+<section class="rogue-module" data-rogue-section="menores" hidden>
+<div class="panel">
+<h3>Menores de idade</h3>
+<p class="rogue-summary">Autorização e revisão dos responsáveis</p>
+<div class="kpis"><div class="kpi"><h2>Autorizações pendentes</h2><div class="number" data-rogue-stat="minor_pending">—</div></div></div>
+<p class="note" style="margin-top:16px">O total é real. Documentos, imagens, assinatura e aprovação permanecem protegidos até a revisão de privacidade e permissões.</p>
+<p class="rogue-ready-status" style="margin-top:18px">Módulo separado conforme o ADM da Hype. Funcionalidades operacionais em integração; nenhuma aprovação ou cobrança é efetuada nesta tela.</p>
+</div>
+</section>
+<section class="rogue-module" data-rogue-section="vendasmanuais" hidden>
+<div class="panel">
+<h3>Vendas manuais</h3>
+<p class="rogue-summary">Pedidos e confirmação</p>
+<div class="kpis"><div class="kpi"><h2>Pedidos pendentes</h2><div class="number" data-rogue-stat="manual_pending">—</div></div></div>
+<p class="note" style="margin-top:16px">Os pedidos pendentes da Rogue são contabilizados. Aprovação, envio de ingresso e confirmação financeira ainda não foram liberados.</p>
+<p class="rogue-ready-status" style="margin-top:18px">Módulo separado conforme o ADM da Hype. Funcionalidades operacionais em integração; nenhuma aprovação ou cobrança é efetuada nesta tela.</p>
+</div>
+</section>
+</section>
+<footer>Rogue Lounge — ambiente de homologação. Eventos em rascunho não estão disponíveis para vendas.</footer>
 </main>
 <script>
 (async()=>{
@@ -130,10 +294,57 @@ async function reload(){
   const {data:allEvents,error:eventsError}=await sb.rpc("rogue_admin_events_v1",{}, {get:true});
   if(eventsError||!Array.isArray(allEvents))throw eventsError||new Error("Lista de eventos indisponível");
   renderEvents(allEvents);
-  $("content").hidden=false;status("Acesso confirmado. Dados reais da Rogue carregados. Cadastro de rascunhos disponível.");
+  document.querySelectorAll("[data-rogue-stat]").forEach(el=>{
+    const key=el.getAttribute("data-rogue-stat");
+    el.textContent=Number(data[key]??0).toLocaleString("pt-BR");
+  });
+  $("content").hidden=false;
+  status("Acesso confirmado. Escolha uma área do ADM Rogue; eventos e rascunhos já estão conectados.");
  }catch(e){status("Não foi possível carregar o painel. Verifique seu login Rogue e a conexão. Detalhe: "+String(e?.message||"").slice(0,160),true)}
  finally{$("refresh").disabled=false}
 }
+const moduleTitles={
+  resumo:["Visão geral","Indicadores do Supabase Rogue"],
+  financeiro:["Financeiro","Consulta e conciliação em integração"],
+  promoters:["Promoters","Equipe e links"],
+  lista:["Lista / FREE","Aprovações e convidados"],
+  listapromoter:["Lista/Promoter","Convidados por promoter"],
+  portaria:["Portaria","Controle de acesso e QR Code"],
+  clientes:["Clientes","Ingressos e pagamentos"],
+  cadastros:["Cadastros","Histórico de clientes"],
+  eventos:["Eventos","Festividades e rascunhos reais"],
+  avaliacao:["Avaliações","Feedback dos clientes"],
+  ferramentas:["Sorteio & Acessos","Dispositivos e equipe"],
+  menores:["Menores de idade","Autorizações"],
+  vendasmanuais:["Vendas manuais","Pedidos pendentes"]
+};
+function showModule(key,historyUpdate=true){
+ if(!Object.hasOwn(moduleTitles,key))return showHome(historyUpdate);
+ $("v95AdminHome").hidden=true;
+ $("v95SectionBar").hidden=false;
+ $("v95SectionTitle").textContent=moduleTitles[key][0];
+ $("v95SectionSubtitle").textContent=moduleTitles[key][1];
+ document.querySelectorAll("[data-rogue-section]").forEach(el=>{
+  el.hidden=el.dataset.rogueSection!==key;
+ });
+ if(historyUpdate)history.replaceState(null,"","#"+key);
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+function showHome(historyUpdate=true){
+ $("v95AdminHome").hidden=false;
+ $("v95SectionBar").hidden=true;
+ document.querySelectorAll("[data-rogue-section]").forEach(el=>el.hidden=true);
+ if(historyUpdate)history.replaceState(null,"",location.pathname+location.search);
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+document.querySelectorAll("[data-rogue-open]").forEach(b=>b.addEventListener("click",()=>showModule(b.dataset.rogueOpen)));
+$("v95BackHome").addEventListener("click",()=>showHome());
+window.addEventListener("hashchange",()=>{
+ const key=decodeURIComponent(location.hash.slice(1));
+ if(Object.hasOwn(moduleTitles,key))showModule(key,false);else showHome(false);
+});
+const initialKey=decodeURIComponent(location.hash.slice(1));
+if(Object.hasOwn(moduleTitles,initialKey))showModule(initialKey,false);else showHome(false);
 $("refresh").addEventListener("click",reload);
 $("draftForm").addEventListener("submit",async ev=>{
   ev.preventDefault();
