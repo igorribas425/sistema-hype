@@ -306,6 +306,8 @@
   window.deletePromoterV168 = async function(id) {
     const row = (window.__HYPE_V168_PROMOTERS || []).find(p => Number(p.id) === Number(id));
     if (!row) return alert('Promoter não encontrado.');
+    const linked = (window.__HYPE_V250_BRANCHES || []).filter(b => Number(b.matrix_id) === Number(id));
+    if (linked.length) return alert('Esta matriz possui ' + linked.length + ' filial(is). Desative-a em vez de excluir, para preservar os vínculos e as vendas.');
     if (!confirm(`Excluir o promoter ${row.name}?\n\nAs vendas antigas continuam no histórico, mas o link dele deixa de valer para novas compras.`)) return;
     try {
       await sbRpc('staff_delete_promoter_global_v16', {
