@@ -1,4 +1,5 @@
 -- Adapta o PostgreSQL descartável dos testes V250 à estrutura V251.
+create role service_role nologin;
 create schema if not exists extensions;
 create extension if not exists pgcrypto with schema extensions;
 alter table public.promoters_global_v16
