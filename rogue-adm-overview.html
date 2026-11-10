@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>Rogue Lounge // Painel Administrativo</title>
+<link rel="icon" type="image/svg+xml" href="/favicon-rogue-v2.svg?v=20261110">
+<style>
+:root{font-family:Inter,system-ui,Arial,sans-serif;background:#09090b;color:#f2f1f5;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -280px,#3f2d17 0,#161113 33%,#09090b 65%);min-height:100vh}
+main{margin:0 auto;max-width:1130px;padding:20px 20px 80px}
+header{text-align:center;padding:16px 0 25px}
+header img{width:min(270px,70vw);max-height:120px;object-fit:contain;display:block;margin:0 auto}
+h1{font-size:clamp(22px,3vw,31px);margin:10px 0 0}
+small,.muted{color:#a7a3ac}
+nav{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between;padding:5px 0 23px}
+nav a{color:#f8d99a;text-decoration:none;font-size:13px;font-weight:bold}
+nav button{border:1px solid #62533b;background:#24202a;border-radius:9px;color:white;padding:11px 16px;font-weight:750;cursor:pointer}
+.status{border:1px solid #65533b;background:#1d1820;padding:18px;border-radius:14px;color:#e9e1d1;font-size:14px;line-height:1.6;margin-bottom:24px}
+.status[data-error="true"]{border-color:#ab5a66;color:#ffcdd3}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.kpi{background:linear-gradient(155deg,#211c20,#111015);border:1px solid #463d38;border-radius:17px;padding:21px;min-height:142px}
+.kpi .number{font-size:clamp(28px,4vw,43px);font-weight:950;letter-spacing:-.04em;line-height:1.1;margin:12px 0;color:#f8dfac}
+.kpi h2{font-size:12px;font-weight:700;color:#c6bbc1;margin:0}
+h3{font-size:20px;margin:0 0 15px}
+.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;margin-top:20px}
+.panel{background:#141217;border:1px solid #393139;padding:23px;border-radius:17px;min-height:150px}
+.event{padding:13px 0;border-bottom:1px solid #332e33;display:flex;justify-content:space-between;gap:13px;align-items:center}
+.event:last-child{border-bottom:0}.event strong{font-size:14px}.event small{display:block;margin-top:4px;font-size:12px}
+.tag{border:1px solid #5d5141;color:#edcc93;font-size:11px;border-radius:999px;padding:5px 9px;white-space:nowrap}
+.note{font-size:13px;line-height:1.7;color:#bbb7be}
+ul{padding-left:19px;margin:12px 0;color:#c4bec6;font-size:13px;line-height:1.8}
+footer{text-align:center;font-size:12px;color:#817e85;margin:37px 0}
+#content[hidden]{display:none!important}
+@media(max-width:800px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}}
+@media(max-width:460px){.kpis{gap:9px}.kpi{min-height:114px;padding:15px}.panel{padding:16px}.event{align-items:flex-start}}
+</style>
+<script src="clone-isolation.js?v=20261110-admin-readonly"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=20261110-admin-readonly"></script>
+</head>
+<body>
+<main>
+<header>
+<img src="https://rogue-vendas.vercel.app/assets/rogue-logo.webp" alt="Rogue Lounge">
+<small style="letter-spacing:.2em;font-weight:800">ACESSO ADMINISTRATIVO</small>
+<h1>ADM // ROGUE LOUNGE</h1>
+</header>
+<nav><a href="admin.html">← Login da Rogue</a><button id="refresh" type="button" disabled>↻ Atualizar dados</button></nav>
+<div id="state" class="status" role="status" aria-live="polite">Verificando sua sessão e as permissões do administrador Rogue...</div>
+<section id="content" hidden>
+<div class="kpis">
+<div class="kpi"><h2>Eventos cadastrados</h2><div class="number" id="events_total">—</div></div>
+<div class="kpi"><h2>Eventos futuros ativos</h2><div class="number" id="events_future">—</div></div>
+<div class="kpi"><h2>Ingressos registrados</h2><div class="number" id="tickets_total">—</div></div>
+<div class="kpi"><h2>Ingressos pagos (status)</h2><div class="number" id="tickets_paid">—</div></div>
+<div class="kpi"><h2>Vendas manuais pendentes</h2><div class="number" id="manual_pending">—</div></div>
+<div class="kpi"><h2>Lista FREE pendente</h2><div class="number" id="guest_pending">—</div></div>
+<div class="kpi"><h2>Menores pendentes</h2><div class="number" id="minor_pending">—</div></div>
+<div class="kpi"><h2>Promoters cadastrados</h2><div class="number" id="promoters_total">—</div></div>
+</div>
+<div class="grid">
+<section class="panel"><h3>Eventos no banco da Rogue</h3><div id="events">Buscando...</div></section>
+<section class="panel"><h3>Operação protegida</h3>
+<p class="note">Estes valores são consultados diretamente no Supabase exclusivo da Rogue, com autenticação e autorização. Não são dados demonstrativos.</p>
+<ul><li>Somente leitura: nenhum dado pode ser alterado nesta versão</li><li>Não mostra nomes, CPF, telefones ou documentos</li><li>O Pix, Brevo, check-in e as funções financeiras continuam bloqueados</li><li>Esta tela ainda não substitui o ADM completo da Hype</li></ul>
+</section>
+</div></section>
+<footer>Rogue Lounge — consulta privada de homologação. Não utilizar para operação do evento.</footer>
+</main>
+<script>
+(async()=>{
+"use strict";
+const API="https://etxvkvdsnqqdkonvbgzf.supabase.co",EMAIL="rogue@gmail.com";
+const $=id=>document.getElementById(id);
+const status=(msg,error=false)=>{$("state").textContent=msg;$("state").dataset.error=String(error)};
+const cfg=window.HYPE_SUPABASE_CONFIG;
+if(!cfg||cfg.url!==API||!cfg.anonKey||!window.supabase?.createClient){status("Falha de configuração. Não foram carregados dados privados.",true);return}
+const sb=window.supabase.createClient(API,cfg.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"rogue-admin-onboarding-v1"}});
+function renderEvents(arr){
+const div=$("events");div.replaceChildren();
+if(!Array.isArray(arr)||!arr.length){div.textContent="Nenhum evento cadastrado.";return}
+for(const e of arr){
+ const row=document.createElement("div");row.className="event";
+ const left=document.createElement("div"),name=document.createElement("strong"),meta=document.createElement("small"),tag=document.createElement("span");
+ name.textContent=String(e.name||"Evento sem nome");meta.textContent=String(e.event_date||"Data pendente")+(e.venue?" · "+String(e.venue):"");
+ tag.textContent=e.active?"Ativo":"Inativo";tag.className="tag";
+ left.append(name,meta);row.append(left,tag);div.append(row);
+}
+}
+async function reload(){
+ $("refresh").disabled=true;$("content").hidden=true;
+ status("Validando sessão e consultando o Supabase da Rogue...");
+ try{
+  const {data:userData,error:userError}=await sb.auth.getUser();
+  const user=userData?.user;
+  if(userError||!user||user.email?.toLowerCase()!==EMAIL||!user.email_confirmed_at){status("Entre com o usuário rogue na tela anterior para consultar os dados.",true);return}
+  const {data, error}=await sb.rpc("rogue_admin_overview_v1",{}, {get:true});
+  if(error||!data||data.read_only!==true)throw error||new Error("Resposta de acesso não confirmada");
+  for(const key of ["events_total","events_future","tickets_total","tickets_paid","manual_pending","guest_pending","minor_pending","promoters_total"]){
+   $(key).textContent=Number(data[key]??0).toLocaleString("pt-BR");
+  }
+  renderEvents(data.recent_events);
+  $("content").hidden=false;status("Acesso confirmado. Dados reais da Rogue carregados somente para consulta.");
+ }catch(e){status("Não foi possível carregar o painel. Verifique seu login Rogue e a conexão. Detalhe: "+String(e?.message||"").slice(0,160),true)}
+ finally{$("refresh").disabled=false}
+}
+$("refresh").addEventListener("click",reload);await reload();
+})();
+</script>
+</body></html>

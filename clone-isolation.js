@@ -6,7 +6,7 @@ function forbid(value,method){
  try{const raw=typeof value==="string"?value:(value?.url||String(value||""));const url=new URL(raw,location.href),host=url.hostname.toLowerCase(),verb=String(method||"GET").toUpperCase();
  if(blockedHosts.has(host))return true;
  // Rogue ADM: permite somente autenticação (senha/refresh/logout), nunca escrita administrativa.
- const authOnly = host==="etxvkvdsnqqdkonvbgzf.supabase.co" && location.pathname==="/admin.html" && verb==="POST" && ((url.pathname==="/auth/v1/token" && ["password","refresh_token"].includes(url.searchParams.get("grant_type"))) || url.pathname==="/auth/v1/logout");
+ const authOnly = host==="etxvkvdsnqqdkonvbgzf.supabase.co" && ["/admin.html","/rogue-adm-overview.html"].includes(location.pathname) && verb==="POST" && ((url.pathname==="/auth/v1/token" && ["password","refresh_token"].includes(url.searchParams.get("grant_type"))) || url.pathname==="/auth/v1/logout");
  if(authOnly)return false;
  if(readOnly&&host.endsWith(".supabase.co")&&!["GET","HEAD","OPTIONS"].includes(verb))return true;
  return false;}catch{return false}

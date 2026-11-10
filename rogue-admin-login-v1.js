@@ -23,7 +23,7 @@
    }
    form.hidden=true;form.style.display="none";
    const preview=byId("roguePreviewAfterLogin");if(preview){preview.hidden=false;preview.style.display="block"}
-   notify("Login rogue confirmado! A autenticação está funcionando. As funções operacionais seguem em homologação.");
+   notify("Login rogue confirmado! A autenticação está funcionando. Abra o painel para consultar eventos, ingressos e pendências da Rogue. Alterações continuam bloqueadas.");
    return true;
  }
  form.addEventListener("submit",async event=>{
