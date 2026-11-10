@@ -45,7 +45,7 @@ grant execute on function public.staff_matrizes_pendentes_v251(text,text) to ano
 -- O link de convite é fornecido apenas ao admin autenticado no ADM.
 create or replace function public.staff_matriz_link_cadastro_v251(
   p_username text, p_password text
-) returns text language plpgsql security definer set search_path = '' as $
+) returns text language plpgsql security definer set search_path = '' as $matriz_link$
 declare v_token text;
 begin
   perform private.hype_require_staff(p_username,p_password,array['admin']);
@@ -53,7 +53,7 @@ begin
   if v_token is null then raise exception 'Convite indisponível'; end if;
   return 'https://hypeloungeclub.com.br/promoter.html?convite='||v_token;
 end;
-$;
+$matriz_link$;
 revoke all on function public.staff_matriz_link_cadastro_v251(text,text) from public;
 grant execute on function public.staff_matriz_link_cadastro_v251(text,text)
   to anon, authenticated;
@@ -163,7 +163,7 @@ create or replace function public.public_filial_cadastro_v251(
 )
 returns table(ok boolean, message text, promoter_code text, sales_url text)
 language plpgsql security definer set search_path = ''
-as $
+as $filial_cadastro$
 declare
   v_name text := regexp_replace(trim(coalesce(p_name,'')), '\s+', ' ', 'g');
   v_cpf text := private.hype_digits_v49(p_cpf);
@@ -243,7 +243,7 @@ begin
     v_existing.code::text,
     ('https://hypeloungeclub.com.br/cliente.html?promoter='||v_existing.code)::text;
 end;
-$;
+$filial_cadastro$;
 revoke all on function public.public_filial_cadastro_v251(text,text,text,text,text)
   from public;
 grant execute on function public.public_filial_cadastro_v251(text,text,text,text,text)
