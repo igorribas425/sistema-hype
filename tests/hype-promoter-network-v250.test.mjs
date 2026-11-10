@@ -47,3 +47,14 @@ test('SQL não apaga vendas antigas e protege vínculo matriz-filial', () => {
   assert.match(sql, /public_promoter_registration_submit_v49/);
   assert.doesNotMatch(sql, /\b(?:delete from public\.tickets|truncate\b|drop table public\.tickets)\b/i);
 });
+test('relatório detalhado de filiais não revela CPF nem WhatsApp', () => {
+  const sql = read('supabase/migrations/202611100001_hype_promoter_network_v250.sql');
+  const js = read('promoter-global-v16-8.js');
+  assert.match(sql, /create or replace function public\.staff_promoter_branch_sales_v250/);
+  assert.match(sql, /private\.hype_require_staff/);
+  assert.match(sql, /order by t\.purchased_at desc/);
+  assert.match(sql, /limit 100/);
+  assert.match(js, /openBranchSalesV250/);
+  assert.match(js, /customer_name/);
+  assert.match(js, /HypePromoterNetworkV250\.openSales/);
+});
