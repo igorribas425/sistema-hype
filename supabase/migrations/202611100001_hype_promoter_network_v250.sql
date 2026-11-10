@@ -126,3 +126,30 @@ end;
 $$;
 revoke all on function public.staff_list_promoter_branches_v250(text,text) from public;
 grant execute on function public.staff_list_promoter_branches_v250(text,text) to anon, authenticated;
+
+-- Permite que uma matriz acesse o link de recrutamento depois do próprio cadastro.
+-- Filiais não podem recrutar outras filiais; rede tem apenas dois níveis.
+create or replace function public.public_promoter_matrix_invite_v250(p_promoter_code text)
+returns table(ok boolean, invite_url text)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare v_code text;
+begin
+  select p.code into v_code
+  from public.promoters_global_v16 p
+  where p.code = upper(trim(coalesce(p_promoter_code,''))) and p.active
+    and not exists (
+      select 1 from public.promoter_branches_v250 b where b.promoter_id = p.id
+    );
+  if v_code is null then
+    return query select false, null::text;
+  else
+    return query select true,
+      'https://hypeloungeclub.com.br/promoter.html?matriz=' || v_code;
+  end if;
+end;
+$$;
+revoke all on function public.public_promoter_matrix_invite_v250(text) from public;
+grant execute on function public.public_promoter_matrix_invite_v250(text) to anon, authenticated;
