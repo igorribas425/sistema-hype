@@ -6,6 +6,18 @@
   const rows = data => Array.isArray(data) ? data : (data ? [data] : []);
   const digits = value => String(value || '').replace(/\D/g, '');
   let salesUrl = '';
+  const matrixCode = new URLSearchParams(window.location.search).get('matriz')?.trim().toUpperCase() || '';
+  const isBranchSignup = Boolean(matrixCode);
+  if (isBranchSignup) {
+    const heading = $('promoterHeading');
+    const subtitle = $('promoterSubtitle');
+    const hint = $('promoterHint');
+    const label = $('promoterMatrixLabel');
+    if (heading) heading.textContent = 'Seja filial de vendas HYPE';
+    if (subtitle) subtitle.textContent = 'Você foi convidado por uma matriz. Faça seu cadastro como vendedor e receba seu próprio link para vender ingressos.';
+    if (hint) hint.textContent = 'O CPF não pode estar vinculado a outra matriz. Se você já é promoter, entre em contato com a administração para alterar o vínculo.';
+    if (label) { label.textContent = 'Código da matriz: ' + matrixCode; label.hidden = false; }
+  }
   function showStatus(message, kind) {
     const box = $('promoterStatus');
     if (!box) return;
@@ -44,12 +56,17 @@
     if (!form.reportValidity() || !client) return;
     button.disabled = true; button.textContent = 'GERANDO...';
     try {
-      const {data, error} = await client.rpc('public_promoter_registration_submit_v49', {
+      const params = {
         p_name: $('promoterName').value.trim(),
         p_cpf: digits($('promoterCpf').value),
         p_phone: digits($('promoterPhone').value),
         p_website: $('promoterWebsite').value
-      });
+      };
+      if (isBranchSignup) params.p_matrix_code = matrixCode;
+      const {data, error} = await client.rpc(
+        isBranchSignup ? 'public_promoter_branch_signup_v250' : 'public_promoter_registration_submit_v49',
+        params
+      );
       if (error) throw error;
       const row = rows(data)[0] || {};
       if (!row.ok || !row.sales_url) {
