@@ -153,3 +153,33 @@ end;
 $$;
 revoke all on function public.public_promoter_matrix_invite_v250(text) from public;
 grant execute on function public.public_promoter_matrix_invite_v250(text) to anon, authenticated;
+
+-- Auditoria detalhada de ingressos atribuídos a cada filial. Somente ADM.
+-- O relatório não expõe CPF, WhatsApp ou e-mail.
+create or replace function public.staff_promoter_branch_sales_v250(
+  p_username text, p_password text, p_promoter_id bigint
+)
+returns table(
+  ticket_id bigint, event_name text, customer_name text,
+  price numeric, payment_status text, purchased_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform private.hype_require_staff(p_username,p_password,array['admin']);
+  return query
+  select t.id,e.name,t.customer_name,t.price,t.payment_status,t.purchased_at
+  from public.promoter_branches_v250 b
+  join public.promoters_global_v16 p on p.id=b.promoter_id
+  join public.tickets t on upper(coalesce(t.promoter_code,''))=p.code
+  join public.events e on e.id=t.event_id
+  where p.id=p_promoter_id
+  order by t.purchased_at desc, t.id desc
+  limit 100;
+end;
+$$;
+revoke all on function public.staff_promoter_branch_sales_v250(text,text,bigint) from public;
+grant execute on function public.staff_promoter_branch_sales_v250(text,text,bigint)
+  to anon, authenticated;
