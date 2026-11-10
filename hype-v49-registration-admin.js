@@ -439,14 +439,21 @@
 
   function showPromoterTab(tab) {
     const manage = $('v49PromoterManagePanel');
+    const branches = $('v250PromoterBranchesPanel');
     const link = $('v49PromoterLinkPanel');
     const manageTab = $('v49PromoterTabManage');
+    const branchTab = $('v250PromoterTabBranches');
     const linkTab = $('v49PromoterTabLink');
+    const isManage = tab !== 'branches' && tab !== 'link';
+    const isBranches = tab === 'branches';
     const isLink = tab === 'link';
-    if (manage) manage.hidden = isLink;
+    if (manage) manage.hidden = !isManage;
+    if (branches) branches.hidden = !isBranches;
     if (link) link.hidden = !isLink;
-    manageTab?.classList.toggle('active', !isLink);
+    manageTab?.classList.toggle('active', isManage);
+    branchTab?.classList.toggle('active', isBranches);
     linkTab?.classList.toggle('active', isLink);
+    if (isBranches) window.HypePromoterNetworkV250?.refresh?.(true);
   }
 
   function showListTab(tab) {
