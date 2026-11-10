@@ -78,19 +78,69 @@ footer{text-align:center;font-size:12px;color:#817e85;margin:37px 0}
 #content[hidden]{display:none!important}
 @media(max-width:800px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}}
 @media(max-width:460px){.kpis{gap:9px}.kpi{min-height:114px;padding:15px}.panel{padding:16px}.event{align-items:flex-start}}
+
+    body{padding-top:18px!important}
+    .v95-brand-header{display:flex!important;justify-content:center!important;align-items:center!important;border:0!important;margin:4px 0 12px!important;padding:10px 0 4px!important}
+    .v95-brand-logo{width:min(260px,68vw);height:auto;display:block}
+    .v95-admin-home{max-width:760px;margin:0 auto 30px}
+    .v95-home-copy{padding:8px 2px 18px}
+    .v95-home-copy strong{display:block;font-size:13px;letter-spacing:1.4px;color:#fff}
+    .v95-home-copy span{display:block;margin-top:5px;color:var(--muted);font-size:11px}
+    .v95-home-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .v95-home-card{appearance:none;text-align:left;min-height:160px;padding:20px;border-radius:22px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(145deg,#0c0c10,#08080b);color:#fff;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.03);transition:transform .16s ease,border-color .16s ease,background .16s ease}
+    .v95-home-card:active{transform:scale(.985)}
+    .v95-home-card:hover{border-color:rgba(255,255,255,.34);background:#101014}
+    .v95-icon{font-size:34px;line-height:1;margin-bottom:18px;filter:saturate(.9)}
+    .v95-home-card b{font-size:20px;line-height:1.15}
+    .v95-home-card small{display:block;color:#888892;font-size:11px;line-height:1.45;margin-top:8px}
+    .v95-section-bar{max-width:1050px;margin:0 auto 14px;display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:rgba(10,10,13,.94);position:sticky;top:8px;z-index:800;backdrop-filter:blur(12px)}
+    .v95-section-bar button{flex:0 0 auto;min-height:38px;border:1px solid rgba(255,255,255,.16);border-radius:10px;background:#151519;color:#fff;padding:0 12px;font-weight:900;font-size:10px;cursor:pointer}
+    .v95-section-bar strong{display:block;font-size:13px}.v95-section-bar small{display:block;color:var(--muted);font-size:9px;margin-top:3px}
+    .v95-hidden{display:none!important}
+    #v94SalesTopStats,#v94SalesFinancePanel,#v16DashboardPanel,#v16ManagementPanel,#v34LivePanel,#v92PortariaPeoplePanel,#v92EvaluationPanel,#eventsAdminPanel,#v18ControlPanel,#v92ListPeoplePanel,#v408SimpleListAdmin,#adminMainGrid,#v95LotsPanel,#v95ClientsPanel,#v103CustomerRegistryPanel{display:none!important}
+    #v94SalesTopStats.v95-show{display:grid!important}
+    #adminMainGrid.v95-show{display:grid!important;grid-template-columns:1fr!important}
+    #v95LotsPanel.v95-show,#v95ClientsPanel.v95-show{display:block!important}
+    #v94SalesFinancePanel.v95-show,#v16DashboardPanel.v95-show,#v16ManagementPanel.v95-show,#v34LivePanel.v95-show,#v92PortariaPeoplePanel.v95-show,#v92EvaluationPanel.v95-show,#eventsAdminPanel.v95-show,#v18ControlPanel.v95-show,#v92ListPeoplePanel.v95-show,#v408SimpleListAdmin.v95-show,#v103CustomerRegistryPanel.v95-show{display:block!important}
+    @media(max-width:640px){
+      body{padding:10px max(10px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))!important}
+      .v95-brand-logo{width:min(220px,66vw)}
+      .v95-home-grid{gap:10px}
+      .v95-home-card{min-height:142px;padding:16px;border-radius:18px}
+      .v95-icon{font-size:30px;margin-bottom:15px}
+      .v95-home-card b{font-size:17px}
+      .v95-home-card small{font-size:10px}
+      .v95-section-bar{top:6px}
+    }
+  
+
+/* Ajustes mínimos: a base visual da central usa o CSS V95 copiado do ADM Hype atual */
+:root{--bg:#050505;--panel:#0d0d10;--line:#222228;--text:#f7f7f8;--muted:#96969e;color-scheme:dark}
+body{background:#050505!important;color:var(--text)!important;padding:20px!important}
+main.container{max-width:1050px;margin:0 auto;padding:0 0 70px!important}
+#content[hidden],#v95AdminHome[hidden],#v95SectionBar[hidden],.rogue-module[hidden],#state[hidden]{display:none!important}
+#v95BrandHeader{display:flex!important;justify-content:center!important;align-items:center!important;border:0!important;margin:4px 0 12px!important;padding:10px 0 4px!important}
+#v95BrandHeader .v95-brand-logo{width:min(260px,68vw)!important;height:auto!important;max-height:160px;object-fit:contain;display:block}
+#state{max-width:760px;margin:10px auto 18px;font-size:12px}
+#v95SectionBar #refresh{margin-left:auto;flex:0 0 auto;min-height:38px;font-size:11px;padding:0 9px;border-radius:10px;background:#151519;color:#fff;border:1px solid rgba(255,255,255,.16)}
+.rogue-module .panel,.rogue-module .kpi{background:#0d0d10;border-color:#222228}
+.rogue-module .kpi .number{color:#fff}
+.rogue-ready-status{background:#101014;border:1px solid #24242c;border-radius:12px;color:#a7a7b0;padding:14px;font-size:12px}
+.draft-submit{background:#19191e;color:#fff;border:1px solid #484852;border-radius:10px}
+.draft-field input{background:#09090c;border-color:#33333d}
+.rogue-subnav{border:1px solid #444451;background:#19191e;color:#fff;border-radius:10px;padding:10px 12px;margin-bottom:14px;cursor:pointer}
+@media(max-width:640px){body{padding:10px max(10px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))!important}main.container{padding-bottom:36px!important}#v95SectionBar #refresh{font-size:10px}}
+
 </style>
 <script src="clone-isolation.js?v=20261110-admin-readonly"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261110-admin-readonly"></script>
 </head>
 <body>
-<main>
-<header>
-<img src="https://rogue-vendas.vercel.app/assets/rogue-logo.webp" alt="Rogue Lounge">
-<small style="letter-spacing:.2em;font-weight:800">ACESSO ADMINISTRATIVO</small>
-<h1>ADM // ROGUE LOUNGE</h1>
+<main class="container">
+<header class="v95-brand-header" id="v95BrandHeader">
+<img src="https://rogue-vendas.vercel.app/assets/rogue-logo.webp" class="v95-brand-logo" alt="Rogue Lounge">
 </header>
-<nav><a href="admin.html">← Login da Rogue</a><button id="refresh" type="button" disabled>↻ Atualizar dados</button></nav>
 <div id="state" class="status" role="status" aria-live="polite">Verificando sua sessão e as permissões do administrador Rogue...</div>
 <section id="content" hidden>
 <section class="v95-admin-home" id="v95AdminHome">
@@ -99,7 +149,6 @@ footer{text-align:center;font-size:12px;color:#817e85;margin:37px 0}
       <span>Escolha o que você quer gerenciar.</span>
     </div>
     <div class="v95-home-grid">
-<button class="v95-home-card" type="button" data-rogue-open="resumo"><span class="v95-icon">📊</span><b>Visão geral</b><small>Números reais do banco da Rogue</small></button>
       <button class="v95-home-card" type="button" data-rogue-open="financeiro"><span class="v95-icon">💰</span><b>Financeiro</b><small>Vendas, caixa e valores acumulados</small></button>
       <button class="v95-home-card" type="button" data-rogue-open="promoters"><span class="v95-icon">🎯</span><b>Promoters</b><small>Equipe, links, vendas e cupons</small></button>
       <button class="v95-home-card" type="button" data-rogue-open="lista"><span class="v95-icon">📋</span><b>Lista / FREE</b><small>Fotos, aprovações e nomes liberados</small></button>
@@ -111,15 +160,16 @@ footer{text-align:center;font-size:12px;color:#817e85;margin:37px 0}
       <button class="v95-home-card" type="button" data-rogue-open="avaliacao"><span class="v95-icon">⭐</span><b>Avaliações</b><small>Feedbacks bons e ruins</small></button>
       <button class="v95-home-card" type="button" data-rogue-open="ferramentas"><span class="v95-icon">🎁</span><b>Sorteio & Acessos</b><small>Sorteio e dispositivos da equipe</small></button>
       <button class="v95-home-card" type="button" data-rogue-open="menores"><span class="v95-icon">🛡️</span><b>Menores de idade</b><small>Autorização dos pais, fotos e assinaturas</small></button>
-<button class="v95-home-card" type="button" data-rogue-open="vendasmanuais"><span class="v95-icon">🧾</span><b>Vendas manuais</b><small>Pedidos pendentes e confirmação</small></button>
+      <button class="v95-home-card" type="button" data-rogue-open="vendasmanuais"><span class="v95-icon">🧾</span><b>Vendas manuais</b><small>Pedidos, revisão e liberação de ingresso</small></button>
     </div>
   </section>
 <div class="v95-section-bar" id="v95SectionBar" hidden>
   <button id="v95BackHome" type="button">← INÍCIO</button>
   <div><strong id="v95SectionTitle">Área</strong><small id="v95SectionSubtitle">Selecione um módulo</small></div>
+<button id="refresh" type="button" disabled>↻ Atualizar</button>
 </div>
 <section class="rogue-module" data-rogue-section="resumo" hidden>
-<p class="rogue-summary">Indicadores reais do banco exclusivo da Rogue. Clique nas outras áreas para navegar como na central de ícones da Hype.</p>
+<p class="rogue-summary">Indicadores reais do banco exclusivo da Rogue. Consulte os dados e navegue entre os módulos.</p>
 <div class="kpis">
 <div class="kpi"><h2>Eventos cadastrados</h2><div class="number" id="events_total">—</div></div>
 <div class="kpi"><h2>Eventos futuros ativos</h2><div class="number" id="events_future">—</div></div>
@@ -157,6 +207,7 @@ footer{text-align:center;font-size:12px;color:#817e85;margin:37px 0}
 </section>
 <section class="rogue-module" data-rogue-section="financeiro" hidden>
 <div class="panel">
+<button class="rogue-subnav" type="button" data-rogue-go="resumo">📊 Ver visão geral e todos os indicadores</button>
 <h3>Financeiro</h3>
 <p class="rogue-summary">Vendas, caixa e valores acumulados</p>
 <div class="kpis"><div class="kpi"><h2>Ingressos com status pago</h2><div class="number" data-rogue-stat="tickets_paid">—</div></div>
@@ -264,7 +315,7 @@ footer{text-align:center;font-size:12px;color:#817e85;margin:37px 0}
 "use strict";
 const API="https://etxvkvdsnqqdkonvbgzf.supabase.co",EMAIL="rogue@gmail.com";
 const $=id=>document.getElementById(id);
-const status=(msg,error=false)=>{$("state").textContent=msg;$("state").dataset.error=String(error)};
+const status=(msg,error=false)=>{const e=$("state");e.textContent=msg;e.dataset.error=String(error);e.hidden=!error&&msg.startsWith("Acesso confirmado.")};
 const cfg=window.HYPE_SUPABASE_CONFIG;
 if(!cfg||cfg.url!==API||!cfg.anonKey||!window.supabase?.createClient){status("Falha de configuração. Não foram carregados dados privados.",true);return}
 const sb=window.supabase.createClient(API,cfg.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"rogue-admin-onboarding-v1"}});
@@ -299,7 +350,7 @@ async function reload(){
     el.textContent=Number(data[key]??0).toLocaleString("pt-BR");
   });
   $("content").hidden=false;
-  status("Acesso confirmado. Escolha uma área do ADM Rogue; eventos e rascunhos já estão conectados.");
+  status("Acesso confirmado. Escolha uma área do ADM Rogue.");
  }catch(e){status("Não foi possível carregar o painel. Verifique seu login Rogue e a conexão. Detalhe: "+String(e?.message||"").slice(0,160),true)}
  finally{$("refresh").disabled=false}
 }
@@ -338,6 +389,7 @@ function showHome(historyUpdate=true){
  window.scrollTo({top:0,behavior:"smooth"});
 }
 document.querySelectorAll("[data-rogue-open]").forEach(b=>b.addEventListener("click",()=>showModule(b.dataset.rogueOpen)));
+document.querySelectorAll("[data-rogue-go]").forEach(b=>b.addEventListener("click",()=>showModule(b.dataset.rogueGo)));
 $("v95BackHome").addEventListener("click",()=>showHome());
 window.addEventListener("hashchange",()=>{
  const key=decodeURIComponent(location.hash.slice(1));
