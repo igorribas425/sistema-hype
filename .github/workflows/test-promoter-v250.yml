@@ -14,6 +14,24 @@ on:
 jobs:
   promoter-network:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: hype_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d hype_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: hype_test
     steps:
       - uses: actions/checkout@v4
       - name: Conferir sintaxe dos scripts modificados
@@ -23,3 +41,8 @@ jobs:
           node --check hype-v49-registration-admin.js
       - name: Testar contratos da rede de promoters
         run: node --test tests/hype-promoter-network-v250.test.mjs
+      - name: Simular cadastro, bloqueios e vendas em PostgreSQL isolado
+        run: |
+          psql -v ON_ERROR_STOP=1 -f tests/sql/hype-promoter-network-v250-setup.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611100001_hype_promoter_network_v250.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/hype-promoter-network-v250-smoke.sql
