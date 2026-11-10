@@ -7,7 +7,7 @@
   <style>
     :root{color-scheme:dark;--bg:#050506;--panel:#111116;--line:#2b2b34;--muted:#a3a3ad;--ok:#28d17c;--red:#ff4d67}
     *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -10%,#3d1823 0,#120b10 32%,var(--bg) 68%);font-family:Inter,system-ui,Arial,sans-serif;color:#fff;padding:24px 14px}
-    main{width:min(620px,100%);margin:0 auto}.brand{text-align:center}.brand img{width:min(260px,68vw);height:auto}.eyebrow{margin:20px 0 7px;text-align:center;color:#ff6b80;font-size:11px;font-weight:900;letter-spacing:2px}.title{text-align:center;font-size:clamp(25px,6vw,42px);margin:0;letter-spacing:.5px}.sub{text-align:center;color:var(--muted);font-size:13px;line-height:1.55;margin:11px auto 20px;max-width:480px}.panel{background:rgba(17,17,22,.94);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 20px 55px #0008}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{margin-bottom:12px}.field.full{grid-column:1/-1}label{display:block;font-size:10px;font-weight:900;letter-spacing:.7px;color:#d8d8df;margin-bottom:6px}input{width:100%;height:46px;border:1px solid var(--line);border-radius:9px;background:#07070a;color:#fff;padding:0 12px;font-size:14px;outline:none}input:focus{border-color:#fff}.hint{color:var(--muted);font-size:11px;line-height:1.45;margin:0 0 14px}.btn{width:100%;height:48px;border:0;border-radius:9px;background:linear-gradient(135deg,#fff,#bdbdc3);color:#080808;font-weight:950;cursor:pointer}.btn:disabled{opacity:.6;cursor:wait}.status{display:none;margin-top:14px;padding:12px;border-radius:10px;border:1px solid var(--line);font-size:12px;line-height:1.5}.status.show{display:block}.status.ok{border-color:rgba(40,209,124,.42);color:#a8f5c7;background:rgba(40,209,124,.08)}.status.error{border-color:rgba(255,77,103,.42);color:#ffadb9;background:rgba(255,77,103,.08)}.result{display:none;margin-top:14px;padding:13px;border:1px solid rgba(40,209,124,.42);border-radius:10px;background:rgba(40,209,124,.08)}.result.show{display:block}.result strong,.result code{display:block}.result code{margin-top:8px;color:#fff;word-break:break-all;font-size:11px}.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.footer{text-align:center;color:#777;font-size:11px;margin:18px 0}.footer a{color:#fff}.hp{position:absolute;left:-10000px;opacity:0;height:1px;width:1px}
+    main{width:min(620px,100%);margin:0 auto}.brand{text-align:center}.brand img{width:min(260px,68vw);height:auto}.eyebrow{margin:20px 0 7px;text-align:center;color:#ff6b80;font-size:11px;font-weight:900;letter-spacing:2px}.title{text-align:center;font-size:clamp(25px,6vw,42px);margin:0;letter-spacing:.5px}.sub{text-align:center;color:var(--muted);font-size:13px;line-height:1.55;margin:11px auto 20px;max-width:480px}.panel{background:rgba(17,17,22,.94);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 20px 55px #0008}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{margin-bottom:12px}.field.full{grid-column:1/-1}label{display:block;font-size:10px;font-weight:900;letter-spacing:.7px;color:#d8d8df;margin-bottom:6px}input{width:100%;height:46px;border:1px solid var(--line);border-radius:9px;background:#07070a;color:#fff;padding:0 12px;font-size:14px;outline:none}input:focus{border-color:#fff}.hint{color:var(--muted);font-size:11px;line-height:1.45;margin:0 0 14px}.btn{width:100%;height:48px;border:0;border-radius:9px;background:linear-gradient(135deg,#fff,#bdbdc3);color:#080808;font-weight:950;cursor:pointer}.btn:disabled{opacity:.6;cursor:wait}.status{display:none;margin-top:14px;padding:12px;border-radius:10px;border:1px solid var(--line);font-size:12px;line-height:1.5}.status.show{display:block}.status.ok{border-color:rgba(40,209,124,.42);color:#a8f5c7;background:rgba(40,209,124,.08)}.status.error{border-color:rgba(255,77,103,.42);color:#ffadb9;background:rgba(255,77,103,.08)}.result{display:none;margin-top:14px;padding:13px;border:1px solid rgba(40,209,124,.42);border-radius:10px;background:rgba(40,209,124,.08)}.result.show{display:block}.portal-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:0 0 16px}.portal-tab{min-height:44px;padding:8px 6px;background:#09090d;color:#bdbdc7;border:1px solid #34343d;border-radius:9px;font-size:11px;font-weight:900;cursor:pointer}.portal-tab.active{background:#25252b;color:#fff;border-color:#fff}.portal-tab:disabled{opacity:.36;cursor:not-allowed}#promoterResult[hidden],#promoterTeamInvite[hidden],#promoterForm[hidden],#promoterMatrixLabel[hidden],.portal-tab[hidden]{display:none!important}.result strong,.result code{display:block}.result code{margin-top:8px;color:#fff;word-break:break-all;font-size:11px}.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.footer{text-align:center;color:#777;font-size:11px;margin:18px 0}.footer a{color:#fff}.hp{position:absolute;left:-10000px;opacity:0;height:1px;width:1px}
     @media(max-width:520px){body{padding:16px 10px}.panel{padding:15px}.grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
   </style>
   <style>.result-actions{grid-template-columns:repeat(3,minmax(0,1fr))}@media(max-width:520px){.result-actions{grid-template-columns:1fr}}</style>
@@ -15,11 +15,16 @@
 <body>
   <main>
     <div class="brand"><img src="logo-hype.png" alt="HYPE Lounge Club"></div>
-    <div class="eyebrow">CADASTRO OFICIAL</div>
-    <h1 id="promoterHeading" class="title">Seja promoter HYPE</h1>
-    <p id="promoterSubtitle" class="sub">Preencha seus dados e receba seu link permanente para vender ingressos nos eventos HYPE.</p>
+    <div class="eyebrow">CENTRAL DE PROMOTERS</div>
+    <h1 id="promoterHeading" class="title">Cadastro de matriz HYPE</h1>
+    <p id="promoterSubtitle" class="sub">Cadastre ou recadastre sua matriz e tenha acesso ao seu link de vendas e ao convite para suas filiais.</p>
     <section class="panel">
-      <p id="promoterHint" class="hint">O CPF identifica seu cadastro. Se você já estiver cadastrado, o mesmo link será mostrado novamente.</p><p id="promoterMatrixLabel" class="hint" hidden></p>
+      <p id="promoterHint" class="hint">Preencha os dados do cadastro para acessar seus links. Quem já era matriz pode se recadastrar com o mesmo CPF, nome e WhatsApp. Os ingressos antigos ficam preservados.</p><p id="promoterMatrixLabel" class="hint" hidden></p>
+      <nav class="portal-tabs" aria-label="Abas da central de promoters">
+        <button id="promoterTabRegister" class="portal-tab active" type="button" aria-selected="true">📝 CADASTRO</button>
+        <button id="promoterTabSales" class="portal-tab" type="button" disabled aria-selected="false">🎟️ MEU LINK</button>
+        <button id="promoterTabBranches" class="portal-tab" type="button" disabled aria-selected="false">🌐 LINK FILIAL</button>
+      </nav>
       <form id="promoterForm" novalidate>
         <div class="grid">
           <div class="field full"><label for="promoterName">NOME COMPLETO</label><input id="promoterName" name="name" required autocomplete="name" maxlength="120"></div>
@@ -27,21 +32,21 @@
           <div class="field"><label for="promoterPhone">WHATSAPP</label><input id="promoterPhone" name="phone" required inputmode="tel" autocomplete="tel" maxlength="15" placeholder="(00) 00000-0000"></div>
         </div>
         <input id="promoterWebsite" name="website" class="hp" tabindex="-1" autocomplete="off">
-        <button id="promoterSubmit" class="btn" type="submit">GERAR MEU LINK DE VENDAS</button>
+        <button id="promoterSubmit" class="btn" type="submit">CADASTRAR MATRIZ E GERAR LINKS</button>
       </form>
       <div id="promoterStatus" class="status" role="status" aria-live="polite"></div>
-      <div id="promoterTeamInvite" class="result">
+      <div id="promoterTeamInvite" class="result" hidden>
         <strong>🌐 Seu link para cadastrar vendedores da sua matriz:</strong>
         <code id="promoterTeamUrl"></code>
         <div class="result-actions" style="grid-template-columns:1fr">
           <button id="promoterTeamCopy" class="btn" type="button">COPIAR CONVITE PARA FILIAIS</button>
         </div>
       </div>
-      <div id="promoterResult" class="result"><strong>Seu link de vendas está pronto:</strong><code id="promoterSalesLink"></code><div class="result-actions"><button id="promoterCopy" class="btn" type="button">COPIAR LINK</button><button id="promoterShare" class="btn" type="button">COMPARTILHAR</button><button id="promoterOpenSales" class="btn" type="button">ABRIR INGRESSOS</button></div></div>
+      <div id="promoterResult" class="result" hidden><strong>Seu link de vendas está pronto:</strong><code id="promoterSalesLink"></code><div class="result-actions"><button id="promoterCopy" class="btn" type="button">COPIAR LINK</button><button id="promoterShare" class="btn" type="button">COMPARTILHAR</button><button id="promoterOpenSales" class="btn" type="button">ABRIR INGRESSOS</button></div></div>
     </section>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=20261001-v49"></script>
-  <script src="promoter-v49.js?v=20261110-matriz-filial-v250"></script>
+  <script src="promoter-v49.js?v=20261110-central-v251"></script>
 </body>
 </html>

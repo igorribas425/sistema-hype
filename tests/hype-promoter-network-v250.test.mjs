@@ -19,7 +19,7 @@ test('filiais mantêm código individual para vendas; somatório da rede sem dup
   const js = read('promoter-global-v16-8.js');
   assert.match(js, /staff_list_promoter_branches_v250/);
   assert.match(js, /branchIds = new Set/);
-  assert.match(js, /rows\.filter\(p => !branchIds\.has/);
+  assert.match(js, /visibleRows\.filter\(p => !branchIds\.has/);
   assert.match(js, /groupRevenue: Number\(p\.revenue/);
   assert.match(js, /team\.reduce/);
   assert.match(js, /copyPromoterRecruitV250/);
@@ -29,8 +29,11 @@ test('cadastro público da filial exige código da matriz e não altera cadastro
   const js = read('promoter-v49.js');
   const html = read('promoter.html');
   assert.match(js, /new URLSearchParams\(window\.location\.search\)\.get\('matriz'\)/);
-  assert.match(js, /public_promoter_branch_signup_v250/);
-  assert.match(js, /public_promoter_registration_submit_v49/);
+  assert.match(js, /public_filial_cadastro_v251/);
+  assert.match(read('supabase/migrations/202611100002_hype_promoters_recadastro_v251.sql'), /public_promoter_branch_signup_v250/);
+  assert.match(js, /public_matriz_cadastro_v251/);
+  assert.match(read('supabase/migrations/202611100002_hype_promoters_recadastro_v251.sql'),
+    /public_promoter_registration_submit_v49/);
   assert.match(js, /public_promoter_matrix_invite_v250/);
   assert.match(html, /id="promoterTeamInvite"/);
 });

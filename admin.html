@@ -671,8 +671,8 @@ html,body{max-width:100%;overflow-x:hidden}
     <div id="v49PromoterManagePanel">
     <div class="v16-management-grid" style="grid-template-columns:minmax(0,1fr)">
       <div class="v16-manage-card">
-        <h4>Matrizes (promoters principais)</h4>
-        <div class="v16-form-row"><input id="v16PromoterName" placeholder="Nome do promoter"><button class="btn-action" onclick="createPromoterV16()">+ GERAR LINK</button></div><small style="display:block;margin-top:7px;color:var(--muted)">Cada matriz tem seu link de vendas e também um link para cadastrar vendedores de filiais. As vendas de cada filial aparecem separadas.</small>
+        <h4>Matrizes cadastradas nesta organização</h4>
+        <div class="v16-form-row" style="align-items:center"><span style="font-size:12px;color:var(--muted);flex:1">Agora cada matriz faz seu próprio cadastro ou recadastro e encontra duas abas: Meu Link e Link Filial.</span><button class="btn-action" type="button" onclick="HypeV49Registration.copyPromoterRegistrationLink()">📝 COPIAR LINK DE CADASTRO</button></div><small style="display:block;margin-top:7px;color:var(--muted)">Promoters da temporada anterior ficam arquivados, sem perder histórico. Matriz e filiais possuem links de vendas individuais.</small>
         <div id="v16PromoterList" class="v16-manage-list"></div>
       </div>
     </div>
@@ -693,9 +693,9 @@ html,body{max-width:100%;overflow-x:hidden}
     </style>
     <div id="v49PromoterLinkPanel" class="v49-link-panel" hidden>
       <div class="v49-link-copy">
-        <h4>Cadastro de promoter</h4>
-        <p>Envie este link para cadastrar uma matriz principal. Dentro de Matrizes, copie o convite específico de cada matriz para cadastrar as filiais.</p>
-        <div class="v49-link-row"><input id="v49PromoterPublicUrl" readonly value="https://hypeloungeclub.com.br/promoter.html"><button class="btn-action" type="button" onclick="HypeV49Registration.copyPromoterRegistrationLink()">COPIAR</button><button class="btn-action" type="button" onclick="HypeV49Registration.sharePromoterRegistrationLink()">COMPARTILHAR</button></div>
+        <h4>Cadastro e recadastro de matriz</h4>
+        <p>Copie o convite privado e envie somente para as matrizes autorizadas. Não publique o link em grupos abertos. Envie este link para cada matriz fazer seu próprio cadastro. Após confirmar os dados, ela terá duas abas: Meu Link de Vendas e Link para Filiais.</p>
+        <div class="v49-link-row"><input id="v49PromoterPublicUrl" readonly value="Abra o ADM para gerar o convite privado de matriz"><button class="btn-action" type="button" onclick="HypeV49Registration.copyPromoterRegistrationLink()">COPIAR</button><button class="btn-action" type="button" onclick="HypeV49Registration.sharePromoterRegistrationLink()">COMPARTILHAR</button></div>
       </div>
       <div class="v49-link-qr"><img id="v49PromoterPublicQr" alt="QR Code do cadastro de promoter"></div>
     </div>
@@ -879,9 +879,9 @@ Bruna Santos"></textarea>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
 <script src="app.js?v=20261103-finance-clean-event-v263"></script>
-<script src="promoter-global-v16-8.js?v=20261110-matriz-filial-v250"></script>
+<script src="promoter-global-v16-8.js?v=20261110-convite-v251"></script>
 <script src="hype-qrcode.js?v=20261001-v49"></script>
-<script src="hype-v49-registration-admin.js?v=20261110-matriz-filial-v250"></script>
+<script src="hype-v49-registration-admin.js?v=20261110-convite-v251"></script>
 <script>
 /* HYPE V24 // correção da sessão do Admin
    - JavaScript incorporado no próprio admin.html: não depende de v21-admin.js.
