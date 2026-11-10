@@ -8,6 +8,12 @@ function forbid(value,method){
  // Rogue ADM: permite somente autenticação (senha/refresh/logout), nunca escrita administrativa.
  const authOnly = host==="etxvkvdsnqqdkonvbgzf.supabase.co" && ["/admin.html","/rogue-adm-overview.html"].includes(location.pathname) && verb==="POST" && ((url.pathname==="/auth/v1/token" && ["password","refresh_token"].includes(url.searchParams.get("grant_type"))) || url.pathname==="/auth/v1/logout");
  if(authOnly)return false;
+ // Exceção controlada: somente salvar rascunho inativo; a função exige UUID/conta Rogue autenticada.
+ const draftOnly=host==="etxvkvdsnqqdkonvbgzf.supabase.co"
+   &&location.pathname==="/rogue-adm-overview.html"
+   &&verb==="POST"
+   &&url.pathname==="/rest/v1/rpc/rogue_admin_create_event_draft_v1";
+ if(draftOnly)return false;
  if(readOnly&&host.endsWith(".supabase.co")&&!["GET","HEAD","OPTIONS"].includes(verb))return true;
  return false;}catch{return false}
 }

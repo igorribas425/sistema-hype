@@ -33,6 +33,16 @@ h3{font-size:20px;margin:0 0 15px}
 .note{font-size:13px;line-height:1.7;color:#bbb7be}
 ul{padding-left:19px;margin:12px 0;color:#c4bec6;font-size:13px;line-height:1.8}
 footer{text-align:center;font-size:12px;color:#817e85;margin:37px 0}
+.draft-panel{margin-top:20px}
+.draft-panel p{font-size:13px;color:#bbb7be;line-height:1.6;margin-bottom:17px}
+.draft-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.draft-field label{display:block;font-size:12px;font-weight:750;color:#d2c5c7;margin-bottom:7px}
+.draft-field input{width:100%;padding:13px 12px;background:#0b0a0e;border:1px solid #645346;border-radius:10px;color:#fff;font-size:15px}
+.draft-submit{background:#eed5aa;color:#241b16;border:0;border-radius:11px;margin-top:17px;padding:13px 20px;font-size:14px;font-weight:850;cursor:pointer}
+.draft-submit:disabled{opacity:.6;cursor:wait}
+.draft-status{margin-top:15px;color:#c9d9c6;font-size:13px;line-height:1.5}
+.draft-status[data-error="true"]{color:#ffb2bc}
+@media(max-width:540px){.draft-fields{grid-template-columns:1fr}}
 #content[hidden]{display:none!important}
 @media(max-width:800px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}}
 @media(max-width:460px){.kpis{gap:9px}.kpi{min-height:114px;padding:15px}.panel{padding:16px}.event{align-items:flex-start}}
@@ -62,13 +72,28 @@ footer{text-align:center;font-size:12px;color:#817e85;margin:37px 0}
 <div class="kpi"><h2>Promoters cadastrados</h2><div class="number" id="promoters_total">—</div></div>
 </div>
 <div class="grid">
-<section class="panel"><h3>Eventos no banco da Rogue</h3><div id="events">Buscando...</div></section>
+<section class="panel"><h3>Eventos no banco da Rogue</h3><p class="note">Eventos antigos continuam preservados. Novos rascunhos não aparecem na venda.</p><div id="events">Buscando...</div></section>
 <section class="panel"><h3>Operação protegida</h3>
 <p class="note">Estes valores são consultados diretamente no Supabase exclusivo da Rogue, com autenticação e autorização. Não são dados demonstrativos.</p>
-<ul><li>Somente leitura: nenhum dado pode ser alterado nesta versão</li><li>Não mostra nomes, CPF, telefones ou documentos</li><li>O Pix, Brevo, check-in e as funções financeiras continuam bloqueados</li><li>Esta tela ainda não substitui o ADM completo da Hype</li></ul>
+<ul><li>O cadastro de rascunhos inativos está liberado apenas para o administrador verificado</li><li>Os demais módulos permanecem em consulta e homologação</li><li>Não mostra nomes, CPF, telefones ou documentos</li><li>O Pix, Brevo, check-in e as funções financeiras continuam bloqueados</li><li>Esta tela ainda não substitui o ADM completo da Hype</li></ul>
 </section>
-</div></section>
-<footer>Rogue Lounge — consulta privada de homologação. Não utilizar para operação do evento.</footer>
+</div>
+<section class="panel draft-panel" id="draftPanel" aria-labelledby="draftTitle">
+  <h3 id="draftTitle">Criar evento na Rogue — rascunho</h3>
+  <p>Cadastro real no banco exclusivo da Rogue. O evento será salvo como <strong>inativo</strong>: não libera ingressos, lotes, Pix ou anúncios. Use para preparar a próxima festa com segurança.</p>
+  <form id="draftForm">
+    <div class="draft-fields">
+      <div class="draft-field"><label for="draftName">Nome da festa *</label><input id="draftName" name="draftName" type="text" maxlength="120" minlength="4" required placeholder="Ex.: Sexta na Rogue" autocomplete="off"></div>
+      <div class="draft-field"><label for="draftDate">Data *</label><input id="draftDate" name="draftDate" type="date" required></div>
+      <div class="draft-field"><label for="draftArtist">Atração / DJ</label><input id="draftArtist" name="draftArtist" type="text" maxlength="120" placeholder="Artista ou line-up" autocomplete="off"></div>
+      <div class="draft-field"><label for="draftVenue">Local</label><input id="draftVenue" name="draftVenue" type="text" maxlength="120" placeholder="Rogue Lounge" autocomplete="off"></div>
+    </div>
+    <button id="draftSubmit" class="draft-submit" type="submit">SALVAR RASCUNHO — NÃO PUBLICAR</button>
+    <div id="draftStatus" class="draft-status" role="status" aria-live="polite">Nenhum evento será criado até você clicar em salvar.</div>
+  </form>
+</section>
+</section>
+<footer>Rogue Lounge — ambiente de homologação. Rascunhos não estão disponíveis para vendas.</footer>
 </main>
 <script>
 (async()=>{
@@ -102,12 +127,37 @@ async function reload(){
   for(const key of ["events_total","events_future","tickets_total","tickets_paid","manual_pending","guest_pending","minor_pending","promoters_total"]){
    $(key).textContent=Number(data[key]??0).toLocaleString("pt-BR");
   }
-  renderEvents(data.recent_events);
-  $("content").hidden=false;status("Acesso confirmado. Dados reais da Rogue carregados somente para consulta.");
+  const {data:allEvents,error:eventsError}=await sb.rpc("rogue_admin_events_v1",{}, {get:true});
+  if(eventsError||!Array.isArray(allEvents))throw eventsError||new Error("Lista de eventos indisponível");
+  renderEvents(allEvents);
+  $("content").hidden=false;status("Acesso confirmado. Dados reais da Rogue carregados. Cadastro de rascunhos disponível.");
  }catch(e){status("Não foi possível carregar o painel. Verifique seu login Rogue e a conexão. Detalhe: "+String(e?.message||"").slice(0,160),true)}
  finally{$("refresh").disabled=false}
 }
-$("refresh").addEventListener("click",reload);await reload();
+$("refresh").addEventListener("click",reload);
+$("draftForm").addEventListener("submit",async ev=>{
+  ev.preventDefault();
+  const button=$("draftSubmit"), info=$("draftStatus");
+  const name=$("draftName").value.trim(),day=$("draftDate").value,venue=$("draftVenue").value.trim(),artist=$("draftArtist").value.trim();
+  if(name.length<4||!/^\\d{4}-\\d{2}-\\d{2}$/.test(day)){
+    info.dataset.error="true";info.textContent="Preencha nome e data válidos.";return;
+  }
+  button.disabled=true;info.dataset.error="false";info.textContent="Salvando rascunho no banco da Rogue...";
+  try{
+    const {data,error}=await sb.rpc("rogue_admin_create_event_draft_v1",{
+      p_name:name,p_event_date:day,p_venue:venue,p_artist_name:artist
+    });
+    if(error||!data||data.active!==false)throw error||new Error("Resposta inválida do cadastro");
+    $("draftForm").reset();
+    await reload();
+    info.dataset.error="false";
+    info.textContent="Rascunho salvo com sucesso. A festa está INATIVA e NÃO recebe vendas.";
+  }catch(err){
+    info.dataset.error="true";
+    info.textContent="Não foi possível salvar: "+String(err?.message||"Erro de conexão").slice(0,180);
+  }finally{button.disabled=false;}
+});
+await reload();
 })();
 </script>
 </body></html>
