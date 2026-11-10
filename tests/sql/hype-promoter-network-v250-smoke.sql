@@ -60,6 +60,35 @@ begin
       and payment_status='Pago' and event_id=1;
   if t + b.revenue<>80 then raise exception 'Falha: faturamento consolidado'; end if;
 
+  -- O detalhe identifica quem comprou, qual evento e o status da venda;
+  -- exige credenciais de administrador e preserva eventos antigos.
+  update public.tickets
+    set customer_name=case when payment_status='Pendente'
+      then 'Cliente Pendente' else 'Cliente Confirmado' end;
+  select * into b from public.staff_promoter_branch_sales_v250(
+    'admin-teste','senha-teste',id_filial
+  );
+  if b.event_name is null or b.customer_name is null or b.payment_status is null then
+    raise exception 'Falha: detalhes do pedido';
+  end if;
+  select count(*) into c from public.staff_promoter_branch_sales_v250(
+    'admin-teste','senha-teste',id_filial
+  );
+  if c<>3 then raise exception 'Falha: histórico de vendas, total %',c; end if;
+  select count(*) into c from public.staff_promoter_branch_sales_v250(
+    'admin-teste','senha-teste',matriz
+  );
+  if c<>0 then raise exception 'Falha: detalhes expõem matriz como filial'; end if;
+  begin
+    perform 1 from public.staff_promoter_branch_sales_v250(
+      'usuario-nao-autorizado','errado',id_filial
+    );
+    raise exception 'Falha: leitura sem permissões';
+  exception when sqlstate 'P0001' then
+    if SQLERRM = 'Sem permissão' then null;
+    else raise; end if;
+  end;
+
   -- Convites de matriz válidos; filiais e matrizes inativas são bloqueadas.
   select * into a from public.public_promoter_matrix_invite_v250('MATRIZ-ALFA');
   if not a.ok or a.invite_url not like '%matriz=MATRIZ-ALFA' then
