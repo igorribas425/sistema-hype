@@ -96,7 +96,7 @@
       if (isBranchSignup) params.p_matrix_code = matrixCode;
       else params.p_invite_token = matrixInviteToken;
       const {data, error} = await client.rpc(
-        isBranchSignup ? 'public_promoter_branch_signup_v250' : 'public_matriz_cadastro_v251',
+        isBranchSignup ? 'public_filial_cadastro_v251' : 'public_matriz_cadastro_v251',
         params
       );
       if (error) throw error;
