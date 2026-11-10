@@ -3,7 +3,7 @@
   'use strict';
 
   const DOMAIN = 'https://hypeloungeclub.com.br';
-  const promoterUrl = `${DOMAIN}/promoter.html`;
+  let promoterInviteUrl = '';
   const listUrl = `${DOMAIN}/lista.html`;
   const $ = id => document.getElementById(id);
   const esc = value => typeof hypeEscape === 'function'
@@ -44,6 +44,38 @@
     }
     await copyText(url);
     if (typeof hypeNotify === 'function') hypeNotify('Link copiado.');
+  }
+
+  async function getMatrizInviteUrl() {
+    const hype = state();
+    if (!hype?.user || !hype?.pass || hype?.role !== 'admin') {
+      throw new Error('Entre no ADM como administrador para obter o convite de matriz.');
+    }
+    if (promoterInviteUrl) return promoterInviteUrl;
+    const url = await sbRpc('staff_matriz_link_cadastro_v251', {
+      p_username:hype.user,p_password:hype.pass
+    });
+    if (typeof url !== 'string' || !url.startsWith('https://hypeloungeclub.com.br/promoter.html?convite=')) {
+      throw new Error('O convite de matriz ainda não está disponível no Supabase.');
+    }
+    promoterInviteUrl = url;
+    const field = $('v49PromoterPublicUrl');
+    if (field) field.value = url;
+    setQr('v49PromoterPublicQr', url);
+    return url;
+  }
+  async function copyMatrizInvite() {
+    try {
+      const url = await getMatrizInviteUrl();
+      await copyText(url);
+      if (typeof hypeNotify === 'function') hypeNotify('Convite privado de matriz copiado.');
+    } catch(error) { alert(error?.message || 'Não foi possível carregar o convite.'); }
+  }
+  async function shareMatrizInvite() {
+    try {
+      const url = await getMatrizInviteUrl();
+      await share('Convite para cadastro de matriz HYPE',url);
+    } catch(error) { alert(error?.message || 'Não foi possível compartilhar o convite.'); }
   }
 
   function setQr(id, url) {
@@ -454,6 +486,10 @@
     branchTab?.classList.toggle('active', isBranches);
     linkTab?.classList.toggle('active', isLink);
     if (isBranches) window.HypePromoterNetworkV250?.refresh?.(true);
+    if (isLink) getMatrizInviteUrl().catch(error => {
+      const field = $('v49PromoterPublicUrl');
+      if (field) field.value = error?.message || 'Convite indisponível';
+    });
   }
 
   function showListTab(tab) {
@@ -473,9 +509,9 @@
 
   function init() {
     if (!$('v49PromoterLinkPanel') && !$('v49ListLinkPanel')) return false;
-    $('v49PromoterPublicUrl')?.setAttribute('value', promoterUrl);
+    $('v49PromoterPublicUrl')?.setAttribute('value', 'Disponível após login do ADM');
     $('v49ListPublicUrl')?.setAttribute('value', listUrl);
-    setQr('v49PromoterPublicQr', promoterUrl);
+    // O QR é criado somente depois da autenticação administrativa.
     setQr('v49ListPublicQr', listUrl);
     fillEvents();
     const hype = state();
@@ -490,9 +526,9 @@
     showPromoterTab,
     showListTab,
     toggleGuestList,
-    copyPromoterRegistrationLink: () => copyText(promoterUrl).then(() => hypeNotify?.('Link do promoter copiado.')),
+    copyPromoterRegistrationLink: copyMatrizInvite,
     copyListRegistrationLink: () => copyText(listUrl).then(() => hypeNotify?.('Link da lista copiado.')),
-    sharePromoterRegistrationLink: () => share('Cadastro de promoter HYPE', promoterUrl),
+    sharePromoterRegistrationLink: shareMatrizInvite,
     shareListRegistrationLink: () => share('Lista HYPE', listUrl),
     loadListSettings,
     saveGuestListSettings,
