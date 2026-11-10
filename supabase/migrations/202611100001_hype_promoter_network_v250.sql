@@ -121,7 +121,7 @@ begin
     and exists(select 1 from public.events e
                where e.id = t.event_id and e.active is true)
   group by b.matrix_id,p.id,p.name,p.code,p.active
-  order by b.matrix_id, revenue desc, p.name;
+  order by 1, 8 desc, 3;
 end;
 $$;
 revoke all on function public.staff_list_promoter_branches_v250(text,text) from public;
