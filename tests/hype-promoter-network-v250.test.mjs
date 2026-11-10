@@ -29,7 +29,8 @@ test('cadastro público da filial exige código da matriz e não altera cadastro
   const js = read('promoter-v49.js');
   const html = read('promoter.html');
   assert.match(js, /new URLSearchParams\(window\.location\.search\)\.get\('matriz'\)/);
-  assert.match(js, /public_promoter_branch_signup_v250/);
+  assert.match(js, /public_filial_cadastro_v251/);
+  assert.match(read('supabase/migrations/202611100002_hype_promoters_recadastro_v251.sql'), /public_promoter_branch_signup_v250/);
   assert.match(js, /public_matriz_cadastro_v251/);
   assert.match(read('supabase/migrations/202611100002_hype_promoters_recadastro_v251.sql'),
     /public_promoter_registration_submit_v49/);
