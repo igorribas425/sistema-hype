@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>Acesso administrativo — Rogue Lounge</title>
+<link rel="icon" type="image/svg+xml" href="/favicon-rogue-v2.svg?v=20261109">
+<style>
+:root{font-family:Inter,system-ui,Arial,sans-serif;color-scheme:dark;background:#09080c;color:#f5f4f6}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% -10%,#322532 0,#131016 40%,#09080c 100%);padding:22px}
+main{width:100%;max-width:490px;background:#121116;border:1px solid #403a45;border-radius:22px;padding:clamp(20px,4vw,34px);box-shadow:0 25px 80px #0008}
+.brand{display:block;max-width:245px;width:65%;height:auto;max-height:120px;object-fit:contain;margin:0 auto 22px}
+h1{font-size:23px;line-height:1.2;margin:0 0 10px;text-align:center}
+.subtitle{text-align:center;color:#b5afb9;font-size:13px;line-height:1.55;margin:0 0 20px}
+label{display:block;font-weight:800;font-size:12px;color:#d9d4db;margin:14px 0 7px}
+input{width:100%;background:#08080b;border:1px solid #4d4851;color:#fff;border-radius:11px;padding:14px 13px;font-size:15px;outline:none}
+input:focus{border-color:#e5d1ec}
+input[readonly]{color:#c3bec7;background:#19161d}
+button{width:100%;margin-top:12px;border:0;border-radius:11px;padding:14px 13px;font-size:14px;font-weight:900;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+.primary{background:linear-gradient(115deg,#e7d7ee,#f6f3f6);color:#17121b}
+.secondary{border:1px solid #6d6371;background:transparent;color:#f4eff6}
+.note{border:1px solid #544c56;border-radius:12px;padding:13px;color:#c9c3cc;font-size:12px;line-height:1.65;margin-top:20px}
+.status{margin-top:18px;border:1px solid #4d4750;background:#1a171e;border-radius:12px;padding:13px;line-height:1.5;font-size:13px;min-height:42px}
+.status[data-kind=error]{border-color:#b85064;color:#ffd3dc}
+.status[data-kind=ok]{border-color:#59976a;color:#d4ffdf}
+a{color:#ece6f3}nav{text-align:center;margin:22px 0 0;display:flex;flex-wrap:wrap;justify-content:center;gap:14px;font-size:12px}
+hr{border:0;border-top:1px solid #302b34;margin:22px 0}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/supabase-config.js?v=20261109-rogue"></script>
+</head>
+<body>
+<main>
+<img class="brand" src="https://rogue-vendas.vercel.app/assets/rogue-logo.webp" alt="Rogue Lounge" onerror="this.style.display='none'">
+<h1>Acesso administrativo Rogue</h1>
+<p class="subtitle">Etapa 1: cadastrar seu e-mail e confirmar sua identidade. O financeiro, os ingressos e as permissões administrativas continuam bloqueados até a conclusão dos testes.</p>
+<label for="email">E-mail reservado para o administrador</label>
+<input id="email" value="rogue@gmail.com" readonly autocomplete="username" aria-readonly="true">
+<label for="pass">Crie uma senha exclusiva da Rogue</label>
+<input id="pass" type="password" placeholder="Mínimo de 12 caracteres" autocomplete="new-password" minlength="12" required>
+<label for="confirm">Repita a senha (para criar a conta)</label>
+<input id="confirm" type="password" placeholder="Confirme a senha" autocomplete="new-password" minlength="12">
+<button id="register" class="primary" type="button">CRIAR CONTA ROGUE</button>
+<button id="login" class="secondary" type="button">JÁ TENHO CONTA — ENTRAR</button>
+<button id="resend" class="secondary" type="button">REENVIAR CONFIRMAÇÃO DO E-MAIL</button>
+<button id="logout" class="secondary" type="button" hidden>SAIR DA CONTA</button>
+<div class="status" id="status" role="status" aria-live="polite">Aguardando cadastro ou login. Não digite nenhuma senha da Hype.</div>
+<div class="note"><strong>Segurança:</strong> o acesso ADM só será habilitado depois de confirmar o e-mail e vincular a conta verificada ao cadastro da Rogue. Esta página não dá acesso direto aos dados dos clientes. Não compartilhe senhas, códigos ou links de confirmação no chat.</div>
+<nav>
+<a href="admin-demo.html">Ver prévia das abas</a>
+<a href="admin.html">Voltar ao ADM</a>
+</nav>
+</main>
+<script>
+(async()=>{
+"use strict";
+const adminEmail="rogue@gmail.com", url="https://etxvkvdsnqqdkonvbgzf.supabase.co";
+const $=id=>document.getElementById(id), state=$("status");
+const update=(message,kind="normal")=>{state.textContent=message;state.dataset.kind=kind};
+const buttons=["register","login","resend","logout"];
+function loading(b){for(const id of buttons)$(id).disabled=b}
+const config=window.HYPE_SUPABASE_CONFIG;
+if(!config||config.url!==url||!config.anonKey||!window.supabase?.createClient){update("Configuração da Rogue não encontrada. Nenhuma conta foi alterada.","error");loading(true);return}
+const sb=window.supabase.createClient(url,config.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"rogue-admin-onboarding-v1"}});
+const redirect=window.location.origin+"/acesso-rogue.html";
+function errorText(e){return String(e?.message||"Falha ao comunicar com o Supabase.").slice(0,230)}
+async function check(){
+  try{
+    const {data:{user},error:userError}=await sb.auth.getUser();
+    if(userError||!user){$("logout").hidden=true;return}
+    $("logout").hidden=false;
+    if(user.email?.toLowerCase()!==adminEmail){await sb.auth.signOut();update("Esta conta não corresponde ao administrador reservado. Sessão encerrada.","error");return}
+    const {data, error}=await sb.rpc("rogue_admin_access_v1");
+    if(error){update("Conta autenticada, mas a verificação de acesso ainda não pôde ser concluída. Nenhuma permissão foi liberada.","error");return}
+    update(data===true
+      ?"E-mail confirmado e vínculo autorizado. Seu cadastro de identidade está pronto; o ADM operacional ainda está em homologação."
+      :"Conta autenticada. O acesso de administrador ainda está pendente da confirmação do e-mail e da liberação segura do responsável.",data===true?"ok":"normal");
+  }catch(e){update("Não foi possível verificar o status da conta: "+errorText(e),"error")}
+}
+$("register").addEventListener("click",async()=>{
+  const password=$("pass").value,confirm=$("confirm").value;
+  if(password.length<12){update("Para segurança, crie uma senha com 12 caracteres ou mais.","error");return}
+  if(password!==confirm){update("As duas senhas não conferem.","error");return}
+  loading(true);update("Solicitando cadastro no Supabase da Rogue...");
+  try{
+    const {data,error}=await sb.auth.signUp({email:adminEmail,password,options:{emailRedirectTo:redirect}});
+    if(error)throw error;
+    $("pass").value="";$("confirm").value="";
+    update(data.session
+      ?"Conta criada. A autorização ADM continua pendente. Confira o status e confirme seu e-mail quando solicitado."
+      :"Solicitação enviada. Verifique a caixa de entrada de rogue@gmail.com e siga a mensagem de confirmação. Se o link abrir outro site, não insira senha nele.", "ok");
+    await check();
+  }catch(e){update("Não foi possível cadastrar: "+errorText(e),"error")}
+  finally{loading(false)}
+});
+$("login").addEventListener("click",async()=>{
+  const password=$("pass").value;
+  if(!password){update("Digite a senha que você criou para a Rogue.","error");return}
+  loading(true);update("Verificando a conta no Supabase da Rogue...");
+  try{
+    const {error}=await sb.auth.signInWithPassword({email:adminEmail,password});
+    if(error)throw error;
+    $("pass").value="";$("confirm").value="";await check();
+  }catch(e){update("Não foi possível entrar: "+errorText(e),"error")}
+  finally{loading(false)}
+});
+$("resend").addEventListener("click",async()=>{
+  loading(true);update("Solicitando reenvio do e-mail de confirmação...");
+  try{
+    const {error}=await sb.auth.resend({type:"signup",email:adminEmail,options:{emailRedirectTo:redirect}});
+    if(error)throw error;
+    update("Se o cadastro estiver pendente, a mensagem será enviada para rogue@gmail.com. Verifique também spam e promoções.","ok");
+  }catch(e){update("Falha ao solicitar reenvio: "+errorText(e),"error")}
+  finally{loading(false)}
+});
+$("logout").addEventListener("click",async()=>{await sb.auth.signOut();$("logout").hidden=true;update("Sessão Rogue encerrada.","ok")});
+await check();
+})();
+</script>
+</body>
+</html>
