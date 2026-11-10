@@ -126,6 +126,35 @@
     );
   }
 
+  function renderBranchPanelV250(branches, promoters, error) {
+    const box = document.getElementById('v250BranchList');
+    if (!box) return;
+    if (error) {
+      box.innerHTML = `<div class="v18-empty error">O módulo de filiais ainda não está disponível no banco: ${esc(error)}</div>`;
+      return;
+    }
+    if (!branches.length) {
+      box.innerHTML = '<div class="v18-empty">Nenhuma filial cadastrada ainda. Entre em MATRIZES, copie o convite de uma matriz e envie aos vendedores.</div>';
+      return;
+    }
+    box.innerHTML = `<div style="font-size:12px;color:var(--muted);margin:5px 0 10px">${branches.length} filial(is) cadastrada(s). Os valores abaixo consideram somente ingressos pagos de eventos ativos.</div>` +
+      branches.map(b => {
+        const matrix = promoters.find(p => Number(p.id) === Number(b.matrix_id));
+        return `<div class="v250-row">
+          <div style="flex:1;min-width:210px">
+            <strong style="font-size:14px">${esc(b.promoter_name)}</strong>
+            <span style="font-size:10px;margin-left:7px;color:${b.active?'#a8f3c4':'#ff9aaa'}">${b.active?'ATIVO':'INATIVO'}</span>
+            <div class="v250-meta">Matriz: <b style="color:#fff">${esc(matrix?.name || 'Não localizada')}</b> • Código: ${esc(b.promoter_code)}
+            <div>Pedidos: ${Number(b.sales_count || 0)} • Pagos: ${Number(b.paid_count || 0)} • Total: <b style="color:#a8f3c4">${esc(money(b.revenue || 0))}</b></div></div>
+          </div>
+          <div class="v250-actions">
+            <button class="btn-action" type="button" onclick="copyPromoterLinkV168(${Number(b.promoter_id)})">🎟️ LINK DE VENDAS</button>
+            <button class="btn-action" type="button" onclick="togglePromoterV168(${Number(b.promoter_id)})">${b.active?'DESATIVAR':'ATIVAR'}</button>
+          </div>
+        </div>`;
+      }).join('');
+  }
+
   async function renderPromotersGlobal(force = false) {
     const box = document.getElementById('v16PromoterList');
     if (!box || HYPE?.role !== 'admin' || rendering) return;
@@ -135,6 +164,30 @@
     box.innerHTML = '<div style="margin-top:12px;color:var(--muted);font-size:12px">Carregando promoters globais...</div>';
     try {
       const rows = await loadGlobalPromoters();
+      let branches = [];
+      let branchError = '';
+      try {
+        const result = await sbRpc('staff_list_promoter_branches_v250', {
+          p_username: HYPE.user,
+          p_password: HYPE.pass
+        });
+        branches = Array.isArray(result) ? result : [];
+      } catch (error) {
+        branchError = error?.message || 'Não foi possível carregar as filiais.';
+      }
+      window.__HYPE_V250_BRANCHES = branches;
+      renderBranchPanelV250(branches, rows, branchError);
+      const branchIds = new Set(branches.map(b => Number(b.promoter_id)));
+      const matrixRows = rows.filter(p => !branchIds.has(Number(p.id))).map(p => {
+        const team = branches.filter(b => Number(b.matrix_id) === Number(p.id));
+        return {
+          ...p,
+          team,
+          groupRevenue: Number(p.revenue || 0) + team.reduce((sum,b)=>sum+Number(b.revenue||0),0),
+          groupPaid: Number(p.paid_count || 0) + team.reduce((sum,b)=>sum+Number(b.paid_count||0),0)
+        };
+      }).sort((a,b)=> b.groupRevenue-a.groupRevenue || b.groupPaid-a.groupPaid ||
+        String(a.name).localeCompare(String(b.name),'pt-BR'));
       window.__HYPE_V168_PROMOTERS = rows;
       HYPE.promoters = rows;
       lastLoadAt = Date.now();
@@ -146,9 +199,9 @@
       }
 
       box.innerHTML = `
-        <div style="margin-top:14px;font-size:12px;color:#cbe9da;font-weight:900;letter-spacing:.5px">🏆 RANKING DE PROMOTERS • FESTA ATUAL</div>
-        <div style="margin-top:5px;font-size:11px;color:var(--muted)">Somente valores de ingressos com pagamento confirmado. FREE vale R$ 0. Ranking da festa atual. Eventos anteriores continuam no histórico.</div>
-        ${rows.map((p, index) => `
+        <div style="margin-top:14px;font-size:12px;color:#cbe9da;font-weight:900;letter-spacing:.5px">🏆 RANKING DE MATRIZES • FESTAS ATIVAS</div>
+        <div style="margin-top:5px;font-size:11px;color:var(--muted)">Ranking por vendas pagas da matriz + suas filiais, sem duplicação. FREE vale R$ 0. Vendas antigas permanecem no histórico.</div>
+        ${matrixRows.map((p, index) => `
           <div style="margin-top:10px;padding:13px;border:1px solid var(--line);border-radius:14px;background:#0b0b0e">
             <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
               <div style="min-width:0;flex:1">
@@ -158,13 +211,15 @@
                 </div>
                 <div style="margin-top:5px;font-size:11px;color:var(--muted)">Código: <b style="color:#fff">${esc(p.code)}</b> • funciona em todos os eventos</div>
                 <div style="margin-top:6px;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted)">
-                  <span>🧾 Confirmados: <b style="color:#fff">${Number(p.paid_count || 0)}</b></span>
+                  <span>🧾 Confirmados da rede: <b style="color:#fff">${p.groupPaid}</b></span>
                   <span>📋 Pedidos: <b style="color:#fff">${Number(p.sales_count || 0)}</b></span>
-                  <span>💰 TOTAL VENDIDO: <b style="color:#a8f3c4;font-size:15px">${esc(money(p.revenue || 0))}</b></span>
+                  <span>💰 TOTAL DA REDE: <b style="color:#a8f3c4;font-size:15px">${esc(money(p.groupRevenue))}</b></span>
                 </div>
+                <div style="margin-top:6px;font-size:11px;color:var(--muted)">🌐 ${p.team.length} filial(is) • Vendas próprias: ${esc(money(p.revenue || 0))}</div>
                 <div style="margin-top:7px;font-size:10px;color:#777;word-break:break-all">${esc(promoterLink(p))}</div>
               </div>
               <div style="display:flex;gap:7px;flex-wrap:wrap">
+                <button class="btn-action" type="button" onclick="copyPromoterRecruitV250(${Number(p.id)})">🌐 CONVITE PARA FILIAIS</button>
                 <button class="btn-action" type="button" onclick="copyPromoterLinkV168(${Number(p.id)})">🎟️ LINK DE VENDAS</button>
                 <button class="btn-action" type="button" onclick="openPromoterSalesV168(${Number(p.id)})">🎟️ ABRIR INGRESSOS</button>
                 <button class="btn-action" type="button" onclick="togglePromoterV168(${Number(p.id)})">${p.active ? 'DESATIVAR' : 'ATIVAR'}</button>
@@ -178,6 +233,16 @@
       rendering = false;
     }
   }
+
+  async function copyPromoterRecruitV250(id) {
+    const row = (window.__HYPE_V168_PROMOTERS || []).find(p => Number(p.id) === Number(id));
+    if (!row) return alert('Matriz não encontrada.');
+    const link = `${OFFICIAL_DOMAIN}/promoter.html?matriz=${encodeURIComponent(row.code)}`;
+    await copyText(link);
+    if (typeof hypeNotify === 'function') hypeNotify('Link de recrutamento de filiais copiado.');
+  }
+  window.copyPromoterRecruitV250 = copyPromoterRecruitV250;
+  window.HypePromoterNetworkV250 = {refresh:renderPromotersGlobal};
 
   window.createPromoterV16 = async function() {
     if (HYPE?.role !== 'admin') return alert('Somente o Admin pode gerenciar promoters.');
