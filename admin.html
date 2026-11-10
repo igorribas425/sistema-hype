@@ -681,9 +681,10 @@ html,body{max-width:100%;overflow-x:hidden}
       <h4>🌐 Filiais de vendas</h4>
       <p style="font-size:12px;color:var(--muted);margin:7px 0">Os vendedores se cadastram pelo convite da matriz e recebem um link próprio de ingressos. Os valores ficam atribuídos a cada filial e somados à matriz sem duplicar vendas.</p>
       <div id="v250BranchList" class="v16-manage-list" aria-live="polite">Carregando filiais...</div>
+      <div id="v250BranchSalesDetail" hidden aria-live="polite" style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px"></div>
     </section>
     <style>
-      #v250PromoterBranchesPanel[hidden],#v49PromoterManagePanel[hidden],#v49PromoterLinkPanel[hidden]{display:none!important}
+      #v250BranchSalesDetail[hidden],#v250PromoterBranchesPanel[hidden],#v49PromoterManagePanel[hidden],#v49PromoterLinkPanel[hidden]{display:none!important}
       #v250PromoterBranchesPanel{background:#0b0b0e;border:1px solid var(--line);border-radius:14px}
       #v250PromoterBranchesPanel .v250-row{margin-top:9px;padding:13px;border:1px solid var(--line);border-radius:11px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:center}
       #v250PromoterBranchesPanel .v250-row .v250-meta{font-size:11px;color:var(--muted);line-height:1.8;overflow-wrap:anywhere}
