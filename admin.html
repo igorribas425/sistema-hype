@@ -389,13 +389,20 @@ html,body{max-width:100%;overflow-x:hidden}
 
 <div id="loginScreen">
   <div class="loginBox">
-    <div class="brand-logo-wrap"><img src="https://rogue-vendas.vercel.app/assets/rogue-logo.webp" class="brand-logo" alt="Rogue Lounge"></div><h2 style="margin-bottom:5px;color:#fff">ADMIN // ROGUE LOUNGE</h2>
-    <p style="color:var(--muted);font-size:12px;margin-bottom:20px">Acesso administrativo</p>
-    <div style="border:1px solid #48404e;background:#151219;border-radius:10px;padding:14px;margin:14px 0;color:#dad6de;font-size:13px;line-height:1.5">
-      <strong>Cadastro ADM Rogue</strong><div>O usuário definido é <b>rogue</b>. A conta vinculada ao usuário rogue está confirmada. Entre usando a senha criada exclusivamente para este acesso.</div>
-    </div>
-    <a href="acesso-rogue.html" style="display:block;background:#f0edf3;color:#08080a;border-radius:10px;text-align:center;padding:14px 12px;text-decoration:none;font-weight:900">ENTRAR COM USUÁRIO ROGUE</a>
-    <a href="admin-demo.html" style="display:block;border:1px solid rgba(255,255,255,.30);border-radius:10px;padding:12px;color:white;text-decoration:none;font-weight:800;font-size:13px">VER LAYOUT DO ADM — SEM LOGIN</a>
+    <div class="brand-logo-wrap"><img src="https://rogue-vendas.vercel.app/assets/rogue-logo.webp" class="brand-logo" alt="Rogue Lounge"></div>
+    <h2 style="margin-bottom:5px;color:#fff">ADMIN // ROGUE LOUNGE</h2>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:17px">Acesso administrativo</p>
+    <form id="rogueLoginForm" autocomplete="on">
+      <label for="adminUser" style="display:block;text-align:left;font-size:12px;color:#bdbdc8;margin:0 0 6px">Usuário</label>
+      <input type="text" id="adminUser" name="username" value="rogue" readonly aria-readonly="true" autocomplete="username" style="margin-bottom:12px;width:100%">
+      <label for="adminPass" style="display:block;text-align:left;font-size:12px;color:#bdbdc8;margin:0 0 6px">Senha da Rogue</label>
+      <input type="password" id="adminPass" name="password" autocomplete="current-password" placeholder="Digite sua senha" required style="margin-bottom:14px;width:100%">
+      <button id="rogueLoginButton" class="btn" type="submit">ENTRAR NO PAINEL</button>
+    </form>
+    <p id="rogueLoginStatus" role="status" aria-live="polite" style="margin:14px 0 8px;color:#c2b9c8;font-size:12px;line-height:1.5">Use a senha cadastrada em rogue@gmail.com. Nenhuma senha da Hype é necessária.</p>
+    <a href="admin-demo.html" id="roguePreviewAfterLogin" hidden style="display:none;background:#e9e5ec;color:#100e12;border-radius:10px;padding:13px;font-weight:850;text-decoration:none;margin:12px 0">ABRIR PAINEL VISUAL — HOMOLOGAÇÃO</a>
+    <p style="margin:10px 0;color:#90909a;font-size:11px;line-height:1.45">Login real da Rogue. Vendas, Pix, financeiro e cadastros ainda estão bloqueados nos testes.</p>
+    <a href="acesso-rogue.html" style="display:block;margin-top:10px;color:#cbc4d2;font-size:12px;text-decoration:underline">Gerenciar cadastro e senha</a>
   </div>
 </div>
 
@@ -1311,5 +1318,6 @@ Bruna Santos"></textarea>
 
 
 
+<script src="rogue-admin-login-v1.js?v=20261110-directlogin"></script>
 </body>
 </html>
