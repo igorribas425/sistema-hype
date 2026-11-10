@@ -92,7 +92,7 @@ begin
     end if;
     select r.* into v_archive from public.promoter_matriz_recadastro_v251 r
     where r.promoter_id=v_existing.id for update;
-    if not found or not v_archive.was_active then
+    if not found or not v_archive.was_active or v_archive.reenrolled_at is not null then
       return query select false,
         'Cadastro inativo. Solicite autorização à administração.',
         null::text,null::text;
@@ -149,6 +149,7 @@ begin
   select v_total,(select count(*) from public.tickets)::bigint;
 end;
 $$;
-revoke all on function public.staff_reiniciar_matrizes_v251(text,text,text) from public;
-grant execute on function public.staff_reiniciar_matrizes_v251(text,text,text)
-  to anon, authenticated;
+revoke all on function public.staff_reiniciar_matrizes_v251(text,text,text)
+  from public, anon, authenticated;
+-- Só o operador do banco poderá iniciar o encerramento da temporada.
+-- Nenhum site público recebe permissão para invocar o reset.
