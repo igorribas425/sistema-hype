@@ -16,10 +16,10 @@
   <main>
     <div class="brand"><img src="logo-hype.png" alt="HYPE Lounge Club"></div>
     <div class="eyebrow">CADASTRO OFICIAL</div>
-    <h1 class="title">Seja promoter HYPE</h1>
-    <p class="sub">Preencha seus dados e receba seu link permanente para vender ingressos nos eventos HYPE.</p>
+    <h1 id="promoterHeading" class="title">Seja promoter HYPE</h1>
+    <p id="promoterSubtitle" class="sub">Preencha seus dados e receba seu link permanente para vender ingressos nos eventos HYPE.</p>
     <section class="panel">
-      <p class="hint">O CPF identifica seu cadastro. Se você já estiver cadastrado, o mesmo link será mostrado novamente.</p>
+      <p id="promoterHint" class="hint">O CPF identifica seu cadastro. Se você já estiver cadastrado, o mesmo link será mostrado novamente.</p><p id="promoterMatrixLabel" class="hint" hidden></p>
       <form id="promoterForm" novalidate>
         <div class="grid">
           <div class="field full"><label for="promoterName">NOME COMPLETO</label><input id="promoterName" name="name" required autocomplete="name" maxlength="120"></div>
@@ -30,11 +30,18 @@
         <button id="promoterSubmit" class="btn" type="submit">GERAR MEU LINK DE VENDAS</button>
       </form>
       <div id="promoterStatus" class="status" role="status" aria-live="polite"></div>
+      <div id="promoterTeamInvite" class="result">
+        <strong>🌐 Seu link para cadastrar vendedores da sua matriz:</strong>
+        <code id="promoterTeamUrl"></code>
+        <div class="result-actions" style="grid-template-columns:1fr">
+          <button id="promoterTeamCopy" class="btn" type="button">COPIAR CONVITE PARA FILIAIS</button>
+        </div>
+      </div>
       <div id="promoterResult" class="result"><strong>Seu link de vendas está pronto:</strong><code id="promoterSalesLink"></code><div class="result-actions"><button id="promoterCopy" class="btn" type="button">COPIAR LINK</button><button id="promoterShare" class="btn" type="button">COMPARTILHAR</button><button id="promoterOpenSales" class="btn" type="button">ABRIR INGRESSOS</button></div></div>
     </section>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=20261001-v49"></script>
-  <script src="promoter-v49.js?v=20261028-v207-sales"></script>
+  <script src="promoter-v49.js?v=20261110-matriz-filial-v250"></script>
 </body>
 </html>
