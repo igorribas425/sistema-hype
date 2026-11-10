@@ -1,0 +1,50 @@
+name: Testar Central de Matrizes Hype (V251)
+on:
+  push:
+    branches:
+      - feat/promoter-central-recadastrar-v251
+  pull_request:
+    paths:
+      - 'promoter.html'
+      - 'promoter-v49.js'
+      - 'promoter-global-v16-8.js'
+      - 'admin.html'
+      - 'supabase/migrations/*recadastro_v251.sql'
+      - 'tests/hype-promoter-central-v251.test.mjs'
+      - 'tests/sql/hype-promoter-v251-*.sql'
+jobs:
+  central-matrizes:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: hype_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d hype_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: hype_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar JavaScript
+        run: |
+          node --check promoter-v49.js
+          node --check promoter-global-v16-8.js
+          node --test tests/hype-promoter-central-v251.test.mjs
+      - name: Simular recadastro e reinício em PostgreSQL descartável
+        run: |
+          psql -v ON_ERROR_STOP=1 -f tests/sql/hype-promoter-network-v250-setup.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611100001_hype_promoter_network_v250.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/hype-promoter-network-v250-smoke.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/hype-promoter-v251-compat.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611100002_hype_promoters_recadastro_v251.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/hype-promoter-v251-smoke.sql
