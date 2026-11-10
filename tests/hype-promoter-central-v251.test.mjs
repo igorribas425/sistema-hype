@@ -13,7 +13,8 @@ test('Central tem cadastro, Meu Link e Link Filial, com blocos separados', () =>
   assert.match(js,/function showTab\(tab\)/);
   assert.match(js,/tabButtons\.filiais\.disabled = false/);
   assert.match(js,/public_matriz_cadastro_v251/);
-  assert.match(js,/public_promoter_branch_signup_v250/);
+  assert.match(js,/public_filial_cadastro_v251/);
+  assert.match(js,/p_invite_token/);
   assert.match(html,/#promoterResult\[hidden\]/);
 });
 
@@ -25,6 +26,9 @@ test('recadastro não apaga ingressos e exige confirmação para reinício', () 
   assert.match(sql,/was_active/);
   assert.match(sql,/reenrolled_at is not null/);
   assert.match(sql,/enable row level security/);
+  assert.match(sql,/staff_matriz_link_cadastro_v251/);
+  assert.match(sql,/hype_matriz_signup_invite_v251/);
+  assert.match(sql,/public_filial_cadastro_v251/);
   assert.doesNotMatch(sql,/delete from public\.promoters_global_v16|drop table public\.tickets|truncate public\.tickets/i);
   assert.doesNotMatch(sql,/grant execute on function public\.staff_reiniciar_matrizes_v251[^;]*to anon/i);
 });
