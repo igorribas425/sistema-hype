@@ -36,19 +36,21 @@ hr{border:0;border-top:1px solid #302b34;margin:22px 0}
 <main>
 <img class="brand" src="https://rogue-vendas.vercel.app/assets/rogue-logo.webp" alt="Rogue Lounge" onerror="this.style.display='none'">
 <h1>Acesso administrativo Rogue</h1>
-<p class="subtitle">Etapa 1: cadastrar seu e-mail e confirmar sua identidade. O financeiro, os ingressos e as permissões administrativas continuam bloqueados até a conclusão dos testes.</p>
-<label for="email">E-mail reservado para o administrador</label>
+<p class="subtitle">Conta confirmada. Entre com a senha que você já cadastrou. O financeiro e os ingressos permanecem bloqueados até os testes de segurança.</p>
+<label for="username">Usuário do ADM</label>
+<input id="username" value="rogue" readonly autocomplete="off" aria-readonly="true">
+<label for="email">E-mail confirmado do administrador</label>
 <input id="email" value="rogue@gmail.com" readonly autocomplete="username" aria-readonly="true">
-<label for="pass">Crie uma senha exclusiva da Rogue</label>
+<label for="pass">Senha da sua conta Rogue</label>
 <input id="pass" type="password" placeholder="Mínimo de 12 caracteres" autocomplete="new-password" minlength="12" required>
 <label for="confirm">Repita a senha (para criar a conta)</label>
 <input id="confirm" type="password" placeholder="Confirme a senha" autocomplete="new-password" minlength="12">
-<button id="register" class="primary" type="button">CRIAR CONTA ROGUE</button>
-<button id="login" class="secondary" type="button">JÁ TENHO CONTA — ENTRAR</button>
+<button id="login" class="primary" type="button">ENTRAR COM A CONTA ROGUE</button>
+<button id="register" class="secondary" type="button">CRIAR CONTA (SOMENTE SE NÃO EXISTIR)</button>
 <button id="resend" class="secondary" type="button">REENVIAR CONFIRMAÇÃO DO E-MAIL</button>
 <button id="logout" class="secondary" type="button" hidden>SAIR DA CONTA</button>
-<div class="status" id="status" role="status" aria-live="polite">Aguardando cadastro ou login. Não digite nenhuma senha da Hype.</div>
-<div class="note"><strong>Segurança:</strong> o acesso ADM só será habilitado depois de confirmar o e-mail e vincular a conta verificada ao cadastro da Rogue. Esta página não dá acesso direto aos dados dos clientes. Não compartilhe senhas, códigos ou links de confirmação no chat.</div>
+<div class="status" id="status" role="status" aria-live="polite">Faça login com a senha já criada. Não reutilize senhas de outros sistemas.</div>
+<div class="note"><strong>Segurança:</strong> sua conta foi vinculada ao usuário rogue. Esta página apenas valida a identidade; os dados administrativos continuam protegidos durante a homologação. Não compartilhe senhas, códigos ou links de confirmação no chat.</div>
 <nav>
 <a href="admin-demo.html">Ver prévia das abas</a>
 <a href="admin.html">Voltar ao ADM</a>
