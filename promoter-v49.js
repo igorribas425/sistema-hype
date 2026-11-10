@@ -6,6 +6,7 @@
   const rows = data => Array.isArray(data) ? data : (data ? [data] : []);
   const digits = value => String(value || '').replace(/\D/g, '');
   let salesUrl = '';
+  let teamInviteUrl = '';
   const matrixCode = new URLSearchParams(window.location.search).get('matriz')?.trim().toUpperCase() || '';
   const isBranchSignup = Boolean(matrixCode);
   if (isBranchSignup) {
@@ -77,6 +78,21 @@
       salesUrl = row.sales_url;
       $('promoterSalesLink').textContent = salesUrl;
       $('promoterResult').classList.add('show');
+      $('promoterTeamInvite')?.classList.remove('show');
+      teamInviteUrl = '';
+      if (!isBranchSignup) {
+        try {
+          const {data: matrixData, error: matrixError} = await client.rpc('public_promoter_matrix_invite_v250', {
+            p_promoter_code: row.promoter_code
+          });
+          const invite = rows(matrixData)[0];
+          if (!matrixError && invite?.ok && invite.invite_url) {
+            teamInviteUrl = invite.invite_url;
+            $('promoterTeamUrl').textContent = teamInviteUrl;
+            $('promoterTeamInvite')?.classList.add('show');
+          }
+        } catch (_) { /* Continua fornecendo o link de venda sem dependências */ }
+      }
       showStatus(row.message || 'Cadastro aprovado.', 'ok');
     } catch (error) {
       showStatus(error?.message || 'Não foi possível gerar o link.', 'error');
@@ -90,4 +106,14 @@
   $('promoterCopy')?.addEventListener('click', copy);
   $('promoterShare')?.addEventListener('click', share);
   $('promoterOpenSales')?.addEventListener('click', openSales);
+  $('promoterTeamCopy')?.addEventListener('click', async () => {
+    if (!teamInviteUrl) return;
+    try { await navigator.clipboard.writeText(teamInviteUrl); }
+    catch (_) {
+      const area = document.createElement('textarea');
+      area.value = teamInviteUrl; document.body.appendChild(area);
+      area.select(); document.execCommand('copy'); area.remove();
+    }
+    showStatus('Convite para filiais copiado.', 'ok');
+  });
 })();
