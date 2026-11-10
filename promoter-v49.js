@@ -9,6 +9,8 @@
   let teamInviteUrl = '';
   const matrixCode = new URLSearchParams(window.location.search).get('matriz')?.trim().toUpperCase() || '';
   const isBranchSignup = Boolean(matrixCode);
+  const matrixInviteToken = isBranchSignup ? '' :
+    (new URLSearchParams(window.location.search).get('convite')?.trim() || '');
   const tabButtons = {
     cadastro: $('promoterTabRegister'),
     vendas: $('promoterTabSales'),
@@ -28,6 +30,12 @@
     if ($('promoterTeamInvite')) $('promoterTeamInvite').hidden = tab !== 'filiais';
     $('promoterResult')?.classList.toggle('show', tab === 'vendas' && !!salesUrl);
     $('promoterTeamInvite')?.classList.toggle('show', tab === 'filiais' && !!teamInviteUrl);
+  }
+  if (!isBranchSignup && !matrixInviteToken) {
+    const hint = $('promoterHint');
+    if (hint) hint.textContent = 'O cadastro de matriz agora é exclusivo por convite. Peça ao ADM da HYPE o novo link de cadastro.';
+    const button = $('promoterSubmit');
+    if (button) { button.disabled = true; button.textContent = 'SOLICITE O CONVITE DE MATRIZ'; }
   }
   if (isBranchSignup) {
     if (tabButtons.filiais) tabButtons.filiais.hidden = true;
@@ -86,6 +94,7 @@
         p_website: $('promoterWebsite').value
       };
       if (isBranchSignup) params.p_matrix_code = matrixCode;
+      else params.p_invite_token = matrixInviteToken;
       const {data, error} = await client.rpc(
         isBranchSignup ? 'public_promoter_branch_signup_v250' : 'public_matriz_cadastro_v251',
         params
