@@ -1,4 +1,6 @@
 -- Adapta o PostgreSQL descartável dos testes V250 à estrutura V251.
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
 alter table public.promoters_global_v16
   add column updated_at timestamptz not null default now();
 create function private.hype_normalize_phone_v49(p text)
