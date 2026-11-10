@@ -47,4 +47,5 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f tests/sql/hype-promoter-network-v250-smoke.sql
           psql -v ON_ERROR_STOP=1 -f tests/sql/hype-promoter-v251-compat.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611100002_hype_promoters_recadastro_v251.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611100003_hype_matriz_convite_bloqueio_cadastro_antigo.sql
           psql -v ON_ERROR_STOP=1 -f tests/sql/hype-promoter-v251-smoke.sql
