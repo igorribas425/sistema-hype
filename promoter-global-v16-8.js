@@ -148,11 +148,47 @@
             <div>Pedidos: ${Number(b.sales_count || 0)} • Pagos: ${Number(b.paid_count || 0)} • Total: <b style="color:#a8f3c4">${esc(money(b.revenue || 0))}</b></div></div>
           </div>
           <div class="v250-actions">
+            <button class="btn-action" type="button" onclick="HypePromoterNetworkV250.openSales(${Number(b.promoter_id)})">🧾 VER VENDAS</button>
             <button class="btn-action" type="button" onclick="copyPromoterLinkV168(${Number(b.promoter_id)})">🎟️ LINK DE VENDAS</button>
             <button class="btn-action" type="button" onclick="togglePromoterV168(${Number(b.promoter_id)})">${b.active?'DESATIVAR':'ATIVAR'}</button>
           </div>
         </div>`;
       }).join('');
+  }
+
+  async function openBranchSalesV250(id) {
+    const parent = document.getElementById('v250BranchSalesDetail');
+    if (!parent || HYPE?.role !== 'admin') return;
+    const branch = (window.__HYPE_V250_BRANCHES || []).find(b => Number(b.promoter_id) === Number(id));
+    if (!branch) return alert('Filial não encontrada.');
+    parent.hidden = false;
+    parent.innerHTML = '<div style="color:var(--muted);font-size:12px">Carregando vendas individuais...</div>';
+    try {
+      const data = await sbRpc('staff_promoter_branch_sales_v250', {
+        p_username: HYPE.user, p_password: HYPE.pass,
+        p_promoter_id: Number(branch.promoter_id)
+      });
+      const sales = Array.isArray(data) ? data : [];
+      parent.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap">' +
+        '<h4 style="margin:0">🧾 Vendas de ' + esc(branch.promoter_name) + '</h4>' +
+        '<button class="btn-action" type="button" onclick="HypePromoterNetworkV250.closeSales()">FECHAR</button></div>' +
+        '<p style="color:var(--muted);font-size:11px">Últimos 100 pedidos de todos os eventos (inclusive encerrados). Vendas pendentes não entram no faturamento.</p>' +
+        (sales.length ? sales.map(t => {
+          const when = t.purchased_at ? new Date(t.purchased_at).toLocaleString('pt-BR') : '—';
+          return '<div class="v250-row"><div style="flex:1;min-width:200px">' +
+            '<strong>' + esc(t.customer_name || 'Cliente') + '</strong>' +
+            '<div class="v250-meta">' + esc(t.event_name || 'Evento Hype') + ' • ' + esc(when) + '</div>' +
+            '</div><div style="font-size:12px">' + esc(t.payment_status || 'Pendente') +
+            ' • <b>' + esc(money(t.price || 0)) + '</b></div></div>';
+        }).join('') : '<div class="v18-empty">Nenhuma venda registrada para esta filial.</div>');
+    } catch(error) {
+      parent.innerHTML = '<div class="v18-empty error">Não foi possível carregar as vendas: ' +
+        esc(error?.message || 'erro de conexão') + '</div>';
+    }
+  }
+  function closeBranchSalesV250() {
+    const node = document.getElementById('v250BranchSalesDetail');
+    if (node) { node.hidden = true; node.innerHTML = ''; }
   }
 
   async function renderPromotersGlobal(force = false) {
@@ -184,7 +220,8 @@
           ...p,
           team,
           groupRevenue: Number(p.revenue || 0) + team.reduce((sum,b)=>sum+Number(b.revenue||0),0),
-          groupPaid: Number(p.paid_count || 0) + team.reduce((sum,b)=>sum+Number(b.paid_count||0),0)
+          groupPaid: Number(p.paid_count || 0) + team.reduce((sum,b)=>sum+Number(b.paid_count||0),0),
+          groupOrders: Number(p.sales_count || 0) + team.reduce((sum,b)=>sum+Number(b.sales_count||0),0)
         };
       }).sort((a,b)=> b.groupRevenue-a.groupRevenue || b.groupPaid-a.groupPaid ||
         String(a.name).localeCompare(String(b.name),'pt-BR'));
@@ -212,7 +249,7 @@
                 <div style="margin-top:5px;font-size:11px;color:var(--muted)">Código: <b style="color:#fff">${esc(p.code)}</b> • funciona em todos os eventos</div>
                 <div style="margin-top:6px;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted)">
                   <span>🧾 Confirmados da rede: <b style="color:#fff">${p.groupPaid}</b></span>
-                  <span>📋 Pedidos: <b style="color:#fff">${Number(p.sales_count || 0)}</b></span>
+                  <span>📋 Pedidos da rede: <b style="color:#fff">${p.groupOrders}</b></span>
                   <span>💰 TOTAL DA REDE: <b style="color:#a8f3c4;font-size:15px">${esc(money(p.groupRevenue))}</b></span>
                 </div>
                 <div style="margin-top:6px;font-size:11px;color:var(--muted)">🌐 ${p.team.length} filial(is) • Vendas próprias: ${esc(money(p.revenue || 0))}</div>
@@ -242,7 +279,7 @@
     if (typeof hypeNotify === 'function') hypeNotify('Link de recrutamento de filiais copiado.');
   }
   window.copyPromoterRecruitV250 = copyPromoterRecruitV250;
-  window.HypePromoterNetworkV250 = {refresh:renderPromotersGlobal};
+  window.HypePromoterNetworkV250 = {refresh:renderPromotersGlobal,openSales:openBranchSalesV250,closeSales:closeBranchSalesV250};
 
   window.createPromoterV16 = async function() {
     if (HYPE?.role !== 'admin') return alert('Somente o Admin pode gerenciar promoters.');
