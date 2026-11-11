@@ -65,6 +65,11 @@
       title: 'Menores da Malibu',
       subtitle: 'Autorizações da Malibu, aprovação e PDF exclusivos',
       ids: ['malibuMinorsAdminPanel']
+    },
+    roguemenores: {
+      title: 'Menores da Rogue',
+      subtitle: 'Solicitações, selfies, documentos e assinatura da Rogue',
+      ids: ['rogueMinorsAdminPanel']
     }
   };
 
@@ -112,6 +117,8 @@
       } else if (key === 'menores') {
         await window.HypeMinorAdminV120?.load?.();
         await window.HypeMinorDemoV128?.load?.();
+      } else if (key === 'roguemenores') {
+        await window.RogueMinorAdminV1?.load?.();
       } else if (key === 'malibumenores') {
         await window.MalibuMinorAdminV1?.load?.();
       }

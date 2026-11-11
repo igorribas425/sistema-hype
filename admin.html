@@ -413,6 +413,7 @@ html,body{max-width:100%;overflow-x:hidden}
       <button class="v95-home-card" type="button" data-v95-open="ferramentas"><span class="v95-icon">🎁</span><b>Sorteio & Acessos</b><small>Sorteio e dispositivos da equipe</small></button>
       <button class="v95-home-card" type="button" data-v95-open="menores"><span class="v95-icon">🛡️</span><b>Menores de idade</b><small>Autorização dos pais, fotos e assinaturas</small></button>
       <button class="v95-home-card" type="button" data-v95-open="malibumenores"><span class="v95-icon">🌙</span><b>Menores da Malibu</b><small>Autorizações, fotos, PDF e aprovação separada</small></button>
+      <button class="v95-home-card" type="button" data-v95-open="roguemenores"><span class="v95-icon">🛡️</span><b>Menores da Rogue</b><small>Solicitações, fotos e documentos da Rogue</small></button>
     </div>
   </section>
 
@@ -1341,6 +1342,59 @@ Bruna Santos"></textarea>
  <div id="malibuMinorAdminList"></div><div id="malibuMinorAdminDetail" hidden></div>
 </section>
 <script src="malibu-admin-menores-v1.js?v=20261107-v1"></script>
+
+<style id="rogue-minors-hype-v1">
+#rogueMinorsAdminPanel{display:none!important;max-width:1050px;margin:16px auto 65px;background:#100e12;border:1px solid #76573b;border-radius:19px;padding:19px;color:#fff}
+#rogueMinorsAdminPanel.v95-show{display:block!important}
+#rogueMinorsAdminPanel h2{font-size:23px;margin:0 0 9px;color:#f4d59f}
+#rogueMinorsAdminPanel .rm-head{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;flex-wrap:wrap}
+#rogueMinorsAdminPanel .rm-description{color:#c7bfc3;font-size:12px;line-height:1.6}
+#rogueMinorsAdminPanel .rm-link{display:inline-block;color:#f3dcae;font-size:12px;font-weight:800;text-decoration:underline}
+#rogueMinorsAdminPanel .rm-alert{font-size:12px;line-height:1.65;color:#e8d9bf;background:#231c18;border:1px solid #70583f;border-radius:12px;padding:13px;margin:16px 0}
+#rogueMinorsAdminPanel .rm-counters{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}
+#rogueMinorsAdminPanel .rm-counters span{border:1px solid #4c3d35;border-radius:11px;padding:11px 13px;font-size:12px;color:#d7d3d2;background:#19161a}
+#rogueMinorsAdminPanel .rm-counters b{color:#f6dba3;font-size:18px;margin-left:5px}
+#rogueMinorsAdminPanel .rm-toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:17px 0}
+#rogueMinorsAdminPanel button{border:1px solid #66533b;border-radius:10px;background:#262126;color:#fff;padding:11px 14px;font-size:12px;font-weight:900;cursor:pointer}
+#rogueMinorsAdminPanel button:disabled{opacity:.55;cursor:not-allowed}
+#rogueMinorsAdminPanel .rm-search{display:block;width:100%;padding:13px;background:#0b0a0d;border:1px solid #75583c;border-radius:11px;color:#fff;min-height:46px;font-size:14px;margin:10px 0}
+#rogueMinorsAdminPanel .rm-status{color:#c7e7d0;font-size:12px;line-height:1.6;overflow-wrap:anywhere;margin:13px 0}
+#rogueMinorsAdminPanel .rm-status[data-error="true"]{color:#ffbac6}
+#rogueMinorsAdminPanel .rm-list{display:grid;gap:11px;margin:15px 0}
+#rogueMinorsAdminPanel .rm-row{border:1px solid #4a3b35;border-radius:13px;background:#161316;padding:14px;display:flex;justify-content:space-between;gap:13px;align-items:flex-start;flex-wrap:wrap}
+#rogueMinorsAdminPanel .rm-row strong{font-size:14px;display:block;color:#fff}
+#rogueMinorsAdminPanel .rm-row small{font-size:11px;color:#b8b2b7;display:block;margin-top:5px;line-height:1.5}
+#rogueMinorsAdminPanel .rm-review{border:1px solid #60503e;background:#141116;border-radius:15px;padding:17px;margin-top:20px}
+#rogueMinorsAdminPanel .rm-review[hidden]{display:none!important}
+#rogueMinorsAdminPanel .rm-review h3{font-size:19px;margin:0 0 14px}
+#rogueMinorsAdminPanel .rm-info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+#rogueMinorsAdminPanel .rm-field{background:#201a1e;border-radius:9px;padding:12px;min-width:0}
+#rogueMinorsAdminPanel .rm-field b{display:block;font-size:10px;color:#c8b9b9;margin-bottom:6px}
+#rogueMinorsAdminPanel .rm-field span{display:block;font-size:13px;color:#f4f1f2;overflow-wrap:anywhere}
+#rogueMinorsAdminPanel .rm-pictures{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:14px 0}
+#rogueMinorsAdminPanel .rm-picture{border:1px solid #57463f;border-radius:12px;padding:10px;background:#110e12}
+#rogueMinorsAdminPanel .rm-picture img{display:block;width:100%;max-height:250px;object-fit:contain;background:#08070a;border-radius:8px;margin-top:8px}
+#rogueMinorsAdminPanel .rm-picture strong{display:block;font-size:12px}
+@media(max-width:640px){#rogueMinorsAdminPanel{padding:12px;margin:12px auto}#rogueMinorsAdminPanel .rm-info{grid-template-columns:1fr}#rogueMinorsAdminPanel .rm-pictures{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}}
+</style>
+
+<section id="rogueMinorsAdminPanel" aria-label="Menores da Rogue">
+ <div class="rm-head"><div><h2>🛡️ Menores da Rogue</h2><p class="rm-description">Solicitações guardadas no Supabase exclusivo da Rogue, sem misturar cadastros com Hype ou Malibu. Acesso somente ADM e gerente da Hype.</p></div>
+ <a class="rm-link" href="https://rogue-lounge.vercel.app/menores-adm.html" target="_blank" rel="noopener noreferrer">🔗 ABRIR FORMULÁRIO ATUAL DA ROGUE</a></div>
+ <p class="rm-alert">⚠️ Etapa de conferência: você pode consultar as fichas, selfies, documentos e assinaturas. Aprovação, recusa, reenvio de PDF e exclusões permanecem desativados até a validação da integração. Esta declaração não substitui a verificação presencial nem garante entrada; menores não podem receber bebidas alcoólicas.</p>
+ <div class="rm-counters"><span>⏳ Pendentes <b id="rogueMinorCountPending">—</b></span><span>✅ Conferidos <b id="rogueMinorCountChecked">—</b></span><span>⛔ Recusados <b id="rogueMinorCountRejected">—</b></span></div>
+ <div class="rm-toolbar">
+  <button id="rogueMinorRefresh" type="button">↻ ATUALIZAR</button>
+  <button id="rogueMinorShowAll" type="button">📂 VER TODOS OS STATUS</button>
+ </div>
+ <label for="rogueMinorSearch" style="font-weight:800;font-size:12px">🔎 PESQUISAR MENOR OU RESPONSÁVEL</label>
+ <input id="rogueMinorSearch" class="rm-search" type="search" autocomplete="off" placeholder="Pesquisar por nome ou protocolo">
+ <p id="rogueMinorStatus" class="rm-status" role="status" aria-live="polite">Entre no ADM da Hype para consultar as autorizações da Rogue.</p>
+ <div id="rogueMinorList" class="rm-list"></div>
+ <div id="rogueMinorDetail" class="rm-review" hidden></div>
+</section>
+<script src="rogue-admin-menores-v1.js?v=20261110-r1"></script>
+
 
 </body>
 </html>
