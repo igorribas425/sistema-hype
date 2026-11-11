@@ -32,5 +32,26 @@ document.addEventListener("submit",e=>{
  }
  notice.textContent="MALIBU EM HOMOLOGAÇÃO: este formulário é somente uma prévia. Nenhum pedido, cadastro ou pagamento foi enviado.";
 },true);
-document.addEventListener("click",e=>{const a=e.target?.closest?.("a[href]");if(a&&forbid(a.href,"GET"))e.preventDefault()},true);
+const allowedExternalPreview=new Set(["malibu-menores.vercel.app"]);
+function externalUnsafe(href){
+ try{
+  const url=new URL(href,location.href);
+  return /^https?:$/.test(url.protocol)&&url.origin!==location.origin&&!allowedExternalPreview.has(url.hostname);
+ }catch{return true}
+}
+// Nunca enviar o cliente ao WhatsApp ou checkout herdado da Hype durante homologação.
+const originalOpen=window.open;
+if(typeof originalOpen==="function"){
+ window.open=function(url,...rest){
+  if(readOnly&&externalUnsafe(url))return null;
+  return originalOpen.call(this,url,...rest);
+ };
+}
+document.addEventListener("click",e=>{
+ const a=e.target?.closest?.("a[href]");
+ if(a&&(forbid(a.href,"GET")||(readOnly&&externalUnsafe(a.href)))){
+  e.preventDefault();
+  e.stopImmediatePropagation?.();
+ }
+},true);
 })();
