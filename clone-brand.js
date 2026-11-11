@@ -24,6 +24,18 @@
     if(img.complete){if(img.naturalWidth===0)fail();else ok();}
    }
  }finally{working=false;}}
- function start(){paint();new MutationObserver(()=>{if(!working)paint()}).observe(document.body,{subtree:true,childList:true,characterData:true})}
+ function addPreviewNavigation(){
+  if(document.getElementById("malibuPreviewNotice")||!document.body)return;
+  const bar=document.createElement("div");
+  bar.id="malibuPreviewNotice";
+  bar.style.cssText="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;background:#181820;color:#f2f1f6;border:1px solid #474650;border-radius:12px;padding:12px 14px;margin:0 auto 14px;max-width:1100px;font:700 12px/1.6 system-ui;text-align:center;position:relative;z-index:15";
+  const label=document.createElement("span");
+  label.textContent="PRÉVIA MALIBU • Sem Supabase, Pix ou cadastros reais. Não informe dados pessoais.";
+  const link=document.createElement("a");
+  link.href="/admin.html";link.textContent="ABRIR ADM DE TESTE";
+  link.style.cssText="display:inline-block;border-radius:9px;background:#eeeef2;color:#13131a;text-decoration:none;padding:8px 12px;font-weight:900";
+  bar.append(label,link);document.body.insertAdjacentElement("afterbegin",bar);
+ }
+ function start(){paint();addPreviewNavigation();new MutationObserver(()=>{if(!working)paint()}).observe(document.body,{subtree:true,childList:true,characterData:true})}
  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
 })();
