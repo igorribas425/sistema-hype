@@ -5,13 +5,32 @@ const readOnly=true;
 function forbid(value,method){
  try{const raw=typeof value==="string"?value:(value?.url||String(value||""));const url=new URL(raw,location.href),host=url.hostname.toLowerCase(),verb=String(method||"GET").toUpperCase();
  if(blockedHosts.has(host))return true;
- if(readOnly&&host.endsWith(".supabase.co")&&!["GET","HEAD","OPTIONS"].includes(verb))return true;
- return false;}catch{return false}
+ // Sem banco MALIBU: bloquear toda escrita, para qualquer destino, não só Supabase.
+ if(readOnly&&!["GET","HEAD","OPTIONS"].includes(verb))return true;
+ // Nenhum projeto Supabase deve ser consultado neste ambiente.
+ if(readOnly&&host.endsWith(".supabase.co"))return true;
+ return false;}catch{return readOnly&&!["GET","HEAD","OPTIONS"].includes(String(method||"GET").toUpperCase())}
 }
 const fetchOriginal=window.fetch;
 if(fetchOriginal)window.fetch=function(input,init){const method=init?.method||input?.method||"GET";if(forbid(input,method))return Promise.reject(new Error("Ambiente de homologação: solicitação bloqueada para proteger produção"));return fetchOriginal.call(this,input,init)};
 const xhrOpen=XMLHttpRequest.prototype.open;
 XMLHttpRequest.prototype.open=function(method,url,...rest){if(forbid(url,method))throw new Error("Ambiente de homologação: gravação bloqueada");return xhrOpen.call(this,method,url,...rest)};
 if(navigator.sendBeacon){const original=navigator.sendBeacon.bind(navigator);try{navigator.sendBeacon=function(url,data){if(forbid(url,"POST"))return false;return original(url,data)}}catch{}}
+// Impedir envio nativo de FORM para endpoints herdados da Hype.
+document.addEventListener("submit",e=>{
+ if(!readOnly)return;
+ e.preventDefault();
+ e.stopImmediatePropagation?.();
+ const form=e.target;
+ if(!form||String(form.tagName||"").toUpperCase()!=="FORM")return;
+ let notice=form.querySelector?.(".malibu-preview-form-notice");
+ if(!notice){
+  notice=document.createElement("p");
+  notice.className="malibu-preview-form-notice";
+  notice.style.cssText="color:#fff;background:#35202c;border:1px solid #b27291;border-radius:10px;padding:12px;font:700 13px/1.5 system-ui;margin-top:12px";
+  form.appendChild(notice);
+ }
+ notice.textContent="MALIBU EM HOMOLOGAÇÃO: este formulário é somente uma prévia. Nenhum pedido, cadastro ou pagamento foi enviado.";
+},true);
 document.addEventListener("click",e=>{const a=e.target?.closest?.("a[href]");if(a&&forbid(a.href,"GET"))e.preventDefault()},true);
 })();
