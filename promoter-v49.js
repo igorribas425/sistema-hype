@@ -11,6 +11,7 @@
   const isBranchSignup = Boolean(matrixCode);
   const matrixInviteToken = isBranchSignup ? '' :
     (new URLSearchParams(window.location.search).get('convite')?.trim() || '');
+  let inviteVerified = isBranchSignup;
   const tabButtons = {
     cadastro: $('promoterTabRegister'),
     vendas: $('promoterTabSales'),
@@ -55,6 +56,44 @@
     box.className = `status show ${kind || ''}`;
     box.textContent = message;
   }
+  async function validateInvite() {
+    if (isBranchSignup) return;
+    const button = $('promoterSubmit');
+    if (!matrixInviteToken) {
+      showStatus('O convite está incompleto. Abra o link completo enviado pelo administrador da HYPE.', 'error');
+      return;
+    }
+    if (!client) {
+      showStatus('Não foi possível conectar ao servidor. Atualize a página e tente novamente.', 'error');
+      button.disabled = true;
+      return;
+    }
+    button.disabled = true;
+    button.textContent = 'VERIFICANDO CONVITE...';
+    showStatus('Verificando se este convite é o atual da HYPE...', '');
+    try {
+      const {data, error} = await client.rpc('public_matriz_convite_valido_v252', {
+        p_invite_token: matrixInviteToken
+      });
+      if (error) throw error;
+      if (data !== true) {
+        inviteVerified = false;
+        button.disabled = true;
+        button.textContent = 'SOLICITE O NOVO CONVITE AO ADM';
+        showStatus('Este link é antigo, foi revogado ou está incompleto. Peça ao ADM da HYPE o convite de matriz atualizado e abra o link completo.', 'error');
+        return;
+      }
+      inviteVerified = true;
+      button.disabled = false;
+      button.textContent = 'CADASTRAR MATRIZ E GERAR LINKS';
+      showStatus('Convite de matriz confirmado. Preencha os dados para gerar seus links.', 'ok');
+    } catch (error) {
+      inviteVerified = false;
+      button.disabled = true;
+      button.textContent = 'ATUALIZE A PÁGINA PARA TENTAR';
+      showStatus('Não foi possível validar o convite agora. Atualize a página ou fale com o ADM. ' + (error?.message || ''), 'error');
+    }
+  }
   function formatCpf(input) {
     const value = digits(input.value).slice(0, 11);
     input.value = value.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
@@ -85,6 +124,10 @@
     const form = event.currentTarget;
     const button = $('promoterSubmit');
     if (!form.reportValidity() || !client) return;
+    if (!isBranchSignup && !inviteVerified) {
+      showStatus('O convite ainda não foi validado. Use o link oficial mais recente enviado pelo ADM.', 'error');
+      return;
+    }
     button.disabled = true; button.textContent = 'GERANDO...';
     try {
       const params = {
@@ -102,6 +145,7 @@
       if (error) throw error;
       const row = rows(data)[0] || {};
       if (!row.ok || !row.sales_url) {
+        if (!isBranchSignup && /convite oficial de matriz/i.test(String(row.message || ''))) inviteVerified = false;
         showStatus(row.message || 'Cadastro indisponível.', 'error');
         salesUrl = '';
         teamInviteUrl = '';
@@ -136,14 +180,15 @@
     } catch (error) {
       showStatus(error?.message || 'Não foi possível gerar o link.', 'error');
     } finally {
-      button.disabled = false;
-      button.textContent = isBranchSignup ? 'CADASTRAR FILIAL E GERAR LINK' : 'CADASTRAR MATRIZ E GERAR LINKS';
+      button.disabled = !isBranchSignup && !inviteVerified;
+      button.textContent = isBranchSignup ? 'CADASTRAR FILIAL E GERAR LINK' : (inviteVerified ? 'CADASTRAR MATRIZ E GERAR LINKS' : 'SOLICITE O NOVO CONVITE AO ADM');
     }
   }
   tabButtons.cadastro?.addEventListener('click', () => showTab('cadastro'));
   tabButtons.vendas?.addEventListener('click', () => showTab('vendas'));
   tabButtons.filiais?.addEventListener('click', () => showTab('filiais'));
   showTab('cadastro');
+  void validateInvite();
   $('promoterCpf')?.addEventListener('input', event => formatCpf(event.currentTarget));
   $('promoterPhone')?.addEventListener('input', event => formatPhone(event.currentTarget));
   $('promoterForm')?.addEventListener('submit', submit);
