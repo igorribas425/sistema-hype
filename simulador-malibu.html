@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#07070a">
+<title>MALIBU // Laboratório de Operação — 100% FICTÍCIO</title>
+<link rel="icon" href="/favicon-malibu-v2.svg" type="image/svg+xml">
+<style>
+:root{color-scheme:dark;--bg:#070709;--card:#141317;--line:#34323a;--text:#f7f7f8;--muted:#b6b1bc;--accent:#efdfbb}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Inter,system-ui,Arial,sans-serif;color:var(--text)}
+main{max-width:1060px;margin:auto;padding:14px 15px 80px}header{text-align:center;margin:13px 0 25px}
+header img{display:block;margin:auto;max-width:min(260px,75vw);height:auto;max-height:130px}
+h1{margin:7px 0;font-size:clamp(21px,4vw,31px)}h2{font-size:18px;margin:0 0 16px}
+p{color:var(--muted);line-height:1.6}.banner{border:1px solid #695836;border-radius:14px;background:#211c17;padding:15px 18px;font-size:13px;line-height:1.65;margin-bottom:17px}
+.banner strong{color:#fff}.home-link{color:var(--accent);font-weight:850;font-size:13px;text-decoration:none;display:inline-block;margin-bottom:12px}
+.panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
+.panel{padding:21px;border-radius:17px;border:1px solid var(--line);background:var(--card);min-width:0}
+.panel.full{grid-column:1/-1}
+label{font-size:12px;font-weight:750;display:block;color:#d6d2dc;margin-bottom:10px}
+input,select{display:block;width:100%;border:1px solid #4b4653;border-radius:9px;min-height:45px;background:#0c0b0e;color:#fff;font:inherit;font-size:14px;padding:10px;margin-top:6px}
+button{appearance:none;border-radius:10px;padding:11px 14px;min-height:43px;background:#eee5d1;color:#161317;border:0;font:inherit;font-size:12px;font-weight:900;cursor:pointer}
+button.secondary{background:#29262e;color:#fff;border:1px solid #595260}
+button:disabled{opacity:.5;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.stat{padding:14px;border:1px solid #39343d;border-radius:13px;background:#1b181f}
+.stat small{color:#b6b1bc;font-size:11px;display:block}.stat strong{display:block;font-size:27px;margin-top:8px}
+.entry{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid #363038}
+.entry:last-child{border-bottom:0}.entry strong{display:block;font-size:13px}.entry small{display:block;color:#aeadb7;font-size:11px;margin:5px 0;line-height:1.5}
+code{font-size:12px;overflow-wrap:anywhere;color:#efd49d}.status{color:#b9e8c2;font-size:12px;line-height:1.5;min-height:18px}
+.status.error{color:#ffb6c0}.badge{display:inline-block;border:1px solid #625544;border-radius:9px;padding:4px 8px;color:#ecd8af;font-size:11px;font-weight:800;margin:4px 0}
+.empty{border:1px dashed #514957;color:#a8a3af;text-align:center;border-radius:10px;padding:18px;font-size:12px;line-height:1.6}
+summary{font-weight:800;cursor:pointer;color:#e8e0dd;font-size:13px}
+details{padding:13px 0;border-bottom:1px solid #37313b}
+footer{text-align:center;margin-top:26px;font-size:11px;color:#95909c}
+@media(max-width:700px){.panels{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{padding:16px}.entry{flex-wrap:wrap}}
+</style></head><body><main>
+<a class="home-link" href="/admin.html">← VOLTAR AO ADM MALIBU</a>
+<header><img src="/malibu-logo.svg" alt="Malibu Lounge"><h1>Laboratório da Malibu</h1><p>Simulação local do fluxo de vendas, listas e portaria</p></header>
+<div class="banner"><strong>AMBIENTE DE TESTE — NÃO É O SITE DE VENDAS.</strong>
+Todos os nomes, pagamentos e ingressos desta página são fictícios. Nenhuma informação vai ao Supabase, Asaas, Brevo, WhatsApp ou e-mail. Não utilize dados de clientes reais. Ingressos e códigos daqui <strong>não autorizam entrada</strong>.</div>
+<div class="stats" aria-label="Indicadores fictícios">
+<div class="stat"><small>Pedidos pendentes</small><strong id="pending">0</strong></div>
+<div class="stat"><small>Ingressos confirmados</small><strong id="confirmed">0</strong></div>
+<div class="stat"><small>Entradas simuladas</small><strong id="checked">0</strong></div>
+<div class="stat"><small>Faturamento simulado</small><strong id="revenue">R$ 0</strong></div>
+</div>
+<div class="row"><button id="reset" class="secondary" type="button">LIMPAR TODOS OS TESTES</button><button id="export" class="secondary" type="button">EXPORTAR DADOS FICTÍCIOS</button></div>
+<p id="generalStatus" class="status" role="status" aria-live="polite"></p>
+<div class="panels">
+<section class="panel"><h2>1. Evento e promoters</h2>
+<label>Nome do evento de teste<input id="eventName" maxlength="90" value="Noite de Teste Malibu"></label>
+<label>Data de teste<input id="eventDate" type="date" value="2026-11-14"></label>
+<div class="row"><button id="saveEvent" type="button">SALVAR EVENTO FICTÍCIO</button><button class="secondary" id="addPromoter" type="button">CADASTRAR PROMOTER TESTE</button></div>
+<div id="eventInfo" class="status"></div>
+<div id="promoterInfo"></div>
+</section>
+<section class="panel"><h2>2. Compra de ingresso</h2>
+<p>Imita a compra que fica pendente no ADM até a confirmação manual.</p>
+<label>Tipo de ingresso<select id="lot">
+<option value="pista_m">Pista masculina — R$ 30</option>
+<option value="pista_f">Pista feminina — R$ 15</option>
+<option value="vip">VIP — R$ 50</option>
+<option value="camarote">Camarote — R$ 550</option>
+</select></label>
+<label>Origem<select id="saleOrigin"><option value="site">Site</option><option value="promoter">Link de promoter teste</option></select></label>
+<button id="buy" type="button">SIMULAR PEDIDO PENDENTE</button>
+<p class="status" id="purchaseStatus"></p>
+</section>
+<section class="panel"><h2>3. Aprovação ADM</h2>
+<p>Confirmar pagamento aqui é simulação: não cria cobrança, Pix nem e-mail.</p>
+<div id="orders"></div>
+</section>
+<section class="panel"><h2>4. Portaria</h2>
+<p>Teste o código do ingresso liberado. A segunda leitura deve ser bloqueada.</p>
+<label>Código fictício do ingresso<input id="scanCode" placeholder="Cole aqui o código TESTE-..." autocomplete="off"></label>
+<button id="scan" type="button">VALIDAR ENTRADA FICTÍCIA</button>
+<p id="scanResult" class="status" role="status"></p>
+</section>
+<section class="panel"><h2>5. Lista FREE / promoter</h2>
+<p>Simule inscrição, aprovação e código para entrada, sem cadastro pessoal.</p>
+<button id="guestRequest" type="button">CRIAR CONVIDADO FICTÍCIO PENDENTE</button>
+<div id="guests"></div>
+</section>
+<section class="panel"><h2>6. Menores</h2>
+<p>Fichas fictícias sem documento, assinatura nem selfie. A liberação real exigirá análise e regras próprias.</p>
+<button id="minorRequest" type="button">CRIAR AUTORIZAÇÃO FICTÍCIA PENDENTE</button>
+<div id="minors"></div>
+</section>
+<section class="panel full"><h2>7. Financeiro e conferência</h2>
+<p>Apenas ingressos fictícios aprovados e pagos entram na soma; FREE não gera receita.</p>
+<div id="finance"></div>
+<details><summary>O que ainda depende do sistema real?</summary><p>Supabase independente, autenticação do ADM, registro de pagamentos, Asaas, confirmação de webhook, QR escaneável, e-mail Brevo, foto facial, documentos, assinatura, leitores de câmera Android/iOS e histórico da portaria. Nenhum desses itens é exercitado nesta simulação local.</p></details>
+</section>
+</div>
+<footer>Malibu Lounge — simulação isolada, não operacional • Testes armazenados somente neste navegador</footer>
+</main>
+<script>
+(() => {"use strict";
+ const KEY="malibu-flow-lab-v1", $=id=>document.getElementById(id);
+ const defaults=()=>({event:{name:"Noite de Teste Malibu",date:"2026-11-14"},promoters:[],orders:[],guests:[],minors:[],seq:0});
+ let data;
+ function load(){try{const v=JSON.parse(localStorage.getItem(KEY)||"null");return v&&Array.isArray(v.orders)&&Array.isArray(v.promoters)&&Array.isArray(v.guests)&&Array.isArray(v.minors)?v:defaults()}catch{return defaults()}}
+ function persist(){try{localStorage.setItem(KEY,JSON.stringify(data));return true}catch{return false}}
+ function money(n){return Number(n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
+ function id(prefix){data.seq=Number(data.seq||0)+1;return prefix+"-"+String(data.seq).padStart(4,"0")}
+ function create(tag,content){const x=document.createElement(tag);if(content!==undefined)x.textContent=String(content);return x}
+ function button(label,handler,alt=false){const b=create("button",label);b.type="button";if(alt)b.className="secondary";b.addEventListener("click",handler);return b}
+ function setStatus(id,message,error=false){const e=$(id);if(!e)return;e.textContent=message;e.classList.toggle("error",error)}
+ const prices={pista_m:30,pista_f:15,vip:50,camarote:550};
+ const names={pista_m:"Pista masculina",pista_f:"Pista feminina",vip:"VIP",camarote:"Camarote"};
+ function render(){
+  $("pending").textContent=data.orders.filter(o=>o.status==="pendente").length;
+  $("confirmed").textContent=data.orders.filter(o=>o.status==="confirmado").length+data.guests.filter(o=>o.status==="aprovado").length;
+  $("checked").textContent=data.orders.filter(o=>o.entry).length+data.guests.filter(o=>o.entry).length;
+  $("revenue").textContent=money(data.orders.filter(o=>o.status==="confirmado").reduce((sum,o)=>sum+o.price,0));
+  $("eventInfo").textContent="Evento fictício: "+data.event.name+" · "+data.event.date;
+  $("eventName").value=data.event.name;$("eventDate").value=data.event.date;
+  const prom=$("promoterInfo");prom.replaceChildren();
+  for(const p of data.promoters){const row=create("p","Promoter de teste: "+p.name+" · Código "+p.code);row.className="status";prom.append(row)}
+  const orders=$("orders");orders.replaceChildren();
+  for(const o of data.orders.slice().reverse()){
+   const row=create("div");row.className="entry";const left=create("div");
+   left.append(create("strong",o.label+" — "+money(o.price)),create("small","Pedido "+o.id+" · "+(o.promoter||"Venda pelo site")+" · "+o.status));
+   if(o.token)left.append(create("code","Código: "+o.token));
+   row.append(left);
+   if(o.status==="pendente")row.append(button("APROVAR TESTE",()=>{o.status="confirmado";o.token=id("TESTE");persist();render()}));
+   orders.append(row);
+  }
+  if(!data.orders.length)orders.append(create("div","Nenhum pedido fictício.","empty"));
+  const guests=$("guests");guests.replaceChildren();
+  for(const o of data.guests.slice().reverse()){
+    const row=create("div");row.className="entry";const left=create("div");
+    left.append(create("strong",o.label),create("small","Lista FREE · "+o.status));
+    if(o.token)left.append(create("code",o.token));row.append(left);
+    if(o.status==="pendente")row.append(button("APROVAR FREE",()=>{o.status="aprovado";o.token=id("TESTE-FREE");persist();render()}));
+    guests.append(row);
+  }
+  if(!data.guests.length)guests.append(create("div","Nenhum convidado fictício.","empty"));
+  const minors=$("minors");minors.replaceChildren();
+  for(const o of data.minors.slice().reverse()){
+    const row=create("div");row.className="entry";const left=create("div");
+    left.append(create("strong",o.label),create("small","Autorização teste · "+o.status));row.append(left);
+    if(o.status==="pendente")row.append(button("MARCAR CONFERIDO",()=>{o.status="conferido";persist();render()}));
+    minors.append(row);
+  }
+  if(!data.minors.length)minors.append(create("div","Nenhuma autorização fictícia.","empty"));
+  const paid=data.orders.filter(o=>o.status==="confirmado");
+  const counts=Object.keys(names).map(k=>({name:names[k],count:paid.filter(o=>o.type===k).length,total:paid.filter(o=>o.type===k).reduce((s,o)=>s+o.price,0)}));
+  const finance=$("finance");finance.replaceChildren();
+  for(const o of counts){const row=create("div");row.className="entry";
+    row.append(create("strong",o.name+" · "+o.count+" ingressos"),create("strong",money(o.total)));finance.append(row)}
+  const promoterSales=paid.filter(o=>o.promoter).length;
+  finance.append(create("p",promoterSales+" ingresso(s) confirmado(s) por link de promoter fictício."));
+ }
+ function addOrder(){const type=$("lot").value,code=$("saleOrigin").value==="promoter"?data.promoters[0]?.code:null;
+  if($("saleOrigin").value==="promoter"&&!code){setStatus("purchaseStatus","Cadastre um promoter de teste antes de usar o link.",true);return}
+  const order={id:id("PED"),label:names[type],type,price:prices[type],promoter:code,status:"pendente",token:null,entry:false};
+  data.orders.push(order);persist();render();setStatus("purchaseStatus","Pedido fictício "+order.id+" criado. Aprove na seção ADM.");}
+ function scan(){
+  const token=$("scanCode").value.trim().toUpperCase();
+  const record=[...data.orders,...data.guests].find(x=>x.token===token);
+  if(!token||!record){setStatus("scanResult","Código inválido ou inexistente nesta simulação.",true);return}
+  if(record.entry){setStatus("scanResult","ENTRADA BLOQUEADA: este código já foi utilizado.",true);return}
+  if(!["confirmado","aprovado"].includes(record.status)){setStatus("scanResult","Entrada negada: ingresso pendente.",true);return}
+  record.entry=true;persist();render();setStatus("scanResult","Check-in fictício registrado uma vez. A próxima leitura será recusada.");}
+ function start(){
+  data=load();render();
+  $("saveEvent").addEventListener("click",()=>{const name=$("eventName").value.trim(),date=$("eventDate").value;
+   if(name.length<4||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(date)){setStatus("generalStatus","Preencha nome e data válidos.",true);return}
+   data.event={name,date};persist();render();setStatus("generalStatus","Evento fictício salvo somente no navegador.");});
+  $("addPromoter").addEventListener("click",()=>{const code=id("PROM");data.promoters.push({name:"Promoter Teste "+(data.promoters.length+1),code});persist();render()});
+  $("buy").addEventListener("click",addOrder);
+  $("scan").addEventListener("click",scan);
+  $("guestRequest").addEventListener("click",()=>{data.guests.push({id:id("FREE"),label:"Convidado Teste "+(data.guests.length+1),status:"pendente",token:null,entry:false});persist();render()});
+  $("minorRequest").addEventListener("click",()=>{data.minors.push({id:id("MENOR"),label:"Autorização Teste "+(data.minors.length+1),status:"pendente"});persist();render()});
+  $("reset").addEventListener("click",()=>{if(!confirm("Limpar SOMENTE os dados fictícios deste navegador?"))return;data=defaults();persist();render();setStatus("generalStatus","Simulação zerada. Nenhum dado real foi alterado.")});
+  $("export").addEventListener("click",()=>{const blob=new Blob([JSON.stringify({kind:"simulacao-malibu",data},null,2)],{type:"application/json"});
+   const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="malibu-simulacao-ficticia.json";a.click();URL.revokeObjectURL(url)});
+ }
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
+})();
+</script></body></html>
