@@ -2447,6 +2447,49 @@ async function savePixKey() {
   } catch (err) { alert(hypeUserMessage(err, "Não foi possível salvar a chave PIX.")); }
 }
 
+/* HYPE V271 — atalhos de ingressos APROVADOS, sem alterar o visual ou pagamentos */
+function hypeApprovedTicketRecordV271(id) {
+  const ticket=(HYPE.tickets||[]).find(t=>Number(t.id)===Number(id));
+  if(!ticket||String(ticket.payment_status)!=="Pago")return null;
+  if(!/^HYPE-[A-Z0-9]{6,24}$/i.test(String(ticket.ticket_code||"")))return null;
+  return ticket;
+}
+function hypeApprovedTicketUrlV271(ticket) {
+  return "https://hypeloungeclub.com.br/cliente.html?ticket="+
+    encodeURIComponent(String(ticket.ticket_code).trim().toUpperCase());
+}
+function hypeApprovedWhatsappNumberV271(raw) {
+  const digits=String(raw||"").replace(/\D/g,"");
+  const local=digits.startsWith("55")&&(digits.length===12||digits.length===13)?digits.slice(2):digits;
+  if(!/^[1-9]\d(?:9\d{8}|\d{8})$/.test(local))return "";
+  return "55"+local;
+}
+async function hypeCopyApprovedTicketLinkV271(id) {
+  const ticket=hypeApprovedTicketRecordV271(id);
+  if(!ticket){hypeNotify("Este ingresso não está confirmado ou não foi encontrado. Atualize a lista.");return}
+  const url=hypeApprovedTicketUrlV271(ticket);
+  try{
+    if(!navigator.clipboard?.writeText)throw Error("clipboard unavailable");
+    await navigator.clipboard.writeText(url);
+    hypeNotify("Link do ingresso copiado. Envie ao cliente pelo WhatsApp.");
+  }catch(_){
+    window.prompt("Copie o link do ingresso:",url);
+  }
+}
+function hypeOpenApprovedTicketWhatsAppV271(id) {
+  const ticket=hypeApprovedTicketRecordV271(id);
+  if(!ticket){hypeNotify("Ingresso não confirmado. Atualize a lista.");return}
+  const phone=hypeApprovedWhatsappNumberV271(ticket.phone);
+  if(!phone){hypeNotify("WhatsApp do cliente não informado ou inválido.");return}
+  const firstName=String(ticket.customer_name||"").trim().split(/\s+/)[0].slice(0,45)||"cliente";
+  const link=hypeApprovedTicketUrlV271(ticket);
+  const message="Olá, "+firstName+"! Aqui é a equipe da HYPE Lounge Club. "+
+    "Seu ingresso está confirmado! 🎟️\nAcesse seu ingresso com QR Code: "+link+
+    "\nNa entrada, apresente o QR Code e um documento com foto.";
+  window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(message),
+    "_blank","noopener,noreferrer");
+}
+
 async function renderClientsTable() {
   const tbody = document.getElementById("adminTableBody");
   if (!tbody) return;
@@ -2496,7 +2539,7 @@ async function renderClientsTable() {
       : paymentStatus === "Pago" && item.email
         ? `<small style="display:block;color:#ffcc00;margin-top:4px">📧 E-MAIL AINDA NÃO ENVIADO</small>`
         : "";
-    return `<tr><td><strong>${hypeEscape(item.customer_name || "SEM NOME")}</strong><br><span class="badge gender">${hypeEscape(item.gender || "N/I")}</span><small style="color:var(--muted)">${hypeEscape(item.ticket_code || "")} ${entry}</small><small style="display:block;color:var(--muted);line-height:1.55">📱 ${hypeEscape(item.phone || "—")}<br>📧 ${hypeEscape(item.email || "—")}<br>CPF: ${cpf}</small>${emailState}</td><td>${isFree ? "FREE" : hypeFormatMoney(item.price)}<br><small style="color:var(--muted)">${hypeEscape(item.lot_name || "")}</small><small style="display:block;color:var(--muted)">${hypeEscape(item.sector || "")} • ${hypeEscape(item.payment_method || "Manual")}</small>${item.event_name ? `<small style="display:block;color:var(--muted)">🎤 ${hypeEscape(item.event_name)}</small>` : ""}${item.promoter_code ? `<small style="display:block;color:#7dd3fc">Promoter: ${hypeEscape(item.promoter_code)}</small>` : ""}${item.coupon_code ? `<small style="display:block;color:#86efac">Cupom: ${hypeEscape(item.coupon_code)} • -${hypeFormatMoney(item.discount_amount || 0)}</small>` : ""}</td><td><span class="badge ${status}">${hypeEscape(displayStatus)}</span>${paymentStatus === "Pendente" && /asaas/i.test(String(item.payment_method || "")) ? (item.asaas_payment_id ? '<small style="display:block;color:#a8f3c4;margin-top:5px;font-weight:800">✅ PIX GERADO NO ASAAS • AGUARDANDO CLIENTE PAGAR</small>' : '<small style="display:block;color:#ff8da0;margin-top:5px;font-weight:900">⚠️ PIX NÃO GERADO NO ASAAS • NÃO HÁ COBRANÇA</small>') : ''}<br><small>${hypeEscape(item.entry_status || "Não utilizado")}</small></td><td><div class="actions-cell">${canPay && paymentStatus !== "Pago" ? `<button class="btn-action btn-confirm" onclick="setPayment(${item.id},'Pago')">✅ CONFIRMAR</button>` : ""}${canPay && paymentStatus === "Pago" && item.email ? `<button class="btn-action" onclick="resendTicketEmailFromAdmin(${Number(item.id)})">📧 REENVIAR QR</button>` : ""}${canPay && paymentStatus === "Pago" ? `<button class="btn-action" onclick="setPayment(${item.id},'Pendente')">PENDENTE</button>` : ""}${canPay && paymentStatus !== "Cancelado" ? `<button class="btn-action btn-del" onclick="setPayment(${item.id},'Cancelado')">CANCELAR</button>` : ""}${HYPE.role === "admin" ? `<button class="btn-action btn-del" style="border-color:#ff4d67;background:rgba(255,22,61,.18)" onclick="purgeSingleTicketV25(${item.id})">🧪 EXCLUIR TESTE</button>` : ""}</div></td></tr>`;
+    return `<tr><td><strong>${hypeEscape(item.customer_name || "SEM NOME")}</strong><br><span class="badge gender">${hypeEscape(item.gender || "N/I")}</span><small style="color:var(--muted)">${hypeEscape(item.ticket_code || "")} ${entry}</small><small style="display:block;color:var(--muted);line-height:1.55">📱 ${hypeEscape(item.phone || "—")}<br>📧 ${hypeEscape(item.email || "—")}<br>CPF: ${cpf}</small>${emailState}</td><td>${isFree ? "FREE" : hypeFormatMoney(item.price)}<br><small style="color:var(--muted)">${hypeEscape(item.lot_name || "")}</small><small style="display:block;color:var(--muted)">${hypeEscape(item.sector || "")} • ${hypeEscape(item.payment_method || "Manual")}</small>${item.event_name ? `<small style="display:block;color:var(--muted)">🎤 ${hypeEscape(item.event_name)}</small>` : ""}${item.promoter_code ? `<small style="display:block;color:#7dd3fc">Promoter: ${hypeEscape(item.promoter_code)}</small>` : ""}${item.coupon_code ? `<small style="display:block;color:#86efac">Cupom: ${hypeEscape(item.coupon_code)} • -${hypeFormatMoney(item.discount_amount || 0)}</small>` : ""}</td><td><span class="badge ${status}">${hypeEscape(displayStatus)}</span>${paymentStatus === "Pendente" && /asaas/i.test(String(item.payment_method || "")) ? (item.asaas_payment_id ? '<small style="display:block;color:#a8f3c4;margin-top:5px;font-weight:800">✅ PIX GERADO NO ASAAS • AGUARDANDO CLIENTE PAGAR</small>' : '<small style="display:block;color:#ff8da0;margin-top:5px;font-weight:900">⚠️ PIX NÃO GERADO NO ASAAS • NÃO HÁ COBRANÇA</small>') : ''}<br><small>${hypeEscape(item.entry_status || "Não utilizado")}</small></td><td><div class="actions-cell">${canPay && paymentStatus !== "Pago" ? `<button class="btn-action btn-confirm" onclick="setPayment(${item.id},'Pago')">✅ CONFIRMAR</button>` : ""}${canPay && paymentStatus === "Pago" && item.email ? `<button class="btn-action" onclick="resendTicketEmailFromAdmin(${Number(item.id)})">📧 REENVIAR QR</button>` : ""}${canPay && paymentStatus === "Pago" && /^HYPE-[A-Z0-9]{6,24}$/i.test(String(item.ticket_code||"")) ? `<button class="btn-action" type="button" onclick="hypeCopyApprovedTicketLinkV271(${Number(item.id)})">🔗 COPIAR LINK DO INGRESSO</button>` : ""}${canPay && paymentStatus === "Pago" && /^HYPE-[A-Z0-9]{6,24}$/i.test(String(item.ticket_code||"")) && hypeApprovedWhatsappNumberV271(item.phone) ? `<button class="btn-action" type="button" onclick="hypeOpenApprovedTicketWhatsAppV271(${Number(item.id)})">💬 WHATSAPP</button>` : ""}${canPay && paymentStatus === "Pago" ? `<button class="btn-action" onclick="setPayment(${item.id},'Pendente')">PENDENTE</button>` : ""}${canPay && paymentStatus !== "Cancelado" ? `<button class="btn-action btn-del" onclick="setPayment(${item.id},'Cancelado')">CANCELAR</button>` : ""}${HYPE.role === "admin" ? `<button class="btn-action btn-del" style="border-color:#ff4d67;background:rgba(255,22,61,.18)" onclick="purgeSingleTicketV25(${item.id})">🧪 EXCLUIR TESTE</button>` : ""}</div></td></tr>`;
   }).join('');
 
   const financeSelect=document.getElementById("v94SalesEvent");
