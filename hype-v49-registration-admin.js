@@ -51,7 +51,7 @@
     if (!hype?.user || !hype?.pass || hype?.role !== 'admin') {
       throw new Error('Entre no ADM como administrador para obter o convite de matriz.');
     }
-    if (promoterInviteUrl) return promoterInviteUrl;
+    // Sempre consulta o convite atual; não reutiliza um token anterior à limpeza.
     const url = await sbRpc('staff_matriz_link_cadastro_v251', {
       p_username:hype.user,p_password:hype.pass
     });
