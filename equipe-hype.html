@@ -10,7 +10,7 @@
 *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -10%,#3d1823 0,#100a0e 45%,var(--bg) 90%);font-family:Inter,system-ui,Arial,sans-serif;color:#fff;padding:28px 16px}
 main{max-width:560px;margin:0 auto}.brand{display:block;width:220px;max-width:70%;margin:0 auto 24px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 20px 45px #0006}
-h1{font-size:26px;line-height:1.16;margin:0 0 12px}p,li{color:var(--muted);font-size:14px;line-height:1.6}h2{font-size:16px}ul{padding-left:20px}
+h1{font-size:26px;line-height:1.16;margin:0 0 15px}.eyebrow{font-size:10px;font-weight:900;letter-spacing:2px;color:#bebec8;margin:0 0 11px}p{color:var(--muted);font-size:14px;line-height:1.6;margin:10px 0}.consent-title{font-size:17px;line-height:1.45;margin:0 0 12px;color:#f4f4f5}.compact-detail{font-size:12px;color:#b6b6c0;padding:12px;border-left:2px solid #35d68d;background:#14171a;border-radius:5px}.promoter-id{color:#fff;font-size:13px;font-weight:800;margin:17px 0 12px}
 .notice{padding:14px;border-radius:12px;background:#15191a;border:1px solid #30654d;color:#d5f9e5;font-size:13px;line-height:1.6;margin:16px 0}
 .consent{display:flex;align-items:start;gap:10px;padding:14px;border:1px solid #494954;border-radius:12px;line-height:1.45;font-size:13px;cursor:pointer}
 .consent input{margin-top:3px;width:19px;height:19px;flex-shrink:0;accent-color:var(--green)}
@@ -27,21 +27,14 @@ button.stop{background:#32161f;color:#ffc1cc;border:1px solid #9d415a}
 <main>
 <img src="logo-hype.png" class="brand" alt="HYPE Lounge Club">
 <section class="card">
- <h1>📍 Compartilhar localização com a Hype</h1>
- <p>Este convite é individual. Você escolhe se deseja compartilhar sua posição durante o trabalho. A localização será visível <strong>somente para administradores autorizados da Hype</strong>, nunca para outros promoters.</p>
- <p id="promoterName" style="color:#fff;font-weight:800">Conferindo convite...</p>
- <div class="notice">
-  <strong>Antes de ativar:</strong>
-  <ul>
-   <li>A Hype verá sua última localização enquanto você compartilhar.</li>
-   <li>O compartilhamento dura até <strong>3 horas</strong> e pode ser interrompido a qualquer momento.</li>
-   <li>O sistema não cria histórico de trajetos; guarda apenas a posição mais recente.</li>
-   <li>O envio funciona enquanto esta página estiver aberta. Em segundo plano pode parar; não haverá monitoramento ao fechar o site.</li>
-   <li>A autorização do GPS no celular, sozinha, <strong>não ativa</strong> este recurso.</li>
-  </ul>
- </div>
- <label class="consent"><input id="consent" type="checkbox"><span>Li e aceito compartilhar minha localização com a administração da Hype durante a atividade, podendo parar quando quiser.</span></label>
- <button id="start" type="button" disabled>📍 INICIAR COMPARTILHAMENTO</button>
+ <div class="eyebrow">PORTAL DA EQUIPE HYPE</div>
+ <h1>Área do promoter</h1>
+ <h2 class="consent-title">📍 Compartilhamento de localização (opcional)</h2>
+ <p>Ao ativar, a administração da Hype poderá acompanhar <strong>sua localização em tempo real</strong> no mapa do ADM durante o trabalho.</p>
+ <p class="compact-detail">A sessão dura até <strong>3 horas</strong> e pode ser encerrada por você a qualquer momento. O envio funciona com esta página aberta, sem histórico de trajetos.</p>
+ <p id="promoterName" class="promoter-id">Aguardando identificação pelo convite individual...</p>
+ <label class="consent"><input id="consent" type="checkbox"><span><strong>Autorizo</strong> a Hype a receber minha localização GPS durante esta sessão. Sei que posso parar quando quiser.</span></label>
+ <button id="start" type="button" disabled>📍 INICIAR COMPARTILHAMENTO GPS</button>
  <button id="stop" class="stop" type="button" hidden>⛔ PARAR E APAGAR LOCALIZAÇÃO</button>
  <div id="result" role="status" aria-live="polite">Aguardando a validação do convite.</div>
 </section>
