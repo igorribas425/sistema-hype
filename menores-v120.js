@@ -99,17 +99,18 @@
  // A selfie do responsavel usa a camera ao vivo, sem acesso a galeria.
  // A captura nao substitui a conferencia humana nem uma prova de vida biometrica.
  function setupGuardianLiveCamera(){
-   const trigger=$('guardianPhoto');
+   let trigger=$('guardianPhoto');
    if(!trigger)return;
-   // Compatibilidade temporaria enquanto paginas antigas ainda estiverem em cache.
+   // Se o HTML antigo vier do cache, tambem removemos o campo que aceita galeria.
    if(trigger.tagName!=='BUTTON'){
-     trigger.addEventListener('change',async()=>{
-       photoUrl='';photosProcessing++;
-       try{photoUrl=await compressPhoto(trigger.files[0]);$('photoPreview').src=photoUrl;$('photoPreview').style.display='block';}
-       catch(err){photoUrl='';$('photoPreview').style.display='none';photoError('guardianPhoto',err);}
-       finally{photosProcessing--;}
-     });
-     return;
+     const liveButton=document.createElement('button');
+     liveButton.type='button';
+     liveButton.className=trigger.className;
+     liveButton.id=trigger.id;
+     liveButton.setAttribute('aria-label','Abrir câmera frontal para selfie ao vivo do responsável');
+     liveButton.setAttribute('aria-describedby','guardianPhotoStatus');
+     trigger.replaceWith(liveButton);
+     trigger=liveButton;
    }
    const overlay=document.createElement('div');
    overlay.id='hypeGuardianCamera';
