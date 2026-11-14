@@ -96,12 +96,116 @@
    const label=$(inputId+'Button');if(label)label.textContent='📷 TENTAR FOTO NOVAMENTE';
    message(err?.message||'Não foi possível carregar a foto.');
  }
- $('guardianPhoto').addEventListener('change',async()=>{
-   photoUrl='';photosProcessing++;
-   try{photoUrl=await compressPhoto($('guardianPhoto').files[0]);$('photoPreview').src=photoUrl;$('photoPreview').style.display='block';}
-   catch(err){photoUrl='';$('photoPreview').style.display='none';photoError('guardianPhoto',err);}
-   finally{photosProcessing--;}
- });
+ // A selfie do responsavel usa a camera ao vivo, sem acesso a galeria.
+ // A captura nao substitui a conferencia humana nem uma prova de vida biometrica.
+ function setupGuardianLiveCamera(){
+   const trigger=$('guardianPhoto');
+   if(!trigger)return;
+   // Compatibilidade temporaria enquanto paginas antigas ainda estiverem em cache.
+   if(trigger.tagName!=='BUTTON'){
+     trigger.addEventListener('change',async()=>{
+       photoUrl='';photosProcessing++;
+       try{photoUrl=await compressPhoto(trigger.files[0]);$('photoPreview').src=photoUrl;$('photoPreview').style.display='block';}
+       catch(err){photoUrl='';$('photoPreview').style.display='none';photoError('guardianPhoto',err);}
+       finally{photosProcessing--;}
+     });
+     return;
+   }
+   const overlay=document.createElement('div');
+   overlay.id='hypeGuardianCamera';
+   overlay.setAttribute('role','dialog');
+   overlay.setAttribute('aria-modal','true');
+   overlay.setAttribute('aria-label','Capturar selfie ao vivo do responsavel');
+   overlay.style.cssText='display:none;position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.94);align-items:center;justify-content:center;padding:14px;overflow-y:auto';
+   overlay.innerHTML=[
+     '<section style="background:#191720;color:#fff;border:1px solid #a04a71;border-radius:16px;padding:16px;width:min(100%,480px);box-sizing:border-box;text-align:center">',
+     '<h2 style="font-size:19px;margin:0 0 8px">Selfie ao vivo do responsável</h2>',
+     '<p style="font-size:13px;color:#f0d5df;margin:0 0 12px">Abra a câmera frontal, enquadre seu rosto e tire a foto agora. Não é permitido selecionar fotos salvas. A equipe fará a conferência da identidade.</p>',
+     '<video id="hypeGuardianLiveVideo" autoplay muted playsinline style="display:block;width:100%;max-height:53vh;min-height:180px;object-fit:cover;transform:scaleX(-1);border-radius:12px;background:#09090b"></video>',
+     '<p id="hypeGuardianCameraMessage" role="status" style="font-size:13px;min-height:36px;color:#f6dce7;margin:12px 0"></p>',
+     '<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">',
+     '<button type="button" id="hypeGuardianCapture" disabled style="flex:1;min-width:160px;border:0;border-radius:10px;background:#d12d63;color:#fff;font-weight:800;padding:14px">📸 CAPTURAR SELFIE</button>',
+     '<button type="button" id="hypeGuardianCancel" style="border:1px solid #a1a1aa;border-radius:10px;background:transparent;color:#fff;font-weight:700;padding:14px">Cancelar</button>',
+     '</div><small style="display:block;color:#c7bcc5;margin-top:10px">A câmera é desligada ao capturar ou fechar. Não gravamos vídeo.</small></section>'
+   ].join('');
+   document.body.appendChild(overlay);
+   const video=$('hypeGuardianLiveVideo'),status=$('hypeGuardianCameraMessage');
+   const take=$('hypeGuardianCapture'),cancel=$('hypeGuardianCancel');
+   let stream=null,requestId=0,priorOverflow='';
+   function stop(){
+     if(stream){stream.getTracks().forEach(track=>track.stop());stream=null;}
+     try{video.pause();video.srcObject=null;}catch(_){}
+   }
+   function close(){
+     requestId++;
+     stop();
+     overlay.style.display='none';
+     document.body.style.overflow=priorOverflow;
+     trigger.focus();
+   }
+   trigger.addEventListener('click',async()=>{
+     if(overlay.style.display!=='none')return;
+     if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia){
+       photoError('guardianPhoto',new Error('Câmera indisponível. Abra o link HTTPS no Safari (iPhone) ou Chrome (Android), fora do WhatsApp/Instagram.'));
+       return;
+     }
+     const id=++requestId;
+     priorOverflow=document.body.style.overflow;
+     document.body.style.overflow='hidden';
+     overlay.style.display='flex';
+     take.disabled=true;
+     status.textContent='⏳ Solicitando acesso à câmera frontal...';
+     cancel.focus();
+     try{
+       const live=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:'user',width:{ideal:1280},height:{ideal:960}}});
+       if(id!==requestId){live.getTracks().forEach(track=>track.stop());return;}
+       stream=live;
+       video.srcObject=live;
+       await video.play();
+       if(id!==requestId)return;
+       take.disabled=false;
+       take.focus();
+       status.textContent='✅ Câmera pronta. Olhe para a lente, com o rosto inteiro visível, e toque em CAPTURAR SELFIE.';
+     }catch(err){
+       if(id!==requestId)return;
+       stop();
+       const denied=err?.name==='NotAllowedError'||err?.name==='PermissionDeniedError';
+       status.textContent=denied?'❌ Permita o acesso à câmera nas configurações do navegador e tente novamente.':'❌ Não foi possível iniciar a câmera. Abra no Safari ou Chrome e confira as permissões.';
+     }
+   });
+   take.addEventListener('click',()=>{
+     if(!stream||!video.videoWidth||!video.videoHeight){status.textContent='A câmera ainda está carregando. Tente novamente.';return;}
+     try{
+       const width=video.videoWidth,height=video.videoHeight;
+       let captured='';
+       for(const max of [720,600,480]){
+         const scale=Math.min(1,max/Math.max(width,height));
+         const c=document.createElement('canvas');
+         c.width=Math.max(1,Math.round(width*scale));
+         c.height=Math.max(1,Math.round(height*scale));
+         const context=c.getContext('2d');
+         if(!context)throw new Error('Não foi possível processar a imagem.');
+         context.drawImage(video,0,0,c.width,c.height);
+         for(const quality of [.73,.60,.48]){
+           captured=c.toDataURL('image/jpeg',quality);
+           if(captured.length<=530000)break;
+         }
+         if(captured.length<=530000)break;
+       }
+       if(!captured||captured.length>530000)throw new Error('Foto muito grande. Tente novamente com boa iluminação.');
+       photoUrl=captured;
+       $('photoPreview').src=photoUrl;
+       $('photoPreview').style.display='block';
+       close();
+     }catch(err){status.textContent='❌ '+(err.message||'Não foi possível tirar a foto.');}
+   });
+   cancel.addEventListener('click',close);
+   overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
+   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.style.display!=='none')close();});
+   document.addEventListener('visibilitychange',()=>{if(document.hidden&&overlay.style.display!=='none')close();});
+   window.addEventListener('pagehide',stop);
+ }
+ setupGuardianLiveCamera();
  $('guardianDocument').addEventListener('change',async()=>{
    documentUrl='';photosProcessing++;
    $('documentPreview').style.display='none';
