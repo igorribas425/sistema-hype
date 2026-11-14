@@ -16,6 +16,11 @@
       subtitle: 'Equipe, links, vendas e cupons',
       ids: ['v16ManagementPanel']
     },
+    mapapromoters: {
+      title: 'Mapa de promoters',
+      subtitle: 'Somente localizações compartilhadas voluntariamente com o ADM',
+      ids: ['hypePromoterLocationAdminPanel']
+    },
     lista: {
       title: 'Lista / FREE',
       subtitle: 'Aprovação de fotos, nomes liberados e lista do evento',
@@ -93,6 +98,8 @@
         if (typeof renderV16Dashboard === 'function') renderV16Dashboard();
       } else if (key === 'promoters') {
         if (typeof loadV16AdminData === 'function') await loadV16AdminData();
+      } else if (key === 'mapapromoters') {
+        await window.HypePromoterLocationsV1?.refresh?.();
       } else if (key === 'lista') {
         await window.HypeAdminTabsV92?.refreshPeople?.(true);
         await window.HypeV49Registration?.loadListSettings?.();
