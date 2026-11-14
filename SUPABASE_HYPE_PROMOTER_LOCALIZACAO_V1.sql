@@ -118,7 +118,7 @@ begin
  on conflict(promoter_id) do update set token_hash=excluded.token_hash, created_by=excluded.created_by,
    issued_at=excluded.issued_at, valid_until=excluded.valid_until;
  return query select true,
-   ('https://hypeloungeclub.com.br/promoter-localizacao.html?chave='||v_token)::text,
+   ('https://hypeloungeclub.com.br/equipe-hype.html?chave='||v_token)::text,
    v_until;
 end;
 $function$
