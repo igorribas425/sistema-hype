@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>HYPE • Compartilhamento opcional de localização</title>
+<style>
+:root{color-scheme:dark;--bg:#050506;--panel:#111115;--line:#34343a;--muted:#b5b5bf;--green:#35d68d}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -10%,#3d1823 0,#100a0e 45%,var(--bg) 90%);font-family:Inter,system-ui,Arial,sans-serif;color:#fff;padding:28px 16px}
+main{max-width:560px;margin:0 auto}.brand{display:block;width:220px;max-width:70%;margin:0 auto 24px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 20px 45px #0006}
+h1{font-size:26px;line-height:1.16;margin:0 0 12px}p,li{color:var(--muted);font-size:14px;line-height:1.6}h2{font-size:16px}ul{padding-left:20px}
+.notice{padding:14px;border-radius:12px;background:#15191a;border:1px solid #30654d;color:#d5f9e5;font-size:13px;line-height:1.6;margin:16px 0}
+.consent{display:flex;align-items:start;gap:10px;padding:14px;border:1px solid #494954;border-radius:12px;line-height:1.45;font-size:13px;cursor:pointer}
+.consent input{margin-top:3px;width:19px;height:19px;flex-shrink:0;accent-color:var(--green)}
+button{display:block;width:100%;min-height:49px;padding:12px;border-radius:11px;border:0;background:var(--green);color:#07130e;font-size:13px;font-weight:900;margin:13px 0 0;cursor:pointer}
+button:disabled{opacity:.42;cursor:not-allowed}
+button.stop{background:#32161f;color:#ffc1cc;border:1px solid #9d415a}
+#result{font-size:13px;line-height:1.55;margin-top:16px;color:#b8edd0}
+#result.error{color:#ffb1c0}
+[hidden]{display:none!important}
+.footer{font-size:11px;text-align:center;opacity:.7;margin:18px 0}
+</style>
+</head>
+<body>
+<main>
+<img src="logo-hype.png" class="brand" alt="HYPE Lounge Club">
+<section class="card">
+ <h1>📍 Compartilhar localização com a Hype</h1>
+ <p>Este convite é individual. Você escolhe se deseja compartilhar sua posição durante o trabalho. A localização será visível <strong>somente para administradores autorizados da Hype</strong>, nunca para outros promoters.</p>
+ <p id="promoterName" style="color:#fff;font-weight:800">Conferindo convite...</p>
+ <div class="notice">
+  <strong>Antes de ativar:</strong>
+  <ul>
+   <li>A Hype verá sua última localização enquanto você compartilhar.</li>
+   <li>O compartilhamento dura até <strong>3 horas</strong> e pode ser interrompido a qualquer momento.</li>
+   <li>O sistema não cria histórico de trajetos; guarda apenas a posição mais recente.</li>
+   <li>O envio funciona enquanto esta página estiver aberta. Em segundo plano pode parar; não haverá monitoramento ao fechar o site.</li>
+   <li>A autorização do GPS no celular, sozinha, <strong>não ativa</strong> este recurso.</li>
+  </ul>
+ </div>
+ <label class="consent"><input id="consent" type="checkbox"><span>Li e aceito compartilhar minha localização com a administração da Hype durante a atividade, podendo parar quando quiser.</span></label>
+ <button id="start" type="button" disabled>📍 INICIAR COMPARTILHAMENTO</button>
+ <button id="stop" class="stop" type="button" hidden>⛔ PARAR E APAGAR LOCALIZAÇÃO</button>
+ <div id="result" role="status" aria-live="polite">Aguardando a validação do convite.</div>
+</section>
+<p class="footer">HYPE Lounge Club · Localização opcional, com consentimento</p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=20261001-v49"></script>
+<script>
+(() => {
+ 'use strict';
+ const $=id=>document.getElementById(id), cfg=window.HYPE_SUPABASE_CONFIG||{};
+ const client=window.supabase?.createClient(cfg.url,cfg.anonKey);
+ const url=new URL(location.href);
+ const key=(url.searchParams.get('chave')||sessionStorage.getItem('hype_loc_optin_v1')||'').trim();
+ if(/^[a-f0-9]{48}$/.test(key)){sessionStorage.setItem('hype_loc_optin_v1',key)}
+ // Não deixar chave secreta na barra de endereço, no histórico ou em links externos.
+ if(url.searchParams.has('chave')){url.searchParams.delete('chave');history.replaceState(null,'',url.pathname+url.search+url.hash)}
+ let valid=false,active=false,timer=null,expiresAt=0,working=false;
+ const one=d=>Array.isArray(d)?d[0]:d;
+ const message=(s,bad=false)=>{const el=$('result');el.textContent=s;el.classList.toggle('error',bad)};
+ async function rpc(name,args){if(!client)throw Error('Conexão indisponível');const {data,error}=await client.rpc(name,args);if(error)throw Error(error.message||'Erro no servidor');return data}
+ const stopTimer=()=>{if(timer){clearInterval(timer);timer=null}};
+ function enabled(){const c=$('consent');$('start').disabled=!valid||!c.checked||active||working}
+ function position(cb){if(!navigator.geolocation)return cb(new Error('Seu navegador não disponibiliza GPS'));
+  navigator.geolocation.getCurrentPosition(pos=>cb(null,pos),err=>cb(new Error(err.code===1?'GPS negado. Autorize nas configurações do navegador se desejar compartilhar.':'Não foi possível obter o GPS. Verifique sinal e permissões.')),{enableHighAccuracy:true,timeout:18000,maximumAge:10000})
+ }
+ async function sendPosition(pos,initial=false){
+  if(!active&& !initial)return;
+  if(Date.now()>expiresAt){stopTimer();active=false;$('stop').hidden=true;message('Seu período de compartilhamento terminou. A posição não está mais ativa.');enabled();return}
+  try{
+   const coords=pos.coords;
+   const ok=await rpc('hype_promoter_location_update_v1',{p_token:key,p_latitude:coords.latitude,p_longitude:coords.longitude,p_accuracy_m:Math.min(coords.accuracy,5000)});
+   if(ok!==true)throw Error('Compartilhamento expirou ou foi revogado pelo administrador.');
+   message('✅ Localização compartilhada às '+new Date().toLocaleTimeString('pt-BR')+'. Você pode parar a qualquer momento.');
+  }catch(e){stopTimer();active=false;$('stop').hidden=true;message('Compartilhamento interrompido: '+e.message,true);enabled()}
+ }
+ async function start(){
+  if(!valid||!$('consent').checked||active||working)return;
+  working=true;enabled();message('Obtendo o GPS com sua permissão...');
+  position(async(err,pos)=>{
+   if(err){working=false;message(err.message,true);enabled();return}
+   try{
+    const result=one(await rpc('hype_promoter_location_start_v1',{p_token:key,p_consent:true}));
+    if(!result?.ok)throw Error('Este convite expirou ou foi revogado.');
+    expiresAt=Date.parse(result.expires_at);active=true;
+    $('stop').hidden=false;$('consent').disabled=true;
+    working=false;enabled();
+    await sendPosition(pos,true);
+    if(active)timer=setInterval(()=>{
+     if(!active)return;position((err,latest)=>{if(err){message(err.message,true);return}sendPosition(latest)});
+    },30000);
+   }catch(e){working=false;active=false;message(e.message,true);enabled()}
+  });
+ }
+ async function stop(){
+  if(working)return;
+  stopTimer();active=false;$('stop').hidden=true;$('consent').disabled=false;enabled();
+  try{const ok=await rpc('hype_promoter_location_stop_v1',{p_token:key});
+   sessionStorage.removeItem('hype_loc_optin_v1');valid=false;enabled();
+   message(ok?'⛔ Compartilhamento encerrado. Sua posição foi apagada e o convite revogado.':'O envio foi interrompido. Confirme com o ADM se o convite já estava revogado.');
+  }catch(e){message('O envio deste celular foi interrompido, mas não foi possível confirmar a exclusão no servidor. Avise o ADM.',true)}
+ }
+ async function init(){
+  if(!/^[a-f0-9]{48}$/.test(key)){message('Convite inválido. Solicite um convite individual ao ADM.',true);return}
+  try{
+   const record=one(await rpc('hype_promoter_location_invite_info_v1',{p_token:key}));
+   if(!record?.ok)throw Error('Convite inválido ou expirado. Solicite outro ao ADM.');
+   $('promoterName').textContent='Promoter: '+record.promoter_name;
+   valid=true;enabled();message('Convite validado. Leia as condições e marque a caixa caso queira compartilhar.');
+  }catch(e){message(e.message,true)}
+ }
+ $('consent').addEventListener('change',enabled);
+ $('start').addEventListener('click',start);
+ $('stop').addEventListener('click',stop);
+ // Ao fechar a página o browser interrompe a captura; nenhuma reativação automática.
+ window.addEventListener('pagehide',stopTimer);
+ init();
+})();
+</script>
+</body>
+</html>

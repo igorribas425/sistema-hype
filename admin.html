@@ -403,6 +403,7 @@ html,body{max-width:100%;overflow-x:hidden}
     <div class="v95-home-grid">
       <button class="v95-home-card" type="button" data-v95-open="financeiro"><span class="v95-icon">💰</span><b>Financeiro</b><small>Vendas, caixa e valores acumulados</small></button>
       <button class="v95-home-card" type="button" data-v95-open="promoters"><span class="v95-icon">🎯</span><b>Promoters</b><small>Equipe, links, vendas e cupons</small></button>
+      <button class="v95-home-card" type="button" data-v95-open="mapapromoters"><span class="v95-icon">📍</span><b>Mapa de Promoters</b><small>GPS voluntário, matrizes e filiais</small></button>
       <button class="v95-home-card" type="button" data-v95-open="lista"><span class="v95-icon">📋</span><b>Lista / FREE</b><small>Fotos, aprovações e nomes liberados</small></button>
       <button class="v95-home-card" type="button" data-v95-open="listapromoter"><span class="v95-icon">🪪</span><b>Lista/Promoter</b><small>Convites, selfies, QR e presença</small></button>
       <button class="v95-home-card" type="button" data-v95-open="portaria"><span class="v95-icon">🚪</span><b>Portaria</b><small>Entradas e movimento da noite</small></button>
@@ -1395,6 +1396,63 @@ Bruna Santos"></textarea>
 </section>
 <script src="rogue-admin-menores-v1.js?v=20261110-r1"></script>
 
+
+
+<style id="hype-loc-admin-css-v1">
+#hypePromoterLocationAdminPanel{display:none!important;max-width:1050px;margin:0 auto 45px;background:#101014;border:1px solid #35353d;border-radius:20px;padding:20px;color:#fff}
+#hypePromoterLocationAdminPanel.v95-show{display:block!important}
+#hypePromoterLocationAdminPanel h2{font-size:21px;margin:0 0 6px}
+#hypePromoterLocationAdminPanel p{font-size:12px;line-height:1.55;color:#afb0bb}
+.hype-loc-tools{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin:14px 0}
+.hype-loc-stats{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}
+.hype-loc-stats>div{background:#18181e;border:1px solid #35353d;border-radius:12px;padding:14px 18px;min-width:130px}
+.hype-loc-stats b{display:block;font-size:24px;color:#fff}
+.hype-loc-stats small{font-size:10px;color:#b1b1b9;text-transform:uppercase}
+#hypeLocMap{height:380px;width:100%;border:1px solid #333;border-radius:14px;background:#10151a;z-index:0;margin:14px 0}
+#hypeLocMapFallback{padding:10px;color:#eab0b5}
+#hypeLocPromotersList{display:grid;gap:8px;margin:14px 0}
+.hype-loc-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#18181d;border:1px solid #36363f;border-radius:12px;padding:13px}
+.hype-loc-row-main{flex:1 1 250px;min-width:0}
+.hype-loc-row-main strong{display:block;font-size:13px;overflow-wrap:anywhere}
+.hype-loc-row-main small{display:block;font-size:11px;line-height:1.5;color:#babac2;margin-top:4px;overflow-wrap:anywhere}
+.hype-loc-row-actions{display:flex;gap:8px;flex-wrap:wrap}
+.hype-loc-row-actions button,#hypeLocCopyInvite,#hypeLocRefresh{background:#eeeeef;color:#111;border:1px solid #aaa;border-radius:9px;padding:10px 12px;font-weight:900;font-size:11px;cursor:pointer}
+.hype-loc-row-actions .ghost{background:#24181c;color:#ffc9d2;border:1px solid #774754}
+.hype-loc-row-actions button:disabled{opacity:.36;cursor:not-allowed}
+#hypeLocInviteBox{padding:15px;border:1px solid #38704e;border-radius:13px;margin:15px 0;background:#101d16}
+#hypeLocInviteBox[hidden]{display:none!important}
+#hypeLocInviteBox strong{display:block;margin-bottom:8px;color:#a4f4c2}
+#hypeLocInviteUrl{display:block;width:100%;box-sizing:border-box;margin:8px 0;padding:11px;color:#fff;background:#090d0a;border:1px solid #536d59;border-radius:8px;font-size:12px}
+#hypeLocAdminStatus{padding:8px 0;font-size:11px;color:#b8edd0}
+@media(max-width:640px){#hypePromoterLocationAdminPanel{padding:12px}#hypeLocMap{height:330px}.hype-loc-row-actions{width:100%}.hype-loc-row-actions button{flex:1}}
+</style>
+<section id="hypePromoterLocationAdminPanel" aria-label="Mapa de promoters da Hype">
+ <h2>📍 Mapa de Promoters — Hype</h2>
+ <p>Exclusivo do ADM. Aqui só aparecem localizações que cada promoter <b>aceitou compartilhar</b> por convite individual. O GPS não é coletado automaticamente pelo cadastro de vendas.</p>
+ <div class="hype-loc-tools">
+  <span id="hypeLocCount" style="font-size:12px;color:#ccc">Sem informações carregadas</span>
+  <button id="hypeLocRefresh" type="button">↻ ATUALIZAR MAPA</button>
+ </div>
+ <div class="hype-loc-stats">
+  <div><b id="hypeLocOnline">0</b><small>Compartilhando agora</small></div>
+  <div><b id="hypeLocTotal">0</b><small>Promoters cadastrados</small></div>
+ </div>
+ <p id="hypeLocAdminStatus" role="status">Abra esta aba com acesso administrativo.</p>
+ <div id="hypeLocMap" aria-label="Mapa de localização voluntária dos promoters"></div>
+ <p id="hypeLocMapFallback" hidden>Mapa indisponível neste dispositivo. Os status continuam disponíveis na lista abaixo.</p>
+ <div id="hypeLocInviteBox" hidden>
+  <strong>🔒 Convite individual para <span id="hypeLocInviteName"></span></strong>
+  <p>Envie este endereço apenas à pessoa indicada, explicando o compartilhamento opcional de localização. A pessoa deverá abrir o link e aceitar antes de qualquer envio de GPS.</p>
+  <input id="hypeLocInviteUrl" type="text" readonly aria-label="Convite individual do promoter">
+  <button id="hypeLocCopyInvite" type="button">COPIAR CONVITE PRIVADO</button>
+ </div>
+ <h3 style="font-size:15px;margin:20px 0 8px">Matrizes e filiais</h3>
+ <div id="hypeLocPromotersList"></div>
+ <p>Compartilhamento por até 3 horas. Últimas posições somem do mapa após 2 minutos sem atualização. Sem histórico de deslocamentos. Clique em REVOGAR para interromper um acesso.</p>
+</section>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+<script src="admin-promoter-locations-v1.js?v=20261114-optin-v1"></script>
 
 </body>
 </html>
