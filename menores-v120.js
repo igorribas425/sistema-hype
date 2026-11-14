@@ -281,7 +281,8 @@
    if(!await updateMinorAge())return message('A autorização geral é para quem já tem 16 ou 17 anos.');
    if(!minorFaceUrl)return message('Tire uma selfie nítida do rosto do próprio menor.');
    if(!minorDocumentUrl)return message('Envie uma foto legível do documento do próprio menor.');
-   if(!signed)return message('O responsável precisa assinar no quadro branco.');
+   if(!['Pai','Mãe'].includes($('minorRelation').value))return message('Para o cadastro da HYPE, selecione Pai ou Mãe. Outros vínculos precisam ser tratados diretamente com a administração.');
+   if(!signed)return message('O pai ou a mãe precisa assinar no quadro branco.');
    if(!photoUrl)return message('Inclua a selfie do responsável antes de continuar.');
    if(!documentUrl)return message('Inclua uma foto nítida do RG ou CNH do responsável antes de continuar.');
    const form={
