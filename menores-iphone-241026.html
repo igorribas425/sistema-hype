@@ -108,8 +108,8 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <div class="field"><label for="guardianPhone">WhatsApp do responsável</label><input id="guardianPhone" type="tel" maxlength="18" inputmode="tel" required></div>
 <div class="field"><label for="guardianEmail">Gmail do responsável (para receber o resultado e autorização)</label><input id="guardianEmail" type="email" maxlength="254" autocomplete="email" placeholder="exemplo@gmail.com" required></div>
 </div>
-<div class="field"><label for="minorRelation">Vínculo com o menor</label><select id="minorRelation" required><option value="">Selecione</option><option>Pai</option><option>Mãe</option><option>Responsável legal</option></select></div>
-<div class="notice">📸 <b>Identificação do pai, mãe ou responsável:</b> a selfie deve ser tirada <b>ao vivo pela câmera frontal</b>. Não é possível selecionar selfie da galeria. Para o RG ou CNH, você pode fotografar ou enviar uma imagem legível. A equipe analisará a solicitação e poderá pedir conferência do documento original. <b>A selfie não é reconhecimento facial automático.</b></div>
+<div class="field"><label for="minorRelation">Vínculo com o menor</label><select id="minorRelation" required><option value="">Selecione</option><option value="Pai">Pai</option><option value="Mãe">Mãe</option></select></div>
+<div class="notice">📸 <b>Identificação do pai ou da mãe:</b> a selfie deve ser tirada <b>ao vivo pela câmera frontal</b>. Não é possível selecionar selfie da galeria. Para o RG ou CNH, você pode fotografar ou enviar uma imagem legível. A equipe analisará a solicitação e poderá pedir conferência do documento original. <b>A selfie não é reconhecimento facial automático.</b></div>
 <div class="field photo-step">
   <div class="photo-title"><span class="photo-number">3</span><div><strong>Foto do rosto do responsável</strong><small>O rosto do responsável deve aparecer de frente, inteiro e sem filtro.</small></div></div>
   <div class="photo-upload">
@@ -135,14 +135,14 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
   <img id="documentPreview" class="photo-preview" alt="Foto enviada: foto do documento do responsável" style="display:none">
 </div>
 </section>
-<section><h2>✍️ Assinatura do responsável</h2><p style="font-size:12px"><b>Pai, mãe ou responsável:</b> use o dedo para assinar dentro da área branca abaixo. No computador, use o mouse.</p>
+<section><h2>✍️ Assinatura do responsável</h2><p style="font-size:12px"><b>Pai ou mãe:</b> use o dedo para assinar dentro da área branca abaixo. No computador, use o mouse.</p>
 <canvas id="signature"></canvas>
 <div style="display:flex;justify-content:flex-end;margin-top:10px"><button id="clearSign" class="action secondary" type="button">Limpar assinatura</button></div></section>
 <section><h2>☑️ Termos e autorização</h2>
-<label class="check"><input type="checkbox" id="checkAttend" required><span>Declaro ser pai, mãe ou responsável legal e autorizo a participação do adolescente nas festas da HYPE enquanto tiver 16 ou 17 anos, <b>somente quando as regras do evento e a legislação permitirem</b>, com conferência dos documentos e possibilidade de revogação da autorização.</span></label>
+<label class="check"><input type="checkbox" id="checkAttend" required><span>Declaro ser pai ou mãe do adolescente e autorizo a participação do adolescente nas festas da HYPE enquanto tiver 16 ou 17 anos, <b>somente quando as regras do evento e a legislação permitirem</b>, com conferência dos documentos e possibilidade de revogação da autorização.</span></label>
 <label class="check"><input type="checkbox" id="checkAlcohol" required><span>Estou ciente de que <b>é proibida a venda, o fornecimento e o consumo de bebidas alcoólicas pelo menor</b>, sem exceções por autorização dos pais.</span></label>
 <label class="check"><input type="checkbox" id="checkPrivacy" required><span>Autorizo o tratamento dos dados e fotos do adolescente e do responsável, dos documentos e da assinatura para verificar a autorização geral nas festas da HYPE enquanto houver validade, nos termos da LGPD. Reconheço que posso solicitar informações, revogação e exclusão à organização, ressalvadas obrigações legais.</span></label>
-<label class="check"><input type="checkbox" id="checkGuardian" required><span>Confirmo que os dados, a selfie e o documento enviados são meus, que sou maior de 18 anos e que comparecerei ou fornecerei documentos originais para a conferência exigida pela HYPE.</span></label>
+<label class="check"><input type="checkbox" id="checkGuardian" required><span>Confirmo que sou o pai ou a mãe informado(a) neste cadastro, que os dados, a selfie e o documento enviados são meus, que sou maior de 18 anos e que comparecerei ou fornecerei documentos originais para a conferência exigida pela HYPE.</span></label>
 <div class="notice">🔒 Os arquivos ficam em área privada, acessível somente à administração autorizada. A declaração é geral para os eventos HYPE enquanto o menor tiver 16 ou 17 anos, desde que não revogada; é conferida pela HYPE. O QR Code não é ingresso, não comprova pagamento nem libera entrada automática. Registros podem ser excluídos conforme a política de retenção.</div>
 <div class="photo-advice"><b>Antes de enviar:</b> confira se as 4 fotos apareceram com ✅, se a assinatura foi feita e se os Gmails estão corretos. A autorização ainda será analisada pela Hype.</div>
 <p id="minorSubmitProgress" role="status" aria-live="polite" style="font-size:13px;color:#b8ebcf;margin:8px 0 12px"></p>
@@ -187,5 +187,5 @@ for(const [id,preview,isDoc] of fields){
 }
 })();
 </script>
-<script src="menores-v120.js?v=20261114-camera-responsavel-v1"></script>
+<script src="menores-v120.js?v=20261114-pai-mae-v2"></script>
 </body></html>
