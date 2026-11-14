@@ -109,7 +109,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <div class="field"><label for="guardianEmail">Gmail do responsável (para receber o resultado e autorização)</label><input id="guardianEmail" type="email" maxlength="254" autocomplete="email" placeholder="exemplo@gmail.com" required></div>
 </div>
 <div class="field"><label for="minorRelation">Vínculo com o menor</label><select id="minorRelation" required><option value="">Selecione</option><option>Pai</option><option>Mãe</option><option>Responsável legal</option></select></div>
-<div class="notice">📸 <b>Agora é a vez do pai, mãe ou responsável:</b> tire uma selfie e fotografe seu RG ou CNH. Toque nos quadros abaixo e escolha <b>Tirar Foto</b> ou <b>Biblioteca de Fotos</b>. As fotos serão conferidas pela equipe, não por reconhecimento facial.</div>
+<div class="notice">📸 <b>Identificação do pai, mãe ou responsável:</b> a selfie deve ser tirada <b>ao vivo pela câmera frontal</b>. Não é possível selecionar selfie da galeria. Para o RG ou CNH, você pode fotografar ou enviar uma imagem legível. A equipe analisará a solicitação e poderá pedir conferência do documento original. <b>A selfie não é reconhecimento facial automático.</b></div>
 <div class="field photo-step">
   <div class="photo-title"><span class="photo-number">3</span><div><strong>Foto do rosto do responsável</strong><small>O rosto do responsável deve aparecer de frente, inteiro e sem filtro.</small></div></div>
   <div class="photo-upload">
@@ -117,7 +117,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
     <strong class="photo-big-label">É uma foto do rosto</strong>
     <span class="photo-button" id="guardianPhotoButton">📷 TIRAR FOTO DO ROSTO</span>
     <span class="photo-tip">Coloque seu rosto dentro do contorno. Evite boné, óculos escuros e contraluz.</span>
-    <input type="file" class="photo-file-input" id="guardianPhoto" accept="image/*" aria-label="Abrir câmera para selfie do responsável" aria-describedby="guardianPhotoStatus" required>
+    <button type="button" class="photo-file-input" id="guardianPhoto" aria-label="Abrir câmera frontal para selfie ao vivo do responsável" aria-describedby="guardianPhotoStatus"></button>
   </div>
   <p class="photo-status" id="guardianPhotoStatus" role="status" aria-live="polite">○ Aguardando foto</p>
   <img id="photoPreview" class="photo-preview" alt="Foto enviada: foto do rosto do responsável" style="display:none">
@@ -145,6 +145,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <label class="check"><input type="checkbox" id="checkGuardian" required><span>Confirmo que os dados, a selfie e o documento enviados são meus, que sou maior de 18 anos e que comparecerei ou fornecerei documentos originais para a conferência exigida pela HYPE.</span></label>
 <div class="notice">🔒 Os arquivos ficam em área privada, acessível somente à administração autorizada. A declaração é geral para os eventos HYPE enquanto o menor tiver 16 ou 17 anos, desde que não revogada; é conferida pela HYPE. O QR Code não é ingresso, não comprova pagamento nem libera entrada automática. Registros podem ser excluídos conforme a política de retenção.</div>
 <div class="photo-advice"><b>Antes de enviar:</b> confira se as 4 fotos apareceram com ✅, se a assinatura foi feita e se os Gmails estão corretos. A autorização ainda será analisada pela Hype.</div>
+<p id="minorSubmitProgress" role="status" aria-live="polite" style="font-size:13px;color:#b8ebcf;margin:8px 0 12px"></p>
 <button class="action" style="width:100%;margin-top:8px" id="sendForm" type="submit">ENVIAR AUTORIZAÇÃO PARA ANÁLISE</button>
 </section></form>
 <div id="feedback" role="status" aria-live="polite"></div>
@@ -186,5 +187,5 @@ for(const [id,preview,isDoc] of fields){
 }
 })();
 </script>
-<script src="menores-v120.js?v=20261024-iphone-atendimento-privado-v166"></script>
+<script src="menores-v120.js?v=20261114-camera-responsavel-v1"></script>
 </body></html>
