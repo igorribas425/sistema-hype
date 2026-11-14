@@ -108,7 +108,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
 <div class="field"><label for="guardianEmail">Gmail do responsável (para receber o resultado e autorização)</label><input id="guardianEmail" type="email" maxlength="254" autocomplete="email" placeholder="exemplo@gmail.com" required></div>
 </div>
 <div class="field"><label for="minorRelation">Vínculo com o menor</label><select id="minorRelation" required><option value="">Selecione</option><option>Pai</option><option>Mãe</option><option>Responsável legal</option></select></div>
-<div class="notice">📸 <b>Agora é a vez do pai, mãe ou responsável:</b> tire uma selfie e fotografe seu RG ou CNH. Toque nos quadros abaixo e escolha <b>Tirar Foto</b> ou <b>Biblioteca de Fotos</b>. As fotos serão conferidas pela equipe, não por reconhecimento facial.</div>
+<div class="notice">📸 <b>Identificação do pai, mãe ou responsável:</b> a selfie deve ser tirada <b>ao vivo pela câmera frontal</b>. Não é possível selecionar selfie da galeria. Para o RG ou CNH, você pode fotografar ou enviar uma imagem legível. A equipe analisará a solicitação e poderá pedir conferência do documento original. <b>A selfie não é reconhecimento facial automático.</b></div>
 <div class="field photo-step">
   <div class="photo-title"><span class="photo-number">3</span><div><strong>Foto do rosto do responsável</strong><small>O rosto do responsável deve aparecer de frente, inteiro e sem filtro.</small></div></div>
   <div class="photo-upload">
@@ -116,7 +116,7 @@ small,p{color:var(--muted)}small{font-size:11px}a{color:#ff8dad}
     <strong class="photo-big-label">É uma foto do rosto</strong>
     <span class="photo-button" id="guardianPhotoButton">📷 TIRAR FOTO DO ROSTO</span>
     <span class="photo-tip">Coloque seu rosto dentro do contorno. Evite boné, óculos escuros e contraluz.</span>
-    <input type="file" class="photo-file-input" id="guardianPhoto" accept="image/*" aria-label="Abrir câmera para selfie do responsável" aria-describedby="guardianPhotoStatus">
+    <button type="button" class="photo-file-input" id="guardianPhoto" aria-label="Abrir câmera frontal para selfie ao vivo do responsável" aria-describedby="guardianPhotoStatus"></button>
   </div>
   <p class="photo-status" id="guardianPhotoStatus" role="status" aria-live="polite">○ Aguardando foto</p>
   <img id="photoPreview" class="photo-preview" alt="Foto enviada: foto do rosto do responsável" style="display:none">
@@ -186,5 +186,5 @@ for(const [id,preview,isDoc] of fields){
 }
 })();
 </script>
-<script src="menores-v120.js?v=20261031-confirmacao-v236"></script>
+<script src="menores-v120.js?v=20261114-camera-responsavel-v1"></script>
 </body></html>
