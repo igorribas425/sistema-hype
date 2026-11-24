@@ -18,7 +18,7 @@
   people.forEach(p=>{
    if(!p.sharing||!Number.isFinite(p.latitude)||!Number.isFinite(p.longitude))return;
    const ll=[p.latitude,p.longitude],pop=element('div','');
-   pop.append(element('strong',p.promoter_name),element('div',p.role_name),element('div','Atualizado: '+new Date(p.last_seen).toLocaleTimeString('pt-BR')));
+   pop.append(element('strong',p.promoter_name),element('div',p.role_name),element('div',p.guests==null?'':'Convidados informados: '+p.guests),element('div','Atualizado: '+new Date(p.last_seen).toLocaleTimeString('pt-BR')));
    L.marker(ll).bindPopup(pop).addTo(pins);bounds.push(ll);
   });
   setTimeout(()=>{map.invalidateSize();if(bounds.length)map.fitBounds(bounds,{padding:[45,45],maxZoom:15})},100);
@@ -40,7 +40,7 @@
  }
  function render(){
   const list=$('hypeLocPromotersList');list.replaceChildren();
-  const online=people.filter(p=>p.sharing===true).length;
+  const online=people.filter(p=>p.sharing===true).length;const checked=people.filter(p=>p.checkin_id);const count=$('hypeCheckinStats');if(count)count.textContent=checked.length+' check-ins • '+checked.reduce((sum,p)=>sum+Number(p.guests||0),0)+' convidados informados';
   $('hypeLocOnline').textContent=online;$('hypeLocTotal').textContent=people.filter(p=>!p.collective).length;
   $('hypeLocCount').textContent=online+' compartilhando • '+(people.length-online)+' sem GPS ao vivo';
   people.forEach(p=>{
@@ -50,14 +50,14 @@
    info.append(element('small',p.role_name+' • '+state));
    const invite=element('button','🔗 GERAR CONVITE');invite.type='button';invite.addEventListener('click',()=>generate(p));
    const stop=element('button','⛔ REVOGAR','ghost');stop.type='button';stop.disabled=!p.invite_issued&&!p.sharing;stop.addEventListener('click',()=>revoke(p));
-   if(p.collective){info.append(element('small','WhatsApp final '+p.phone_last4+' • identidade não verificada'));actions.append(stop)}else actions.append(invite,stop);row.append(info,actions);list.append(row);
+   if(p.collective){info.append(element('small','WhatsApp final '+p.phone_last4+' • identidade não verificada'));if(p.guests!=null)info.append(element('strong',p.guests+' convidados informados'));if(p.checkin_id)info.append(element('small','Check-in: '+new Date(p.checked_at).toLocaleTimeString('pt-BR')+' • '+(p.sharing?'GPS ativo':'Sem GPS ativo')));if(p.sharing&&p.session_id)actions.append(stop)}else actions.append(invite,stop);row.append(info,actions);list.append(row);
   });
   showMap();
  }
  async function refresh(){
   if(!panel()?.classList.contains('v95-show')||busy)return;
   const a=credentials();if(!a)return status('Faça login como administrador da Hype.',true);
-  busy=true;try{const r=await rpc('hype_promoter_location_admin_list_v1',a);const sessions=await rpc('hype_collective_admin_list_v2',a);people=[...(Array.isArray(r)?r:[]),...(Array.isArray(sessions)?sessions.map(s=>({...s,collective:true,sharing:true,role_name:'Link coletivo • identidade autodeclarada'})):[])];render();status('Atualizado às '+new Date().toLocaleTimeString('pt-BR')+'. Só posições autorizadas e recentes são exibidas.')}catch(e){status('Erro: '+e.message,true)}finally{busy=false}
+  busy=true;try{const r=await rpc('hype_promoter_location_admin_list_v1',a);const sessions=await rpc('hype_collective_admin_list_v2',a);const checks=await rpc('hype_team_checkin_admin_v4',a);const rows=Array.isArray(checks)?checks:[];const ids=new Set(rows.map(s=>s.session_id).filter(Boolean));people=[...(Array.isArray(r)?r:[]),...rows.map(s=>({...s,collective:true,role_name:'Check-in • identidade autodeclarada'})),...(Array.isArray(sessions)?sessions.filter(s=>!ids.has(s.session_id)).map(s=>({...s,collective:true,sharing:true,role_name:'Link coletivo • identidade autodeclarada'})):[])];render();status('Atualizado às '+new Date().toLocaleTimeString('pt-BR')+'. Só posições autorizadas e recentes são exibidas.')}catch(e){status('Erro: '+e.message,true)}finally{busy=false}
  }
 
  async function refreshRequests(){
@@ -83,8 +83,8 @@
  }
  function initCollective(){
   const box=element('section','','hype-loc-row');box.id='hypeLocCollectiveRequests';box.style.display='block';
-  box.append(element('h3','Link único da equipe'),element('p','Envie o mesmo link a todos. As sessões aparecem diretamente no mapa após autorização do GPS. Nomes informados pelo link coletivo não são identidades verificadas.'));
-  const link=document.createElement('a');link.href='https://hypeloungeclub.com.br/equipe-promoters.html';link.textContent=link.href;link.target='_blank';link.rel='noopener noreferrer';link.style.cssText='color:#a4f4c2;overflow-wrap:anywhere';box.append(link);
+  box.append(element('h3','Link único da equipe'),element('p','Check-ins e convidados informados em tempo real. GPS somente com autorização. Nomes e quantidades autodeclarados.'));
+  const link=document.createElement('a');link.href='https://hype-dj-awards.vercel.app/checkin-equipe.html';link.textContent=link.href;link.target='_blank';link.rel='noopener noreferrer';link.style.cssText='color:#a4f4c2;overflow-wrap:anywhere';box.append(link);const stats=element('h3','0 check-ins • 0 convidados informados');stats.id='hypeCheckinStats';box.append(stats);
   const actions=element('div','','hype-loc-row-actions');actions.style.marginTop='10px';const copy=element('button','COPIAR LINK ÚNICO');copy.type='button';copy.onclick=async()=>{try{await navigator.clipboard.writeText(link.href);status('Link coletivo copiado.')}catch(e){status('Copie o endereço acima.')}};const reload=element('button','ATUALIZAR MAPA');reload.type='button';reload.onclick=refresh;actions.append(copy,reload);box.append(actions);
   const old=element('details','');old.append(element('summary','Solicitações antigas (opcional)'));const count=element('h4','Solicitações anteriores');count.id='hypeLocRequestCount';old.append(count);const list=element('div','');list.id='hypeLocRequestList';old.append(list);old.addEventListener('toggle',()=>{if(old.open)refreshRequests()});box.append(old);
   $('hypeLocPromotersList').before(box)
