@@ -57,10 +57,41 @@
  async function refresh(){
   if(!panel()?.classList.contains('v95-show')||busy)return;
   const a=credentials();if(!a)return status('Faça login como administrador da Hype.',true);
-  busy=true;try{const r=await rpc('hype_promoter_location_admin_list_v1',a);people=Array.isArray(r)?r:[];render();status('Atualizado às '+new Date().toLocaleTimeString('pt-BR')+'. Só posições autorizadas e recentes são exibidas.')}catch(e){status('Erro: '+e.message,true)}finally{busy=false}
+  busy=true;try{const r=await rpc('hype_promoter_location_admin_list_v1',a);people=Array.isArray(r)?r:[];render();await refreshRequests();status('Atualizado às '+new Date().toLocaleTimeString('pt-BR')+'. Só posições autorizadas e recentes são exibidas.')}catch(e){status('Erro: '+e.message,true)}finally{busy=false}
+ }
+
+ async function refreshRequests(){
+  const box=$('hypeLocCollectiveRequests');if(!box)return;
+  const a=credentials();if(!a)return;
+  try{
+   const data=await rpc('hype_location_request_admin_list_v1',a);const rows=Array.isArray(data)?data:[];const pending=rows.filter(r=>r.state==='pending');
+   const list=$('hypeLocRequestList');list.replaceChildren();
+   $('hypeLocRequestCount').textContent=pending.length+' pendentes';
+   if(!pending.length){list.append(element('p','Nenhuma solicitação pendente.'));return}
+   for(const r of pending){
+    const row=element('article','','hype-loc-row'),info=element('div','','hype-loc-row-main'),actions=element('div','','hype-loc-row-actions');
+    info.append(element('strong',r.name),element('small','Final WhatsApp: '+r.phone_last4+' • Código: '+r.request_id.slice(0,8).toUpperCase()));
+    const select=document.createElement('select');select.setAttribute('aria-label','Vincular promoter cadastrado');select.style.cssText='max-width:100%;padding:10px;background:#222;color:white;border:1px solid #555;border-radius:8px';
+    const placeholder=element('option','Selecione o promoter identificado');placeholder.value='';select.append(placeholder);
+    for(const p of people){const opt=element('option',p.promoter_name+' — '+p.role_name);opt.value=String(p.promoter_id);select.append(opt)}
+    const approve=element('button','APROVAR');approve.type='button';approve.disabled=true;select.onchange=()=>{approve.disabled=!select.value};
+    approve.onclick=async()=>{if(!select.value||!confirm('Confirme pessoalmente ou pelo WhatsApp conhecido a identidade e o código da solicitação. Aprovar o convite para este promoter? Um convite anterior será revogado. Nenhum GPS será ativado automaticamente.'))return;approve.disabled=true;try{await rpc('hype_location_request_admin_decide_v1',{...a,p_request_id:r.request_id,p_promoter_id:Number(select.value),p_approve:true});status('Solicitação aprovada. A pessoa pode retornar ao link coletivo e decidir se deseja compartilhar.');await refreshRequests()}catch(e){status(e.message,true);approve.disabled=false}};
+    const reject=element('button','RECUSAR','ghost');reject.type='button';reject.onclick=async()=>{if(!confirm('Recusar esta solicitação?'))return;reject.disabled=true;try{await rpc('hype_location_request_admin_decide_v1',{...a,p_request_id:r.request_id,p_promoter_id:null,p_approve:false});await refreshRequests()}catch(e){status(e.message,true);reject.disabled=false}};
+    actions.append(approve,reject);info.append(select);row.append(info,actions);list.append(row)
+   }
+  }catch(e){status('Solicitações: '+e.message,true)}
+ }
+ function initCollective(){
+  const box=element('section','','hype-loc-row');box.id='hypeLocCollectiveRequests';box.style.display='block';
+  box.append(element('h3','Link único da equipe'),element('p','Envie o mesmo link a todos os promoters. Identifique cada pessoa e confirme o código antes de aprovar. GPS somente após aceite individual.'));
+  const link=document.createElement('a');link.href='https://hypeloungeclub.com.br/equipe-promoters.html';link.textContent=link.href;link.target='_blank';link.rel='noopener noreferrer';link.style.cssText='color:#a4f4c2;overflow-wrap:anywhere';box.append(link);
+  const actions=element('div','','hype-loc-row-actions');actions.style.marginTop='10px';const copy=element('button','COPIAR LINK ÚNICO');copy.type='button';copy.onclick=async()=>{try{await navigator.clipboard.writeText(link.href);status('Link coletivo copiado.')}catch(e){status('Copie o endereço acima.')}};const reload=element('button','ATUALIZAR SOLICITAÇÕES');reload.type='button';reload.onclick=refresh;actions.append(copy,reload);box.append(actions);
+  const count=element('h4','Solicitações pendentes');count.id='hypeLocRequestCount';box.append(count);const list=element('div','');list.id='hypeLocRequestList';box.append(list);
+  $('hypeLocPromotersList').before(box)
  }
  function init(){
   if(!panel())return;
+  initCollective();
   $('hypeLocRefresh').addEventListener('click',refresh);
   $('hypeLocCopyInvite').addEventListener('click',async()=>{
    const input=$('hypeLocInviteUrl');try{await navigator.clipboard.writeText(input.value);status('Convite copiado. Envie no privado.')}catch(e){input.focus();input.select();status('Convite selecionado: copie no celular.')}
