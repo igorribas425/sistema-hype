@@ -85,6 +85,11 @@
       }
       if (blockedBox) {
         blockedBox.innerHTML = code.startsWith('CONV-') ? '❌ <strong>LINK DE CONVIDADOS, NÃO DE VENDAS</strong><br><span style="font-weight:600;font-size:12px">Este código pertence à Lista/Promoter. Peça o link oficial de ingressos para comprar pelo promoter.</span>' : '❌ <strong>LINK DE VENDAS NÃO VALIDADO</strong><br><span style="font-weight:600;font-size:12px">O link pode estar antigo, inativo ou temporariamente indisponível. Peça o link atualizado à equipe HYPE.</span>';
+        const retry = document.createElement('button');
+        retry.type='button';retry.className='btn';retry.textContent='TENTAR VALIDAR NOVAMENTE';
+        retry.style.cssText='margin:12px 0 0;width:100%';
+        retry.onclick=async()=>{retry.disabled=true;retry.textContent='VALIDANDO...';try{if(await hypeValidatePromoterLinkV56(code)){window.hypeApplyPromoterLinkV16();if(typeof updateClientTicketState==='function')updateClientTicketState();if(typeof hypeV14ScrollToTickets==='function')hypeV14ScrollToTickets()}else{retry.disabled=false;retry.textContent='TENTAR VALIDAR NOVAMENTE'}}catch(e){retry.disabled=false;retry.textContent='TENTAR VALIDAR NOVAMENTE'}};
+        blockedBox.appendChild(retry);
         blockedBox.style.display = 'block';
       }
       if (form) {
