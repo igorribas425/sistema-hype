@@ -3449,10 +3449,11 @@ function hypeV14OpenMap() {
 }
 
 function hypeV14ScrollToTickets() {
-  const form = document.getElementById("ticketForm");
-  const box = document.getElementById("ticketBox");
-  (form || box)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  setTimeout(() => (document.getElementById("clientAgeDeclaration") || document.getElementById("clientName"))?.focus({ preventScroll: true }), 550);
+  const target = document.getElementById("hypeCheckoutAnchor") || document.getElementById("ticketForm") || document.getElementById("ticketBox");
+  if (!target) return;
+  const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - (document.querySelector(".top-nav")?.offsetHeight || 0) - 16);
+  try { window.scrollTo({top, behavior:"instant"}); }
+  catch (_) { window.scrollTo(0,top); }
 }
 
 function hypeV14ChooseLot(lotId) {
