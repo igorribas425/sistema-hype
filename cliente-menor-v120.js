@@ -20,7 +20,9 @@
    if(submit){
      // Mantém o texto original do botão em cada checkout (PIX ou manual).
      if(!submit.dataset.hypeOriginalLabel) submit.dataset.hypeOriginalLabel=submit.textContent.trim();
-     submit.disabled=minor;
+     if(minor) submit.disabled=true;
+     else if(typeof updateClientTicketState==='function') updateClientTicketState();
+     else submit.disabled=false;
      submit.title=minor?'Autorização e análise do ADM necessárias antes do pagamento':'';
      if(minor)submit.textContent='AGUARDE AUTORIZAÇÃO • NÃO PAGUE AINDA';
      else if(submit.textContent==='AGUARDE AUTORIZAÇÃO • NÃO PAGUE AINDA')submit.textContent=submit.dataset.hypeOriginalLabel;
