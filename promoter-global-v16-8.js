@@ -137,7 +137,7 @@
       box.innerHTML = '<div class="v18-empty">Nenhuma filial cadastrada ainda. Entre em MATRIZES, copie o convite de uma matriz e envie aos vendedores.</div>';
       return;
     }
-    box.innerHTML = `<div style="font-size:12px;color:var(--muted);margin:5px 0 10px">${branches.length} filial(is) cadastrada(s). Os valores abaixo consideram somente ingressos pagos de eventos ativos.</div>` +
+    box.innerHTML = `<div style="font-size:12px;color:var(--muted);margin:5px 0 10px">${branches.length} filial(is) cadastrada(s). Os valores abaixo consideram somente os ingressos da festa atual.</div>` +
       branches.map(b => {
         const matrix = promoters.find(p => Number(p.id) === Number(b.matrix_id));
         return `<div class="v250-row">
@@ -172,7 +172,7 @@
       parent.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap">' +
         '<h4 style="margin:0">🧾 Vendas de ' + esc(branch.promoter_name) + '</h4>' +
         '<button class="btn-action" type="button" onclick="HypePromoterNetworkV250.closeSales()">FECHAR</button></div>' +
-        '<p style="color:var(--muted);font-size:11px">Últimos 100 pedidos de todos os eventos (inclusive encerrados). Vendas pendentes não entram no faturamento.</p>' +
+        '<p style="color:var(--muted);font-size:11px">Últimos 100 pedidos da festa atual. Vendas pendentes não entram no faturamento.</p>' +
         (sales.length ? sales.map(t => {
           const when = t.purchased_at ? new Date(t.purchased_at).toLocaleString('pt-BR') : '—';
           return '<div class="v250-row"><div style="flex:1;min-width:200px">' +
@@ -250,7 +250,7 @@
       }
 
       box.innerHTML = `
-        <div style="margin-top:14px;font-size:12px;color:#cbe9da;font-weight:900;letter-spacing:.5px">🏆 RANKING DE MATRIZES • FESTAS ATIVAS</div>
+        <div style="margin-top:14px;font-size:12px;color:#cbe9da;font-weight:900;letter-spacing:.5px">🏆 RANKING DE MATRIZES • FESTA ATUAL</div>
         <div style="margin-top:5px;font-size:11px;color:var(--muted)">Ranking por vendas pagas da matriz + suas filiais, sem duplicação. FREE vale R$ 0. Vendas antigas permanecem no histórico.</div>
         ${matrixRows.map((p, index) => `
           <div style="margin-top:10px;padding:13px;border:1px solid var(--line);border-radius:14px;background:#0b0b0e">
