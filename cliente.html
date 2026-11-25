@@ -11,7 +11,7 @@
 
 :root{--bg:#050505;--panel:#0d0d10;--line:#222228;--red:#f5f5f5;--green:#28d17c;--text:#f7f7f8;--muted:#96969e;--silver:#d8d8dc;--event-accent:#d8d8dc;--event-accent-rgb:216,216,220;--event-accent-soft:rgba(216,216,220,.18);--event-accent-glow:rgba(216,216,220,.32)}
 *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,sans-serif}
-html{scroll-behavior:smooth}
+html{scroll-behavior:auto}#hypeCheckoutAnchor{scroll-margin-top:85px}a.hype-checkout-jump{display:flex;align-items:center;justify-content:center;text-decoration:none;touch-action:manipulation;text-align:center}a.hype-sticky-checkout-link{min-width:130px;height:46px;border:0;border-radius:13px;background:linear-gradient(135deg,var(--event-accent),#f0f0f2);color:#050505;font-weight:950;font-size:10px;letter-spacing:.5px}
 body{background:radial-gradient(circle at 80% 0%,rgba(255,255,255,.055),transparent 28%),radial-gradient(circle at 10% 30%,rgba(255,255,255,.025),transparent 25%),#050505;color:var(--text);min-height:100vh;padding:20px;display:block}
 .top-nav{position:fixed;top:0;left:0;width:100%;background:rgba(5,5,5,.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.13);padding:12px 20px;display:flex;justify-content:center;gap:15px;z-index:1000}
 .top-nav a{color:var(--muted);text-decoration:none;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.17);transition:.2s}
@@ -452,7 +452,7 @@ html,body{max-width:100%;overflow-x:hidden}
         </div>
 
         <div class="v14-actions">
-          <button type="button" class="v14-action primary" onclick="hypeV14ScrollToTickets()">🎟 GARANTIR INGRESSO</button>
+          <a class="v14-action primary hype-checkout-jump" href="#hypeCheckoutAnchor">🎟 GARANTIR INGRESSO</a>
           <button type="button" class="v14-action" onclick="hypeV14OpenWhatsAppContact()">💬 WHATSAPP<small>(54) 9695-6070</small></button>
           <button type="button" class="v14-action" onclick="hypeV14ShareEvent()">COMPARTILHAR</button>
           <button type="button" class="v14-action" id="v14MapButton" onclick="hypeV14OpenMap()">📍 LOCALIZAÇÃO<small>ABRIR NO MAPS</small></button>
@@ -503,7 +503,7 @@ html,body{max-width:100%;overflow-x:hidden}
 
     </div>
 
-    <div class="box">
+    <div class="box" id="hypeCheckoutAnchor">
       <h4 class="box-kicker">PAGAMENTO PIX</h4>
       <h2 class="box-title">Garanta o seu ingresso antecipado</h2>
       <div style="margin:12px 0 16px;padding:13px 14px;border:1px solid rgba(40,209,124,.32);background:rgba(40,209,124,.08);border-radius:14px;font-size:12px;line-height:1.6;color:#d9f8e6">
@@ -675,7 +675,7 @@ html,body{max-width:100%;overflow-x:hidden}
     <small>INGRESSO SELECIONADO</small>
     <strong id="v14StickyText">Escolha seu ingresso</strong>
   </div>
-  <button type="button" onclick="hypeV14ScrollToTickets()">COMPRAR AGORA</button>
+  <a class="hype-sticky-checkout-link hype-checkout-jump" href="#hypeCheckoutAnchor">COMPRAR AGORA</a>
 </div>
 
 
@@ -683,9 +683,9 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
-<script src="app.js?v=20261108-asaas-unified-v236"></script>
-<script src="cliente-menor-v120.js?v=20261024-iphone-same-tab-v156"></script>
-<script src="promoter-global-v16-8.js?v=20261030-promoter-link-tipo-v58"></script>
+<script src="app.js?v=20261125-checkout-v262"></script>
+<script src="cliente-menor-v120.js?v=20261125-checkout-v261"></script>
+<script src="promoter-global-v16-8.js?v=20261125-retry-v263"></script>
 <script src="v18-client.js?v=20260902-v20"></script>
 
 
