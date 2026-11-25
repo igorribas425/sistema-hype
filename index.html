@@ -492,7 +492,7 @@ body{overflow-x:hidden}
 
         <div class="group">
           <label>Telefone / WhatsApp</label>
-          <input type="tel" id="clientPhone" placeholder="(54) 99999-9999" autocomplete="tel">
+          <input type="tel" id="clientPhone" required placeholder="(54) 99999-9999" autocomplete="tel">
         </div>
 
         <div class="group">
@@ -536,7 +536,7 @@ body{overflow-x:hidden}
           <div id="serviceFeeInfo" class="service-fee-card"></div>
         </div>
 
-        <button type="submit" class="btn">CRIAR PEDIDO E ABRIR WHATSAPP</button>
+        <button type="submit" class="btn">GERAR PIX</button>
       </form>
 
       <div class="pix-area" id="pixArea">
@@ -616,8 +616,9 @@ body{overflow-x:hidden}
 <div class="toast" id="toast">Ação efetuada com sucesso!</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20261001-v48"></script>
-<script src="app.js?v=20261023-menores-gate-v120"></script>
-<script src="cliente-menor-v120.js?v=20261023-doc-v122"></script>
+<script src="app.js?v=20261125-checkout-v261"></script>
+<script src="cliente-menor-v120.js?v=20261125-checkout-v261"></script>
+<script>document.getElementById("ticketForm")?.addEventListener("invalid",function(e){const field=e.target;const names={clientAgeDeclaration:"Confirme sua idade.",clientName:"Informe seu nome completo.",clientPhone:"Informe seu WhatsApp.",clientEmail:"Informe um e-mail válido.",clientGender:"Selecione o gênero.",ticketType:"Escolha um ingresso disponível."};if(typeof hypeCheckoutStatusV261==="function")hypeCheckoutStatusV261(names[field.id]||field.validationMessage||"Confira os dados do formulário.",true);},true);</script>
 <script src="promoter-global-v16-8.js?v=20261002-v57-global"></script>
 <script src="v18-client.js?v=20260902-v20"></script>
 
