@@ -513,7 +513,7 @@ async function hypeValidatePromoterLinkV56(code) {
     return true;
   }
   try {
-    const rows = await sbRpc("public_promoter_link_status_v56", { p_code: normalized });
+    const rows = await hypeWithTimeout(sbRpc("public_promoter_link_status_v56", { p_code: normalized }), 10000, "Validação do promoter");
     const row = Array.isArray(rows) ? rows[0] : rows;
     HYPE.promoterLinkInvalid = !(row && row.valid === true);
     return !HYPE.promoterLinkInvalid;
@@ -1201,7 +1201,7 @@ function updateClientTicketState() {
     return;
   }
   const state = hypeStatus(ticket);
-  if (button) button.disabled = !state.canBuy;
+  if (button) button.disabled = !state.canBuy || !!HYPE.checkoutBusyV261 || !!document.getElementById("clientIsMinor")?.checked || document.getElementById("clientAgeDeclaration")?.value === "menor";
   if (info) {
     const cls = state.code === "active" ? "active" : state.code === "upcoming" ? "upcoming" : "expired";
     info.className = `ticket-schedule ${cls}`;
@@ -1483,8 +1483,23 @@ function renderFreeEntry(entry) {
   if (emailNotice) emailNotice.textContent = "✅ Ingresso FREE confirmado! Este QR Code já é válido na portaria. Você pode tirar um print para apresentar com seu documento. Envio por e-mail em processamento.";
 }
 
+function hypeCheckoutStatusV261(message, error = false) {
+  const form = document.getElementById("ticketForm");
+  if (!form) return;
+  let box = document.getElementById("hypeCheckoutStatusV261");
+  if (!box) {
+    box = document.createElement("div"); box.id = "hypeCheckoutStatusV261";
+    box.setAttribute("role", "status"); box.setAttribute("aria-live", "polite");
+    box.style.cssText = "margin:12px 0;padding:12px;border-radius:10px;font-size:14px;font-weight:600;line-height:1.5";
+    form.appendChild(box);
+  }
+  box.textContent = message; box.style.color = error ? "#ffbec9" : "#c9f7da";
+  box.style.background = error ? "#3d1823" : "#153329"; box.hidden = !message;
+}
 async function createPixOrder(e) {
   e.preventDefault();
+  if (HYPE.checkoutBusyV261) return;
+  hypeCheckoutStatusV261("");
 
   // No checkout PIX, a confirmação de idade é obrigatória antes de gerar pedido.
   // Menores dependem da avaliação do responsável; não emitir PIX antecipado.
@@ -1504,14 +1519,6 @@ async function createPixOrder(e) {
     alert('Antes de pagar o ingresso de um menor, o responsável deve preencher a autorização e a HYPE precisa analisar a admissão. O pagamento será tratado com a equipe após a análise.');
     warning?.scrollIntoView({behavior:'smooth',block:'center'});
     return;
-  }
-
-  if (HYPE.promoterLinkCode) {
-    const promoterOk = await hypeValidatePromoterLinkV56(HYPE.promoterLinkCode);
-    if (!promoterOk) {
-      hypeApplyPromoterLinkV16();
-      return alert(String(HYPE.promoterLinkCode||"").toUpperCase().startsWith("CONV-") ? "Este é um link da Lista/Promoter, não um link de vendas. Peça o link oficial de ingressos." : "Não foi possível validar este link de vendas. Peça o link atualizado do promoter ou tente novamente.");
-    }
   }
 
   const lot = currentSelectedLot();
@@ -1536,16 +1543,29 @@ async function createPixOrder(e) {
   if (!validEmail(email)) return alert("Informe um e-mail válido.");
 
   const submit = document.querySelector('#ticketForm button[type="submit"]');
-  const oldText = submit?.textContent || "GERAR PIX";
+  const oldText = "GERAR PIX";
+  HYPE.checkoutBusyV261 = true;
   if (submit) {
     submit.disabled = true;
     submit.textContent = "GERANDO PIX...";
   }
 
   try {
+    const promoterCode = String(HYPE.promoterLinkCode || document.getElementById("clientPromoter")?.value || "").trim().toUpperCase();
+    if (promoterCode) {
+      hypeCheckoutStatusV261("Validando link do promoter...");
+      const result = await hypeWithTimeout(sbRpc("public_promoter_link_status_v56", {p_code: promoterCode}), 10000, "Validação do promoter");
+      const row = Array.isArray(result) ? result[0] : result;
+      if (!row?.valid) throw new Error("Link de vendas inválido. Solicite o link oficial ao promoter.");
+      HYPE.promoterLinkInvalid = false;
+    }
+    hypeCheckoutStatusV261("Criando seu pedido...");
     // Usa o RPC manual porque ele já grava o e-mail do cliente no ticket.
     // O pagamento, porém, é criado no Asaas logo em seguida.
-    const rows = await sbRpc("create_manual_order_v16", {
+    const checkoutKey = JSON.stringify([Number(lot.id), name, phone, email.toLowerCase(), cpf, gender, promoterCode]);
+    const retry = HYPE.checkoutPendingV261;
+    if (retry && retry.key !== checkoutKey) throw new Error("Já existe um pedido pendente nesta tela. Confira o pedido anterior antes de iniciar outro.");
+    const rows = retry ? [retry.entry] : await sbRpc("create_manual_order_v16", {
       p_name: name,
       p_phone: phone,
       p_email: email,
@@ -1553,11 +1573,12 @@ async function createPixOrder(e) {
       p_gender: gender,
       p_lot_id: Number(lot.id),
       p_coupon_code: null,
-      p_promoter_code: (document.getElementById("clientPromoter")?.value || "").trim().toUpperCase()
+      p_promoter_code: promoterCode
     });
 
     const entry = Array.isArray(rows) ? rows[0] : rows;
     if (!entry?.id) throw new Error("Não foi possível criar o pedido.");
+    HYPE.checkoutPendingV261 = {key: checkoutKey, entry};
 
     HYPE.currentEntryId = entry.id;
     HYPE.currentEntryCode = entry.ticket_code;
@@ -1568,6 +1589,7 @@ async function createPixOrder(e) {
 
     if (entry.payment_status === "Pago" && Number(entry.price || 0) <= 0) {
       renderFreeEntry(entry);
+      HYPE.checkoutPendingV261 = null;
       try {
         const emailResult = await autoSendFreeTicketEmail(entry);
         const emailNotice = document.getElementById("ticketEmailNotice");
@@ -1586,19 +1608,23 @@ async function createPixOrder(e) {
       return;
     }
 
+    hypeCheckoutStatusV261("Pedido criado. Gerando o Pix...");
     const payment = await createAsaasPix(entry.id, entry.qr_token);
     window.__hypeCurrentPix = payment;
     hypeSaveClientOrderV168(entry,payment);
     renderAsaasPayment(entry, payment);
+    HYPE.checkoutPendingV261 = null;
+    document.getElementById("pixArea")?.scrollIntoView({behavior:"smooth",block:"start"});
     await refreshCurrentOrderStatus(false); // Caso webhook tenha confirmado durante a criação.
     hypeNotify(`PIX do pedido ${entry.ticket_code} gerado.`);
   } catch (err) {
-    alert(hypeUserMessage(err, "Não foi possível gerar o PIX. Tente novamente em instantes."));
+    const msg = hypeUserMessage(err, "Não foi possível concluir. Confira sua conexão e tente novamente.");
+    hypeCheckoutStatusV261(msg + (HYPE.checkoutPendingV261 ? " Seu pedido já foi criado; tente novamente nesta mesma tela, sem alterar os dados." : ""), true);
+    console.warn("[HYPE][checkout]", err);
   } finally {
-    if (submit) {
-      submit.disabled = false;
-      submit.textContent = oldText;
-    }
+    HYPE.checkoutBusyV261 = false;
+    if (submit) { submit.textContent = HYPE.checkoutPendingV261 ? "TENTAR GERAR PIX NOVAMENTE" : oldText; }
+    updateClientTicketState();
   }
 }
 
